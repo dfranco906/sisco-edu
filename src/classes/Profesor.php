@@ -44,4 +44,24 @@ class Profesor {
         return false;
     }
 }
+
+// ... tu código anterior (constructor y método crear) ...
+
+    // Lógica para LEER (READ) todos los profesores de la BD
+    public function leer() {
+        // Escribimos la consulta SQL (traemos todos los campos)
+        // ORDER BY id_profesor DESC los ordena del más nuevo al más viejo
+        $query = "SELECT id_profesor, nombre, apellido, cedula_identidad, huella_id, fecha_registro 
+                  FROM " . $this->table_name . " 
+                  ORDER BY id_profesor DESC";
+
+        // Preparamos la consulta
+        $stmt = $this->conn->prepare($query);
+
+        // Ejecutamos la consulta
+        $stmt->execute();
+
+        // Retornamos el "statement" (la declaración con los datos) para que la API lo procese
+        return $stmt;
+    }
 ?>
