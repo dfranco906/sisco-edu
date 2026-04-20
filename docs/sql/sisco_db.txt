@@ -1,0 +1,216 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 20-04-2026 a las 16:10:05
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de datos: `sisco_db`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `asignacion_docente`
+--
+
+CREATE TABLE `asignacion_docente` (
+  `id_asignacion` int(11) NOT NULL,
+  `id_profesor` int(11) NOT NULL,
+  `id_materia` int(11) NOT NULL,
+  `año_lectivo` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `asistencias`
+--
+
+CREATE TABLE `asistencias` (
+  `id_asistencia` int(11) NOT NULL,
+  `huella_id` int(11) NOT NULL,
+  `tipo_usuario` enum('Profesor','Estudiante') NOT NULL,
+  `fecha_hora` datetime DEFAULT current_timestamp(),
+  `estado` enum('Presente','Llegada Tardia') DEFAULT 'Presente'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `estudiantes`
+--
+
+CREATE TABLE `estudiantes` (
+  `id_estudiante` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `apellido` varchar(100) NOT NULL,
+  `cedula_identidad` varchar(20) NOT NULL,
+  `huella_id` int(11) DEFAULT NULL,
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `horarios`
+--
+
+CREATE TABLE `horarios` (
+  `id_horario` int(11) NOT NULL,
+  `id_asignacion` int(11) NOT NULL,
+  `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado') NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fin` time NOT NULL,
+  `aula` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `materias`
+--
+
+CREATE TABLE `materias` (
+  `id_materia` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `carga_horaria_semanal` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `profesores`
+--
+
+CREATE TABLE `profesores` (
+  `id_profesor` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `apellido` varchar(100) NOT NULL,
+  `cedula_identidad` varchar(20) NOT NULL,
+  `huella_id` int(11) DEFAULT NULL,
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `asignacion_docente`
+--
+ALTER TABLE `asignacion_docente`
+  ADD PRIMARY KEY (`id_asignacion`),
+  ADD KEY `id_profesor` (`id_profesor`),
+  ADD KEY `id_materia` (`id_materia`);
+
+--
+-- Indices de la tabla `asistencias`
+--
+ALTER TABLE `asistencias`
+  ADD PRIMARY KEY (`id_asistencia`);
+
+--
+-- Indices de la tabla `estudiantes`
+--
+ALTER TABLE `estudiantes`
+  ADD PRIMARY KEY (`id_estudiante`),
+  ADD UNIQUE KEY `cedula_identidad` (`cedula_identidad`),
+  ADD UNIQUE KEY `huella_id` (`huella_id`);
+
+--
+-- Indices de la tabla `horarios`
+--
+ALTER TABLE `horarios`
+  ADD PRIMARY KEY (`id_horario`),
+  ADD KEY `id_asignacion` (`id_asignacion`);
+
+--
+-- Indices de la tabla `materias`
+--
+ALTER TABLE `materias`
+  ADD PRIMARY KEY (`id_materia`);
+
+--
+-- Indices de la tabla `profesores`
+--
+ALTER TABLE `profesores`
+  ADD PRIMARY KEY (`id_profesor`),
+  ADD UNIQUE KEY `cedula_identidad` (`cedula_identidad`),
+  ADD UNIQUE KEY `huella_id` (`huella_id`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `asignacion_docente`
+--
+ALTER TABLE `asignacion_docente`
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `asistencias`
+--
+ALTER TABLE `asistencias`
+  MODIFY `id_asistencia` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `estudiantes`
+--
+ALTER TABLE `estudiantes`
+  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `horarios`
+--
+ALTER TABLE `horarios`
+  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `materias`
+--
+ALTER TABLE `materias`
+  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `profesores`
+--
+ALTER TABLE `profesores`
+  MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `asignacion_docente`
+--
+ALTER TABLE `asignacion_docente`
+  ADD CONSTRAINT `asignacion_docente_ibfk_1` FOREIGN KEY (`id_profesor`) REFERENCES `profesores` (`id_profesor`),
+  ADD CONSTRAINT `asignacion_docente_ibfk_2` FOREIGN KEY (`id_materia`) REFERENCES `materias` (`id_materia`);
+
+--
+-- Filtros para la tabla `horarios`
+--
+ALTER TABLE `horarios`
+  ADD CONSTRAINT `horarios_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignacion_docente` (`id_asignacion`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
