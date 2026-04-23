@@ -30,10 +30,10 @@ class Materia {
 
         return $stmt->execute();
     }
-}
-public function leer() {
+    public function leer() {
     $query = "SELECT * FROM " . $this->table_name . " ORDER BY id_materia DESC";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     return $stmt;
+}
 }
