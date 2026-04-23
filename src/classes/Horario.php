@@ -44,8 +44,7 @@ class Horario {
         }
         return false;
     }
-}
-public function leer() {
+    public function leer() {
     $query = "SELECT h.*, m.nombre as materia, p.nombre as profesor
               FROM horarios h
               INNER JOIN asignacion_docente a ON h.id_asignacion = a.id_asignacion
@@ -57,4 +56,6 @@ public function leer() {
     $stmt->execute();
     return $stmt;
 }
+}
+
 ?>
