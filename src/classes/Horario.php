@@ -45,4 +45,16 @@ class Horario {
         return false;
     }
 }
+public function leer() {
+    $query = "SELECT h.*, m.nombre as materia, p.nombre as profesor
+              FROM horarios h
+              INNER JOIN asignacion_docente a ON h.id_asignacion = a.id_asignacion
+              INNER JOIN materias m ON a.id_materia = m.id_materia
+              INNER JOIN profesores p ON a.id_profesor = p.id_profesor
+              ORDER BY h.id_horario DESC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
 ?>
