@@ -43,9 +43,7 @@ class Profesor {
         }
         return false;
     }
-}
-
-// ... tu código anterior (constructor y método crear) ...
+    // ... tu código anterior (constructor y método crear) ...
 
     // Lógica para LEER (READ) todos los profesores de la BD
     public function leer() {
@@ -64,4 +62,7 @@ class Profesor {
         // Retornamos el "statement" (la declaración con los datos) para que la API lo procese
         return $stmt;
     }
+}
+
+
 ?>
