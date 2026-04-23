@@ -26,3 +26,17 @@ class Asignacion {
         return $stmt->execute();
     }
 }
+public function leer() {
+    $query = "SELECT a.*, 
+                     p.nombre as profesor,
+                     p.apellido,
+                     m.nombre as materia
+              FROM asignacion_docente a
+              INNER JOIN profesores p ON a.id_profesor = p.id_profesor
+              INNER JOIN materias m ON a.id_materia = m.id_materia
+              ORDER BY a.id_asignacion DESC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
