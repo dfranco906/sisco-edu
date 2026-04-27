@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-04-2026 a las 20:27:29
+-- Tiempo de generación: 27-04-2026 a las 15:02:28
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -112,7 +112,19 @@ CREATE TABLE `materias` (
 --
 
 INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_semanal`) VALUES
-(301, '', NULL, 0);
+(301, 'Proyecto\r\n', NULL, 5),
+(302, 'Gabinete Laboratorio', NULL, 10),
+(303, 'Administración Financiera', NULL, 4),
+(304, 'Algorítmica', NULL, 4),
+(305, 'Psicología', NULL, 4),
+(306, 'Matemática', NULL, 3),
+(307, 'Educación Cristiana', NULL, 2),
+(308, 'Literatura', NULL, 4),
+(309, 'Historia y Geografía', NULL, 2),
+(310, 'Ciencias', NULL, 2),
+(311, 'Economía', NULL, 3),
+(312, 'Educación Física', NULL, 2),
+(313, 'Matemática Aplicada A La Informática', NULL, 3);
 
 -- --------------------------------------------------------
 
@@ -224,7 +236,7 @@ ALTER TABLE `horarios`
 -- AUTO_INCREMENT de la tabla `materias`
 --
 ALTER TABLE `materias`
-  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=302;
+  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=314;
 
 --
 -- AUTO_INCREMENT de la tabla `profesores`
