@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-04-2026 a las 16:10:05
+-- Tiempo de generación: 23-04-2026 a las 20:27:29
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -63,6 +63,22 @@ CREATE TABLE `estudiantes` (
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `estudiantes`
+--
+
+INSERT INTO `estudiantes` (`id_estudiante`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`) VALUES
+(1234567, 'Carol ', 'Maldini', '1234567', NULL, '2026-04-23 16:58:47'),
+(6119514, 'Ana Paula', 'Gimenez', '6119514', NULL, '2026-04-23 16:53:04'),
+(6213879, 'Alan', 'Gomez', '6213879', NULL, '2026-04-23 16:56:58'),
+(6523891, 'Jose', 'Rodriguez', '6523891', NULL, '2026-04-23 16:56:58'),
+(7843112, 'Andres', 'Pirlo', '7843112', NULL, '2026-04-23 16:58:47'),
+(7963124, 'Catalina', 'Caballero', '7963124', NULL, '2026-04-23 16:56:58'),
+(7980292, 'Thiago', 'Amarilla', '7980292', NULL, '2026-04-23 16:53:04'),
+(7980335, 'Paulo', 'Nuñez', '7980335', NULL, '2026-04-23 16:56:58'),
+(8112312, 'Joaquin', 'Lopez', '8112312', NULL, '2026-04-23 16:56:58'),
+(8894568, 'Juan', 'Fernandez', '8894568', NULL, '2026-04-23 16:50:58');
+
 -- --------------------------------------------------------
 
 --
@@ -91,6 +107,13 @@ CREATE TABLE `materias` (
   `carga_horaria_semanal` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `materias`
+--
+
+INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_semanal`) VALUES
+(301, '', NULL, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -105,6 +128,22 @@ CREATE TABLE `profesores` (
   `huella_id` int(11) DEFAULT NULL,
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `profesores`
+--
+
+INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`) VALUES
+(1235467, 'Juanfer', 'Quintero', '1235467', NULL, '2026-04-23 17:13:50'),
+(2426285, 'Miguel', 'Merentiel', '2426285', NULL, '2026-04-23 17:13:50'),
+(2704204, 'Samuel', 'De Luque', '2704204', NULL, '2026-04-23 17:13:50'),
+(3697985, 'Santiago', 'Peña', '3697985', NULL, '2026-04-23 17:13:50'),
+(4415863, 'Alexis', 'Sanchez', '4415863', NULL, '2026-04-23 17:13:50'),
+(4567891, 'Mikasa', 'Ackerman', '4567891', NULL, '2026-04-23 17:13:50'),
+(7519463, 'Pedro', 'Gonzalez', '7519463', NULL, '2026-04-23 17:13:50'),
+(7635241, 'Liana ', 'Malva', '7635241', NULL, '2026-04-23 17:13:50'),
+(7891325, 'Levi', 'Gabriel', '7891325', NULL, '2026-04-23 17:13:50'),
+(9876543, 'Elma  ', 'Maria', '9876543', NULL, '2026-04-23 17:13:50');
 
 --
 -- Índices para tablas volcadas
@@ -173,7 +212,7 @@ ALTER TABLE `asistencias`
 -- AUTO_INCREMENT de la tabla `estudiantes`
 --
 ALTER TABLE `estudiantes`
-  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8894569;
 
 --
 -- AUTO_INCREMENT de la tabla `horarios`
@@ -185,13 +224,13 @@ ALTER TABLE `horarios`
 -- AUTO_INCREMENT de la tabla `materias`
 --
 ALTER TABLE `materias`
-  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=302;
 
 --
 -- AUTO_INCREMENT de la tabla `profesores`
 --
 ALTER TABLE `profesores`
-  MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9876544;
 
 --
 -- Restricciones para tablas volcadas

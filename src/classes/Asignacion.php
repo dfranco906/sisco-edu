@@ -25,8 +25,7 @@ class Asignacion {
 
         return $stmt->execute();
     }
-}
-public function leer() {
+    public function leer() {
     $query = "SELECT a.*, 
                      p.nombre as profesor,
                      p.apellido,
@@ -39,4 +38,6 @@ public function leer() {
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     return $stmt;
+}
+
 }
