@@ -3,23 +3,12 @@ session_start();
 
 require_once '../config/db.php';
 
-header("Content-Type: application/json; charset=UTF-8");
-
 $db = (new Database())->getConnection();
 
-// 🔥 IMPORTANTE: aceptar POST correctamente
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // 👇 ESTO ES CLAVE (mejor que $_POST para APIs)
-    $data = $_POST;
-
-    // fallback por si viene JSON
-    if(empty($data)){
-        $data = json_decode(file_get_contents("php://input"), true);
-    }
-
-    $usuario = $data['usuario'] ?? null;
-    $password = $data['password'] ?? null;
+    $usuario = $_POST['usuario'] ?? null;
+    $password = $_POST['password'] ?? null;
 
     if (!empty($usuario) && !empty($password)) {
 
@@ -34,35 +23,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             if (password_verify($password, $row['password'])) {
 
+                // ✅ CREAR SESIÓN
                 $_SESSION['usuario'] = $row['usuario'];
                 $_SESSION['rol'] = $row['rol'];
                 $_SESSION['id_usuario'] = $row['id_usuario'];
 
-                echo json_encode([
-                    "status" => "success",
-                    "message" => "Login correcto",
-                    "rol" => $row['rol']
-                ]);
+                // 🔥 REDIRECCIÓN AL DASHBOARD
+                header("Location: ../views/dashboard.php");
+                exit();
 
             } else {
-                http_response_code(401);
-                echo json_encode(["message" => "Contraseña incorrecta"]);
+                echo "❌ Contraseña incorrecta";
             }
 
         } else {
-            http_response_code(404);
-            echo json_encode(["message" => "Usuario no encontrado"]);
+            echo "❌ Usuario no encontrado";
         }
 
     } else {
-        http_response_code(400);
-        echo json_encode(["message" => "Datos incompletos"]);
+        echo "❌ Datos incompletos";
     }
 
 } else {
-    http_response_code(405);
-    echo json_encode([
-        "message" => "Método no permitido",
-        "metodo_recibido" => $_SERVER['REQUEST_METHOD'] // 👈 DEBUG
-    ]);
+    echo "⛔ Método no permitido";
 }
+?>
