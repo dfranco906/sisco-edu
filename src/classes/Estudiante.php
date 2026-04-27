@@ -42,5 +42,30 @@ class Estudiante {
 
         return $stmt;
     }
+    public $id_estudiante;
+
+public function actualizar() {
+    $query = "UPDATE estudiantes 
+              SET nombre=:nombre,
+                  apellido=:apellido,
+                  cedula_identidad=:cedula,
+                  huella_id=:huella
+              WHERE id_estudiante=:id";
+
+    $stmt = $this->conn->prepare($query);
+
+    $this->nombre = htmlspecialchars(strip_tags($this->nombre));
+    $this->apellido = htmlspecialchars(strip_tags($this->apellido));
+    $this->cedula_identidad = htmlspecialchars(strip_tags($this->cedula_identidad));
+    $this->huella_id = !empty($this->huella_id) ? $this->huella_id : NULL;
+
+    $stmt->bindParam(":nombre", $this->nombre);
+    $stmt->bindParam(":apellido", $this->apellido);
+    $stmt->bindParam(":cedula", $this->cedula_identidad);
+    $stmt->bindParam(":huella", $this->huella_id);
+    $stmt->bindParam(":id", $this->id_estudiante);
+
+    return $stmt->execute();
+}
 }
 ?>
