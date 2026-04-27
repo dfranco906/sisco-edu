@@ -1,13 +1,13 @@
 <?php
 require_once '../src/config/db.php';
-require_once '../src/classes/Asistencia.php';
+require_once '../src/classes/Estudiante.php';
 
-echo "<h2>TEST LEER ASISTENCIAS</h2>";
+echo "<h2>TEST LEER ESTUDIANTES</h2>";
 
 $db = (new Database())->getConnection();
-$asistencia = new Asistencia($db);
+$estudiante = new Estudiante($db);
 
-$stmt = $asistencia->leer();
+$stmt = $estudiante->leer();
 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if(count($data) > 0){
@@ -15,6 +15,6 @@ if(count($data) > 0){
     print_r($data);
     echo "</pre>";
 }else{
-    echo "No hay asistencias registradas.";
+    echo "No hay estudiantes cargados.";
 }
 ?>

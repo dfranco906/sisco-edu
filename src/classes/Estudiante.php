@@ -33,5 +33,14 @@ class Estudiante {
 
         return $stmt->execute();
     }
+    public function leer() {
+        $query = "SELECT * FROM " . $this->table_name . " 
+                  ORDER BY id_estudiante DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt;
+    }
 }
 ?>
