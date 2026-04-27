@@ -7,10 +7,19 @@ header("Content-Type: application/json; charset=UTF-8");
 
 $db = (new Database())->getConnection();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// 🔥 IMPORTANTE: aceptar POST correctamente
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $usuario = $_POST['usuario'] ?? null;
-    $password = $_POST['password'] ?? null;
+    // 👇 ESTO ES CLAVE (mejor que $_POST para APIs)
+    $data = $_POST;
+
+    // fallback por si viene JSON
+    if(empty($data)){
+        $data = json_decode(file_get_contents("php://input"), true);
+    }
+
+    $usuario = $data['usuario'] ?? null;
+    $password = $data['password'] ?? null;
 
     if (!empty($usuario) && !empty($password)) {
 
@@ -23,10 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // 🔐 VERIFICAR PASSWORD
             if (password_verify($password, $row['password'])) {
 
-                // ✅ Crear sesión
                 $_SESSION['usuario'] = $row['usuario'];
                 $_SESSION['rol'] = $row['rol'];
                 $_SESSION['id_usuario'] = $row['id_usuario'];
@@ -54,6 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 } else {
     http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    echo json_encode([
+        "message" => "Método no permitido",
+        "metodo_recibido" => $_SERVER['REQUEST_METHOD'] // 👈 DEBUG
+    ]);
 }
-?>
