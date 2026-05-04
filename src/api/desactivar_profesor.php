@@ -12,10 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $profesor->id_profesor = $_POST['id_profesor'] ?? null;
 
     if (!empty($profesor->id_profesor)) {
-        if ($profesor->eliminar()) {
-            echo json_encode(["message" => "Profesor eliminado correctamente"]);
+        if ($profesor->desactivar()) {
+            echo json_encode(["message" => "Profesor desactivado correctamente"]);
         } else {
-            echo json_encode(["message" => "Error al eliminar profesor"]);
+            echo json_encode(["message" => "Error al desactivar profesor"]);
         }
     } else {
         echo json_encode(["message" => "ID de profesor requerido"]);

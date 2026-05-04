@@ -50,9 +50,10 @@ class Profesor {
     public function leer() {
         // Escribimos la consulta SQL (traemos todos los campos)
         // ORDER BY id_profesor DESC los ordena del más nuevo al más viejo
-        $query = "SELECT id_profesor, nombre, apellido, cedula_identidad, huella_id, fecha_registro 
-                  FROM " . $this->table_name . " 
-                  ORDER BY id_profesor DESC";
+        $query = "SELECT id_profesor, nombre, apellido, cedula_identidad, huella_id, fecha_registro, activo
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_profesor DESC";
 
         // Preparamos la consulta
         $stmt = $this->conn->prepare($query);
@@ -90,8 +91,9 @@ public function actualizar() {
 
     return $stmt->execute();
 }
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
               WHERE id_profesor = :id";
 
     $stmt = $this->conn->prepare($query);
@@ -100,6 +102,4 @@ public function eliminar() {
     return $stmt->execute();
 }
 }
-
-
 ?>
