@@ -56,5 +56,14 @@ class Asistencia {
 
     return $stmt->execute();
 }
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_asistencia=:id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_asistencia);
+
+    return $stmt->execute();
+}
 }
 ?>
