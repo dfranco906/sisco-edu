@@ -31,7 +31,10 @@ class Materia {
         return $stmt->execute();
     }
     public function leer() {
-    $query = "SELECT * FROM " . $this->table_name . " ORDER BY id_materia DESC";
+   $query = "SELECT *
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_materia DESC";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     return $stmt;
@@ -48,6 +51,16 @@ public function actualizar() {
     $stmt->bindParam(":nombre", $this->nombre);
     $stmt->bindParam(":descripcion", $this->descripcion);
     $stmt->bindParam(":carga", $this->carga_horaria_semanal);
+    $stmt->bindParam(":id", $this->id_materia);
+
+    return $stmt->execute();
+}
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
+              WHERE id_materia = :id";
+
+    $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id", $this->id_materia);
 
     return $stmt->execute();
