@@ -32,8 +32,10 @@ class Asistencia {
 
     // READ
     public function leer() {
-        $query = "SELECT * FROM " . $this->table_name . " 
-                  ORDER BY id_asistencia DESC";
+        $query = "SELECT id_asistencia, huella_id, tipo_usuario, fecha_hora, estado, activo
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_asistencia DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -56,9 +58,10 @@ class Asistencia {
 
     return $stmt->execute();
 }
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
-              WHERE id_asistencia=:id";
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
+              WHERE id_asistencia = :id";
 
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id", $this->id_asistencia);

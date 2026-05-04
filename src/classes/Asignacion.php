@@ -27,14 +27,10 @@ class Asignacion {
         return $stmt->execute();
     }
     public function leer() {
-    $query = "SELECT a.*, 
-                     p.nombre as profesor,
-                     p.apellido,
-                     m.nombre as materia
-              FROM asignacion_docente a
-              INNER JOIN profesores p ON a.id_profesor = p.id_profesor
-              INNER JOIN materias m ON a.id_materia = m.id_materia
-              ORDER BY a.id_asignacion DESC";
+    $query = "SELECT *
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_asignacion DESC";
 
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
@@ -56,8 +52,9 @@ public function actualizar() {
 
     return $stmt->execute();
 }
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
               WHERE id_asignacion = :id";
 
     $stmt = $this->conn->prepare($query);
