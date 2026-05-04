@@ -36,4 +36,20 @@ class Materia {
     $stmt->execute();
     return $stmt;
 }
+public function actualizar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET nombre=:nombre,
+                  descripcion=:descripcion,
+                  carga_horaria_semanal=:carga
+              WHERE id_materia=:id";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(":nombre", $this->nombre);
+    $stmt->bindParam(":descripcion", $this->descripcion);
+    $stmt->bindParam(":carga", $this->carga_horaria_semanal);
+    $stmt->bindParam(":id", $this->id_materia);
+
+    return $stmt->execute();
+}
 }
