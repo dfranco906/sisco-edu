@@ -76,6 +76,15 @@ public function actualizar() {
 
     return $stmt->execute();
 }
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_horario = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_horario);
+
+    return $stmt->execute();
+}
 }
 
 ?>
