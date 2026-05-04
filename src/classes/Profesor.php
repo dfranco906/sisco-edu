@@ -10,6 +10,7 @@ class Profesor {
     public $apellido;
     public $cedula_identidad;
     public $huella_id;
+    public $id_profesor;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -86,6 +87,15 @@ public function actualizar() {
     $stmt->bindParam(":apellido", $this->apellido);
     $stmt->bindParam(":cedula", $this->cedula_identidad);
     $stmt->bindParam(":huella", $this->huella_id);
+    $stmt->bindParam(":id", $this->id_profesor);
+
+    return $stmt->execute();
+}
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_profesor = :id";
+
+    $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id", $this->id_profesor);
 
     return $stmt->execute();
