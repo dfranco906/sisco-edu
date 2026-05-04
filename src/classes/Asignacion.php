@@ -8,6 +8,7 @@ class Asignacion {
     public $id_profesor;
     public $id_materia;
     public $año_lectivo;
+    public $id_asignacion;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -38,6 +39,22 @@ class Asignacion {
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     return $stmt;
+}
+public function actualizar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET id_profesor=:id_profesor,
+                  id_materia=:id_materia,
+                  año_lectivo=:anio
+              WHERE id_asignacion=:id_asignacion";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(":id_profesor", $this->id_profesor);
+    $stmt->bindParam(":id_materia", $this->id_materia);
+    $stmt->bindParam(":anio", $this->año_lectivo);
+    $stmt->bindParam(":id_asignacion", $this->id_asignacion);
+
+    return $stmt->execute();
 }
 
 }
