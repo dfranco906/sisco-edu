@@ -10,6 +10,7 @@ class Usuario {
     public $celular;
     public $password;
     public $rol;
+    public $id_usuario;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -62,5 +63,27 @@ class Usuario {
 
         return $stmt;
     }
+    public function actualizar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET nombre=:nombre,
+                  apellido=:apellido,
+                  usuario=:usuario,
+                  email=:email,
+                  celular=:celular,
+                  rol=:rol
+              WHERE id_usuario=:id_usuario";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(":nombre", $this->nombre);
+    $stmt->bindParam(":apellido", $this->apellido);
+    $stmt->bindParam(":usuario", $this->usuario);
+    $stmt->bindParam(":email", $this->email);
+    $stmt->bindParam(":celular", $this->celular);
+    $stmt->bindParam(":rol", $this->rol);
+    $stmt->bindParam(":id_usuario", $this->id_usuario);
+
+    return $stmt->execute();
+}
 }
 ?>
