@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-04-2026 a las 15:02:28
+-- Tiempo de generación: 27-04-2026 a las 20:16:26
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,6 +33,26 @@ CREATE TABLE `asignacion_docente` (
   `id_materia` int(11) NOT NULL,
   `año_lectivo` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `asignacion_docente`
+--
+
+INSERT INTO `asignacion_docente` (`id_asignacion`, `id_profesor`, `id_materia`, `año_lectivo`) VALUES
+(15, 4567891, 312, 2026),
+(16, 4415863, 304, 2026),
+(17, 4415863, 301, 2026),
+(18, 9876543, 306, 2026),
+(19, 9876543, 313, 2026),
+(20, 7891325, 311, 2026),
+(21, 7891325, 309, 2026),
+(22, 7635241, 308, 2026),
+(23, 2426285, 310, 2026),
+(24, 7519463, 302, 2026),
+(25, 7519463, 303, 2026),
+(26, 1235467, 305, 2026),
+(27, 2704204, 307, 2026),
+(28, 3697985, 314, 2026);
 
 -- --------------------------------------------------------
 
@@ -94,6 +114,33 @@ CREATE TABLE `horarios` (
   `aula` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `horarios`
+--
+
+INSERT INTO `horarios` (`id_horario`, `id_asignacion`, `dia_semana`, `hora_inicio`, `hora_fin`, `aula`) VALUES
+(11, 17, 'Lunes', '07:00:00', '09:00:00', '3ro BTI'),
+(12, 24, 'Lunes', '09:00:00', '15:30:00', 'Laboratorio 3'),
+(21, 25, 'Martes', '07:00:00', '10:20:00', 'Laboratorio 3'),
+(22, 16, 'Martes', '10:50:00', '14:10:00', '3ro BTI'),
+(23, 17, 'Martes', '14:10:00', '15:30:00', '3ro BTI'),
+(31, 26, 'Miércoles', '07:00:00', '08:20:00', '3ro BTI'),
+(32, 18, 'Miércoles', '08:20:00', '09:40:00', '3ro BCB'),
+(33, 27, 'Miércoles', '09:40:00', '10:20:00', '3ro BTI'),
+(34, 26, 'Miércoles', '10:50:00', '12:10:00', '3ro BTI'),
+(35, 22, 'Miércoles', '12:10:00', '13:30:00', '3ro BTI'),
+(41, 21, 'Jueves', '07:00:00', '08:20:00', '3ro BCB'),
+(42, 28, 'Jueves', '08:20:00', '09:40:00', '3ro BCB'),
+(43, 27, 'Jueves', '09:40:00', '10:20:00', '3ro BTI'),
+(44, 22, 'Jueves', '10:50:00', '12:10:00', '3ro BCB'),
+(45, 24, 'Jueves', '12:50:00', '15:30:00', 'Laboratorio 3'),
+(51, 23, 'Viernes', '07:00:00', '08:20:00', '3ro BCB'),
+(52, 18, 'Viernes', '08:20:00', '09:00:00', '3ro BCB'),
+(53, 20, 'Viernes', '09:00:00', '10:20:00', '3ro BCB'),
+(54, 20, 'Viernes', '10:50:00', '11:30:00', '3ro BTI'),
+(55, 15, 'Viernes', '11:30:00', '12:50:00', '3ro BTI'),
+(56, 19, 'Viernes', '12:50:00', '15:30:00', '3ro BTI');
+
 -- --------------------------------------------------------
 
 --
@@ -124,7 +171,8 @@ INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_se
 (310, 'Ciencias', NULL, 2),
 (311, 'Economía', NULL, 3),
 (312, 'Educación Física', NULL, 2),
-(313, 'Matemática Aplicada A La Informática', NULL, 3);
+(313, 'Matemática Aplicada A La Informática', NULL, 3),
+(314, 'Orientacion', NULL, 2);
 
 -- --------------------------------------------------------
 
@@ -212,7 +260,7 @@ ALTER TABLE `profesores`
 -- AUTO_INCREMENT de la tabla `asignacion_docente`
 --
 ALTER TABLE `asignacion_docente`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de la tabla `asistencias`
@@ -230,13 +278,13 @@ ALTER TABLE `estudiantes`
 -- AUTO_INCREMENT de la tabla `horarios`
 --
 ALTER TABLE `horarios`
-  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT de la tabla `materias`
 --
 ALTER TABLE `materias`
-  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=314;
+  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=315;
 
 --
 -- AUTO_INCREMENT de la tabla `profesores`
