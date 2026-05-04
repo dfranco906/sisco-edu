@@ -35,8 +35,10 @@ class Estudiante {
         return $stmt->execute();
     }
     public function leer() {
-        $query = "SELECT * FROM " . $this->table_name . " 
-                  ORDER BY id_estudiante DESC";
+        $query = "SELECT id_estudiante, nombre, apellido, cedula_identidad, huella_id, fecha_registro, activo
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_estudiante DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -67,8 +69,9 @@ public function actualizar() {
 
     return $stmt->execute();
 }
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
               WHERE id_estudiante = :id";
 
     $stmt = $this->conn->prepare($query);
