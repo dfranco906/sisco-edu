@@ -54,9 +54,10 @@ class Usuario {
 
     // ✅ READ
     public function leer() {
-        $query = "SELECT id_usuario, nombre, apellido, usuario, email, celular, rol, fecha_creacion
-                  FROM " . $this->table_name . "
-                  ORDER BY id_usuario DESC";
+        $query = "SELECT id_usuario, nombre, apellido, usuario, email, celular, rol, fecha_creacion, activo
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_usuario DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -82,6 +83,16 @@ class Usuario {
     $stmt->bindParam(":celular", $this->celular);
     $stmt->bindParam(":rol", $this->rol);
     $stmt->bindParam(":id_usuario", $this->id_usuario);
+
+    return $stmt->execute();
+}
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
+              WHERE id_usuario = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_usuario);
 
     return $stmt->execute();
 }
