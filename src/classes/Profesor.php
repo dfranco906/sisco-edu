@@ -63,7 +63,6 @@ class Profesor {
         // Retornamos el "statement" (la declaración con los datos) para que la API lo procese
         return $stmt;
     }
-    public $id_profesor;
     // ✅ UPDATE
 public function actualizar() {
     $query = "UPDATE " . $this->table_name . "
