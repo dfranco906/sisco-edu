@@ -56,5 +56,13 @@ public function actualizar() {
 
     return $stmt->execute();
 }
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_asignacion = :id";
 
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_asignacion);
+
+    return $stmt->execute();
+}
 }
