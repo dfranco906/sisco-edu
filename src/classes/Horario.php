@@ -45,12 +45,10 @@ class Horario {
         return false;
     }
     public function leer() {
-    $query = "SELECT h.*, m.nombre as materia, p.nombre as profesor
-              FROM horarios h
-              INNER JOIN asignacion_docente a ON h.id_asignacion = a.id_asignacion
-              INNER JOIN materias m ON a.id_materia = m.id_materia
-              INNER JOIN profesores p ON a.id_profesor = p.id_profesor
-              ORDER BY h.id_horario DESC";
+   $query = "SELECT *
+          FROM " . $this->table_name . "
+          WHERE activo = 1
+          ORDER BY id_horario DESC";
 
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
@@ -76,8 +74,9 @@ public function actualizar() {
 
     return $stmt->execute();
 }
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
+public function desactivar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 0
               WHERE id_horario = :id";
 
     $stmt = $this->conn->prepare($query);
