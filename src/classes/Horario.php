@@ -11,7 +11,7 @@ class Horario {
     public $hora_inicio;
     public $hora_fin;
     public $aula;
-
+    public $id_horario;
     public function __construct($db) {
         $this->conn = $db;
     }
@@ -55,6 +55,26 @@ class Horario {
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     return $stmt;
+}
+public function actualizar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET id_asignacion=:id_asignacion,
+                  dia_semana=:dia_semana,
+                  hora_inicio=:hora_inicio,
+                  hora_fin=:hora_fin,
+                  aula=:aula
+              WHERE id_horario=:id_horario";
+
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindParam(":id_asignacion", $this->id_asignacion);
+    $stmt->bindParam(":dia_semana", $this->dia_semana);
+    $stmt->bindParam(":hora_inicio", $this->hora_inicio);
+    $stmt->bindParam(":hora_fin", $this->hora_fin);
+    $stmt->bindParam(":aula", $this->aula);
+    $stmt->bindParam(":id_horario", $this->id_horario);
+
+    return $stmt->execute();
 }
 }
 
