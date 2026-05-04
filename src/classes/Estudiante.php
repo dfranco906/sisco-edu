@@ -7,6 +7,7 @@ class Estudiante {
     public $apellido;
     public $cedula_identidad;
     public $huella_id;
+    public $id_estudiante;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -42,7 +43,6 @@ class Estudiante {
 
         return $stmt;
     }
-    public $id_estudiante;
 
 public function actualizar() {
     $query = "UPDATE estudiantes 
@@ -63,6 +63,15 @@ public function actualizar() {
     $stmt->bindParam(":apellido", $this->apellido);
     $stmt->bindParam(":cedula", $this->cedula_identidad);
     $stmt->bindParam(":huella", $this->huella_id);
+    $stmt->bindParam(":id", $this->id_estudiante);
+
+    return $stmt->execute();
+}
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_estudiante = :id";
+
+    $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id", $this->id_estudiante);
 
     return $stmt->execute();
