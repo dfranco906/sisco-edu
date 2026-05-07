@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['id_usuario'] = $row['id_usuario'];
 
                 // 🔥 REDIRECCIÓN AL DASHBOARD
-                header("Location: ../views/dashboard.php");
+                header("Location: ../../mvc/views/dashboard.php");
                 exit();
 
             } else {
