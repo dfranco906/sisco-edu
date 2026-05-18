@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-04-2026 a las 20:16:26
+-- Tiempo de generación: 18-05-2026 a las 14:28:55
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -31,28 +31,17 @@ CREATE TABLE `asignacion_docente` (
   `id_asignacion` int(11) NOT NULL,
   `id_profesor` int(11) NOT NULL,
   `id_materia` int(11) NOT NULL,
-  `año_lectivo` int(11) NOT NULL
+  `año_lectivo` int(11) NOT NULL,
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `asignacion_docente`
 --
 
-INSERT INTO `asignacion_docente` (`id_asignacion`, `id_profesor`, `id_materia`, `año_lectivo`) VALUES
-(15, 4567891, 312, 2026),
-(16, 4415863, 304, 2026),
-(17, 4415863, 301, 2026),
-(18, 9876543, 306, 2026),
-(19, 9876543, 313, 2026),
-(20, 7891325, 311, 2026),
-(21, 7891325, 309, 2026),
-(22, 7635241, 308, 2026),
-(23, 2426285, 310, 2026),
-(24, 7519463, 302, 2026),
-(25, 7519463, 303, 2026),
-(26, 1235467, 305, 2026),
-(27, 2704204, 307, 2026),
-(28, 3697985, 314, 2026);
+INSERT INTO `asignacion_docente` (`id_asignacion`, `id_profesor`, `id_materia`, `año_lectivo`, `activo`) VALUES
+(2, 1, 1, 2026, 0),
+(3, 1, 1, 2026, 1);
 
 -- --------------------------------------------------------
 
@@ -65,7 +54,8 @@ CREATE TABLE `asistencias` (
   `huella_id` int(11) NOT NULL,
   `tipo_usuario` enum('Profesor','Estudiante') NOT NULL,
   `fecha_hora` datetime DEFAULT current_timestamp(),
-  `estado` enum('Presente','Llegada Tardia') DEFAULT 'Presente'
+  `estado` enum('Presente','Llegada Tardia') DEFAULT 'Presente',
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -80,24 +70,9 @@ CREATE TABLE `estudiantes` (
   `apellido` varchar(100) NOT NULL,
   `cedula_identidad` varchar(20) NOT NULL,
   `huella_id` int(11) DEFAULT NULL,
-  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `estudiantes`
---
-
-INSERT INTO `estudiantes` (`id_estudiante`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`) VALUES
-(1234567, 'Carol ', 'Maldini', '1234567', NULL, '2026-04-23 16:58:47'),
-(6119514, 'Ana Paula', 'Gimenez', '6119514', NULL, '2026-04-23 16:53:04'),
-(6213879, 'Alan', 'Gomez', '6213879', NULL, '2026-04-23 16:56:58'),
-(6523891, 'Jose', 'Rodriguez', '6523891', NULL, '2026-04-23 16:56:58'),
-(7843112, 'Andres', 'Pirlo', '7843112', NULL, '2026-04-23 16:58:47'),
-(7963124, 'Catalina', 'Caballero', '7963124', NULL, '2026-04-23 16:56:58'),
-(7980292, 'Thiago', 'Amarilla', '7980292', NULL, '2026-04-23 16:53:04'),
-(7980335, 'Paulo', 'Nuñez', '7980335', NULL, '2026-04-23 16:56:58'),
-(8112312, 'Joaquin', 'Lopez', '8112312', NULL, '2026-04-23 16:56:58'),
-(8894568, 'Juan', 'Fernandez', '8894568', NULL, '2026-04-23 16:50:58');
 
 -- --------------------------------------------------------
 
@@ -111,35 +86,16 @@ CREATE TABLE `horarios` (
   `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado') NOT NULL,
   `hora_inicio` time NOT NULL,
   `hora_fin` time NOT NULL,
-  `aula` varchar(50) DEFAULT NULL
+  `aula` varchar(50) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `horarios`
 --
 
-INSERT INTO `horarios` (`id_horario`, `id_asignacion`, `dia_semana`, `hora_inicio`, `hora_fin`, `aula`) VALUES
-(11, 17, 'Lunes', '07:00:00', '09:00:00', '3ro BTI'),
-(12, 24, 'Lunes', '09:00:00', '15:30:00', 'Laboratorio 3'),
-(21, 25, 'Martes', '07:00:00', '10:20:00', 'Laboratorio 3'),
-(22, 16, 'Martes', '10:50:00', '14:10:00', '3ro BTI'),
-(23, 17, 'Martes', '14:10:00', '15:30:00', '3ro BTI'),
-(31, 26, 'Miércoles', '07:00:00', '08:20:00', '3ro BTI'),
-(32, 18, 'Miércoles', '08:20:00', '09:40:00', '3ro BCB'),
-(33, 27, 'Miércoles', '09:40:00', '10:20:00', '3ro BTI'),
-(34, 26, 'Miércoles', '10:50:00', '12:10:00', '3ro BTI'),
-(35, 22, 'Miércoles', '12:10:00', '13:30:00', '3ro BTI'),
-(41, 21, 'Jueves', '07:00:00', '08:20:00', '3ro BCB'),
-(42, 28, 'Jueves', '08:20:00', '09:40:00', '3ro BCB'),
-(43, 27, 'Jueves', '09:40:00', '10:20:00', '3ro BTI'),
-(44, 22, 'Jueves', '10:50:00', '12:10:00', '3ro BCB'),
-(45, 24, 'Jueves', '12:50:00', '15:30:00', 'Laboratorio 3'),
-(51, 23, 'Viernes', '07:00:00', '08:20:00', '3ro BCB'),
-(52, 18, 'Viernes', '08:20:00', '09:00:00', '3ro BCB'),
-(53, 20, 'Viernes', '09:00:00', '10:20:00', '3ro BCB'),
-(54, 20, 'Viernes', '10:50:00', '11:30:00', '3ro BTI'),
-(55, 15, 'Viernes', '11:30:00', '12:50:00', '3ro BTI'),
-(56, 19, 'Viernes', '12:50:00', '15:30:00', '3ro BTI');
+INSERT INTO `horarios` (`id_horario`, `id_asignacion`, `dia_semana`, `hora_inicio`, `hora_fin`, `aula`, `activo`) VALUES
+(18, 2, 'Martes', '08:00:00', '08:40:00', 'B1', 0);
 
 -- --------------------------------------------------------
 
@@ -151,28 +107,16 @@ CREATE TABLE `materias` (
   `id_materia` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `descripcion` text DEFAULT NULL,
-  `carga_horaria_semanal` int(11) NOT NULL
+  `carga_horaria_semanal` int(11) NOT NULL,
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `materias`
 --
 
-INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_semanal`) VALUES
-(301, 'Proyecto\r\n', NULL, 5),
-(302, 'Gabinete Laboratorio', NULL, 10),
-(303, 'Administración Financiera', NULL, 4),
-(304, 'Algorítmica', NULL, 4),
-(305, 'Psicología', NULL, 4),
-(306, 'Matemática', NULL, 3),
-(307, 'Educación Cristiana', NULL, 2),
-(308, 'Literatura', NULL, 4),
-(309, 'Historia y Geografía', NULL, 2),
-(310, 'Ciencias', NULL, 2),
-(311, 'Economía', NULL, 3),
-(312, 'Educación Física', NULL, 2),
-(313, 'Matemática Aplicada A La Informática', NULL, 3),
-(314, 'Orientacion', NULL, 2);
+INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_semanal`, `activo`) VALUES
+(1, 'Matemática Actualizada', 'Descripción actualizada', 5, 0);
 
 -- --------------------------------------------------------
 
@@ -186,24 +130,42 @@ CREATE TABLE `profesores` (
   `apellido` varchar(100) NOT NULL,
   `cedula_identidad` varchar(20) NOT NULL,
   `huella_id` int(11) DEFAULT NULL,
-  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `profesores`
 --
 
-INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`) VALUES
-(1235467, 'Juanfer', 'Quintero', '1235467', NULL, '2026-04-23 17:13:50'),
-(2426285, 'Miguel', 'Merentiel', '2426285', NULL, '2026-04-23 17:13:50'),
-(2704204, 'Samuel', 'De Luque', '2704204', NULL, '2026-04-23 17:13:50'),
-(3697985, 'Santiago', 'Peña', '3697985', NULL, '2026-04-23 17:13:50'),
-(4415863, 'Alexis', 'Sanchez', '4415863', NULL, '2026-04-23 17:13:50'),
-(4567891, 'Mikasa', 'Ackerman', '4567891', NULL, '2026-04-23 17:13:50'),
-(7519463, 'Pedro', 'Gonzalez', '7519463', NULL, '2026-04-23 17:13:50'),
-(7635241, 'Liana ', 'Malva', '7635241', NULL, '2026-04-23 17:13:50'),
-(7891325, 'Levi', 'Gabriel', '7891325', NULL, '2026-04-23 17:13:50'),
-(9876543, 'Elma  ', 'Maria', '9876543', NULL, '2026-04-23 17:13:50');
+INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`, `activo`) VALUES
+(1, 'Juan', 'Perez', '1234567', 1, '2026-04-23 16:58:23', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuarios`
+--
+
+CREATE TABLE `usuarios` (
+  `id_usuario` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `apellido` varchar(100) NOT NULL,
+  `usuario` varchar(50) NOT NULL,
+  `email` varchar(80) NOT NULL,
+  `celular` int(11) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `rol` enum('SuperAdmin','Coordinador','Profesor','Administracion') NOT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `activo` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`id_usuario`, `nombre`, `apellido`, `usuario`, `email`, `celular`, `password`, `rol`, `fecha_creacion`, `activo`) VALUES
+(0, 'Admin', 'Principal', 'admin1', 'admin@test.com', 981234567, '$2y$10$cPm0PqykacBQYPXSO50XUeQH3CiPBt1J1fKlQwOy6l7mSUHFVtOPm', 'SuperAdmin', '2026-04-27 16:23:44', 0);
 
 --
 -- Índices para tablas volcadas
@@ -221,7 +183,8 @@ ALTER TABLE `asignacion_docente`
 -- Indices de la tabla `asistencias`
 --
 ALTER TABLE `asistencias`
-  ADD PRIMARY KEY (`id_asistencia`);
+  ADD PRIMARY KEY (`id_asistencia`),
+  ADD KEY `fk_asistencia_estudiante` (`huella_id`);
 
 --
 -- Indices de la tabla `estudiantes`
@@ -253,6 +216,13 @@ ALTER TABLE `profesores`
   ADD UNIQUE KEY `huella_id` (`huella_id`);
 
 --
+-- Indices de la tabla `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD PRIMARY KEY (`id_usuario`),
+  ADD UNIQUE KEY `usuario` (`usuario`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -260,7 +230,7 @@ ALTER TABLE `profesores`
 -- AUTO_INCREMENT de la tabla `asignacion_docente`
 --
 ALTER TABLE `asignacion_docente`
-  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `asistencias`
@@ -272,25 +242,25 @@ ALTER TABLE `asistencias`
 -- AUTO_INCREMENT de la tabla `estudiantes`
 --
 ALTER TABLE `estudiantes`
-  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8894569;
+  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `horarios`
 --
 ALTER TABLE `horarios`
-  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `materias`
 --
 ALTER TABLE `materias`
-  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=315;
+  MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `profesores`
 --
 ALTER TABLE `profesores`
-  MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9876544;
+  MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Restricciones para tablas volcadas
@@ -302,6 +272,13 @@ ALTER TABLE `profesores`
 ALTER TABLE `asignacion_docente`
   ADD CONSTRAINT `asignacion_docente_ibfk_1` FOREIGN KEY (`id_profesor`) REFERENCES `profesores` (`id_profesor`),
   ADD CONSTRAINT `asignacion_docente_ibfk_2` FOREIGN KEY (`id_materia`) REFERENCES `materias` (`id_materia`);
+
+--
+-- Filtros para la tabla `asistencias`
+--
+ALTER TABLE `asistencias`
+  ADD CONSTRAINT `fk_asistencia_estudiante` FOREIGN KEY (`huella_id`) REFERENCES `estudiantes` (`huella_id`),
+  ADD CONSTRAINT `fk_asistencia_profesores` FOREIGN KEY (`huella_id`) REFERENCES `profesores` (`huella_id`);
 
 --
 -- Filtros para la tabla `horarios`
