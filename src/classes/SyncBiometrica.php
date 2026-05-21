@@ -75,8 +75,8 @@ class SyncBiometrica {
     $query = "UPDATE " . $this->table_name . "
               SET estado='ERROR',
                   intentos = intentos + 1,
-                  fecha_actualizacion=NOW()
-              WHERE id_sync=:id";
+                  fecha_actualizacion = NOW()
+              WHERE id_sync = :id";
 
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id", $this->id_sync);
