@@ -1,6 +1,6 @@
 <?php
-require_once '../src/config/db.php';
-require_once '../src/classes/Estudiante.php';
+require_once '../../src/config/db.php';
+require_once '../../src/classes/Estudiante.php';
 
 echo "<h2>TEST CREAR ESTUDIANTE</h2>";
 
