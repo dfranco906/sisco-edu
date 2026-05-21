@@ -71,5 +71,17 @@ class SyncBiometrica {
 
         return $stmt->execute();
     }
+    public function marcarError() {
+    $query = "UPDATE " . $this->table_name . "
+              SET estado='ERROR',
+                  intentos = intentos + 1,
+                  fecha_actualizacion=NOW()
+              WHERE id_sync=:id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_sync);
+
+    return $stmt->execute();
+}
 }
 ?>
