@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/SyncBiometrica.php';
+require_once '../../config/db.php';
+require_once '../../classes/SyncBiometrica.php';
 
 $db = (new Database())->getConnection();
 $sync = new SyncBiometrica($db);

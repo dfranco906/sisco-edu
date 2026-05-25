@@ -1,8 +1,8 @@
 <?php
 // src/api/crear_horario.php
 
-require_once '../config/db.php';
-require_once '../classes/Horario.php';
+require_once '../../config/db.php';
+require_once '../../classes/Horario.php';
 
 header("Content-Type: application/json; charset=UTF-8");
 

@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/BiometricMapping.php';
+require_once '../../config/db.php';
+require_once '../../classes/BiometricMapping.php';
 
 header("Content-Type: application/json; charset=UTF-8");
 

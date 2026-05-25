@@ -2,8 +2,8 @@
 // src/api/crear_profesor.php
 
 // 1. Incluir archivos necesarios del backend
-require_once '../config/db.php';
-require_once '../classes/Profesor.php';
+require_once '../../config/db.php';
+require_once '../../classes/Profesor.php';
 
 // 2. Inicializar la conexión
 $database = new Database();

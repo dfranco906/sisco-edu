@@ -7,8 +7,8 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET");
 
 // 2. Incluir archivos necesarios del backend
-require_once '../config/db.php';
-require_once '../classes/Profesor.php';
+require_once '../../config/db.php';
+require_once '../../classes/Profesor.php';
 
 // 3. Inicializar la conexión a la base de datos
 $database = new Database();

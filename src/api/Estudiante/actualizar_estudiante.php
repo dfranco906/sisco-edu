@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/Estudiante.php';
+require_once '../../config/db.php';
+require_once '../../classes/Estudiante.php';
 
 $db = (new Database())->getConnection();
 $estudiante = new Estudiante($db);

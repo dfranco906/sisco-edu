@@ -1,8 +1,8 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
-require_once '../config/db.php';
-require_once '../classes/Asistencia.php';
+require_once '../../config/db.php';
+require_once '../../classes/Asistencia.php';
 
 $db = (new Database())->getConnection();
 $asistencia = new Asistencia($db);

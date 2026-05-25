@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/Aula.php';
+require_once '../../config/db.php';
+require_once '../,,/classes/Aula.php';
 
 $db = (new Database())->getConnection();
 $aula = new Aula($db);

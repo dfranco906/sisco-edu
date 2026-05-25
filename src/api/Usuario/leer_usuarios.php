@@ -1,8 +1,8 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
-require_once '../config/db.php';
-require_once '../classes/Usuario.php';
+require_once '../../config/db.php';
+require_once '../../classes/Usuario.php';
 
 $db = (new Database())->getConnection();
 $usuario = new Usuario($db);

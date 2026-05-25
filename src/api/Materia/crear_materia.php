@@ -1,7 +1,7 @@
 <?php
 // src/api/crear_materia.php
-require_once '../config/db.php';
-require_once '../classes/Materia.php';
+require_once '../../config/db.php';
+require_once '../../classes/Materia.php';
 
 $database = new Database();
 $db = $database->getConnection();

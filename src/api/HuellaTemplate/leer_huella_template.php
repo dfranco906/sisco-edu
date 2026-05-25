@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/HuellaTemplate.php';
+require_once '../../config/db.php';
+require_once '../../classes/HuellaTemplate.php';
 
 header("Content-Type: application/json; charset=UTF-8");
 

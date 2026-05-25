@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/HuellaTemplate.php';
+require_once '../../config/db.php';
+require_once '../../classes/HuellaTemplate.php';
 
 $db = (new Database())->getConnection();
 $huella = new HuellaTemplate($db);

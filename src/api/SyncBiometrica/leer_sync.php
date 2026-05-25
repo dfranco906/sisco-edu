@@ -1,6 +1,6 @@
 <?php
-require_once '../config/db.php';
-require_once '../classes/SyncBiometrica.php';
+require_once '../../config/db.php';
+require_once '../../classes/SyncBiometrica.php';
 
 header("Content-Type: application/json; charset=UTF-8");
 
