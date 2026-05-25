@@ -1,9 +1,11 @@
 <?php
+require_once __DIR__ . '/../../../src/config/app.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['usuario'])) {
+if (!isset($_SESSION['id_usuario'])) {
     header("Location: ../auth/login.php");
     exit();
 }
@@ -16,7 +18,7 @@ if (!isset($_SESSION['usuario'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../../public/css/theme.css">
+    <link rel="stylesheet" href="<?= base_url('public/css/theme.css') ?>">
 </head>
 <body class="min-h-screen" style="background: var(--color-bg);">
 

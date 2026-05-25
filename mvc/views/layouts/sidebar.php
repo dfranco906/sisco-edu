@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../../../src/config/app.php'; ?>
 <aside class="hidden md:flex w-64 bg-white shadow-lg flex-col p-6">
     <h1 class="text-2xl font-bold mb-8" style="color: var(--color-primary);">
         SISCO-EDU
@@ -14,7 +15,7 @@
         <a href="../usuarios/index.php" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Usuarios</a>
     </nav>
 
-    <a href="../../../src/api/logout.php" class="mt-auto text-red-500 font-semibold">
-        Cerrar sesión
-    </a>
+    <a href="<?= base_url('src/api/logout.php') ?>" class="mt-auto text-red-500 font-semibold">
+    Cerrar sesión
+</a>
 </aside>

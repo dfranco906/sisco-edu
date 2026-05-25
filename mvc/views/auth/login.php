@@ -1,3 +1,20 @@
+<?php
+$error = $_GET['error'] ?? null;
+
+$mensaje = "";
+
+if ($error === "campos") {
+    $mensaje = "Completá todos los campos.";
+} elseif ($error === "usuario") {
+    $mensaje = "El usuario no existe.";
+} elseif ($error === "password") {
+    $mensaje = "La contraseña es incorrecta.";
+} elseif ($error === "inactivo") {
+    $mensaje = "Este usuario está inactivo.";
+} elseif ($error === "logout") {
+    $mensaje = "Sesión cerrada correctamente.";
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,7 +43,11 @@
         </div>
 
         <form action="../../../src/api/login.php" method="POST" class="space-y-5">
-
+<?php if (!empty($mensaje)): ?>
+    <div class="mb-4 p-3 rounded-xl text-sm bg-red-100 text-red-700">
+        <?= $mensaje ?>
+    </div>
+<?php endif; ?>
             <div>
                 <label class="block text-sm font-medium mb-1" style="color: var(--color-text);">
                     Usuario
