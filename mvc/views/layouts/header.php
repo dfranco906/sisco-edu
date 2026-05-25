@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: ../auth/login.php");
+    header("Location: " . base_url('mvc/views/auth/login.php'));
     exit();
 }
 ?>
