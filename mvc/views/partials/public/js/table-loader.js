@@ -4,9 +4,16 @@ async function cargarTabla(api, columnas) {
 
     try {
         const res = await fetch(api);
-        const data = await res.json();
+        const json = await res.json();
+
+        const data = json.data ?? json;
 
         tbody.innerHTML = "";
+
+        if (!Array.isArray(data) || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${columnas.length}" class="p-4 text-center">No hay datos registrados</td></tr>`;
+            return;
+        }
 
         data.forEach(item => {
             let fila = "<tr class='border-b hover:bg-gray-50'>";
