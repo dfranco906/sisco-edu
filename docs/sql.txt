@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-05-2026 a las 14:28:55
+-- Tiempo de generación: 25-05-2026 a las 16:10:50
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -61,6 +61,50 @@ CREATE TABLE `asistencias` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `aulas`
+--
+
+CREATE TABLE `aulas` (
+  `id_aula` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `codigo` varchar(50) NOT NULL,
+  `ubicacion` varchar(150) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `aulas`
+--
+
+INSERT INTO `aulas` (`id_aula`, `nombre`, `codigo`, `ubicacion`, `activo`, `fecha_creacion`) VALUES
+(1, 'Aula 1 Actualizada', 'AULA_1', 'Bloque B', 0, '2026-05-18 14:28:37');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `biometric_mapping`
+--
+
+CREATE TABLE `biometric_mapping` (
+  `id_mapping` int(11) NOT NULL,
+  `user_id_global` varchar(50) NOT NULL,
+  `room_id` varchar(50) NOT NULL,
+  `sensor_slot` int(11) NOT NULL,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `biometric_mapping`
+--
+
+INSERT INTO `biometric_mapping` (`id_mapping`, `user_id_global`, `room_id`, `sensor_slot`, `activo`, `fecha_creacion`) VALUES
+(1, 'USER_001', 'AULA_1', 2, 0, '2026-05-21 17:52:12');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `estudiantes`
 --
 
@@ -71,8 +115,43 @@ CREATE TABLE `estudiantes` (
   `cedula_identidad` varchar(20) NOT NULL,
   `huella_id` int(11) DEFAULT NULL,
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
-  `activo` tinyint(1) DEFAULT 1
+  `activo` tinyint(1) DEFAULT 1,
+  `user_id_global` varchar(50) DEFAULT NULL,
+  `id_aula` int(11) DEFAULT NULL,
+  `fingerprint_data_user` longtext DEFAULT NULL,
+  `pendiente_sync` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `estudiantes`
+--
+
+INSERT INTO `estudiantes` (`id_estudiante`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`, `activo`, `user_id_global`, `id_aula`, `fingerprint_data_user`, `pendiente_sync`) VALUES
+(2, 'Carlos', 'Gomez', '5555555', 2, '2026-05-21 17:05:33', 1, NULL, NULL, NULL, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `eventos_asistencia`
+--
+
+CREATE TABLE `eventos_asistencia` (
+  `id_evento` int(11) NOT NULL,
+  `user_id_global` varchar(50) NOT NULL,
+  `room_id` varchar(50) NOT NULL,
+  `timestamp_evento` bigint(20) NOT NULL,
+  `origen_node_id` varchar(100) DEFAULT NULL,
+  `sincronizado` tinyint(1) DEFAULT 1,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_recibido` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `eventos_asistencia`
+--
+
+INSERT INTO `eventos_asistencia` (`id_evento`, `user_id_global`, `room_id`, `timestamp_evento`, `origen_node_id`, `sincronizado`, `activo`, `fecha_recibido`) VALUES
+(1, 'USER_001', 'AULA_1', 1779387633, 'ESP32_AULA_1', 1, 0, '2026-05-21 18:09:56');
 
 -- --------------------------------------------------------
 
@@ -100,6 +179,30 @@ INSERT INTO `horarios` (`id_horario`, `id_asignacion`, `dia_semana`, `hora_inici
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `huellas_templates`
+--
+
+CREATE TABLE `huellas_templates` (
+  `id_huella` int(11) NOT NULL,
+  `user_id_global` varchar(50) NOT NULL,
+  `id_estudiante` int(11) DEFAULT NULL,
+  `fingerprint_data` longtext NOT NULL,
+  `formato` enum('HEX','BASE64') DEFAULT 'HEX',
+  `pendiente_sync` tinyint(1) DEFAULT 1,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `huellas_templates`
+--
+
+INSERT INTO `huellas_templates` (`id_huella`, `user_id_global`, `id_estudiante`, `fingerprint_data`, `formato`, `pendiente_sync`, `activo`, `fecha_creacion`) VALUES
+(3, 'USER_001', 2, 'A1B2C3D4E5F6_TEST_HEX', 'HEX', 1, 1, '2026-05-21 17:06:48');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `materias`
 --
 
@@ -117,6 +220,30 @@ CREATE TABLE `materias` (
 
 INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_semanal`, `activo`) VALUES
 (1, 'Matemática Actualizada', 'Descripción actualizada', 5, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `nodos_esp32`
+--
+
+CREATE TABLE `nodos_esp32` (
+  `id_nodo` int(11) NOT NULL,
+  `node_id` varchar(100) NOT NULL,
+  `room_id` varchar(50) DEFAULT NULL,
+  `tipo` enum('CAPTURA','GATEWAY','AULA') NOT NULL,
+  `estado` enum('online','offline') DEFAULT 'offline',
+  `ultimo_heartbeat` timestamp NULL DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `nodos_esp32`
+--
+
+INSERT INTO `nodos_esp32` (`id_nodo`, `node_id`, `room_id`, `tipo`, `estado`, `ultimo_heartbeat`, `activo`, `fecha_creacion`) VALUES
+(1, 'ESP32_AULA_1', 'AULA_1', 'AULA', 'online', NULL, 0, '2026-05-18 14:52:42');
 
 -- --------------------------------------------------------
 
@@ -144,6 +271,29 @@ INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `sync_biometrica`
+--
+
+CREATE TABLE `sync_biometrica` (
+  `id_sync` int(11) NOT NULL,
+  `id_huella` int(11) NOT NULL,
+  `room_id` varchar(50) NOT NULL,
+  `estado` enum('PENDIENTE','ENVIADO','CONFIRMADO','ERROR') DEFAULT 'PENDIENTE',
+  `intentos` int(11) DEFAULT 0,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `fecha_actualizacion` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `sync_biometrica`
+--
+
+INSERT INTO `sync_biometrica` (`id_sync`, `id_huella`, `room_id`, `estado`, `intentos`, `fecha_creacion`, `fecha_actualizacion`) VALUES
+(6, 3, 'AULA_1', 'PENDIENTE', 0, '2026-05-21 18:06:03', NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `usuarios`
 --
 
@@ -165,7 +315,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre`, `apellido`, `usuario`, `email`, `celular`, `password`, `rol`, `fecha_creacion`, `activo`) VALUES
-(0, 'Admin', 'Principal', 'admin1', 'admin@test.com', 981234567, '$2y$10$cPm0PqykacBQYPXSO50XUeQH3CiPBt1J1fKlQwOy6l7mSUHFVtOPm', 'SuperAdmin', '2026-04-27 16:23:44', 0);
+(0, 'Admin', 'Principal', 'admin1', 'admin@test.com', 981234567, '$2y$10$cPm0PqykacBQYPXSO50XUeQH3CiPBt1J1fKlQwOy6l7mSUHFVtOPm', 'SuperAdmin', '2026-04-27 16:23:44', 1);
 
 --
 -- Índices para tablas volcadas
@@ -187,12 +337,31 @@ ALTER TABLE `asistencias`
   ADD KEY `fk_asistencia_estudiante` (`huella_id`);
 
 --
+-- Indices de la tabla `aulas`
+--
+ALTER TABLE `aulas`
+  ADD PRIMARY KEY (`id_aula`),
+  ADD UNIQUE KEY `codigo` (`codigo`);
+
+--
+-- Indices de la tabla `biometric_mapping`
+--
+ALTER TABLE `biometric_mapping`
+  ADD PRIMARY KEY (`id_mapping`);
+
+--
 -- Indices de la tabla `estudiantes`
 --
 ALTER TABLE `estudiantes`
   ADD PRIMARY KEY (`id_estudiante`),
   ADD UNIQUE KEY `cedula_identidad` (`cedula_identidad`),
   ADD UNIQUE KEY `huella_id` (`huella_id`);
+
+--
+-- Indices de la tabla `eventos_asistencia`
+--
+ALTER TABLE `eventos_asistencia`
+  ADD PRIMARY KEY (`id_evento`);
 
 --
 -- Indices de la tabla `horarios`
@@ -202,10 +371,24 @@ ALTER TABLE `horarios`
   ADD KEY `id_asignacion` (`id_asignacion`);
 
 --
+-- Indices de la tabla `huellas_templates`
+--
+ALTER TABLE `huellas_templates`
+  ADD PRIMARY KEY (`id_huella`),
+  ADD KEY `id_estudiante` (`id_estudiante`);
+
+--
 -- Indices de la tabla `materias`
 --
 ALTER TABLE `materias`
   ADD PRIMARY KEY (`id_materia`);
+
+--
+-- Indices de la tabla `nodos_esp32`
+--
+ALTER TABLE `nodos_esp32`
+  ADD PRIMARY KEY (`id_nodo`),
+  ADD UNIQUE KEY `node_id` (`node_id`);
 
 --
 -- Indices de la tabla `profesores`
@@ -214,6 +397,13 @@ ALTER TABLE `profesores`
   ADD PRIMARY KEY (`id_profesor`),
   ADD UNIQUE KEY `cedula_identidad` (`cedula_identidad`),
   ADD UNIQUE KEY `huella_id` (`huella_id`);
+
+--
+-- Indices de la tabla `sync_biometrica`
+--
+ALTER TABLE `sync_biometrica`
+  ADD PRIMARY KEY (`id_sync`),
+  ADD KEY `id_huella` (`id_huella`);
 
 --
 -- Indices de la tabla `usuarios`
@@ -239,10 +429,28 @@ ALTER TABLE `asistencias`
   MODIFY `id_asistencia` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `aulas`
+--
+ALTER TABLE `aulas`
+  MODIFY `id_aula` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `biometric_mapping`
+--
+ALTER TABLE `biometric_mapping`
+  MODIFY `id_mapping` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT de la tabla `estudiantes`
 --
 ALTER TABLE `estudiantes`
-  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `eventos_asistencia`
+--
+ALTER TABLE `eventos_asistencia`
+  MODIFY `id_evento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `horarios`
@@ -251,16 +459,34 @@ ALTER TABLE `horarios`
   MODIFY `id_horario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
+-- AUTO_INCREMENT de la tabla `huellas_templates`
+--
+ALTER TABLE `huellas_templates`
+  MODIFY `id_huella` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT de la tabla `materias`
 --
 ALTER TABLE `materias`
   MODIFY `id_materia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT de la tabla `nodos_esp32`
+--
+ALTER TABLE `nodos_esp32`
+  MODIFY `id_nodo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT de la tabla `profesores`
 --
 ALTER TABLE `profesores`
   MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de la tabla `sync_biometrica`
+--
+ALTER TABLE `sync_biometrica`
+  MODIFY `id_sync` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Restricciones para tablas volcadas
@@ -285,6 +511,18 @@ ALTER TABLE `asistencias`
 --
 ALTER TABLE `horarios`
   ADD CONSTRAINT `horarios_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignacion_docente` (`id_asignacion`);
+
+--
+-- Filtros para la tabla `huellas_templates`
+--
+ALTER TABLE `huellas_templates`
+  ADD CONSTRAINT `huellas_templates_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id_estudiante`);
+
+--
+-- Filtros para la tabla `sync_biometrica`
+--
+ALTER TABLE `sync_biometrica`
+  ADD CONSTRAINT `sync_biometrica_ibfk_1` FOREIGN KEY (`id_huella`) REFERENCES `huellas_templates` (`id_huella`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
