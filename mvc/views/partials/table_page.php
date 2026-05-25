@@ -38,8 +38,12 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 </main>
 
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
+
 <script>
-    cargarTabla("<?= base_url($api) ?>", <?= json_encode($columnas) ?>);
+    cargarTabla(
+        "<?= base_url($api) ?>",
+        <?= json_encode($columnas) ?>
+    );
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
