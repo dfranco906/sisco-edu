@@ -1,13 +1,13 @@
 <?php
-require_once '../src/config/db.php';
-require_once '../src/classes/Asistencia.php';
+require_once '../../src/config/db.php';
+require_once '../../src/classes/Asistencia.php';
 
 echo "<h2>TEST CREAR ASISTENCIA</h2>";
 
 $db = (new Database())->getConnection();
 $asistencia = new Asistencia($db);
 
-$asistencia->huella_id = 1;
+$asistencia->huella_id = 2;
 $asistencia->tipo_usuario = "Profesor"; // o Estudiante
 $asistencia->estado = "Presente";
 
