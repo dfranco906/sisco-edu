@@ -16,7 +16,8 @@
             ["Materias", "Gestionar materias", "materias/index.php"],
             ["Horarios", "Gestionar horarios", "horarios/index.php"],
             ["Asignaciones", "Gestionar asignaciones", "asignaciones/index.php"],
-            ["Asistencias", "Gestionar asistencias", "asistencias/index.php"],
+            ["Asist. Estudiantes", "Ver asistencias de estudiantes", "asistencias_estudiantes/index.php"],
+            ["Asist. Profesores", "Ver asistencias de profesores", "asistencias_profesores/index.php"],
             ["Usuarios", "Control de acceso", "usuarios/index.php"],
             ["Aulas", "Gestionar aulas", "aulas/index.php"],
         ];

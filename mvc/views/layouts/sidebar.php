@@ -12,7 +12,8 @@
         <a href="<?= base_url('mvc/views/materias/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Materias</a>
         <a href="<?= base_url('mvc/views/horarios/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Horarios</a>
         <a href="<?= base_url('mvc/views/asignaciones/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asignaciones</a>
-        <a href="<?= base_url('mvc/views/asistencias/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asistencias</a>
+        <a href="<?= base_url('mvc/views/asistencias_estudiantes/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Estudiantes</a>
+        <a href="<?= base_url('mvc/views/asistencias_profesores/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Profesores</a>
         <a href="<?= base_url('mvc/views/usuarios/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Usuarios</a>
         <a href="<?= base_url('mvc/views/aulas/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Aulas</a>
     </nav>
