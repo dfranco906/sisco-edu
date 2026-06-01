@@ -42,6 +42,11 @@ async function cargarTabla(api, columnas, filtros = {}) {
         <button class="px-3 py-1 rounded-lg bg-red-100 text-red-700 text-xs font-semibold">
             Desactivar
         </button>
+        ${item.id_estudiante ? `
+        <button onclick="solicitarCaptura(${item.id_estudiante})"
+            class="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+            Huella
+        </button>` : ""}
     </td>`;
 
             fila += `</tr>`;
