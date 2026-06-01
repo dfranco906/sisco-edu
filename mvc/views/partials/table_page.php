@@ -7,7 +7,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <main class="flex-1 p-6 md:p-10">
     <div class="bg-white rounded-2xl shadow p-6 w-full">
 
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
                 <h2 class="text-2xl font-bold"><?= $titulo ?></h2>
                 <p class="text-sm" style="color: var(--color-muted);">
@@ -15,23 +15,21 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </p>
             </div>
 
-            <a href="<?= base_url('mvc/views/dashboard.php') ?>"
-               class="px-5 py-3 rounded-xl text-white font-semibold"
-               style="background: var(--color-primary);">
-                Volver
-            </a>
+            <div class="flex gap-3">
+                <button id="btn-crear"
+                    class="px-5 py-3 rounded-xl text-white font-semibold bg-green-600 hover:bg-green-700">
+                    + Crear
+                </button>
+
+                <a href="<?= base_url('mvc/views/dashboard.php') ?>"
+                   class="px-5 py-3 rounded-xl text-white font-semibold"
+                   style="background: var(--color-primary);">
+                    Volver
+                </a>
+            </div>
         </div>
 
-        <?php if ($titulo === "Horarios por Grado"): ?>
-            <div class="mb-6">
-                <h3 class="font-semibold mb-3">Seleccionar grado</h3>
-                <div id="filtro-grado-botones" class="flex flex-wrap gap-3">
-                    <button class="px-4 py-2 rounded-xl bg-blue-600 text-white">
-                        Cargando...
-                    </button>
-                </div>
-            </div>
-        <?php endif; ?>
+        <div id="filtros-tabla" class="flex flex-col md:flex-row gap-3 mb-6"></div>
 
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -40,8 +38,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                         <?php foreach ($columnas as $col): ?>
                             <th class="p-3 text-left"><?= $col ?></th>
                         <?php endforeach; ?>
+
+                        <th class="p-3 text-left">acciones</th>
                     </tr>
                 </thead>
+
                 <tbody id="tabla-body"></tbody>
             </table>
         </div>
@@ -51,7 +52,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
 <script>
-    cargarTabla("<?= base_url($api) ?>", <?= json_encode($columnas) ?>);
+    cargarTabla(
+        "<?= base_url($api) ?>",
+        <?= json_encode($columnas) ?>,
+        <?= json_encode($filtros ?? []) ?>
+    );
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

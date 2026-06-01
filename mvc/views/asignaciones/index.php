@@ -7,5 +7,11 @@ $columnas = [
     "materia",
     "año_lectivo"
 ];
-
+$filtros = [
+    "selects" => [
+        ["campo" => "profesor", "label" => "Profesor"],
+        ["campo" => "materia", "label" => "Materia"],
+        ["campo" => "año_lectivo", "label" => "Año lectivo"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

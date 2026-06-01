@@ -11,5 +11,11 @@ $columnas = [
     "hora",
     "estado"
 ];
-
+$filtros = [
+    "selects" => [
+        ["campo" => "fecha", "label" => "Fecha"],
+        ["campo" => "profesor", "label" => "Profesor"],
+        ["campo" => "estado", "label" => "Estado"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

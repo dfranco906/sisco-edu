@@ -10,5 +10,12 @@ $columnas = [
     "profesor",
     "aula"
 ];
-
+$filtros = [
+    "buscar" => ["materia", "profesor"],
+    "placeholder" => "Buscar materia o profesor...",
+    "selects" => [
+        ["campo" => "grado", "label" => "Grado"],
+        ["campo" => "dia_semana", "label" => "Día"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';
