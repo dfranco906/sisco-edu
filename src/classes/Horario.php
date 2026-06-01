@@ -45,10 +45,21 @@ class Horario {
         return false;
     }
     public function leer() {
-   $query = "SELECT *
-          FROM " . $this->table_name . "
-          WHERE activo = 1
-          ORDER BY id_horario DESC";
+    $query = "SELECT 
+                h.id_horario,
+                h.grado,
+                h.dia_semana,
+                h.hora_inicio,
+                h.hora_fin,
+                h.aula,
+                m.nombre AS materia,
+                CONCAT(p.nombre, ' ', p.apellido) AS profesor
+              FROM horarios h
+              LEFT JOIN asignacion_docente ad ON h.id_asignacion = ad.id_asignacion
+              LEFT JOIN materias m ON ad.id_materia = m.id_materia
+              LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
+              WHERE h.activo = 1
+              ORDER BY h.grado, h.dia_semana, h.hora_inicio";
 
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
