@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-05-2026 a las 16:10:50
+-- Tiempo de generación: 04-06-2026 a las 19:38:49
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -40,7 +40,7 @@ CREATE TABLE `asignacion_docente` (
 --
 
 INSERT INTO `asignacion_docente` (`id_asignacion`, `id_profesor`, `id_materia`, `año_lectivo`, `activo`) VALUES
-(2, 1, 1, 2026, 0),
+(2, 1, 1, 2026, 1),
 (3, 1, 1, 2026, 1);
 
 -- --------------------------------------------------------
@@ -57,6 +57,54 @@ CREATE TABLE `asistencias` (
   `estado` enum('Presente','Llegada Tardia') DEFAULT 'Presente',
   `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `asistencias_estudiantes`
+--
+
+CREATE TABLE `asistencias_estudiantes` (
+  `id_asistencia_estudiante` int(11) NOT NULL,
+  `id_estudiante` int(11) NOT NULL,
+  `huella_id` int(11) NOT NULL,
+  `fecha` date NOT NULL,
+  `hora` time NOT NULL,
+  `estado` enum('PRESENTE','AUSENTE','TARDANZA') DEFAULT 'PRESENTE',
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `asistencias_estudiantes`
+--
+
+INSERT INTO `asistencias_estudiantes` (`id_asistencia_estudiante`, `id_estudiante`, `huella_id`, `fecha`, `hora`, `estado`, `activo`, `fecha_registro`) VALUES
+(1, 2, 2, '2026-06-01', '14:54:35', 'TARDANZA', 1, '2026-06-01 12:54:23');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `asistencias_profesores`
+--
+
+CREATE TABLE `asistencias_profesores` (
+  `id_asistencia_profesor` int(11) NOT NULL,
+  `id_profesor` int(11) NOT NULL,
+  `huella_id` int(11) NOT NULL,
+  `fecha` date NOT NULL,
+  `hora` time NOT NULL,
+  `estado` enum('PRESENTE','AUSENTE','TARDANZA') DEFAULT 'PRESENTE',
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `asistencias_profesores`
+--
+
+INSERT INTO `asistencias_profesores` (`id_asistencia_profesor`, `id_profesor`, `huella_id`, `fecha`, `hora`, `estado`, `activo`, `fecha_registro`) VALUES
+(1, 1, 1, '2026-06-01', '14:56:37', 'TARDANZA', 1, '2026-06-01 12:55:47');
 
 -- --------------------------------------------------------
 
@@ -78,7 +126,7 @@ CREATE TABLE `aulas` (
 --
 
 INSERT INTO `aulas` (`id_aula`, `nombre`, `codigo`, `ubicacion`, `activo`, `fecha_creacion`) VALUES
-(1, 'Aula 1 Actualizada', 'AULA_1', 'Bloque B', 0, '2026-05-18 14:28:37');
+(1, 'Aula 1 Actualizada', 'AULA_1', 'Bloque B', 1, '2026-05-18 14:28:37');
 
 -- --------------------------------------------------------
 
@@ -127,7 +175,9 @@ CREATE TABLE `estudiantes` (
 --
 
 INSERT INTO `estudiantes` (`id_estudiante`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`, `activo`, `user_id_global`, `id_aula`, `fingerprint_data_user`, `pendiente_sync`) VALUES
-(2, 'Carlos', 'Gomez', '5555555', 2, '2026-05-21 17:05:33', 1, NULL, NULL, NULL, 0);
+(2, 'Carlos', 'Gomez', '5555555', 2, '2026-05-21 17:05:33', 1, NULL, NULL, NULL, 0),
+(3, 'Tiago Ortega', 'PERALTA BARUJA', '1234565', NULL, '2026-06-01 17:33:58', 1, NULL, NULL, NULL, 0),
+(5, 'Nahuel', 'Montiel', '1234568', NULL, '2026-06-01 17:51:10', 1, NULL, NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -162,6 +212,7 @@ INSERT INTO `eventos_asistencia` (`id_evento`, `user_id_global`, `room_id`, `tim
 CREATE TABLE `horarios` (
   `id_horario` int(11) NOT NULL,
   `id_asignacion` int(11) NOT NULL,
+  `grado` varchar(50) NOT NULL,
   `dia_semana` enum('Lunes','Martes','Miércoles','Jueves','Viernes','Sábado') NOT NULL,
   `hora_inicio` time NOT NULL,
   `hora_fin` time NOT NULL,
@@ -173,8 +224,8 @@ CREATE TABLE `horarios` (
 -- Volcado de datos para la tabla `horarios`
 --
 
-INSERT INTO `horarios` (`id_horario`, `id_asignacion`, `dia_semana`, `hora_inicio`, `hora_fin`, `aula`, `activo`) VALUES
-(18, 2, 'Martes', '08:00:00', '08:40:00', 'B1', 0);
+INSERT INTO `horarios` (`id_horario`, `id_asignacion`, `grado`, `dia_semana`, `hora_inicio`, `hora_fin`, `aula`, `activo`) VALUES
+(18, 2, '3ro BTI', 'Martes', '08:00:00', '08:40:00', 'B1', 1);
 
 -- --------------------------------------------------------
 
@@ -219,7 +270,7 @@ CREATE TABLE `materias` (
 --
 
 INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_semanal`, `activo`) VALUES
-(1, 'Matemática Actualizada', 'Descripción actualizada', 5, 0);
+(1, 'Matemática Actualizada', 'Descripción actualizada', 5, 1);
 
 -- --------------------------------------------------------
 
@@ -266,7 +317,23 @@ CREATE TABLE `profesores` (
 --
 
 INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `fecha_registro`, `activo`) VALUES
-(1, 'Juan', 'Perez', '1234567', 1, '2026-04-23 16:58:23', 0);
+(1, 'Juan', 'Perez', '1234567', 1, '2026-04-23 16:58:23', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `solicitudes_huella`
+--
+
+CREATE TABLE `solicitudes_huella` (
+  `id_solicitud` int(11) NOT NULL,
+  `id_estudiante` int(11) NOT NULL,
+  `estado` enum('PENDIENTE','EN_PROCESO','COMPLETADO','ERROR') DEFAULT 'PENDIENTE',
+  `huella_id` int(11) DEFAULT NULL,
+  `mensaje` varchar(255) DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -337,6 +404,20 @@ ALTER TABLE `asistencias`
   ADD KEY `fk_asistencia_estudiante` (`huella_id`);
 
 --
+-- Indices de la tabla `asistencias_estudiantes`
+--
+ALTER TABLE `asistencias_estudiantes`
+  ADD PRIMARY KEY (`id_asistencia_estudiante`),
+  ADD KEY `fk_asistencia_estudiante_id` (`id_estudiante`);
+
+--
+-- Indices de la tabla `asistencias_profesores`
+--
+ALTER TABLE `asistencias_profesores`
+  ADD PRIMARY KEY (`id_asistencia_profesor`),
+  ADD KEY `fk_asistencia_profesor_id` (`id_profesor`);
+
+--
 -- Indices de la tabla `aulas`
 --
 ALTER TABLE `aulas`
@@ -399,6 +480,13 @@ ALTER TABLE `profesores`
   ADD UNIQUE KEY `huella_id` (`huella_id`);
 
 --
+-- Indices de la tabla `solicitudes_huella`
+--
+ALTER TABLE `solicitudes_huella`
+  ADD PRIMARY KEY (`id_solicitud`),
+  ADD KEY `id_estudiante` (`id_estudiante`);
+
+--
 -- Indices de la tabla `sync_biometrica`
 --
 ALTER TABLE `sync_biometrica`
@@ -426,13 +514,25 @@ ALTER TABLE `asignacion_docente`
 -- AUTO_INCREMENT de la tabla `asistencias`
 --
 ALTER TABLE `asistencias`
-  MODIFY `id_asistencia` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_asistencia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+
+--
+-- AUTO_INCREMENT de la tabla `asistencias_estudiantes`
+--
+ALTER TABLE `asistencias_estudiantes`
+  MODIFY `id_asistencia_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `asistencias_profesores`
+--
+ALTER TABLE `asistencias_profesores`
+  MODIFY `id_asistencia_profesor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `aulas`
 --
 ALTER TABLE `aulas`
-  MODIFY `id_aula` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_aula` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `biometric_mapping`
@@ -444,7 +544,7 @@ ALTER TABLE `biometric_mapping`
 -- AUTO_INCREMENT de la tabla `estudiantes`
 --
 ALTER TABLE `estudiantes`
-  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_estudiante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `eventos_asistencia`
@@ -483,6 +583,12 @@ ALTER TABLE `profesores`
   MODIFY `id_profesor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT de la tabla `solicitudes_huella`
+--
+ALTER TABLE `solicitudes_huella`
+  MODIFY `id_solicitud` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `sync_biometrica`
 --
 ALTER TABLE `sync_biometrica`
@@ -507,6 +613,18 @@ ALTER TABLE `asistencias`
   ADD CONSTRAINT `fk_asistencia_profesores` FOREIGN KEY (`huella_id`) REFERENCES `profesores` (`huella_id`);
 
 --
+-- Filtros para la tabla `asistencias_estudiantes`
+--
+ALTER TABLE `asistencias_estudiantes`
+  ADD CONSTRAINT `fk_asistencia_estudiante_id` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id_estudiante`);
+
+--
+-- Filtros para la tabla `asistencias_profesores`
+--
+ALTER TABLE `asistencias_profesores`
+  ADD CONSTRAINT `fk_asistencia_profesor_id` FOREIGN KEY (`id_profesor`) REFERENCES `profesores` (`id_profesor`);
+
+--
 -- Filtros para la tabla `horarios`
 --
 ALTER TABLE `horarios`
@@ -517,6 +635,12 @@ ALTER TABLE `horarios`
 --
 ALTER TABLE `huellas_templates`
   ADD CONSTRAINT `huellas_templates_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id_estudiante`);
+
+--
+-- Filtros para la tabla `solicitudes_huella`
+--
+ALTER TABLE `solicitudes_huella`
+  ADD CONSTRAINT `solicitudes_huella_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id_estudiante`);
 
 --
 -- Filtros para la tabla `sync_biometrica`
