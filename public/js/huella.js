@@ -4,7 +4,7 @@ async function solicitarCaptura(idEstudiante) {
     const formData = new FormData();
     formData.append("id_estudiante", idEstudiante);
 
-    const res = await fetch("../../../../src/api/Huella/solicitar_captura.php", {
+    const res = await fetch(window.BASE_URL + "src/api/Huella/solicitar_captura.php", {
         method: "POST",
         body: formData
     });

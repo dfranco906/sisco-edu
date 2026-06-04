@@ -8,7 +8,10 @@ $db = (new Database())->getConnection();
 $id_estudiante = $_POST['id_estudiante'] ?? null;
 
 if (!$id_estudiante) {
-    echo json_encode(["status" => "error", "message" => "Falta id_estudiante"]);
+    echo json_encode([
+        "status" => "error",
+        "message" => "Falta id_estudiante"
+    ]);
     exit;
 }
 
@@ -22,5 +25,6 @@ $resultado = $stmt->execute();
 
 echo json_encode([
     "status" => $resultado ? "success" : "error",
-    "message" => $resultado ? "Solicitud enviada al ESP32" : "Error al solicitar captura"
+    "message" => $resultado ? "Solicitud de huella creada correctamente" : "Error al crear solicitud"
 ]);
+?>
