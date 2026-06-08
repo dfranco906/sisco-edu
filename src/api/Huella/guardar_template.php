@@ -4,11 +4,11 @@ require_once __DIR__ . '/../../config/db.php';
 
 $db = (new Database())->getConnection();
 
-$id_estudiante = $_POST['id_estudiante'] ?? null;
+$id_persona = $_POST['id_persona'] ?? $_POST['id_estudiante'] ?? null;
+$tipo_persona = $_POST['tipo_persona'] ?? 'estudiante';
 $template = $_POST['template'] ?? null;
-$bytes = $_POST['bytes'] ?? null;
 
-if (!$id_estudiante || !$template) {
+if (!$id_persona || !$template) {
     echo json_encode(["status" => "error", "message" => "Faltan datos"]);
     exit;
 }
@@ -16,57 +16,59 @@ if (!$id_estudiante || !$template) {
 try {
     $db->beginTransaction();
 
-    $user_id_global = "EST_" . $id_estudiante;
-    $room_id = "GENERAL";
+    if ($tipo_persona === "profesor") {
+        $tabla = "profesores";
+        $idCampo = "id_profesor";
+        $user_id_global = "PROF_" . $id_persona;
+    } else {
+        $tabla = "estudiantes";
+        $idCampo = "id_estudiante";
+        $user_id_global = "EST_" . $id_persona;
+    }
 
     $stmt = $db->prepare("
         INSERT INTO huellas_templates
-        (user_id_global, id_estudiante, fingerprint_data, formato, pendiente_sync, activo)
+        (user_id_global, {$idCampo}, fingerprint_data, formato, pendiente_sync, activo)
         VALUES
-        (:user_id_global, :id_estudiante, :fingerprint_data, 'HEX', 1, 1)
+        (:user_id_global, :id_persona, :fingerprint_data, 'HEX', 1, 1)
     ");
 
     $stmt->execute([
         ":user_id_global" => $user_id_global,
-        ":id_estudiante" => $id_estudiante,
+        ":id_persona" => $id_persona,
         ":fingerprint_data" => $template
     ]);
 
     $id_huella = $db->lastInsertId();
 
     $stmt2 = $db->prepare("
-        UPDATE estudiantes
+        UPDATE {$tabla}
         SET huella_id = :id_huella,
             user_id_global = :user_id_global,
-            fingerprint_data_user = :fingerprint_data,
             pendiente_sync = 1
-        WHERE id_estudiante = :id_estudiante
+        WHERE {$idCampo} = :id_persona
     ");
 
     $stmt2->execute([
         ":id_huella" => $id_huella,
         ":user_id_global" => $user_id_global,
-        ":fingerprint_data" => $template,
-        ":id_estudiante" => $id_estudiante
+        ":id_persona" => $id_persona
     ]);
 
     $stmt3 = $db->prepare("
         INSERT INTO sync_biometrica
         (id_huella, room_id, estado, intentos)
         VALUES
-        (:id_huella, :room_id, 'PENDIENTE', 0)
+        (:id_huella, 'GENERAL', 'PENDIENTE', 0)
     ");
 
-    $stmt3->execute([
-        ":id_huella" => $id_huella,
-        ":room_id" => $room_id
-    ]);
+    $stmt3->execute([":id_huella" => $id_huella]);
 
     $db->commit();
 
     echo json_encode([
         "status" => "success",
-        "message" => "Huella real guardada y pendiente para Gateway",
+        "message" => "Huella guardada correctamente y pendiente para Gateway",
         "id_huella" => $id_huella
     ]);
 
