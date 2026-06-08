@@ -43,8 +43,8 @@ async function cargarTabla(api, columnas, filtros = {}) {
             Desactivar
         </button>
         ${item.id_estudiante ? `
-        <button onclick="solicitarCaptura(${item.id_estudiante})"
-            class="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+        <button onclick="descargarYGuardarTemplate(${item.id_estudiante})"
+        class="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
             Huella
         </button>` : ""}
     </td>`;
