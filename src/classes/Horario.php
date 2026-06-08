@@ -19,6 +19,7 @@ class Horario {
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
                   SET id_asignacion=:id_asig, 
+                      grado=:grado,
                       dia_semana=:dia, 
                       hora_inicio=:inicio, 
                       hora_fin=:fin, 
@@ -27,6 +28,7 @@ class Horario {
         $stmt = $this->conn->prepare($query);
 
         // Sanitización
+        $this->grado = htmlspecialchars(strip_tags($this->grado));
         $this->dia_semana = htmlspecialchars(strip_tags($this->dia_semana));
         $this->hora_inicio = htmlspecialchars(strip_tags($this->hora_inicio));
         $this->hora_fin = htmlspecialchars(strip_tags($this->hora_fin));

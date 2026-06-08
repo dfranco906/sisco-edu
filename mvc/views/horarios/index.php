@@ -18,4 +18,22 @@ $filtros = [
         ["campo" => "dia_semana", "label" => "Día"]
     ]
 ];
+$formCrear = [
+    "api" => "src/api/Horario/crear_horario.php",
+    "campos" => [
+        [
+            "name" => "id_asignacion",
+            "label" => "Asignación",
+            "type" => "select",
+            "api" => "src/api/Asignaciones/leer_asignaciones.php",
+            "value" => "id_asignacion",
+            "labelField" => "descripcion"
+        ],
+        ["name" => "grado", "label" => "Grado", "type" => "text"],
+        ["name" => "dia_semana", "label" => "Día", "type" => "text"],
+        ["name" => "hora_inicio", "label" => "Hora inicio", "type" => "time"],
+        ["name" => "hora_fin", "label" => "Hora fin", "type" => "time"],
+        ["name" => "aula", "label" => "Aula", "type" => "text"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

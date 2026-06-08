@@ -14,4 +14,26 @@ $filtros = [
         ["campo" => "año_lectivo", "label" => "Año lectivo"]
     ]
 ];
+$formCrear = [
+    "api" => "src/api/Asignaciones/crear_asignacion.php",
+    "campos" => [
+        [
+            "name" => "id_profesor",
+            "label" => "Profesor",
+            "type" => "select",
+            "api" => "src/api/Profesor/leer_profesores.php",
+            "value" => "id_profesor",
+            "labelField" => "nombre_completo"
+        ],
+        [
+            "name" => "id_materia",
+            "label" => "Materia",
+            "type" => "select",
+            "api" => "src/api/Materia/leer_materias.php",
+            "value" => "id_materia",
+            "labelField" => "nombre"
+        ],
+        ["name" => "año_lectivo", "label" => "Año lectivo", "type" => "number"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

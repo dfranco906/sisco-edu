@@ -18,4 +18,14 @@ $filtros = [
         ["campo" => "estado", "label" => "Estado"]
     ]
 ];
+$formCrear = [
+    "api" => "src/api/AsistenciaProfesor/crear_asistencia_profesor.php",
+    "campos" => [
+        ["name" => "id_profesor", "label" => "ID Profesor", "type" => "number"],
+        ["name" => "huella_id", "label" => "Huella ID", "type" => "number"],
+        ["name" => "fecha", "label" => "Fecha", "type" => "date"],
+        ["name" => "hora", "label" => "Hora", "type" => "time"],
+        ["name" => "estado", "label" => "Estado", "type" => "text"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

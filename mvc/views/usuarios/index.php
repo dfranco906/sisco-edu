@@ -10,4 +10,12 @@ $filtros = [
         ["campo" => "activo", "label" => "Estado"]
     ]
 ];
+$formCrear = [
+    "api" => "src/api/Usuario/crear_usuario.php",
+    "campos" => [
+        ["name" => "usuario", "label" => "Usuario", "type" => "text"],
+        ["name" => "password", "label" => "Contraseña", "type" => "password"],
+        ["name" => "rol", "label" => "Rol", "type" => "text"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

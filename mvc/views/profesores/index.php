@@ -10,5 +10,12 @@ $filtros = [
         ["campo" => "activo", "label" => "Estado"]
     ]
 ];
-
+$formCrear = [
+    "api" => "src/api/Profesor/crear_profesor.php",
+    "campos" => [
+        ["name" => "nombre", "label" => "Nombre", "type" => "text"],
+        ["name" => "apellido", "label" => "Apellido", "type" => "text"],
+        ["name" => "cedula_identidad", "label" => "Cédula", "type" => "text"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';

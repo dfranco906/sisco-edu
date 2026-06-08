@@ -10,4 +10,12 @@ $filtros = [
         ["campo" => "activo", "label" => "Estado"]
     ]
 ];
+$formCrear = [
+    "api" => "src/api/Aula/crear_aula.php",
+    "campos" => [
+        ["name" => "nombre", "label" => "Nombre", "type" => "text"],
+        ["name" => "codigo", "label" => "Código", "type" => "text"],
+        ["name" => "ubicacion", "label" => "Ubicación", "type" => "text"]
+    ]
+];
 require_once __DIR__ . '/../partials/table_page.php';
