@@ -79,11 +79,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
 <script src="<?= base_url('public/js/crud.js') ?>"></script>
-<script>
-    window.BASE_URL = "<?= base_url('') ?>";
-</script>
 
-<script src="<?= base_url('public/js/huella.js') ?>"></script>
 <script src="<?= base_url('public/js/huella.js') ?>"></script>
 <script>
     cargarTabla(
