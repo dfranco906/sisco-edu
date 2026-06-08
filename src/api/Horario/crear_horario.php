@@ -14,11 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Asignamos los valores recibidos
     $horario->id_asignacion = $_POST['id_asignacion'] ?? null;
-$horario->grado = $_POST['grado'] ?? null;
-$horario->dia_semana = $_POST['dia_semana'] ?? null;
-$horario->hora_inicio = $_POST['hora_inicio'] ?? null;
-$horario->hora_fin = $_POST['hora_fin'] ?? null;
-$horario->aula = $_POST['aula'] ?? null;
+    $horario->grado = $_POST['grado'] ?? null;
+    $horario->dia_semana = $_POST['dia_semana'] ?? null;
+    $horario->hora_inicio = $_POST['hora_inicio'] ?? null;
+    $horario->hora_fin = $_POST['hora_fin'] ?? null;
+    $horario->aula = $_POST['aula'] ?? null;    
 
     // Validación: No pueden faltar estos datos
     if (!empty($horario->id_asignacion) && !empty($horario->dia_semana) && !empty($horario->hora_inicio)) {
