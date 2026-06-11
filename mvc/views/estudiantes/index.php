@@ -19,4 +19,7 @@ $formCrear = [
         ["name" => "grado", "label" => "Grado", "type" => "text"]
     ]
 ];
+$apiActualizar = "src/api/Estudiante/actualizar_estudiante.php";
+$idCampo = "id_estudiante";
+$camposEditar = ["nombre", "apellido", "cedula_identidad"];
 require_once __DIR__ . '/../partials/table_page.php';

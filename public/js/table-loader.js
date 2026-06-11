@@ -36,9 +36,10 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
             fila += `
     <td class="p-3 flex gap-2">
-        <button class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
-            Editar
-        </button>
+        <button onclick='editarRegistro(${JSON.stringify(item)})'
+class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
+    Editar
+</button>
         <button class="px-3 py-1 rounded-lg bg-red-100 text-red-700 text-xs font-semibold">
             Desactivar
         </button>

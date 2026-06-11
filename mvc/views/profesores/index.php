@@ -18,4 +18,7 @@ $formCrear = [
         ["name" => "cedula_identidad", "label" => "Cédula", "type" => "text"]
     ]
 ];
+$apiActualizar = "src/api/Profesor/actualizar_profesor.php";
+$idCampo = "id_profesor";
+$camposEditar = ["nombre", "apellido", "cedula_identidad"];
 require_once __DIR__ . '/../partials/table_page.php';

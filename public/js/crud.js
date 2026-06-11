@@ -1,46 +1,92 @@
+let itemEditando = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     const btnCrear = document.getElementById("btn-crear");
-    const modal = document.getElementById("modal-crear");
-    const cerrar = document.getElementById("cerrar-modal");
-    const form = document.getElementById("form-crear");
-    const mensaje = document.getElementById("mensaje-form");
+    const modalCrear = document.getElementById("modal-crear");
+    const cerrarCrear = document.getElementById("cerrar-modal");
+    const formCrear = document.getElementById("form-crear");
+    const mensajeCrear = document.getElementById("mensaje-form");
 
-    if (btnCrear && modal) btnCrear.onclick = () => modal.classList.remove("hidden");
-    if (cerrar && modal) cerrar.onclick = () => modal.classList.add("hidden");
+    const modalEditar = document.getElementById("modal-editar");
+    const cancelarEditar = document.getElementById("cancelar-editar");
+    const formEditar = document.getElementById("form-editar");
+    const mensajeEditar = document.getElementById("mensaje-editar");
+
+    if (btnCrear && modalCrear) btnCrear.onclick = () => modalCrear.classList.remove("hidden");
+    if (cerrarCrear && modalCrear) cerrarCrear.onclick = () => modalCrear.classList.add("hidden");
+
+    if (cancelarEditar && modalEditar) {
+        cancelarEditar.onclick = () => modalEditar.classList.add("hidden");
+    }
 
     cargarSelects();
 
-    if (form) {
-        form.onsubmit = async (e) => {
+    if (formCrear) {
+        formCrear.onsubmit = async (e) => {
             e.preventDefault();
 
-            mensaje.innerHTML = "Guardando...";
-            mensaje.className = "text-blue-600 font-semibold mb-3";
+            mensajeCrear.innerHTML = "Guardando...";
+            mensajeCrear.className = "text-blue-600 font-semibold mb-3";
 
             try {
-                const res = await fetch(form.dataset.api, {
+                const res = await fetch(formCrear.dataset.api, {
                     method: "POST",
-                    body: new FormData(form)
+                    body: new FormData(formCrear)
                 });
 
                 const data = await res.json();
-                const exito = data.status === "success" || String(data.message || "").toLowerCase().includes("cread");
+                const exito = data.status === "success";
 
-                mensaje.className = exito
+                mensajeCrear.className = exito
                     ? "text-green-600 font-semibold mb-3"
                     : "text-red-600 font-semibold mb-3";
 
-                mensaje.innerHTML = `
+                mensajeCrear.innerHTML = `
                     ${data.message ?? "Operación realizada"}
                     ${exito ? `<br><button onclick="location.reload()" class="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white">Actualizar tabla</button>` : ""}
                 `;
 
-                if (exito) form.reset();
+                if (exito) formCrear.reset();
 
             } catch (error) {
                 console.error(error);
-                mensaje.className = "text-red-600 font-semibold mb-3";
-                mensaje.innerHTML = "Error al procesar la solicitud";
+                mensajeCrear.className = "text-red-600 font-semibold mb-3";
+                mensajeCrear.innerHTML = "Error al procesar la solicitud";
+            }
+        };
+    }
+
+    if (formEditar) {
+        formEditar.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(formEditar);
+            formData.append(window.ID_CAMPO, itemEditando[window.ID_CAMPO]);
+
+            mensajeEditar.innerHTML = "Actualizando...";
+            mensajeEditar.className = "text-blue-600 font-semibold mb-3";
+
+            try {
+                const res = await fetch(window.API_ACTUALIZAR, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                mensajeEditar.className = data.status === "success"
+                    ? "text-green-600 font-semibold mb-3"
+                    : "text-red-600 font-semibold mb-3";
+
+                mensajeEditar.innerHTML = `
+                    ${data.message}
+                    ${data.status === "success" ? `<br><button onclick="location.reload()" class="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white">Actualizar tabla</button>` : ""}
+                `;
+
+            } catch (error) {
+                console.error(error);
+                mensajeEditar.className = "text-red-600 font-semibold mb-3";
+                mensajeEditar.innerHTML = "Error al actualizar";
             }
         };
     }
@@ -51,20 +97,16 @@ async function cargarSelects() {
 
     for (const select of selects) {
         try {
-            const api = window.BASE_URL + select.dataset.api;
-            const res = await fetch(api);
+            const res = await fetch(window.BASE_URL + select.dataset.api);
             const json = await res.json();
             const data = json.data ?? json;
-
-            const valueField = select.dataset.value;
-            const labelField = select.dataset.label;
 
             select.innerHTML = `<option value="">Seleccione una opción</option>`;
 
             data.forEach(item => {
                 select.innerHTML += `
-                    <option value="${item[valueField]}">
-                        ${item[labelField]}
+                    <option value="${item[select.dataset.value]}">
+                        ${item[select.dataset.label]}
                     </option>
                 `;
             });
@@ -75,3 +117,30 @@ async function cargarSelects() {
         }
     }
 }
+
+window.editarRegistro = function(item) {
+    itemEditando = item;
+
+    const modal = document.getElementById("modal-editar");
+    const campos = document.getElementById("campos-editar");
+    const mensaje = document.getElementById("mensaje-editar");
+
+    mensaje.innerHTML = "";
+    campos.innerHTML = "";
+
+    const camposEditables = window.CAMPOS_EDITAR || [];
+
+    camposEditables.forEach(campo => {
+        campos.innerHTML += `
+            <label class="block mb-2 font-semibold">${campo}</label>
+            <input 
+                name="${campo}"
+                value="${item[campo] ?? ""}"
+                class="border rounded-xl px-4 py-2 w-full mb-4"
+                required
+            >
+        `;
+    });
+
+    modal.classList.remove("hidden");
+};

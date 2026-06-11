@@ -18,4 +18,7 @@ $formCrear = [
         ["name" => "ubicacion", "label" => "Ubicación", "type" => "text"]
     ]
 ];
+$apiActualizar = "src/api/Aula/actualizar_aula.php";
+$idCampo = "id_aula";
+$camposEditar = ["nombre", "codigo", "ubicacion"];
 require_once __DIR__ . '/../partials/table_page.php';

@@ -100,9 +100,33 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
 
     </div>
+    <div id="modal-editar" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Editar registro</h3>
+
+        <div id="mensaje-editar" class="mb-3"></div>
+
+        <form id="form-editar">
+            <div id="campos-editar"></div>
+
+            <div class="flex justify-end gap-3 mt-4">
+                <button type="button" id="cancelar-editar" class="px-4 py-2 rounded-xl bg-gray-100">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 text-white">
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 </main>
 <script>
     window.BASE_URL = "<?= base_url('') ?>";
+    window.API_ACTUALIZAR = "<?= isset($apiActualizar) ? base_url($apiActualizar) : '' ?>";
+    window.ID_CAMPO = "<?= $idCampo ?? '' ?>";
+    window.CAMPOS_EDITAR = <?= json_encode($camposEditar ?? []) ?>;
 </script>
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
 <script src="<?= base_url('public/js/crud.js') ?>"></script>

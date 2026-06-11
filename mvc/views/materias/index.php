@@ -17,4 +17,7 @@ $formCrear = [
         ["name" => "carga_horaria_semanal", "label" => "Carga horaria semanal", "type" => "number"]
     ]
 ];
+$apiActualizar = "src/api/Materia/actualizar_materia.php";
+$idCampo = "id_materia";
+$camposEditar = ["nombre", "descripcion", "carga_horaria_semanal"];
 require_once __DIR__ . '/../partials/table_page.php';
