@@ -31,7 +31,8 @@ class Asignacion {
                 ad.id_asignacion,
                 CONCAT(p.nombre, ' ', p.apellido) AS profesor,
                 m.nombre AS materia,
-                ad.`año_lectivo`
+                ad.`año_lectivo`,
+                CONCAT(p.nombre, ' ', p.apellido, ' - ', m.nombre, ' - ', ad.`año_lectivo`) AS descripcion
               FROM asignacion_docente ad
               LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
               LEFT JOIN materias m ON ad.id_materia = m.id_materia

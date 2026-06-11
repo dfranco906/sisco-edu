@@ -17,35 +17,25 @@ class Horario {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . " 
-                  SET id_asignacion=:id_asig, 
-                      grado=:grado,
-                      dia_semana=:dia, 
-                      hora_inicio=:inicio, 
-                      hora_fin=:fin, 
-                      aula=:aula";
+    $query = "INSERT INTO horarios
+              SET id_asignacion=:id_asignacion,
+                  grado=:grado,
+                  dia_semana=:dia_semana,
+                  hora_inicio=:hora_inicio,
+                  hora_fin=:hora_fin,
+                  aula=:aula";
 
-        $stmt = $this->conn->prepare($query);
+    $stmt = $this->conn->prepare($query);
 
-        // Sanitización
-        $this->grado = htmlspecialchars(strip_tags($this->grado));
-        $this->dia_semana = htmlspecialchars(strip_tags($this->dia_semana));
-        $this->hora_inicio = htmlspecialchars(strip_tags($this->hora_inicio));
-        $this->hora_fin = htmlspecialchars(strip_tags($this->hora_fin));
-        $this->aula = htmlspecialchars(strip_tags($this->aula));
+    $stmt->bindParam(":id_asignacion", $this->id_asignacion);
+    $stmt->bindParam(":grado", $this->grado);
+    $stmt->bindParam(":dia_semana", $this->dia_semana);
+    $stmt->bindParam(":hora_inicio", $this->hora_inicio);
+    $stmt->bindParam(":hora_fin", $this->hora_fin);
+    $stmt->bindParam(":aula", $this->aula);
 
-        // Binding
-        $stmt->bindParam(":id_asig", $this->id_asignacion);
-        $stmt->bindParam(":dia", $this->dia_semana);
-        $stmt->bindParam(":inicio", $this->hora_inicio);
-        $stmt->bindParam(":fin", $this->hora_fin);
-        $stmt->bindParam(":aula", $this->aula);
-
-        if($stmt->execute()) {
-            return true;
-        }
-        return false;
-    }
+    return $stmt->execute();
+}
     public function leer() {
     $query = "SELECT 
                 h.id_horario,

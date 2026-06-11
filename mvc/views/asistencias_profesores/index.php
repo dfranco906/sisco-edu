@@ -21,11 +21,27 @@ $filtros = [
 $formCrear = [
     "api" => "src/api/AsistenciaProfesor/crear_asistencia_profesor.php",
     "campos" => [
-        ["name" => "id_profesor", "label" => "ID Profesor", "type" => "number"],
+        [
+            "name" => "id_profesor",
+            "label" => "Profesor",
+            "type" => "select",
+            "api" => "src/api/Profesor/leer_profesores.php",
+            "value" => "id_profesor",
+            "labelField" => "nombre_completo"
+        ],
         ["name" => "huella_id", "label" => "Huella ID", "type" => "number"],
         ["name" => "fecha", "label" => "Fecha", "type" => "date"],
         ["name" => "hora", "label" => "Hora", "type" => "time"],
-        ["name" => "estado", "label" => "Estado", "type" => "text"]
+        [
+            "name" => "estado",
+            "label" => "Estado",
+            "type" => "select",
+            "options" => [
+                ["value" => "PRESENTE", "label" => "Presente"],
+                ["value" => "AUSENTE", "label" => "Ausente"],
+                ["value" => "TARDANZA", "label" => "Tardanza"]
+            ]
+        ]
     ]
 ];
 require_once __DIR__ . '/../partials/table_page.php';

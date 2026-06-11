@@ -30,10 +30,28 @@ $formCrear = [
             "labelField" => "descripcion"
         ],
         ["name" => "grado", "label" => "Grado", "type" => "text"],
-        ["name" => "dia_semana", "label" => "Día", "type" => "text"],
+        [
+            "name" => "dia_semana",
+            "label" => "Día",
+            "type" => "select",
+            "options" => [
+                ["value" => "Lunes", "label" => "Lunes"],
+                ["value" => "Martes", "label" => "Martes"],
+                ["value" => "Miércoles", "label" => "Miércoles"],
+                ["value" => "Jueves", "label" => "Jueves"],
+                ["value" => "Viernes", "label" => "Viernes"]
+            ]
+        ],
         ["name" => "hora_inicio", "label" => "Hora inicio", "type" => "time"],
         ["name" => "hora_fin", "label" => "Hora fin", "type" => "time"],
-        ["name" => "aula", "label" => "Aula", "type" => "text"]
+        [
+            "name" => "aula",
+            "label" => "Aula",
+            "type" => "select",
+            "api" => "src/api/Aula/leer_aulas.php",
+            "value" => "nombre",
+            "labelField" => "nombre"
+        ]
     ]
 ];
 require_once __DIR__ . '/../partials/table_page.php';

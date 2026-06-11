@@ -35,16 +35,23 @@ class Estudiante {
         return $stmt->execute();
     }
     public function leer() {
-        $query = "SELECT id_estudiante, nombre, apellido, cedula_identidad, huella_id, fecha_registro, activo
-          FROM " . $this->table_name . "
-          WHERE activo = 1
-          ORDER BY id_estudiante DESC";
+    $query = "SELECT 
+                id_estudiante,
+                nombre,
+                apellido,
+                cedula_identidad,
+                huella_id,
+                fecha_registro,
+                activo,
+                CONCAT(nombre, ' ', apellido, ' - CI: ', cedula_identidad) AS nombre_completo
+              FROM estudiantes
+              WHERE activo = 1
+              ORDER BY nombre ASC";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-
-        return $stmt;
-    }
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
 
 public function actualizar() {
     $query = "UPDATE estudiantes 

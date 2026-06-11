@@ -1,12 +1,14 @@
 <?php
 $titulo = "Asignaciones";
 $api = "src/api/Asignaciones/leer_asignaciones.php";
+
 $columnas = [
     "id_asignacion",
     "profesor",
     "materia",
     "año_lectivo"
 ];
+
 $filtros = [
     "selects" => [
         ["campo" => "profesor", "label" => "Profesor"],
@@ -14,6 +16,7 @@ $filtros = [
         ["campo" => "año_lectivo", "label" => "Año lectivo"]
     ]
 ];
+
 $formCrear = [
     "api" => "src/api/Asignaciones/crear_asignacion.php",
     "campos" => [
@@ -36,4 +39,5 @@ $formCrear = [
         ["name" => "año_lectivo", "label" => "Año lectivo", "type" => "number"]
     ]
 ];
+
 require_once __DIR__ . '/../partials/table_page.php';
