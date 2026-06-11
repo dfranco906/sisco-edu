@@ -34,8 +34,9 @@ class AsistenciaProfesor {
     }
 
     public function leer() {
-        $query = "SELECT ap.*, p.nombre, p.apellido
+        $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
                   FROM {$this->table_name} ap
+
                   INNER JOIN profesores p ON ap.id_profesor = p.id_profesor
                   WHERE ap.activo = 1
                   ORDER BY ap.id_asistencia_profesor DESC";

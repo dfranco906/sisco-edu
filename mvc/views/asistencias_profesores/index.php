@@ -29,7 +29,6 @@ $formCrear = [
             "value" => "id_profesor",
             "labelField" => "nombre_completo"
         ],
-        ["name" => "huella_id", "label" => "Huella ID", "type" => "number"],
         ["name" => "fecha", "label" => "Fecha", "type" => "date"],
         ["name" => "hora", "label" => "Hora", "type" => "time"],
         [
