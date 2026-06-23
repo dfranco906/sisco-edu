@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../config/app.php';
 
 $db = (new Database())->getConnection();
 
@@ -63,14 +64,36 @@ try {
     ");
 
     $stmt3->execute([":id_huella" => $id_huella]);
+    
+    $id_sync = $db->lastInsertId();
 
     $db->commit();
 
+    $gatewayAvisado = false;
+
+$ch = curl_init(GATEWAY_SYNC_URL);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "X-GATEWAY-KEY: " . GATEWAY_API_KEY
+]);
+curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+
+$resGateway = curl_exec($ch);
+
+if ($resGateway !== false) {
+    $gatewayAvisado = true;
+}
+
+curl_close($ch);
+
     echo json_encode([
-        "status" => "success",
-        "message" => "Huella guardada correctamente y pendiente para Gateway",
-        "id_huella" => $id_huella
-    ]);
+    "status" => "success",
+    "message" => "Huella guardada correctamente y pendiente para Gateway",
+    "id_huella" => $id_huella,
+    "gateway_avisado" => $gatewayAvisado,
+    "id_sync" => $id_sync
+]);
 
 } catch (Throwable $e) {
     if ($db->inTransaction()) $db->rollBack();
