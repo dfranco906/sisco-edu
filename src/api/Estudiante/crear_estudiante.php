@@ -1,37 +1,36 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Estudiante.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$database = new Database();
-$db = $database->getConnection();
-$estudiante = new Estudiante($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Estudiante.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+try {
+    $db = (new Database())->getConnection();
+    $estudiante = new Estudiante($db);
 
     $estudiante->nombre = $_POST['nombre'] ?? null;
     $estudiante->apellido = $_POST['apellido'] ?? null;
     $estudiante->cedula_identidad = $_POST['cedula_identidad'] ?? null;
+    $estudiante->id_grado = $_POST['id_grado'] ?? null;
     $estudiante->huella_id = $_POST['huella_id'] ?? null;
 
-    if (!empty($estudiante->nombre) && !empty($estudiante->apellido) && !empty($estudiante->cedula_identidad)) {
-
-        if ($estudiante->crear()) {
-            http_response_code(201);
-            echo json_encode(["message" => "Estudiante creado correctamente."]);
-        } else {
-            http_response_code(503);
-            echo json_encode(["message" => "Error al crear estudiante."]);
-        }
-
-    } else {
-        http_response_code(400);
-        echo json_encode(["message" => "Datos incompletos."]);
+    if (!$estudiante->nombre || !$estudiante->apellido || !$estudiante->cedula_identidad || !$estudiante->id_grado) {
+        echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+        exit;
     }
 
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido."]);
+    $resultado = $estudiante->crear();
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Estudiante creado correctamente" : "Error al crear estudiante"
+    ]);
+
+} catch (Throwable $e) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Error interno",
+        "debug" => $e->getMessage()
+    ]);
 }
 ?>

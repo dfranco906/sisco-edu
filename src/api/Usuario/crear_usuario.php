@@ -1,13 +1,18 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Usuario.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$usuario = new Usuario($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Usuario.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    exit;
+}
+
+try {
+    $db = (new Database())->getConnection();
+    $usuario = new Usuario($db);
 
     $usuario->nombre = $_POST['nombre'] ?? null;
     $usuario->apellido = $_POST['apellido'] ?? null;
@@ -17,23 +22,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario->password = $_POST['password'] ?? null;
     $usuario->rol = $_POST['rol'] ?? null;
 
-    if (!empty($usuario->nombre) && !empty($usuario->usuario) && !empty($usuario->password)) {
-
-        if ($usuario->crear()) {
-            http_response_code(201);
-            echo json_encode(["message" => "Usuario creado correctamente"]);
-        } else {
-            http_response_code(503);
-            echo json_encode(["message" => "Error al crear usuario"]);
-        }
-
-    } else {
+    if (!$usuario->nombre || !$usuario->apellido || !$usuario->usuario || !$usuario->email || !$usuario->celular || !$usuario->password || !$usuario->rol) {
         http_response_code(400);
-        echo json_encode(["message" => "Datos incompletos"]);
+        echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+        exit;
     }
 
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    $resultado = $usuario->crear();
+
+    if ($resultado) {
+        http_response_code(201);
+    }
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Usuario creado correctamente" : "Error al crear usuario"
+    ]);
+} catch (Throwable $e) {
+    echo json_encode(["status" => "error", "message" => "Error interno", "debug" => $e->getMessage()]);
 }
 ?>

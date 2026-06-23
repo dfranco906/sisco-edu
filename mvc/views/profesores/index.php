@@ -19,6 +19,8 @@ $formCrear = [
     ]
 ];
 $apiActualizar = "src/api/Profesor/actualizar_profesor.php";
+$apiDesactivar = "src/api/Profesor/desactivar_profesor.php";
+$urlDesactivados = "mvc/views/profesores/desactivados.php";
 $idCampo = "id_profesor";
 $camposEditar = ["nombre", "apellido", "cedula_identidad"];
 require_once __DIR__ . '/../partials/table_page.php';

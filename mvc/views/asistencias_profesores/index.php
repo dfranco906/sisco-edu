@@ -43,4 +43,9 @@ $formCrear = [
         ]
     ]
 ];
+$apiActualizar = "src/api/AsistenciaProfesor/actualizar_asistencia_profesor.php";
+$apiDesactivar = "src/api/AsistenciaProfesor/desactivar_asistencia_profesor.php";
+$urlDesactivados = "mvc/views/asistencias_profesores/desactivados.php";
+$idCampo = "id_asistencia_profesor";
+$camposEditar = ["id_profesor", "huella_id", "fecha", "hora", "estado"];
 require_once __DIR__ . '/../partials/table_page.php';

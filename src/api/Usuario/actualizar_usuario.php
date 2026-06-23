@@ -1,13 +1,18 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Usuario.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$usuario = new Usuario($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Usuario.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    exit;
+}
+
+try {
+    $db = (new Database())->getConnection();
+    $usuario = new Usuario($db);
 
     $usuario->id_usuario = $_POST['id_usuario'] ?? null;
     $usuario->nombre = $_POST['nombre'] ?? null;
@@ -17,18 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario->celular = $_POST['celular'] ?? null;
     $usuario->rol = $_POST['rol'] ?? null;
 
-    if (!empty($usuario->id_usuario)) {
-        if ($usuario->actualizar()) {
-            echo json_encode(["message" => "Usuario actualizado correctamente"]);
-        } else {
-            echo json_encode(["message" => "Error al actualizar usuario"]);
-        }
-    } else {
-        echo json_encode(["message" => "ID de usuario requerido"]);
+    if (!$usuario->id_usuario) {
+        echo json_encode(["status" => "error", "message" => "ID de usuario requerido"]);
+        exit;
     }
 
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    $resultado = $usuario->actualizar();
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Usuario actualizado correctamente" : "Error al actualizar usuario"
+    ]);
+} catch (Throwable $e) {
+    echo json_encode(["status" => "error", "message" => "Error interno", "debug" => $e->getMessage()]);
 }
 ?>

@@ -68,12 +68,14 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
 
             <div class="flex gap-3">
+                <?php if (isset($formCrear)): ?>
                 <button id="btn-crear"
                     class="px-5 py-3 rounded-xl text-white font-semibold bg-green-600 hover:bg-green-700">
                     + Crear
                 </button>
+                <?php endif; ?>
 
-                <a href="<?= base_url('mvc/views/dashboard.php') ?>"
+                <a href="<?= base_url($urlVolver ?? 'mvc/views/dashboard.php') ?>"
                    class="px-5 py-3 rounded-xl text-white font-semibold"
                    style="background: var(--color-primary);">
                     Volver
@@ -125,6 +127,10 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <script>
     window.BASE_URL = "<?= base_url('') ?>";
     window.API_ACTUALIZAR = "<?= isset($apiActualizar) ? base_url($apiActualizar) : '' ?>";
+    window.API_DESACTIVAR = "<?= isset($apiDesactivar) ? base_url($apiDesactivar) : '' ?>";
+    window.API_RESTAURAR = "<?= isset($apiRestaurar) ? base_url($apiRestaurar) : '' ?>";
+    window.API_ELIMINAR = "<?= isset($apiEliminar) ? base_url($apiEliminar) : '' ?>";
+    window.URL_DESACTIVADOS = "<?= isset($urlDesactivados) ? base_url($urlDesactivados) : '' ?>";
     window.ID_CAMPO = "<?= $idCampo ?? '' ?>";
     window.CAMPOS_EDITAR = <?= json_encode($camposEditar ?? []) ?>;
 </script>

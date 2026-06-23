@@ -144,3 +144,67 @@ window.editarRegistro = function(item) {
 
     modal.classList.remove("hidden");
 };
+
+async function ejecutarAccionRegistro(api, id, mensajeConfirmacion) {
+    if (!api || !window.ID_CAMPO) {
+        alert("Accion no configurada para este modulo");
+        return;
+    }
+
+    if (!confirm(mensajeConfirmacion)) return;
+
+    const formData = new FormData();
+    formData.append(window.ID_CAMPO, id);
+
+    try {
+        const res = await fetch(api, {
+            method: "POST",
+            body: formData
+        });
+
+        const texto = await res.text();
+        let data;
+
+        try {
+            data = JSON.parse(texto);
+        } catch (error) {
+            data = {
+                status: res.ok ? "success" : "error",
+                message: texto || "Operacion finalizada"
+            };
+        }
+
+        alert(data.message ?? "Operacion finalizada");
+
+        if (data.status === "success") {
+            location.reload();
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error al procesar la solicitud");
+    }
+}
+
+window.desactivarRegistro = function(id) {
+    ejecutarAccionRegistro(
+        window.API_DESACTIVAR,
+        id,
+        "Seguro que desea desactivar este registro?"
+    );
+};
+
+window.restaurarRegistro = function(id) {
+    ejecutarAccionRegistro(
+        window.API_RESTAURAR,
+        id,
+        "Seguro que desea restaurar este registro?"
+    );
+};
+
+window.eliminarRegistro = function(id) {
+    ejecutarAccionRegistro(
+        window.API_ELIMINAR,
+        id,
+        "Seguro que desea eliminar este registro? Esta accion no se puede deshacer."
+    );
+};

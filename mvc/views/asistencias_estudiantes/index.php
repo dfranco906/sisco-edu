@@ -43,4 +43,9 @@ $formCrear = [
         ]
     ]
 ];
+$apiActualizar = "src/api/AsistenciaEstudiante/actualizar_asistencia_estudiante.php";
+$apiDesactivar = "src/api/AsistenciaEstudiante/desactivar_asistencia_estudiante.php";
+$urlDesactivados = "mvc/views/asistencias_estudiantes/desactivados.php";
+$idCampo = "id_asistencia_estudiante";
+$camposEditar = ["id_estudiante", "huella_id", "fecha", "hora", "estado"];
 require_once __DIR__ . '/../partials/table_page.php';

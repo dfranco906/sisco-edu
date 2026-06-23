@@ -64,6 +64,17 @@ class Usuario {
 
         return $stmt;
     }
+    public function leerDesactivados() {
+        $query = "SELECT id_usuario, nombre, apellido, usuario, email, celular, rol, fecha_creacion, activo
+          FROM " . $this->table_name . "
+          WHERE activo = 0
+          ORDER BY id_usuario DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt;
+    }
     public function actualizar() {
     $query = "UPDATE " . $this->table_name . "
               SET nombre=:nombre,
@@ -95,6 +106,26 @@ public function desactivar() {
     $stmt->bindParam(":id", $this->id_usuario);
 
     return $stmt->execute();
+}
+public function restaurar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 1
+              WHERE id_usuario = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_usuario);
+
+    return $stmt->execute();
+}
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_usuario = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_usuario);
+    $stmt->execute();
+
+    return $stmt->rowCount() > 0;
 }
 }
 ?>

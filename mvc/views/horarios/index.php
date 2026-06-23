@@ -54,4 +54,9 @@ $formCrear = [
         ]
     ]
 ];
+$apiActualizar = "src/api/Horario/actualizar_horario.php";
+$apiDesactivar = "src/api/Horario/desactivar_horario.php";
+$urlDesactivados = "mvc/views/horarios/desactivados.php";
+$idCampo = "id_horario";
+$camposEditar = ["id_asignacion", "grado", "dia_semana", "hora_inicio", "hora_fin", "aula"];
 require_once __DIR__ . '/../partials/table_page.php';

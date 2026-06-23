@@ -28,6 +28,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
         }
 
         datos.forEach(item => {
+            const idRegistro = window.ID_CAMPO ? item[window.ID_CAMPO] : null;
             let fila = `<tr class="border-b hover:bg-gray-50">`;
 
             columnas.forEach(col => {
@@ -36,13 +37,26 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
             fila += `
     <td class="p-3 flex gap-2">
+        ${window.API_ACTUALIZAR && idRegistro ? `
         <button onclick='editarRegistro(${JSON.stringify(item)})'
-class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
-    Editar
-</button>
-        <button class="px-3 py-1 rounded-lg bg-red-100 text-red-700 text-xs font-semibold">
+        class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
+            Editar
+        </button>` : ""}
+        ${window.API_DESACTIVAR && idRegistro ? `
+        <button onclick='desactivarRegistro(${JSON.stringify(idRegistro)})'
+        class="px-3 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-semibold">
             Desactivar
-        </button>
+        </button>` : ""}
+        ${window.API_RESTAURAR && idRegistro ? `
+        <button onclick='restaurarRegistro(${JSON.stringify(idRegistro)})'
+        class="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+            Restaurar
+        </button>` : ""}
+        ${window.API_ELIMINAR && idRegistro ? `
+        <button onclick='eliminarRegistro(${JSON.stringify(idRegistro)})'
+        class="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-semibold">
+            Eliminar
+        </button>` : ""}
         ${item.id_estudiante ? `
         <button onclick="descargarYGuardarTemplate(${item.id_estudiante}, 'estudiante')"
         class="btn-huella px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
@@ -98,6 +112,14 @@ class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
                 Limpiar filtros
             </button>
         `;
+
+        if (window.URL_DESACTIVADOS) {
+            filtrosBox.innerHTML += `
+                <a href="${window.URL_DESACTIVADOS}" class="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-800">
+                    Desactivados
+                </a>
+            `;
+        }
 
         activarEventos();
     }

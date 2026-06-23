@@ -19,6 +19,7 @@
             ["Asist. Estudiantes", "Ver asistencias de estudiantes", "asistencias_estudiantes/index.php"],
             ["Asist. Profesores", "Ver asistencias de profesores", "asistencias_profesores/index.php"],
             ["Usuarios", "Control de acceso", "usuarios/index.php"],
+            ["Grados", "Gestionar grados y aulas asignadas", "grados/index.php"],
             ["Aulas", "Gestionar aulas", "aulas/index.php"],
         ];
 

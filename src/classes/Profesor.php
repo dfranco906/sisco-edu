@@ -64,6 +64,23 @@ public function leer() {
     $stmt->execute();
     return $stmt;
 }
+public function leerDesactivados() {
+    $query = "SELECT 
+                id_profesor,
+                nombre,
+                apellido,
+                cedula_identidad,
+                huella_id,
+                activo,
+                CONCAT(nombre, ' ', apellido) AS nombre_completo
+              FROM profesores
+              WHERE activo = 0
+              ORDER BY nombre ASC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
     // ✅ UPDATE
 public function actualizar() {
     $query = "UPDATE " . $this->table_name . "
@@ -100,6 +117,41 @@ public function desactivar() {
     $stmt->bindParam(":id", $this->id_profesor);
 
     return $stmt->execute();
+}
+public function restaurar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 1
+              WHERE id_profesor = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_profesor);
+
+    return $stmt->execute();
+}
+public function contarDependencias() {
+    $query = "SELECT
+                (SELECT COUNT(*) FROM asignacion_docente WHERE id_profesor=:id1) +
+                (SELECT COUNT(*) FROM asistencias_profesores WHERE id_profesor=:id2) +
+                (SELECT COUNT(*) FROM huellas_templates WHERE id_profesor=:id3)";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([
+        ":id1" => $this->id_profesor,
+        ":id2" => $this->id_profesor,
+        ":id3" => $this->id_profesor
+    ]);
+
+    return (int) $stmt->fetchColumn();
+}
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_profesor = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_profesor);
+    $stmt->execute();
+
+    return $stmt->rowCount() > 0;
 }
 }
 ?>

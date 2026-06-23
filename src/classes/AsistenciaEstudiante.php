@@ -34,10 +34,24 @@ class AsistenciaEstudiante {
     }
 
     public function leer() {
-        $query = "SELECT ae.*, e.nombre, e.apellido
+        $query = "SELECT ae.*, e.nombre, e.apellido, g.nombre AS grado
                   FROM {$this->table_name} ae
                   INNER JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
+                  LEFT JOIN grados g ON e.id_grado = g.id_grado
                   WHERE ae.activo = 1
+                  ORDER BY ae.id_asistencia_estudiante DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    public function leerDesactivados() {
+        $query = "SELECT ae.*, e.nombre, e.apellido, g.nombre AS grado
+                  FROM {$this->table_name} ae
+                  INNER JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
+                  LEFT JOIN grados g ON e.id_grado = g.id_grado
+                  WHERE ae.activo = 0
                   ORDER BY ae.id_asistencia_estudiante DESC";
 
         $stmt = $this->conn->prepare($query);
@@ -75,6 +89,28 @@ class AsistenciaEstudiante {
         $stmt->bindParam(":id", $this->id_asistencia_estudiante);
 
         return $stmt->execute();
+    }
+
+    public function restaurar() {
+        $query = "UPDATE {$this->table_name}
+                  SET activo = 1
+                  WHERE id_asistencia_estudiante=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_asistencia_estudiante);
+
+        return $stmt->execute();
+    }
+
+    public function eliminar() {
+        $query = "DELETE FROM {$this->table_name}
+                  WHERE id_asistencia_estudiante=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_asistencia_estudiante);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
     }
 }
 ?>

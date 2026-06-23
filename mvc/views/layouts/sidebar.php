@@ -16,6 +16,7 @@
         <a href="<?= base_url('mvc/views/asistencias_profesores/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Profesores</a>
         <a href="<?= base_url('mvc/views/usuarios/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Usuarios</a>
         <a href="<?= base_url('mvc/views/aulas/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Aulas</a>
+        <a href="<?= base_url('mvc/views/grados/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Grados</a>    
     </nav>
 
     <a href="<?= base_url('src/api/logout.php') ?>" class="mt-auto text-red-500 font-semibold">

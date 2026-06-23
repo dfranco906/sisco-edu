@@ -34,10 +34,22 @@ class AsistenciaProfesor {
     }
 
     public function leer() {
-        $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
+        $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido) AS profesor, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
                   FROM {$this->table_name} ap
                   INNER JOIN profesores p ON ap.id_profesor = p.id_profesor
                   WHERE ap.activo = 1
+                  ORDER BY ap.id_asistencia_profesor DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    public function leerDesactivados() {
+        $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido) AS profesor, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
+                  FROM {$this->table_name} ap
+                  INNER JOIN profesores p ON ap.id_profesor = p.id_profesor
+                  WHERE ap.activo = 0
                   ORDER BY ap.id_asistencia_profesor DESC";
 
         $stmt = $this->conn->prepare($query);
@@ -75,6 +87,28 @@ class AsistenciaProfesor {
         $stmt->bindParam(":id", $this->id_asistencia_profesor);
 
         return $stmt->execute();
+    }
+
+    public function restaurar() {
+        $query = "UPDATE {$this->table_name}
+                  SET activo = 1
+                  WHERE id_asistencia_profesor=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_asistencia_profesor);
+
+        return $stmt->execute();
+    }
+
+    public function eliminar() {
+        $query = "DELETE FROM {$this->table_name}
+                  WHERE id_asistencia_profesor=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_asistencia_profesor);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
     }
 }
 ?>

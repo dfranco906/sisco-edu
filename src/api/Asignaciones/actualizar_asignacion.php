@@ -1,31 +1,36 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Asignacion.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$asignacion = new Asignacion($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Asignacion.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    exit;
+}
+
+try {
+    $db = (new Database())->getConnection();
+    $asignacion = new Asignacion($db);
 
     $asignacion->id_asignacion = $_POST['id_asignacion'] ?? null;
     $asignacion->id_profesor = $_POST['id_profesor'] ?? null;
     $asignacion->id_materia = $_POST['id_materia'] ?? null;
-    $asignacion->año_lectivo = $_POST['anio'] ?? null;
+    $asignacion->aÃ±o_lectivo = $_POST['aÃ±o_lectivo'] ?? $_POST['anio'] ?? null;
 
-    if (!empty($asignacion->id_asignacion)) {
-        if ($asignacion->actualizar()) {
-            echo json_encode(["message" => "Asignación actualizada correctamente"]);
-        } else {
-            echo json_encode(["message" => "Error al actualizar asignación"]);
-        }
-    } else {
-        echo json_encode(["message" => "ID de asignación requerido"]);
+    if (!$asignacion->id_asignacion) {
+        echo json_encode(["status" => "error", "message" => "ID de asignacion requerido"]);
+        exit;
     }
 
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    $resultado = $asignacion->actualizar();
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Asignacion actualizada correctamente" : "Error al actualizar asignacion"
+    ]);
+} catch (Throwable $e) {
+    echo json_encode(["status" => "error", "message" => "Error interno", "debug" => $e->getMessage()]);
 }
 ?>
