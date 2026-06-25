@@ -57,7 +57,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 </div>
 <?php endif; ?>
 <main class="flex-1 p-6 md:p-10">
-    <div class="bg-white rounded-2xl shadow p-6 w-full">
+    <div class="app-panel p-6 w-full">
 
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>

@@ -1,22 +1,53 @@
-<?php require_once __DIR__ . '/../../../src/config/app.php'; ?>
+<?php
+require_once __DIR__ . '/../../../src/config/app.php';
 
-<aside class="hidden md:flex w-64 bg-white shadow-lg flex-col p-6">
-    <h1 class="text-2xl font-bold mb-8" style="color: var(--color-primary);">
+$currentPath = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$navItems = [
+    ['Dashboard', 'mvc/views/dashboard.php'],
+    ['Profesores', 'mvc/views/profesores/index.php'],
+    ['Estudiantes', 'mvc/views/estudiantes/index.php'],
+    ['Horarios', 'mvc/views/horarios/index.php'],
+    ['Asist. Estudiantes', 'mvc/views/asistencias_estudiantes/index.php'],
+    ['Asist. Profesores', 'mvc/views/asistencias_profesores/index.php'],
+    ['Administraci&oacute;n', 'mvc/views/administracion/index.php'],
+];
+
+$adminPaths = [
+    'mvc/views/administracion/',
+    'mvc/views/usuarios/',
+    'mvc/views/aulas/',
+    'mvc/views/grados/',
+    'mvc/views/materias/',
+    'mvc/views/asignaciones/',
+];
+?>
+
+<aside class="app-sidebar hidden md:flex w-64 flex-col p-6">
+    <h1 class="app-logo text-2xl font-bold mb-8">
         SISCO-EDU
     </h1>
 
     <nav class="space-y-3">
-        <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Dashboard</a>
-        <a href="<?= base_url('mvc/views/profesores/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Profesores</a>
-        <a href="<?= base_url('mvc/views/estudiantes/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Estudiantes</a>
-        <a href="<?= base_url('mvc/views/horarios/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Horarios</a>
-        <a href="<?= base_url('mvc/views/asignaciones/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asignaciones</a>
-        <a href="<?= base_url('mvc/views/asistencias_estudiantes/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Estudiantes</a>
-        <a href="<?= base_url('mvc/views/asistencias_profesores/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Profesores</a>
-        <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Administraci&oacute;n</a>
+        <?php foreach ($navItems as $item): ?>
+            <?php
+            $label = $item[0];
+            $path = $item[1];
+            $isActive = strpos($currentPath, '/' . $path) !== false;
+
+            if ($path === 'mvc/views/administracion/index.php') {
+                foreach ($adminPaths as $adminPath) {
+                    if (strpos($currentPath, '/' . $adminPath) !== false) {
+                        $isActive = true;
+                        break;
+                    }
+                }
+            }
+            ?>
+            <a href="<?= base_url($path) ?>" class="app-nav-link<?= $isActive ? ' is-active' : '' ?>"><?= $label ?></a>
+        <?php endforeach; ?>
     </nav>
 
-    <a href="<?= base_url('src/api/logout.php') ?>" class="mt-auto text-red-500 font-semibold">
-        Cerrar sesión
+    <a href="<?= base_url('src/api/logout.php') ?>" class="app-logout mt-auto">
+        Cerrar sesi&oacute;n
     </a>
 </aside>
