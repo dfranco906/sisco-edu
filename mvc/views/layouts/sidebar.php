@@ -9,14 +9,11 @@
         <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Dashboard</a>
         <a href="<?= base_url('mvc/views/profesores/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Profesores</a>
         <a href="<?= base_url('mvc/views/estudiantes/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Estudiantes</a>
-        <a href="<?= base_url('mvc/views/materias/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Materias</a>
         <a href="<?= base_url('mvc/views/horarios/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Horarios</a>
         <a href="<?= base_url('mvc/views/asignaciones/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asignaciones</a>
         <a href="<?= base_url('mvc/views/asistencias_estudiantes/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Estudiantes</a>
         <a href="<?= base_url('mvc/views/asistencias_profesores/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Asist. Profesores</a>
-        <a href="<?= base_url('mvc/views/usuarios/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Usuarios</a>
-        <a href="<?= base_url('mvc/views/aulas/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Aulas</a>
-        <a href="<?= base_url('mvc/views/grados/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Grados</a>    
+        <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="block px-4 py-3 rounded-xl hover:bg-blue-50">Administraci&oacute;n</a>
     </nav>
 
     <a href="<?= base_url('src/api/logout.php') ?>" class="mt-auto text-red-500 font-semibold">

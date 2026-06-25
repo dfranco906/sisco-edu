@@ -13,14 +13,11 @@
         $modulos = [
             ["Profesores", "Gestionar profesores", "profesores/index.php"],
             ["Estudiantes", "Gestionar estudiantes", "estudiantes/index.php"],
-            ["Materias", "Gestionar materias", "materias/index.php"],
             ["Horarios", "Gestionar horarios", "horarios/index.php"],
             ["Asignaciones", "Gestionar asignaciones", "asignaciones/index.php"],
             ["Asist. Estudiantes", "Ver asistencias de estudiantes", "asistencias_estudiantes/index.php"],
             ["Asist. Profesores", "Ver asistencias de profesores", "asistencias_profesores/index.php"],
-            ["Usuarios", "Control de acceso", "usuarios/index.php"],
-            ["Grados", "Gestionar grados y aulas asignadas", "grados/index.php"],
-            ["Aulas", "Gestionar aulas", "aulas/index.php"],
+            ["Administraci&oacute;n", "Gestionar usuarios, aulas, grados y materias.", "administracion/index.php"],
         ];
 
         foreach ($modulos as $m):
