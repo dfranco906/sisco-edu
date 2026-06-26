@@ -1,0 +1,111 @@
+:root {
+    --color-primary: #2563EB;
+    --color-primary-dark: #1E40AF;
+    --color-sidebar: #0F172A;
+    --color-sidebar-soft: #1E293B;
+    --color-bg: #F8FAFC;
+    --color-card: #FFFFFF;
+    --color-text: #0F172A;
+    --color-muted: #64748B;
+    --color-border: #E2E8F0;
+    --color-logout: #EF4444;
+    --radius: 16px;
+}
+
+body {
+    color: var(--color-text);
+}
+
+.app-sidebar {
+    background: linear-gradient(180deg, var(--color-sidebar) 0%, #111827 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 12px 0 30px rgba(15, 23, 42, 0.16);
+}
+
+.app-logo {
+    color: #E0F2FE;
+    letter-spacing: 0;
+}
+
+.app-nav-link {
+    display: block;
+    position: relative;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: #CBD5E1;
+    font-weight: 600;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.app-nav-link:hover {
+    background: rgba(37, 99, 235, 0.16);
+    color: #FFFFFF;
+}
+
+.app-nav-link.is-active {
+    background: rgba(37, 99, 235, 0.28);
+    color: #FFFFFF;
+}
+
+.app-nav-link.is-active::before {
+    content: "";
+    position: absolute;
+    left: -0.5rem;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 4px;
+    border-radius: 999px;
+    background: #60A5FA;
+}
+
+.app-logout {
+    color: #FCA5A5;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+.app-logout:hover {
+    background: rgba(239, 68, 68, 0.14);
+    color: #FEE2E2;
+}
+
+.app-page-header,
+.app-panel,
+.app-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+}
+
+.app-page-header {
+    background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+}
+
+.app-page-header p,
+.app-card p {
+    color: var(--color-muted);
+}
+
+.app-card {
+    display: block;
+    min-height: 136px;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.app-card:hover {
+    border-color: #BFDBFE;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.11);
+    transform: translateY(-2px);
+}
+
+.app-card h3 {
+    color: var(--color-text);
+}
+
+.app-card-accent {
+    border-color: #93C5FD;
+    background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+}
