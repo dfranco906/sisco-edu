@@ -4,8 +4,8 @@ require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 <?php if (isset($formCrear)): ?>
-<div id="modal-crear" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+<div id="modal-crear" class="app-modal hidden">
+    <div class="app-modal-dialog max-w-md">
         <h3 class="text-xl font-bold mb-4">Crear <?= $titulo ?></h3>
             <div id="mensaje-form" class="mb-3"></div>
         <form id="form-crear" data-api="<?= base_url($formCrear['api']) ?>">
@@ -43,7 +43,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <?php endif; ?>
             <?php endforeach; ?>
 
-            <div class="flex justify-end gap-3">
+            <div class="app-modal-actions">
     <button type="button" id="cerrar-modal" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200">
         Cerrar
     </button>
@@ -56,8 +56,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     </div>
 </div>
 <?php endif; ?>
-<main class="flex-1 p-6 md:p-10">
-    <div class="app-panel p-6 w-full">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-10">
+    <div class="app-panel p-4 sm:p-6 w-full">
 
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
@@ -67,7 +67,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </p>
             </div>
 
-            <div class="flex gap-3">
+            <div class="app-toolbar-actions flex flex-wrap gap-3">
                 <?php if (isset($formCrear)): ?>
                 <button id="btn-crear"
                     class="px-5 py-3 rounded-xl text-white font-semibold bg-green-600 hover:bg-green-700">
@@ -83,9 +83,9 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         </div>
 
-        <div id="filtros-tabla" class="flex flex-col md:flex-row gap-3 mb-6"></div>
+        <div id="filtros-tabla" class="app-filters mb-6"></div>
 
-        <div class="overflow-x-auto">
+        <div class="app-table-wrap">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-100">
                     <tr>
@@ -102,8 +102,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
 
     </div>
-    <div id="modal-editar" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+    <div id="modal-editar" class="app-modal hidden">
+    <div class="app-modal-dialog max-w-md">
         <h3 class="text-xl font-bold mb-4">Editar registro</h3>
 
         <div id="mensaje-editar" class="mb-3"></div>
@@ -111,7 +111,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         <form id="form-editar">
             <div id="campos-editar"></div>
 
-            <div class="flex justify-end gap-3 mt-4">
+            <div class="app-modal-actions mt-4">
                 <button type="button" id="cancelar-editar" class="px-4 py-2 rounded-xl bg-gray-100">
                     Cancelar
                 </button>

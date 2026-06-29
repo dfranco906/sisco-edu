@@ -36,7 +36,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
             });
 
             fila += `
-    <td class="p-3 flex gap-2">
+    <td class="p-3"><div class="table-actions">
         ${window.API_ACTUALIZAR && idRegistro ? `
         <button onclick='editarRegistro(${JSON.stringify(item)})'
         class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
@@ -68,7 +68,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
         class="btn-huella px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
           Huella
         </button>` : ""}
-            </td>`;
+            </div></td>`;
 
             fila += `</tr>`;
             tbody.innerHTML += fila;
@@ -85,7 +85,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
                 <input id="buscar-tabla" 
                        type="text" 
                        placeholder="${filtros.placeholder ?? 'Buscar...'}"
-                       class="border rounded-xl px-4 py-2 w-full md:w-72">
+                       class="app-input w-full">
             `;
         }
 
@@ -94,7 +94,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
                 const valores = [...new Set(datos.map(i => i[f.campo]).filter(v => v !== null && v !== ""))];
 
                 let select = `
-                    <select data-campo="${f.campo}" class="filtro-select border rounded-xl px-4 py-2">
+                    <select data-campo="${f.campo}" class="filtro-select app-input">
                         <option value="">${f.label}</option>
                 `;
 

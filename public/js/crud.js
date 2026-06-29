@@ -136,7 +136,7 @@ window.editarRegistro = function(item) {
             <input 
                 name="${campo}"
                 value="${item[campo] ?? ""}"
-                class="border rounded-xl px-4 py-2 w-full mb-4"
+                class="app-input w-full mb-4"
                 required
             >
         `;

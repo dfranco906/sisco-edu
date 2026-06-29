@@ -14,12 +14,86 @@
 
 body {
     color: var(--color-text);
+    overflow-x: hidden;
+}
+
+.app-shell {
+    width: 100%;
+}
+
+.app-shell > main,
+.app-main {
+    min-width: 0;
+    width: 100%;
 }
 
 .app-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    flex: 0 0 16rem;
+    height: 100vh;
     background: linear-gradient(180deg, var(--color-sidebar) 0%, #111827 100%);
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 12px 0 30px rgba(15, 23, 42, 0.16);
+}
+
+.app-sidebar-nav {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.app-menu-toggle,
+.app-menu-close {
+    align-items: center;
+    justify-content: center;
+}
+
+.app-menu-toggle {
+    position: fixed;
+    top: 0.85rem;
+    left: 0.85rem;
+    z-index: 55;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-direction: column;
+    gap: 0.3rem;
+    border-radius: 0.8rem;
+    border: 1px solid var(--color-border);
+    background: #FFFFFF;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+}
+
+.app-menu-toggle span {
+    display: block;
+    width: 1.25rem;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--color-sidebar);
+}
+
+.app-menu-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.65rem;
+    color: #E2E8F0;
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.app-menu-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.app-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: rgba(15, 23, 42, 0.58);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 180ms ease, visibility 180ms ease;
 }
 
 .app-logo {
@@ -108,4 +182,384 @@ body {
 .app-card-accent {
     border-color: #93C5FD;
     background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+}
+
+.app-page-header,
+.app-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.app-input {
+    min-height: 2.75rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 0.75rem;
+    background: #FFFFFF;
+    padding: 0.65rem 0.9rem;
+    color: var(--color-text);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.app-input:focus {
+    outline: none;
+    border-color: #60A5FA;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+.app-input-readonly {
+    background: #F1F5F9;
+    color: #334155;
+    cursor: not-allowed;
+}
+
+.app-help {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 400;
+}
+
+.app-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.app-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    width: 100%;
+}
+
+.app-filters > .app-input {
+    flex: 1 1 11rem;
+    width: auto;
+    min-width: 0;
+}
+
+.app-filters > input.app-input {
+    flex: 2 1 20rem;
+}
+
+.app-filters > button,
+.app-filters > a {
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.app-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-table-wrap table {
+    width: 100%;
+    min-width: 100%;
+    max-width: none;
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+.app-table-wrap th,
+.app-table-wrap td {
+    padding: clamp(0.65rem, 0.8vw, 0.9rem);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.app-table-wrap th {
+    white-space: nowrap;
+}
+
+.app-table-wrap td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.app-table-wrap thead {
+    background: #F1F5F9;
+}
+
+.app-table-wrap tbody tr {
+    border-top: 1px solid var(--color-border);
+}
+
+.table-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+}
+
+.app-table-wrap th:last-child,
+.app-table-wrap td:last-child {
+    width: 1%;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.app-table-wrap td:last-child .table-actions {
+    justify-content: center;
+    align-items: center;
+}
+
+.app-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.app-modal.hidden {
+    display: none;
+}
+
+.app-modal-dialog {
+    width: min(95vw, 42rem);
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 1rem;
+    background: #FFFFFF;
+    padding: 1.5rem;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.app-modal-close {
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.65rem;
+    color: #475569;
+    background: #F1F5F9;
+    font-size: 1.55rem;
+    line-height: 1;
+}
+
+.app-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+body.modal-open,
+body.sidebar-open {
+    overflow: hidden;
+}
+
+.schedule-week-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 0.85rem;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.schedule-day-column {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+    background: #F8FAFC;
+}
+
+.schedule-day-column > h4,
+.schedule-mobile-day > h4 {
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 800;
+    color: #1E3A8A;
+}
+
+.schedule-day-entries {
+    display: grid;
+    gap: 0.7rem;
+    padding: 0.7rem;
+}
+
+.schedule-entry {
+    position: relative;
+    border: 1px solid #BFDBFE;
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0.75rem;
+    background: #FFFFFF;
+    padding: 0.8rem;
+    box-shadow: 0 5px 14px rgba(15, 23, 42, 0.05);
+}
+
+.schedule-entry-time {
+    color: #1E40AF;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.schedule-entry-subject {
+    margin-top: 0.3rem;
+    font-weight: 800;
+}
+
+.schedule-entry-meta,
+.schedule-entry-room {
+    margin-top: 0.2rem;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+}
+
+.schedule-entry-room {
+    color: #166534;
+    font-weight: 700;
+}
+
+.schedule-entry-edit {
+    margin-top: 0.55rem;
+    color: var(--color-primary-dark);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.schedule-empty {
+    padding: 0.75rem;
+    color: var(--color-muted);
+    font-size: 0.82rem;
+}
+
+.schedule-mobile-days {
+    display: none;
+}
+
+.room-badge {
+    display: inline-flex;
+    border-radius: 999px;
+    background: #DCFCE7;
+    padding: 0.2rem 0.6rem;
+    color: #166534;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+@media (max-width: 1100px) {
+    .app-filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .app-filters > .app-input,
+    .app-filters > button,
+    .app-filters > a {
+        width: 100%;
+    }
+
+    .app-table-wrap table {
+        width: max-content;
+        min-width: 100%;
+    }
+
+    .app-table-wrap th,
+    .app-table-wrap td {
+        white-space: nowrap;
+    }
+
+    .table-actions {
+        flex-wrap: wrap;
+    }
+
+}
+
+@media (max-width: 767px) {
+    .app-menu-toggle,
+    .app-menu-close {
+        display: flex;
+    }
+
+    .app-shell > main {
+        padding-top: 4.75rem !important;
+    }
+
+    .app-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 50;
+        width: min(84vw, 18rem);
+        height: 100vh;
+        transform: translateX(-105%);
+        transition: transform 180ms ease;
+    }
+
+    body.sidebar-open .app-sidebar {
+        transform: translateX(0);
+    }
+
+    body.sidebar-open .app-sidebar-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .schedule-week-grid {
+        display: none;
+    }
+
+    .schedule-mobile-days {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .schedule-mobile-day {
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 0.9rem;
+        background: #F8FAFC;
+    }
+
+    .schedule-mobile-day .schedule-entry,
+    .schedule-mobile-day .schedule-empty {
+        margin: 0.7rem;
+    }
+
+    .app-form-grid,
+    .app-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .app-form-grid .sm\:col-span-2 {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-toolbar-actions > * {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .app-modal {
+        align-items: flex-start;
+        padding: 5vh 0.65rem;
+    }
+
+    .app-modal-dialog {
+        width: 95vw;
+        max-height: 90vh;
+        padding: 1rem;
+    }
+
+    .app-modal-actions > * {
+        flex: 1 1 100%;
+        width: 100%;
+    }
 }

@@ -22,12 +22,19 @@ $adminPaths = [
 ];
 ?>
 
-<aside class="app-sidebar hidden md:flex w-64 flex-col p-6">
-    <h1 class="app-logo text-2xl font-bold mb-8">
-        SISCO-EDU
-    </h1>
+<button id="app-menu-toggle" class="app-menu-toggle md:hidden" type="button"
+        aria-controls="app-sidebar" aria-expanded="false" aria-label="Abrir menú principal">
+    <span></span><span></span><span></span>
+</button>
+<div id="app-sidebar-overlay" class="app-sidebar-overlay md:hidden" aria-hidden="true"></div>
 
-    <nav class="space-y-3">
+<aside id="app-sidebar" class="app-sidebar flex w-64 flex-col p-6" aria-label="Navegación principal">
+    <div class="flex items-center justify-between gap-3 mb-8">
+        <h1 class="app-logo text-2xl font-bold">SISCO-EDU</h1>
+        <button id="app-menu-close" class="app-menu-close md:hidden" type="button" aria-label="Cerrar menú">×</button>
+    </div>
+
+    <nav class="app-sidebar-nav space-y-3">
         <?php foreach ($navItems as $item): ?>
             <?php
             $label = $item[0];
