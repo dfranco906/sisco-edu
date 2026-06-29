@@ -9,6 +9,57 @@ $id_persona = $_POST['id_persona'] ?? $_POST['id_estudiante'] ?? null;
 $tipo_persona = $_POST['tipo_persona'] ?? 'estudiante';
 $template = $_POST['template'] ?? null;
 
+function avisarGatewaySync(): array
+{
+    $url = GATEWAY_SYNC_URL;
+    $headers = [
+        "X-GATEWAY-KEY: " . GATEWAY_API_KEY
+    ];
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+
+        $respuesta = curl_exec($ch);
+        $error = curl_error($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return [
+            "avisado" => $respuesta !== false && $httpCode >= 200 && $httpCode < 300,
+            "http_code" => $httpCode,
+            "error" => $respuesta === false ? $error : null,
+            "url" => $url
+        ];
+    }
+
+    $context = stream_context_create([
+        "http" => [
+            "method" => "POST",
+            "header" => implode("\r\n", $headers),
+            "timeout" => 3,
+            "ignore_errors" => true
+        ]
+    ]);
+
+    $respuesta = @file_get_contents($url, false, $context);
+    $httpCode = 0;
+
+    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $matches)) {
+        $httpCode = (int) $matches[1];
+    }
+
+    return [
+        "avisado" => $respuesta !== false && $httpCode >= 200 && $httpCode < 300,
+        "http_code" => $httpCode,
+        "error" => $respuesta === false ? "No se pudo invocar el gateway" : null,
+        "url" => $url
+    ];
+}
+
 if (!$id_persona || !$template) {
     echo json_encode(["status" => "error", "message" => "Faltan datos"]);
     exit;
@@ -69,31 +120,18 @@ try {
 
     $db->commit();
 
-    $gatewayAvisado = false;
-
-$ch = curl_init(GATEWAY_SYNC_URL);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "X-GATEWAY-KEY: " . GATEWAY_API_KEY
-]);
-curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-
-$resGateway = curl_exec($ch);
-
-if ($resGateway !== false) {
-    $gatewayAvisado = true;
-}
-
-curl_close($ch);
+    $gatewaySync = avisarGatewaySync();
 
     echo json_encode([
-    "status" => "success",
-    "message" => "Huella guardada correctamente y pendiente para Gateway",
-    "id_huella" => $id_huella,
-    "gateway_avisado" => $gatewayAvisado,
-    "id_sync" => $id_sync
-]);
+        "status" => "success",
+        "message" => "Huella guardada correctamente y pendiente para Gateway",
+        "id_huella" => $id_huella,
+        "gateway_avisado" => $gatewaySync["avisado"],
+        "gateway_http_code" => $gatewaySync["http_code"],
+        "gateway_error" => $gatewaySync["error"],
+        "gateway_url" => $gatewaySync["url"],
+        "id_sync" => $id_sync
+    ]);
 
 } catch (Throwable $e) {
     if ($db->inTransaction()) $db->rollBack();
