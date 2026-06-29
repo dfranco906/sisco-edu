@@ -40,6 +40,7 @@ $stmt = $db->prepare("
     WHERE s.estado = 'PENDIENTE'
       AND h.activo = 1
       AND (s.room_id = :room_id OR s.room_id = 'GENERAL')
+      AND NOT (s.room_id = 'GENERAL' AND h.id_estudiante IS NOT NULL)
     ORDER BY s.id_sync ASC
     LIMIT 1
 ");

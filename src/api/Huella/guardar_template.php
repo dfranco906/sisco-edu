@@ -8,6 +8,7 @@ $db = (new Database())->getConnection();
 $id_persona = $_POST['id_persona'] ?? $_POST['id_estudiante'] ?? null;
 $tipo_persona = $_POST['tipo_persona'] ?? 'estudiante';
 $template = $_POST['template'] ?? null;
+$room_id_recibido = isset($_POST['room_id']) ? trim((string) $_POST['room_id']) : null;
 
 function avisarGatewaySync(): array
 {
@@ -66,17 +67,62 @@ if (!$id_persona || !$template) {
 }
 
 try {
-    $db->beginTransaction();
-
     if ($tipo_persona === "profesor") {
         $tabla = "profesores";
         $idCampo = "id_profesor";
         $user_id_global = "PROF_" . $id_persona;
+        $room_id = "GENERAL";
     } else {
         $tabla = "estudiantes";
         $idCampo = "id_estudiante";
         $user_id_global = "EST_" . $id_persona;
+
+        $stmtEstudiante = $db->prepare("
+            SELECT
+                NULLIF(TRIM(e.room_id), '') AS room_estudiante,
+                NULLIF(TRIM(g.room_id), '') AS room_grado
+            FROM estudiantes e
+            LEFT JOIN grados g
+                ON g.id_grado = e.id_grado
+               AND g.activo = 1
+            WHERE e.id_estudiante = :id_estudiante
+              AND e.activo = 1
+            LIMIT 1
+        ");
+        $stmtEstudiante->execute([":id_estudiante" => $id_persona]);
+        $estudiante = $stmtEstudiante->fetch(PDO::FETCH_ASSOC);
+
+        if (!$estudiante) {
+            http_response_code(404);
+            echo json_encode(["status" => "error", "message" => "Estudiante no encontrado"]);
+            exit;
+        }
+
+        if ($room_id_recibido !== null && $room_id_recibido !== '') {
+            $stmtRoom = $db->prepare("
+                SELECT codigo
+                FROM aulas
+                WHERE codigo = :room_id
+                  AND activo = 1
+                LIMIT 1
+            ");
+            $stmtRoom->execute([":room_id" => $room_id_recibido]);
+            $room_id = $stmtRoom->fetchColumn() ?: null;
+        } else {
+            $room_id = $estudiante["room_estudiante"] ?? $estudiante["room_grado"] ?? null;
+        }
+
+        if (!$room_id || strcasecmp($room_id, "GENERAL") === 0) {
+            http_response_code(422);
+            echo json_encode([
+                "status" => "error",
+                "message" => "El estudiante no tiene room_id asignado. No se puede sincronizar la huella al aula."
+            ]);
+            exit;
+        }
     }
+
+    $db->beginTransaction();
 
     $stmt = $db->prepare("
         INSERT INTO huellas_templates
@@ -111,10 +157,13 @@ try {
         INSERT INTO sync_biometrica
         (id_huella, room_id, estado, intentos)
         VALUES
-        (:id_huella, 'GENERAL', 'PENDIENTE', 0)
+        (:id_huella, :room_id, 'PENDIENTE', 0)
     ");
 
-    $stmt3->execute([":id_huella" => $id_huella]);
+    $stmt3->execute([
+        ":id_huella" => $id_huella,
+        ":room_id" => $room_id
+    ]);
     
     $id_sync = $db->lastInsertId();
 

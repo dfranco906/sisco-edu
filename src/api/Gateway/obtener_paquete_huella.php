@@ -31,13 +31,14 @@ $stmt = $db->prepare("
 
         e.id_estudiante,
         e.cedula_identidad AS ci_estudiante,
-        e.room_id AS room_estudiante,
+        COALESCE(NULLIF(TRIM(e.room_id), ''), NULLIF(TRIM(g.room_id), '')) AS room_estudiante,
 
         p.id_profesor,
         p.cedula_identidad AS ci_profesor
 
     FROM huellas_templates h
     LEFT JOIN estudiantes e ON h.id_estudiante = e.id_estudiante
+    LEFT JOIN grados g ON e.id_grado = g.id_grado AND g.activo = 1
     LEFT JOIN profesores p ON h.id_profesor = p.id_profesor
     WHERE h.id_huella = :huella_id
       AND h.activo = 1
@@ -54,7 +55,16 @@ if (!$data) {
 
 $tipo = $data["id_estudiante"] ? "estudiante" : "profesor";
 $ci = $tipo === "estudiante" ? $data["ci_estudiante"] : $data["ci_profesor"];
-$room_id = $tipo === "estudiante" ? ($data["room_estudiante"] ?? "GENERAL") : "GENERAL";
+$room_id = $tipo === "estudiante" ? ($data["room_estudiante"] ?? null) : "GENERAL";
+
+if ($tipo === "estudiante" && (!$room_id || strcasecmp($room_id, "GENERAL") === 0)) {
+    http_response_code(422);
+    echo json_encode([
+        "status" => "error",
+        "message" => "El estudiante no tiene room_id asignado. No se puede sincronizar la huella al aula."
+    ]);
+    exit;
+}
 
 echo json_encode([
     "status" => "success",

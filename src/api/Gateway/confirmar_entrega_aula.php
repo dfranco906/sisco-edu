@@ -28,6 +28,50 @@ if (!$id_sync || !$id_huella || !$room_id || !$ci || !$slot_local || !$tipo_pers
 }
 
 try {
+    $stmtSync = $db->prepare("
+        SELECT s.room_id, h.id_estudiante, h.id_profesor
+        FROM sync_biometrica s
+        INNER JOIN huellas_templates h ON h.id_huella = s.id_huella
+        WHERE s.id_sync = :id_sync
+          AND s.id_huella = :id_huella
+        LIMIT 1
+    ");
+    $stmtSync->execute([
+        ":id_sync" => $id_sync,
+        ":id_huella" => $id_huella
+    ]);
+    $sync = $stmtSync->fetch(PDO::FETCH_ASSOC);
+
+    if (!$sync) {
+        http_response_code(404);
+        echo json_encode(["status" => "error", "message" => "Sincronización biométrica no encontrada"]);
+        exit;
+    }
+
+    if ($sync["id_estudiante"] !== null) {
+        $room_id_sync = trim((string) $sync["room_id"]);
+
+        if ($room_id_sync === '' || strcasecmp($room_id_sync, "GENERAL") === 0) {
+            http_response_code(422);
+            echo json_encode([
+                "status" => "error",
+                "message" => "El estudiante no tiene room_id asignado. No se puede sincronizar la huella al aula."
+            ]);
+            exit;
+        }
+
+        if ($room_id !== $room_id_sync) {
+            http_response_code(422);
+            echo json_encode([
+                "status" => "error",
+                "message" => "El room_id confirmado no coincide con el aula de la sincronización."
+            ]);
+            exit;
+        }
+
+        $room_id = $room_id_sync;
+    }
+
     $db->beginTransaction();
 
     $stmt = $db->prepare("
