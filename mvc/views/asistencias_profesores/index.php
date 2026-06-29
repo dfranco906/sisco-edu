@@ -12,10 +12,12 @@ $columnas = [
     "estado"
 ];
 $filtros = [
+    "buscar" => ["nombre", "apellido"],
+    "placeholder" => "Buscar profesor...",
     "selects" => [
-        ["campo" => "fecha", "label" => "Fecha"],
-        ["campo" => "profesor", "label" => "Profesor"],
-        ["campo" => "estado", "label" => "Estado"]
+        ["campo" => "id_profesor", "label" => "Profesor", "labelFields" => ["nombre", "apellido"]],
+        ["campo" => "fecha", "label" => "Fecha", "orden" => "desc"],
+        ["campo" => "estado", "label" => "Estado", "formato" => "titulo"]
     ]
 ];
 $formCrear = [

@@ -1,3 +1,78 @@
+function escaparHtml(valor) {
+    return String(valor ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function etiquetaFiltro(item, filtro) {
+    let etiqueta;
+
+    if (Array.isArray(filtro.labelFields)) {
+        etiqueta = filtro.labelFields
+            .map((campo) => item[campo])
+            .filter((valor) => valor !== null && valor !== undefined && String(valor).trim() !== "")
+            .join(" ");
+    } else {
+        etiqueta = item[filtro.labelField || filtro.campo];
+    }
+
+    etiqueta = String(etiqueta ?? "").trim();
+
+    if (filtro.formato === "titulo") {
+        etiqueta = etiqueta
+            .toLocaleLowerCase("es")
+            .replace(/(^|\s|_)(\p{L})/gu, (coincidencia) =>
+                coincidencia.replace("_", " ").toLocaleUpperCase("es")
+            );
+    }
+
+    return etiqueta;
+}
+
+function opcionesFiltro(datos, filtro) {
+    const opciones = new Map();
+
+    datos.forEach((item) => {
+        const valorOriginal = item[filtro.campo];
+        if (valorOriginal === null || valorOriginal === undefined || String(valorOriginal).trim() === "") return;
+
+        const valor = String(valorOriginal);
+        const etiqueta = etiquetaFiltro(item, filtro) || valor;
+        if (!opciones.has(valor)) opciones.set(valor, etiqueta);
+    });
+
+    return [...opciones.entries()].sort((a, b) => {
+        const comparacion = a[1].localeCompare(b[1], "es", { numeric: true, sensitivity: "base" });
+        return filtro.orden === "desc" ? -comparacion : comparacion;
+    });
+}
+
+function contenidoCelda(columna, valor) {
+    const texto = String(valor ?? "");
+
+    if (columna === "estado" && texto !== "") {
+        const estado = texto.toUpperCase();
+        const clase = estado === "PRESENTE" || estado === "CONFIRMADO" || estado === "RECIBIDO"
+            ? "status-success"
+            : estado === "TARDANZA" || estado === "PENDIENTE" || estado === "ENVIADO"
+                ? "status-warning"
+                : estado === "AUSENTE" || estado === "ERROR"
+                    ? "status-danger"
+                    : "status-neutral";
+        return `<span class="status-badge ${clase}">${escaparHtml(etiquetaFiltro({ estado: texto }, { campo: "estado", formato: "titulo" }))}</span>`;
+    }
+
+    if (columna === "activo" && texto !== "") {
+        const activo = texto === "1";
+        return `<span class="status-badge ${activo ? "status-success" : "status-neutral"}">${activo ? "Activo" : "Inactivo"}</span>`;
+    }
+
+    return escaparHtml(texto);
+}
+
 async function cargarTabla(api, columnas, filtros = {}) {
     const tbody = document.getElementById("tabla-body");
     const filtrosBox = document.getElementById("filtros-tabla");
@@ -32,40 +107,40 @@ async function cargarTabla(api, columnas, filtros = {}) {
             let fila = `<tr class="border-b hover:bg-gray-50">`;
 
             columnas.forEach(col => {
-                fila += `<td class="p-3">${item[col] ?? ""}</td>`;
+                fila += `<td class="p-3">${contenidoCelda(col, item[col])}</td>`;
             });
 
             fila += `
     <td class="p-3"><div class="table-actions">
         ${window.API_ACTUALIZAR && idRegistro ? `
         <button onclick='editarRegistro(${JSON.stringify(item)})'
-        class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">
+        class="btn btn-edit">
             Editar
         </button>` : ""}
         ${window.API_DESACTIVAR && idRegistro ? `
         <button onclick='desactivarRegistro(${JSON.stringify(idRegistro)})'
-        class="px-3 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-semibold">
+        class="btn btn-warning">
             Desactivar
         </button>` : ""}
         ${window.API_RESTAURAR && idRegistro ? `
         <button onclick='restaurarRegistro(${JSON.stringify(idRegistro)})'
-        class="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+        class="btn btn-restore">
             Restaurar
         </button>` : ""}
         ${window.API_ELIMINAR && idRegistro ? `
         <button onclick='eliminarRegistro(${JSON.stringify(idRegistro)})'
-        class="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-semibold">
+        class="btn btn-danger btn-sm">
             Eliminar
         </button>` : ""}
         ${item.id_estudiante ? `
         <button onclick="descargarYGuardarTemplate(${item.id_estudiante}, 'estudiante')"
-        class="btn-huella px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+        class="btn btn-fingerprint btn-huella">
             Huella
         </button>` : ""}
 
         ${item.id_profesor ? `
         <button onclick="descargarYGuardarTemplate(${item.id_profesor}, 'profesor')"
-        class="btn-huella px-3 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+        class="btn btn-fingerprint btn-huella">
           Huella
         </button>` : ""}
             </div></td>`;
@@ -91,15 +166,16 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
         if (filtros.selects) {
             filtros.selects.forEach(f => {
-                const valores = [...new Set(datos.map(i => i[f.campo]).filter(v => v !== null && v !== ""))];
+                const opciones = opcionesFiltro(datos, f);
+                if (opciones.length === 0) return;
 
                 let select = `
                     <select data-campo="${f.campo}" class="filtro-select app-input">
-                        <option value="">${f.label}</option>
+                        <option value="">${escaparHtml(f.label)}</option>
                 `;
 
-                valores.forEach(v => {
-                    select += `<option value="${v}">${v}</option>`;
+                opciones.forEach(([valor, etiqueta]) => {
+                    select += `<option value="${escaparHtml(valor)}">${escaparHtml(etiqueta)}</option>`;
                 });
 
                 select += `</select>`;
@@ -108,15 +184,15 @@ async function cargarTabla(api, columnas, filtros = {}) {
         }
 
         filtrosBox.innerHTML += `
-            <button id="limpiar-filtros" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200">
+            <button id="limpiar-filtros" class="btn btn-muted">
                 Limpiar filtros
             </button>
         `;
 
         if (window.URL_DESACTIVADOS) {
             filtrosBox.innerHTML += `
-                <a href="${window.URL_DESACTIVADOS}" class="px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-800">
-                    Desactivados
+                <a href="${window.URL_DESACTIVADOS}" class="btn btn-dark">
+                    Ver desactivados
                 </a>
             `;
         }

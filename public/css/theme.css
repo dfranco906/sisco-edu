@@ -213,6 +213,139 @@ body {
     cursor: not-allowed;
 }
 
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 2.65rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(15, 23, 42, 0.13);
+}
+
+.btn:focus-visible {
+    outline: 3px solid rgba(96, 165, 250, 0.35);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: #FFFFFF;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.btn-success {
+    background: #16A34A;
+    color: #FFFFFF;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #15803D;
+}
+
+.btn-secondary,
+.btn-dark {
+    background: #334155;
+    color: #FFFFFF;
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-dark:hover:not(:disabled) {
+    background: #1E293B;
+}
+
+.btn-muted {
+    border-color: #E2E8F0;
+    background: #F1F5F9;
+    color: #334155;
+    box-shadow: none;
+}
+
+.btn-muted:hover:not(:disabled) {
+    background: #E2E8F0;
+}
+
+.btn-danger {
+    background: #DC2626;
+    color: #FFFFFF;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #B91C1C;
+}
+
+.btn-edit,
+.btn-warning,
+.btn-fingerprint,
+.btn-restore {
+    min-height: 2rem;
+    padding: 0.42rem 0.7rem;
+    border-radius: 0.55rem;
+    box-shadow: none;
+    font-size: 0.75rem;
+}
+
+.btn-edit {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.btn-edit:hover:not(:disabled) {
+    background: #BFDBFE;
+}
+
+.btn-warning {
+    background: #FEF3C7;
+    color: #B45309;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #FDE68A;
+}
+
+.btn-fingerprint,
+.btn-restore {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.btn-fingerprint:hover:not(:disabled),
+.btn-restore:hover:not(:disabled) {
+    background: #BBF7D0;
+}
+
+.btn-sm {
+    min-height: 2rem;
+    padding: 0.42rem 0.7rem;
+    border-radius: 0.55rem;
+    font-size: 0.75rem;
+}
+
 .app-help {
     display: block;
     margin-top: 0.4rem;
@@ -451,6 +584,38 @@ body.sidebar-open {
     color: #166534;
     font-size: 0.78rem;
     font-weight: 800;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.status-success {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.status-warning {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-danger {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+.status-neutral {
+    background: #E2E8F0;
+    color: #475569;
 }
 
 @media (max-width: 1100px) {

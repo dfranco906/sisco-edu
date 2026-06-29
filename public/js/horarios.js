@@ -45,9 +45,10 @@
         return Array.isArray(datos) ? datos : [];
     }
 
-    function opcionGrado(grado) {
+    function opcionGrado(grado, deshabilitarSinAula = false) {
         const roomId = grado.room_id || "Sin aula";
-        return `<option value="${escapar(grado.id_grado)}">${escapar(grado.nombre)} - ${escapar(roomId)}</option>`;
+        const disabled = deshabilitarSinAula && !grado.room_id ? " disabled" : "";
+        return `<option value="${escapar(grado.id_grado)}"${disabled}>${escapar(grado.nombre)} - ${escapar(roomId)}</option>`;
     }
 
     function etiquetaAsignacion(asignacion) {
@@ -56,13 +57,15 @@
     }
 
     function cargarOpciones() {
-        const opcionesGrado = grados.map(opcionGrado).join("");
+        const gradosConAula = grados.filter((grado) => String(grado.room_id ?? "").trim() !== "");
+        const opcionesFormulario = grados.map((grado) => opcionGrado(grado, true)).join("");
+        const opcionesSemanal = gradosConAula.map((grado) => opcionGrado(grado)).join("");
         const opcionesAsignacion = asignaciones.map((asignacion) =>
             `<option value="${escapar(asignacion.id_asignacion)}">${escapar(etiquetaAsignacion(asignacion))}</option>`
         ).join("");
 
         [$("#crear-id-grado"), $("#editar-id-grado")].forEach((select) => {
-            select.innerHTML = `<option value="">Seleccione un grado</option>${opcionesGrado}`;
+            select.innerHTML = `<option value="">Seleccione un grado</option>${opcionesFormulario}`;
         });
 
         [$("#crear-id-asignacion"), $("#editar-id-asignacion")].forEach((select) => {
@@ -71,11 +74,37 @@
 
         const selectorSemanal = $("#selector-grado-semanal");
         const filtroGrado = $("#filtro-horario-grado");
-        selectorSemanal.innerHTML = `<option value="">Seleccione un grado</option>${opcionesGrado}`;
-        filtroGrado.innerHTML = `<option value="">Todos los grados</option>${opcionesGrado}`;
+        const filtroDia = $("#filtro-horario-dia");
+        selectorSemanal.innerHTML = `<option value="">Seleccione un grado</option>${opcionesSemanal}`;
 
-        const primerGradoConHorario = horarios.find((horario) => horario.id_grado)?.id_grado;
-        selectorSemanal.value = String(primerGradoConHorario || grados[0]?.id_grado || "");
+        const opcionesLista = new Map();
+        horarios.forEach((horario) => {
+            if (horario.id_grado) {
+                const grado = gradoPorId(horario.id_grado);
+                const etiqueta = grado
+                    ? `${grado.nombre} - ${grado.room_id || "Sin aula"}`
+                    : `${horario.grado} - ${horario.aula || "Sin aula"}`;
+                opcionesLista.set(`id:${horario.id_grado}`, etiqueta);
+            } else if (horario.grado) {
+                opcionesLista.set(`grado:${horario.grado}`, `${horario.grado} - ${horario.aula || "Aula antigua"}`);
+            }
+        });
+        filtroGrado.innerHTML = `<option value="">Todos los grados</option>${[...opcionesLista.entries()]
+            .sort((a, b) => a[1].localeCompare(b[1], "es", { numeric: true }))
+            .map(([valor, etiqueta]) => `<option value="${escapar(valor)}">${escapar(etiqueta)}</option>`)
+            .join("")}`;
+
+        const ordenDias = [...diasSemana, "Sábado"];
+        const diasDisponibles = [...new Set(horarios.map((horario) => horario.dia_semana).filter(Boolean))]
+            .sort((a, b) => ordenDias.indexOf(a) - ordenDias.indexOf(b));
+        filtroDia.innerHTML = `<option value="">Todos los días</option>${diasDisponibles
+            .map((dia) => `<option value="${escapar(dia)}">${escapar(dia)}</option>`)
+            .join("")}`;
+
+        const primerGradoConHorario = horarios.find((horario) =>
+            horario.id_grado && gradosConAula.some((grado) => String(grado.id_grado) === String(horario.id_grado))
+        )?.id_grado;
+        selectorSemanal.value = String(primerGradoConHorario || gradosConAula[0]?.id_grado || "");
     }
 
     function gradoPorId(idGrado) {
@@ -99,7 +128,7 @@
                 <div class="schedule-entry-subject">${escapar(horario.materia || "Sin materia")}</div>
                 <div class="schedule-entry-meta">${escapar(horario.profesor || "Sin profesor")}</div>
                 <div class="schedule-entry-room">${escapar(horario.aula || "Sin aula")}</div>
-                <button type="button" class="schedule-entry-edit" data-editar-horario="${escapar(horario.id_horario)}">Editar</button>
+                <button type="button" class="btn btn-edit schedule-entry-edit" data-editar-horario="${escapar(horario.id_horario)}">Editar</button>
             </article>
         `;
     }
@@ -149,13 +178,15 @@
 
     function horariosFiltrados() {
         const texto = $("#filtro-horario-buscar").value.trim().toLowerCase();
-        const idGrado = $("#filtro-horario-grado").value;
+        const filtroGrado = $("#filtro-horario-grado").value;
         const dia = $("#filtro-horario-dia").value;
 
         return horarios.filter((horario) => {
             const coincideTexto = !texto || [horario.materia, horario.profesor, horario.aula, horario.grado]
                 .some((valor) => String(valor ?? "").toLowerCase().includes(texto));
-            const coincideGrado = !idGrado || String(horario.id_grado) === String(idGrado);
+            const coincideGrado = !filtroGrado
+                || (filtroGrado.startsWith("id:") && String(horario.id_grado) === filtroGrado.slice(3))
+                || (filtroGrado.startsWith("grado:") && String(horario.grado) === filtroGrado.slice(6));
             const coincideDia = !dia || horario.dia_semana === dia;
             return coincideTexto && coincideGrado && coincideDia;
         });
@@ -182,9 +213,9 @@
                 <td data-label="Acciones">
                     <div class="table-actions">
                         <button type="button" data-editar-horario="${escapar(horario.id_horario)}"
-                                class="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold">Editar</button>
+                                class="btn btn-edit">Editar</button>
                         <button type="button" data-desactivar-horario="${escapar(horario.id_horario)}"
-                                class="px-3 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-semibold">Desactivar</button>
+                                class="btn btn-warning">Desactivar</button>
                     </div>
                 </td>
             </tr>

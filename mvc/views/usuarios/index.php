@@ -3,11 +3,10 @@ $titulo = "Usuarios";
 $api = "src/api/Usuario/leer_usuarios.php";
 $columnas = ["id_usuario", "nombre", "apellido", "usuario", "email", "celular", "rol"];
 $filtros = [
-    "buscar" => ["usuario"],
-    "placeholder" => "Buscar usuario...",
+    "buscar" => ["nombre", "apellido", "usuario", "email"],
+    "placeholder" => "Buscar nombre, usuario o email...",
     "selects" => [
         ["campo" => "rol", "label" => "Rol"],
-        ["campo" => "activo", "label" => "Estado"]
     ]
 ];
 $formCrear = [

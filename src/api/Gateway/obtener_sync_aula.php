@@ -58,7 +58,7 @@ $ci = $tipo === "estudiante" ? $data["ci_estudiante"] : $data["ci_profesor"];
 
 $db->prepare("
     UPDATE sync_biometrica
-    SET estado='EN_PROCESO', intentos=intentos+1
+    SET estado='ENVIADO', intentos=intentos+1
     WHERE id_sync=:id_sync
 ")->execute([":id_sync" => $data["id_sync"]]);
 

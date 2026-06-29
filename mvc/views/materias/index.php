@@ -3,7 +3,7 @@ $titulo = "Materias";
 $api = "src/api/Materia/leer_materias.php";
 $columnas = ["id_materia", "nombre", "descripcion", "carga_horaria_semanal", "activo"];
 $filtros = [
-    "buscar" => ["nombre"],
+    "buscar" => ["nombre", "descripcion"],
     "placeholder" => "Buscar materia...",
     "selects" => [
         ["campo" => "carga_horaria_semanal", "label" => "Carga horaria"]

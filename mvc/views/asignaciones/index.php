@@ -10,6 +10,8 @@ $columnas = [
 ];
 
 $filtros = [
+    "buscar" => ["profesor", "materia"],
+    "placeholder" => "Buscar profesor o materia...",
     "selects" => [
         ["campo" => "profesor", "label" => "Profesor"],
         ["campo" => "materia", "label" => "Materia"],

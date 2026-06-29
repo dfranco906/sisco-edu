@@ -6,8 +6,14 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <?php if (isset($formCrear)): ?>
 <div id="modal-crear" class="app-modal hidden">
     <div class="app-modal-dialog max-w-md">
-        <h3 class="text-xl font-bold mb-4">Crear <?= $titulo ?></h3>
-            <div id="mensaje-form" class="mb-3"></div>
+        <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+                <h3 class="text-xl font-bold">Crear <?= $titulo ?></h3>
+                <p class="text-sm mt-1" style="color: var(--color-muted);">Completá los datos obligatorios para guardar el registro.</p>
+            </div>
+            <button type="button" id="cerrar-modal" class="app-modal-close" aria-label="Cerrar">×</button>
+        </div>
+        <div id="mensaje-form" class="mb-3"></div>
         <form id="form-crear" data-api="<?= base_url($formCrear['api']) ?>">
             <?php foreach ($formCrear['campos'] as $campo): ?>
                 <label class="block mb-2 font-semibold"><?= $campo['label'] ?></label>
@@ -15,7 +21,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <?php if (($campo['type'] ?? '') === 'select'): ?>
 
     <?php if (isset($campo['options'])): ?>
-        <select name="<?= $campo['name'] ?>" class="border rounded-xl px-4 py-2 w-full mb-4" required>
+        <select name="<?= $campo['name'] ?>" class="app-input w-full mb-4" required>
             <option value="">Seleccione una opción</option>
             <?php foreach ($campo['options'] as $op): ?>
                 <option value="<?= $op['value'] ?>"><?= $op['label'] ?></option>
@@ -27,7 +33,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             data-api="<?= $campo['api'] ?>"
             data-value="<?= $campo['value'] ?>"
             data-label="<?= $campo['labelField'] ?>"
-            class="border rounded-xl px-4 py-2 w-full mb-4"
+            class="app-input w-full mb-4"
             required>
             <option value="">Cargando...</option>
         </select>
@@ -37,18 +43,18 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     <input 
         type="<?= $campo['type'] ?>"
         name="<?= $campo['name'] ?>"
-        class="border rounded-xl px-4 py-2 w-full mb-4"
+        class="app-input w-full mb-4"
         required
     >
 <?php endif; ?>
             <?php endforeach; ?>
 
             <div class="app-modal-actions">
-    <button type="button" id="cerrar-modal" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200">
+    <button type="button" class="btn btn-muted js-cerrar-modal-crear">
         Cerrar
     </button>
 
-    <button type="submit" class="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700">
+    <button type="submit" class="btn btn-success">
         Guardar
     </button>
 </div>
@@ -70,14 +76,13 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             <div class="app-toolbar-actions flex flex-wrap gap-3">
                 <?php if (isset($formCrear)): ?>
                 <button id="btn-crear"
-                    class="px-5 py-3 rounded-xl text-white font-semibold bg-green-600 hover:bg-green-700">
+                    class="btn btn-success">
                     + Crear
                 </button>
                 <?php endif; ?>
 
                 <a href="<?= base_url($urlVolver ?? 'mvc/views/dashboard.php') ?>"
-                   class="px-5 py-3 rounded-xl text-white font-semibold"
-                   style="background: var(--color-primary);">
+                   class="btn btn-primary">
                     Volver
                 </a>
             </div>
@@ -90,10 +95,10 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 <thead class="bg-gray-100">
                     <tr>
                         <?php foreach ($columnas as $col): ?>
-                            <th class="p-3 text-left"><?= $col ?></th>
+                            <th class="p-3 text-left"><?= ucfirst(str_replace('_', ' ', $col)) ?></th>
                         <?php endforeach; ?>
 
-                        <th class="p-3 text-left">acciones</th>
+                        <th class="p-3">Acciones</th>
                     </tr>
                 </thead>
 
@@ -104,7 +109,13 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     </div>
     <div id="modal-editar" class="app-modal hidden">
     <div class="app-modal-dialog max-w-md">
-        <h3 class="text-xl font-bold mb-4">Editar registro</h3>
+        <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+                <h3 class="text-xl font-bold">Editar registro</h3>
+                <p class="text-sm mt-1" style="color: var(--color-muted);">Actualizá los datos necesarios y guardá los cambios.</p>
+            </div>
+            <button type="button" id="cerrar-modal-editar" class="app-modal-close" aria-label="Cerrar">×</button>
+        </div>
 
         <div id="mensaje-editar" class="mb-3"></div>
 
@@ -112,11 +123,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             <div id="campos-editar"></div>
 
             <div class="app-modal-actions mt-4">
-                <button type="button" id="cancelar-editar" class="px-4 py-2 rounded-xl bg-gray-100">
+                <button type="button" id="cancelar-editar" class="btn btn-muted">
                     Cancelar
                 </button>
 
-                <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 text-white">
+                <button type="submit" class="btn btn-primary">
                     Guardar cambios
                 </button>
             </div>

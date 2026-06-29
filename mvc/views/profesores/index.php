@@ -5,10 +5,7 @@ $columnas = ["id_profesor", "nombre", "apellido", "cedula_identidad", "huella_id
 
 $filtros = [
     "buscar" => ["nombre", "apellido", "cedula_identidad"],
-    "placeholder" => "Buscar profesor...",
-    "selects" => [
-        ["campo" => "activo", "label" => "Estado"]
-    ]
+    "placeholder" => "Buscar profesor..."
 ];
 $formCrear = [
     "api" => "src/api/Profesor/crear_profesor.php",

@@ -9,15 +9,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modalEditar = document.getElementById("modal-editar");
     const cancelarEditar = document.getElementById("cancelar-editar");
+    const cerrarEditar = document.getElementById("cerrar-modal-editar");
     const formEditar = document.getElementById("form-editar");
     const mensajeEditar = document.getElementById("mensaje-editar");
 
-    if (btnCrear && modalCrear) btnCrear.onclick = () => modalCrear.classList.remove("hidden");
-    if (cerrarCrear && modalCrear) cerrarCrear.onclick = () => modalCrear.classList.add("hidden");
+    const abrirModal = (modal) => {
+        modal?.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+    };
+
+    const cerrarModal = (modal) => {
+        modal?.classList.add("hidden");
+        if (!document.querySelector(".app-modal:not(.hidden)")) document.body.classList.remove("modal-open");
+    };
+
+    if (btnCrear && modalCrear) btnCrear.onclick = () => abrirModal(modalCrear);
+    if (cerrarCrear && modalCrear) cerrarCrear.onclick = () => cerrarModal(modalCrear);
+    document.querySelectorAll(".js-cerrar-modal-crear").forEach((boton) => {
+        boton.addEventListener("click", () => cerrarModal(modalCrear));
+    });
 
     if (cancelarEditar && modalEditar) {
-        cancelarEditar.onclick = () => modalEditar.classList.add("hidden");
+        cancelarEditar.onclick = () => cerrarModal(modalEditar);
     }
+    if (cerrarEditar && modalEditar) cerrarEditar.onclick = () => cerrarModal(modalEditar);
+
+    [modalCrear, modalEditar].forEach((modal) => {
+        modal?.addEventListener("click", (evento) => {
+            if (evento.target === modal) cerrarModal(modal);
+        });
+    });
+
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape") {
+            cerrarModal(modalCrear);
+            cerrarModal(modalEditar);
+        }
+    });
 
     cargarSelects();
 
@@ -43,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 mensajeCrear.innerHTML = `
                     ${data.message ?? "Operación realizada"}
-                    ${exito ? `<br><button onclick="location.reload()" class="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white">Actualizar tabla</button>` : ""}
+                    ${exito ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
                 `;
 
                 if (exito) formCrear.reset();
@@ -80,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 mensajeEditar.innerHTML = `
                     ${data.message}
-                    ${data.status === "success" ? `<br><button onclick="location.reload()" class="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white">Actualizar tabla</button>` : ""}
+                    ${data.status === "success" ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
                 `;
 
             } catch (error) {
@@ -143,6 +171,7 @@ window.editarRegistro = function(item) {
     });
 
     modal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
 };
 
 async function ejecutarAccionRegistro(api, id, mensajeConfirmacion) {

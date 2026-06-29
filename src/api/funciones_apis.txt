@@ -13,4 +13,4 @@ Materia: CRUD materias.
 NodoEsp32: registro de nodos/gateway/aulas.
 Profesor: CRUD profesores.
 SyncBiometrica: cola de sincronización de huellas.
-Usuario: login/roles.
+Usuario: login/roles.1

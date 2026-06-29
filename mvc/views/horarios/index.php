@@ -14,12 +14,11 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
             <div class="app-toolbar-actions flex flex-wrap gap-3">
                 <button id="btn-crear-horario" type="button"
-                        class="px-5 py-3 rounded-xl text-white font-semibold bg-green-600 hover:bg-green-700">
+                        class="btn btn-success">
                     + Crear horario
                 </button>
                 <a href="<?= base_url('mvc/views/dashboard.php') ?>"
-                   class="px-5 py-3 rounded-xl text-white font-semibold text-center"
-                   style="background: var(--color-primary);">
+                   class="btn btn-primary">
                     Volver
                 </a>
             </div>
@@ -57,7 +56,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
                 </p>
             </div>
             <a href="<?= base_url('mvc/views/horarios/desactivados.php') ?>"
-               class="px-4 py-2 rounded-xl bg-slate-700 text-white font-semibold text-center hover:bg-slate-800">
+               class="btn btn-dark">
                 Ver desactivados
             </a>
         </div>
@@ -70,15 +69,9 @@ require_once __DIR__ . '/../../../src/config/app.php';
             </select>
             <select id="filtro-horario-dia" class="app-input">
                 <option value="">Todos los días</option>
-                <option value="Lunes">Lunes</option>
-                <option value="Martes">Martes</option>
-                <option value="Miércoles">Miércoles</option>
-                <option value="Jueves">Jueves</option>
-                <option value="Viernes">Viernes</option>
-                <option value="Sábado">Sábado</option>
             </select>
             <button id="limpiar-filtros-horario" type="button"
-                    class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold">
+                    class="btn btn-muted">
                 Limpiar filtros
             </button>
         </div>
@@ -167,9 +160,9 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
             <div class="app-modal-actions mt-6">
                 <button type="button" data-close-modal="modal-crear-horario"
-                        class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold">Cancelar</button>
+                        class="btn btn-muted">Cancelar</button>
                 <button id="guardar-horario" type="submit"
-                        class="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 font-semibold">Guardar horario</button>
+                        class="btn btn-success">Guardar horario</button>
             </div>
         </form>
     </div>
@@ -231,9 +224,9 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
             <div class="app-modal-actions mt-6">
                 <button type="button" data-close-modal="modal-editar-horario"
-                        class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold">Cancelar</button>
+                        class="btn btn-muted">Cancelar</button>
                 <button id="actualizar-horario" type="submit"
-                        class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold">Guardar cambios</button>
+                        class="btn btn-primary">Guardar cambios</button>
             </div>
         </form>
     </div>
