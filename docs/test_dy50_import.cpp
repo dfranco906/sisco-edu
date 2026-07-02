@@ -1,5 +1,5 @@
 // PRUEBA AISLADA - DY50 DESTINO
-// Recibe 3072 caracteres HEX (1536 bytes), ejecuta DownChar hacia CharBuffer1,
+// Recibe 2816 caracteres HEX (1408 bytes), ejecuta DownChar hacia CharBuffer1,
 // guarda en slot 1, relee el template y exige igualdad byte a byte antes de
 // habilitar la prueba de reconocimiento.
 
@@ -202,7 +202,7 @@ void setup() {
     while (crcHex.length() < 8)
       crcHex = "0" + crcHex;
     sendJson(200, "{\"status\":\"success\",\"slot_local\":1,"
-                  "\"bytes\":1536,\"readback_verified\":true,"
+                  "\"bytes\":1408,\"readback_verified\":true,"
                   "\"crc32\":\"" +
                       crcHex + "\"}");
   });

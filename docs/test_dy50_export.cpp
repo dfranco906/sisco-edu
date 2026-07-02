@@ -1,5 +1,5 @@
 // PRUEBA AISLADA - DY50 ORIGEN
-// Enrola en slot 1 y exporta exclusivamente los 1536 bytes de payload del
+// Enrola en slot 1 y exporta exclusivamente los 1408 bytes de payload del
 // template. No incluye headers, longitudes ni checksums del framing UART.
 
 #include <Adafruit_Fingerprint.h>

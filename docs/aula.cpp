@@ -178,7 +178,7 @@ void onReceive(const esp_now_recv_info_t *recv_info, const uint8_t *incomingData
 
   if (paquete.chunk_index == 0) {
     huellaReconstruida = "";
-    huellaReconstruida.reserve(3072); // Pre-asignar memoria para evitar fragmentacion
+    huellaReconstruida.reserve(2816); // Pre-asignar memoria para evitar fragmentacion
     chunkEsperado = 0;
     idSyncSlot = paquete.id_huella;
     strncpy(ciSync, paquete.ci, sizeof(ciSync) - 1);

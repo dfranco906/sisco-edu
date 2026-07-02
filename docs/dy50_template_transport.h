@@ -4,7 +4,7 @@
 
 namespace Dy50TemplateTransport {
 
-constexpr size_t TEMPLATE_BYTES = 1536;
+constexpr size_t TEMPLATE_BYTES = 1408;
 constexpr size_t DATA_PACKET_BYTES = 128;
 
 constexpr uint8_t PID_COMMAND = 0x01;
