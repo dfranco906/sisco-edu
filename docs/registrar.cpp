@@ -99,36 +99,103 @@ void setup() {
       return;
     }
 
-    // Reservamos espacio en memoria para el string hexadecimal (1536 bytes * 2 caracteres por byte = 3072 caracteres)
+    // getModel() envía UpChar al sensor y lee solo el paquete de confirmación (0x07).
+    // El sensor responde con un paquete de datos (0x02) que queda en el buffer serial.
+    // Parseamos ese paquete extrayendo ÚNICAMENTE los bytes del template,
+    // descartando headers, dirección, PID, longitud y checksum del protocolo UART.
+    //
+    // Formato del paquete de datos (0x02):
+    //   ef01          (2 bytes)  — header
+    //   ffffffff      (4 bytes)  — dirección
+    //   02            (1 byte)   — PID = data packet
+    //   XX XX         (2 bytes)  — longitud total (incluye length + data + checksum)
+    //   <template>    (N bytes)  — datos puros del template
+    //   XX XX         (2 bytes)  — checksum
+
     String templateHex = "";
     templateHex.reserve(3072);
 
     uint32_t timeout = millis();
     int bytesLeidos = 0;
+    int estadoParse = 0; // 0=buscando header, 1=leyendo address, 2=leyendo PID,
+                         // 3=leyendo length, 4=leyendo data, 5=leyendo checksum
+    int dataBytesEsperados = 0;
+    int checksumPendientes = 0;
 
-    // Leemos los 1536 bytes provenientes del buffer serial del AS608
-    while ((millis() - timeout < 2000) && (bytesLeidos < 1536)) {
-      if (mySerial.available()) {
-        uint8_t b = mySerial.read();
-        if (b < 16) templateHex += "0"; // Añadir cero a la izquierda para valores menores a 0x10
-        templateHex += String(b, HEX);
-        bytesLeidos++;
+    // Flush cualquier byte residual
+    while (mySerial.available()) mySerial.read();
+
+    while ((millis() - timeout < 3000) && (bytesLeidos < 1536)) {
+      if (!mySerial.available()) continue;
+      uint8_t b = mySerial.read();
+
+      switch (estadoParse) {
+        case 0: // Buscando header 0xEF01
+          if (b == 0xEF) estadoParse = 10; // Esperar 0x01
+          break;
+        case 10: // Segundo byte del header
+          if (b == 0x01) { estadoParse = 1; }
+          else { estadoParse = 0; } // Falso header, reiniciar
+          break;
+        case 1: // Leyendo address (4 bytes) — descartar
+          estadoParse = 11;
+          break;
+        case 11:
+          estadoParse = 12;
+          break;
+        case 12:
+          estadoParse = 13;
+          break;
+        case 13:
+          estadoParse = 2; // Address leída completamente
+          break;
+        case 2: // Leyendo PID — debe ser 0x02 para data packet
+          if (b == 0x02) { estadoParse = 3; }
+          else { estadoParse = 0; } // No es data packet, reiniciar
+          break;
+        case 3: // Leyendo length byte high
+          dataBytesEsperados = b << 8;
+          estadoParse = 31;
+          break;
+        case 31: // Leyendo length byte low
+          dataBytesEsperados |= b;
+          // length incluye: length(2) + data + checksum(2)
+          // data bytes = length - 4
+          dataBytesEsperados -= 4;
+          estadoParse = 4;
+          break;
+        case 4: // Leyendo datos del template
+          if (b < 16) templateHex += "0";
+          templateHex += String(b, HEX);
+          bytesLeidos++;
+          dataBytesEsperados--;
+          if (dataBytesEsperados <= 0) {
+            estadoParse = 5;
+            checksumPendientes = 2;
+          }
+          break;
+        case 5: // Descartando checksum
+          checksumPendientes--;
+          if (checksumPendientes <= 0) {
+            estadoParse = 0; // Listo para otro posible paquete
+          }
+          break;
       }
     }
 
-    // Validamos que se hayan extraído los datos completos antes de responder
-    if (bytesLeidos == 1536) {
-      actualizarPantalla("EXPORTADO", "Template enviado a la web");
+    // Validamos que se hayan extraído datos del template
+    if (bytesLeidos > 0) {
+      actualizarPantalla("EXPORTADO", String(bytesLeidos) + " bytes de template");
      
-      // Construimos el JSON de respuesta conteniendo el string hexadecimal completo
+      // Construimos el JSON de respuesta conteniendo el string hexadecimal puro
       String jsonRespuesta = "{\"status\":\"success\",\"bytes\":" + String(bytesLeidos) + ",\"template\":\"" + templateHex + "\"}";
       server.send(200, "application/json", jsonRespuesta);
      
       delay(1500);
       actualizarPantalla("ONLINE", "IP: " + WiFi.localIP().toString());
     } else {
-      actualizarPantalla("ERR TRANS", "Paquete incompleto en lectura");
-      server.send(500, "application/json", "{\"status\":\"error\",\"message\":\"Transmision incompleta. Se leyeron solo " + String(bytesLeidos) + " bytes.\"}");
+      actualizarPantalla("ERR TRANS", "No se recibio template valido");
+      server.send(500, "application/json", "{\"status\":\"error\",\"message\":\"No se recibio un paquete de datos valido del sensor.\"}");
     }
   });
 
