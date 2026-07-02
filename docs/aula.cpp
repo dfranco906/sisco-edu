@@ -70,6 +70,18 @@ int chunkEsperado = 0;
 volatile bool pingAckRecibido = false;
 volatile bool txStatusStatus = false;
 
+// Variables volatiles para desacoplar el callback ESP-NOW del loop principal
+volatile bool flagSyncIniciado = false;
+volatile bool flagSyncCompletado = false;
+volatile bool flagSyncError = false;
+volatile uint32_t tiempoUltimoChunk = 0;
+volatile int idSyncSlot = 0;
+char ciSync[15] = "";
+char tipoPersonaSync[15] = "";
+
+enum EstadoSync { SYNC_IDLE, SYNC_RECIBIENDO, SYNC_PROCESANDO };
+EstadoSync estadoSync = SYNC_IDLE;
+
 // ============================================================================
 // FUNCIONES DE PANTALLA OLED
 // ============================================================================
@@ -116,53 +128,38 @@ void onSend(const wifi_tx_info_t *tx_info, esp_now_send_status_t status) {
 
 void onReceive(const esp_now_recv_info_t *recv_info, const uint8_t *incomingData, int len) {
   if (len != sizeof(PaqueteHuella)) {
-    Serial.printf("[ESP-NOW] Descartado. Tamanio %d (Esperado %d)\n", len, sizeof(PaqueteHuella));
     return;
   }
 
   PaqueteHuella paquete;
   memcpy(&paquete, incomingData, sizeof(paquete));
   if (String(paquete.room_id) != ROOM_ID) {
-    Serial.printf("[ESP-NOW] Descartado. RoomID '%s' no coincide\n", paquete.room_id);
     return;
   }
 
   if (paquete.chunk_index == 0) {
     huellaReconstruida = "";
+    huellaReconstruida.reserve(3072); // Pre-asignar memoria para evitar fragmentacion
     chunkEsperado = 0;
-    msgOled("SYNC...", "CI: " + String(paquete.ci));
-    Serial.printf("[SYNC] Iniciando recepcion huella slot %d para CI %s\n", paquete.id_huella, paquete.ci);
+    idSyncSlot = paquete.id_huella;
+    strncpy(ciSync, paquete.ci, sizeof(ciSync) - 1);
+    ciSync[sizeof(ciSync) - 1] = '\0';
+    strncpy(tipoPersonaSync, paquete.tipo_persona, sizeof(tipoPersonaSync) - 1);
+    tipoPersonaSync[sizeof(tipoPersonaSync) - 1] = '\0';
+    flagSyncIniciado = true;
   }
 
   if (paquete.chunk_index == chunkEsperado) {
     huellaReconstruida += String(paquete.data);
     chunkEsperado++;
-    Serial.printf("[SYNC] Chunk %d/%d recibido.\n", paquete.chunk_index + 1, paquete.total_chunks);
+    tiempoUltimoChunk = millis();
   } else {
-    Serial.printf("[SYNC] Error: Chunk %d recibido, esperado %d\n", paquete.chunk_index, chunkEsperado);
+    flagSyncError = true;
     return;
   }
 
   if (paquete.chunk_index == paquete.total_chunks - 1) {
-    int slotAsignado = paquete.id_huella;
-    Serial.printf("[SYNC] Recepcion completada. Guardando en DY50 slot %d...\n", slotAsignado);
-    msgOled("GUARDANDO", "En sensor...");
-
-    String error;
-    if (guardarHuellaDY50(huellaReconstruida, slotAsignado, error)) {
-      strcpy(dbLocal[slotAsignado].ci, paquete.ci);
-      strcpy(dbLocal[slotAsignado].tipo_persona, paquete.tipo_persona);
-      dbLocal[slotAsignado].registrado = true;
-      msgOled("SYNC OK", "Slot: " + String(slotAsignado));
-      Serial.println("[SYNC] Exito guardando huella");
-    } else {
-      msgOled("ERROR DY50", error);
-      Serial.printf("[SYNC] Fallo guardando huella: %s\n", error.c_str());
-    }
-   
-    huellaReconstruida = String();
-    delay(1500);
-    msgOled("AULA: " + ROOM_ID, "Listo...");
+    flagSyncCompletado = true;
   }
 }
 
@@ -319,8 +316,8 @@ void setup() {
 // LOOP PRINCIPAL
 // ============================================================================
 void loop() {
-  // 1. Botón presionado para Salida Anticipada
-  if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL) {
+  // 1. Boton presionado para Salida Anticipada
+  if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL && estadoSync == SYNC_IDLE) {
     estadoActual = ESPERANDO_PROFE;
     tiempoLimiteEstado = millis() + 15000;
     msgOled("SALIDA", "Dedo de Profe...");
@@ -335,8 +332,64 @@ void loop() {
     msgOled("AULA: " + ROOM_ID, "Listo...");
   }
 
-  // 3. Sensor Biométrico
-  verificarLecturaHuella();
+  // 3. Desacoplamiento de Sincronizacion (fuera de la interrupcion ESP-NOW)
+  if (flagSyncIniciado) {
+    flagSyncIniciado = false;
+    estadoActual = NORMAL; // Cancelamos cualquier flujo de asistencia
+    msgOled("SYNC...", "CI: " + String(ciSync));
+    Serial.printf("[SYNC] Iniciando recepcion huella para CI: %s en slot: %d\n", ciSync, idSyncSlot);
+    estadoSync = SYNC_RECIBIENDO;
+    tiempoUltimoChunk = millis();
+  }
+
+  if (estadoSync == SYNC_RECIBIENDO) {
+    if (flagSyncError) {
+      flagSyncError = false;
+      estadoSync = SYNC_IDLE;
+      huellaReconstruida = String();
+      msgOled("ERR SYNC", "Secuencia rota");
+      Serial.println("[SYNC] Error: secuencia de chunks rota");
+      delay(2000);
+      msgOled("AULA: " + ROOM_ID, "Listo...");
+    }
+    else if (flagSyncCompletado) {
+      flagSyncCompletado = false;
+      estadoSync = SYNC_PROCESANDO;
+      Serial.printf("[SYNC] Grabando huella completa en DY50 slot %d...\n", idSyncSlot);
+      msgOled("GUARDANDO", "En sensor...");
+
+      String error;
+      if (guardarHuellaDY50(huellaReconstruida, idSyncSlot, error)) {
+        strcpy(dbLocal[idSyncSlot].ci, ciSync);
+        strcpy(dbLocal[idSyncSlot].tipo_persona, tipoPersonaSync);
+        dbLocal[idSyncSlot].registrado = true;
+        msgOled("SYNC OK", "Slot: " + String(idSyncSlot));
+        Serial.println("[SYNC] Huella guardada con exito");
+      } else {
+        msgOled("ERROR DY50", error);
+        Serial.printf("[SYNC] Fallo guardando huella: %s\n", error.c_str());
+      }
+
+      huellaReconstruida = String();
+      estadoSync = SYNC_IDLE;
+      delay(2000);
+      msgOled("AULA: " + ROOM_ID, "Listo...");
+    }
+    else if (millis() - tiempoUltimoChunk > 5000) {
+      // Timeout tras 5 segundos sin recibir chunks
+      estadoSync = SYNC_IDLE;
+      huellaReconstruida = String();
+      msgOled("TIMEOUT", "Cancelando sync");
+      Serial.println("[SYNC] Timeout: Se perdieron paquetes en la transmision");
+      delay(2000);
+      msgOled("AULA: " + ROOM_ID, "Listo...");
+    }
+  }
+
+  // 4. Sensor Biometrico (solo si no estamos sincronizando)
+  if (estadoSync == SYNC_IDLE) {
+    verificarLecturaHuella();
+  }
  
   delay(30);
 }
