@@ -47,7 +47,8 @@ inline bool readPacket(Stream &serial, Packet &packet, String &error,
 
   bool headerFound = false;
   while ((int32_t)(millis() - deadline) < 0) {
-    if (!readByte(serial, current, deadline)) break;
+    if (!readByte(serial, current, deadline))
+      break;
     if (previous == 0xEF && current == 0x01) {
       headerFound = true;
       break;
@@ -123,19 +124,20 @@ inline bool writePacket(Stream &serial, uint8_t pid, const uint8_t *data,
   const uint8_t lengthHigh = packetLength >> 8;
   const uint8_t lengthLow = packetLength & 0xFF;
 
-  const uint8_t header[] = {
-      0xEF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, pid, lengthHigh, lengthLow};
-  if (serial.write(header, sizeof(header)) != sizeof(header)) return false;
+  const uint8_t header[] = {0xEF, 0x01, 0xFF,       0xFF,     0xFF,
+                            0xFF, pid,  lengthHigh, lengthLow};
+  if (serial.write(header, sizeof(header)) != sizeof(header))
+    return false;
 
   uint16_t checksum = pid + lengthHigh + lengthLow;
   for (uint16_t i = 0; i < dataLength; i++) {
-    if (serial.write(data[i]) != 1) return false;
+    if (serial.write(data[i]) != 1)
+      return false;
     checksum += data[i];
   }
 
-  const uint8_t checksumBytes[] = {
-      static_cast<uint8_t>(checksum >> 8),
-      static_cast<uint8_t>(checksum & 0xFF)};
+  const uint8_t checksumBytes[] = {static_cast<uint8_t>(checksum >> 8),
+                                   static_cast<uint8_t>(checksum & 0xFF)};
   if (serial.write(checksumBytes, sizeof(checksumBytes)) !=
       sizeof(checksumBytes)) {
     return false;
@@ -148,7 +150,8 @@ inline bool writePacket(Stream &serial, uint8_t pid, const uint8_t *data,
 inline bool readAck(Stream &serial, uint8_t &confirmationCode, String &error,
                     uint32_t timeoutMs = 2500) {
   Packet packet;
-  if (!readPacket(serial, packet, error, timeoutMs)) return false;
+  if (!readPacket(serial, packet, error, timeoutMs))
+    return false;
   if (packet.pid != PID_ACK || packet.dataLength < 1) {
     error = "INVALID_ACK_PACKET";
     return false;
@@ -157,15 +160,15 @@ inline bool readAck(Stream &serial, uint8_t &confirmationCode, String &error,
   return true;
 }
 
-inline bool readTemplate(Stream &serial, uint8_t *output,
-                         size_t outputCapacity, size_t &bytesRead,
-                         String &error) {
+inline bool readTemplate(Stream &serial, uint8_t *output, size_t outputCapacity,
+                         size_t &bytesRead, String &error) {
   bytesRead = 0;
   bool endReceived = false;
 
   while (!endReceived) {
     Packet packet;
-    if (!readPacket(serial, packet, error, 3000)) return false;
+    if (!readPacket(serial, packet, error, 3000))
+      return false;
     if (packet.pid != PID_DATA && packet.pid != PID_END_DATA) {
       error = "UNEXPECTED_TEMPLATE_PACKET";
       return false;
@@ -187,8 +190,7 @@ inline bool readTemplate(Stream &serial, uint8_t *output,
   return true;
 }
 
-inline bool beginDownChar(Stream &serial, uint8_t charBuffer,
-                          String &error) {
+inline bool beginDownChar(Stream &serial, uint8_t charBuffer, String &error) {
   drainInput(serial);
   const uint8_t command[] = {CMD_DOWN_CHAR, charBuffer};
   if (!writePacket(serial, PID_COMMAND, command, sizeof(command))) {
@@ -197,7 +199,8 @@ inline bool beginDownChar(Stream &serial, uint8_t charBuffer,
   }
 
   uint8_t confirmationCode = 0xFF;
-  if (!readAck(serial, confirmationCode, error)) return false;
+  if (!readAck(serial, confirmationCode, error))
+    return false;
   if (confirmationCode != 0x00) {
     error = "DOWNCHAR_REJECTED_0x" + String(confirmationCode, HEX);
     return false;
@@ -214,8 +217,8 @@ inline bool sendTemplate(Stream &serial, const uint8_t *templateData,
 
   size_t offset = 0;
   while (offset < templateLength) {
-    const uint16_t chunkLength = static_cast<uint16_t>(
-        min(DATA_PACKET_BYTES, templateLength - offset));
+    const uint16_t chunkLength =
+        static_cast<uint16_t>(min(DATA_PACKET_BYTES, templateLength - offset));
     const bool isLast = offset + chunkLength == templateLength;
     if (!writePacket(serial, isLast ? PID_END_DATA : PID_DATA,
                      templateData + offset, chunkLength)) {
@@ -239,9 +242,8 @@ inline uint32_t crc32(const uint8_t *data, size_t length) {
   return crc ^ 0xFFFFFFFF;
 }
 
-inline bool decodeHex(const String &hex, uint8_t *output,
-                      size_t outputCapacity, size_t &bytesDecoded,
-                      String &error) {
+inline bool decodeHex(const String &hex, uint8_t *output, size_t outputCapacity,
+                      size_t &bytesDecoded, String &error) {
   bytesDecoded = 0;
   if ((hex.length() & 1U) != 0) {
     error = "HEX_ODD_LENGTH";
@@ -253,9 +255,12 @@ inline bool decodeHex(const String &hex, uint8_t *output,
   }
 
   auto nibble = [](char c) -> int8_t {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+      return c - '0';
+    if (c >= 'a' && c <= 'f')
+      return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+      return c - 'A' + 10;
     return -1;
   };
 
@@ -272,14 +277,14 @@ inline bool decodeHex(const String &hex, uint8_t *output,
 }
 
 inline String encodeHex(const uint8_t *data, size_t length) {
-  static const char HEX[] = "0123456789abcdef";
+  static const char hexDigits[] = "0123456789abcdef";
   String output;
   output.reserve(length * 2);
   for (size_t i = 0; i < length; i++) {
-    output += HEX[data[i] >> 4];
-    output += HEX[data[i] & 0x0F];
+    output += hexDigits[data[i] >> 4];
+    output += hexDigits[data[i] & 0x0F];
   }
   return output;
 }
 
-}  // namespace Dy50TemplateTransport
+} // namespace Dy50TemplateTransport
