@@ -1,3 +1,4 @@
 <?php
-echo "Hello, World!";
+header("Location: mvc/views/auth/login.php");
+exit();
 ?>
