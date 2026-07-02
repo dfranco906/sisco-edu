@@ -6,6 +6,7 @@
 #include <Adafruit_Fingerprint.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
+#include "dy50_template_transport.h"
 
 // ============================================================================
 // CONFIGURACIÓN DE HARDWARE
@@ -33,7 +34,7 @@ uint32_t tiempoLimiteEstado = 0;
 // ============================================================================
 // ESTRUCTURAS DE DATOS
 // ============================================================================
-typedef struct {
+typedef struct __attribute__((packed)) {
   int id_sync;
   int id_huella;
   int total_chunks;
@@ -44,7 +45,7 @@ typedef struct {
   char data[161];
 } PaqueteHuella;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
   char room_id[16];
   char ci[15];
   char tipo_persona[15];
@@ -52,7 +53,7 @@ typedef struct {
   char fecha_hora[20];
 } PaqueteAsistencia;
 
-typedef struct { char msg[4]; } PaquetePing;
+typedef struct __attribute__((packed)) { char msg[4]; } PaquetePing;
 
 struct RegistroUsuario {
   char ci[15];
@@ -83,6 +84,28 @@ void msgOled(String t1, String t2 = "") {
   oled.display();
 }
 
+bool guardarHuellaDY50(const String &templateHex, int slot, String &error) {
+  static uint8_t templateData[Dy50TemplateTransport::TEMPLATE_BYTES];
+  size_t decodedBytes = 0;
+  if (!Dy50TemplateTransport::decodeHex(templateHex, templateData, sizeof(templateData), decodedBytes, error)) {
+    return false;
+  }
+  if (decodedBytes != Dy50TemplateTransport::TEMPLATE_BYTES) {
+    error = "LONG_INVALIDA_" + String(decodedBytes);
+    return false;
+  }
+  if (!Dy50TemplateTransport::beginDownChar(dy50Serial, 1, error)) return false;
+  if (!Dy50TemplateTransport::sendTemplate(dy50Serial, templateData, decodedBytes, error)) return false;
+  
+  delay(150);
+  uint8_t storeResult = finger.storeModel(slot);
+  if (storeResult != FINGERPRINT_OK) {
+    error = "STORE_FAIL_0x" + String(storeResult, HEX);
+    return false;
+  }
+  return true;
+}
+
 // ============================================================================
 // CALLBACKS ESP-NOW
 // ============================================================================
@@ -92,36 +115,53 @@ void onSend(const wifi_tx_info_t *tx_info, esp_now_send_status_t status) {
 }
 
 void onReceive(const esp_now_recv_info_t *recv_info, const uint8_t *incomingData, int len) {
-  if (len != sizeof(PaqueteHuella)) return;
+  if (len != sizeof(PaqueteHuella)) {
+    Serial.printf("[ESP-NOW] Descartado. Tamanio %d (Esperado %d)\n", len, sizeof(PaqueteHuella));
+    return;
+  }
 
   PaqueteHuella paquete;
   memcpy(&paquete, incomingData, sizeof(paquete));
-  if (String(paquete.room_id) != ROOM_ID) return;
+  if (String(paquete.room_id) != ROOM_ID) {
+    Serial.printf("[ESP-NOW] Descartado. RoomID '%s' no coincide\n", paquete.room_id);
+    return;
+  }
 
   if (paquete.chunk_index == 0) {
     huellaReconstruida = "";
     chunkEsperado = 0;
     msgOled("SYNC...", "CI: " + String(paquete.ci));
+    Serial.printf("[SYNC] Iniciando recepcion huella slot %d para CI %s\n", paquete.id_huella, paquete.ci);
   }
 
   if (paquete.chunk_index == chunkEsperado) {
     huellaReconstruida += String(paquete.data);
     chunkEsperado++;
-  } else { return; }
+    Serial.printf("[SYNC] Chunk %d/%d recibido.\n", paquete.chunk_index + 1, paquete.total_chunks);
+  } else {
+    Serial.printf("[SYNC] Error: Chunk %d recibido, esperado %d\n", paquete.chunk_index, chunkEsperado);
+    return;
+  }
 
   if (paquete.chunk_index == paquete.total_chunks - 1) {
     int slotAsignado = paquete.id_huella;
-   
-    // Aquí iría el guardado físico real: finger.storeModel(slotAsignado)
-    // Usamos el flujo exitoso para la integración lógica
-    strcpy(dbLocal[slotAsignado].ci, paquete.ci);
-    strcpy(dbLocal[slotAsignado].tipo_persona, paquete.tipo_persona);
-    dbLocal[slotAsignado].registrado = true;
+    Serial.printf("[SYNC] Recepcion completada. Guardando en DY50 slot %d...\n", slotAsignado);
+    msgOled("GUARDANDO", "En sensor...");
 
-    msgOled("SYNC OK", "Slot: " + String(slotAsignado));
+    String error;
+    if (guardarHuellaDY50(huellaReconstruida, slotAsignado, error)) {
+      strcpy(dbLocal[slotAsignado].ci, paquete.ci);
+      strcpy(dbLocal[slotAsignado].tipo_persona, paquete.tipo_persona);
+      dbLocal[slotAsignado].registrado = true;
+      msgOled("SYNC OK", "Slot: " + String(slotAsignado));
+      Serial.println("[SYNC] Exito guardando huella");
+    } else {
+      msgOled("ERROR DY50", error);
+      Serial.printf("[SYNC] Fallo guardando huella: %s\n", error.c_str());
+    }
    
-    huellaReconstruida = String();// Reinicializa el objeto desde cero vaciando su buffer
-    delay(1000);
+    huellaReconstruida = String();
+    delay(1500);
     msgOled("AULA: " + ROOM_ID, "Listo...");
   }
 }

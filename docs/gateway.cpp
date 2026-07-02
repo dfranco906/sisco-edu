@@ -37,7 +37,7 @@ DispositivoAula tablaAulas[MAX_AULAS] = {
 // FORMATOS DE PAQUETES (ESP-NOW)
 // ============================================================================
 // 1. Estructura de salida: Envío de Huellas (Modificada a 161 bytes de holgura)
-typedef struct {
+typedef struct __attribute__((packed)) {
   int id_sync;
   int id_huella;
   int total_chunks;
@@ -49,7 +49,7 @@ typedef struct {
 } PaqueteHuella;
 
 // 2. Estructura de entrada: Recepción de Asistencia (Peso: 81 bytes, seguro)
-typedef struct {
+typedef struct __attribute__((packed)) {
   char room_id[16];
   char ci[15];
   char tipo_persona[15];
