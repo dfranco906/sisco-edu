@@ -1,5 +1,5 @@
 async function descargarYGuardarTemplate(idPersona, tipoPersona = "estudiante") {
-    const ipESP32 = "192.168.100.112";
+    const ipESP32 = "192.168.100.122";
 
     mostrarEstadoHuella("Conectando con ESP32...", true);
 
