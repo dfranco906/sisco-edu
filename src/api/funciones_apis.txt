@@ -1,0 +1,16 @@
+Asignaciones: une profesor + materia + año lectivo.
+AsistenciaEstudiante: registra asistencia manual/biométrica de estudiantes.
+AsistenciaProfesor: registra asistencia de profesores.
+Aula: CRUD de aulas.
+BiometricMapping: relación biométrica entre usuario/aula/nodo.
+Estudiante: CRUD estudiantes.
+EventoAsistencia: eventos enviados desde ESP32/aula.
+Gateway: APIs usadas por ESP Gateway.
+Horario: horarios por grado/aula/asignación.
+Huella: captura/guardar/verificar huellas.
+HuellaTemplate: manejo específico de templates.
+Materia: CRUD materias.
+NodoEsp32: registro de nodos/gateway/aulas.
+Profesor: CRUD profesores.
+SyncBiometrica: cola de sincronización de huellas.
+Usuario: login/roles.1

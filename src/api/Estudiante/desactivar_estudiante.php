@@ -1,28 +1,38 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Estudiante.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$estudiante = new Estudiante($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Estudiante.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    exit;
+}
+
+try {
+    $db = (new Database())->getConnection();
+    $estudiante = new Estudiante($db);
 
     $estudiante->id_estudiante = $_POST['id_estudiante'] ?? null;
 
-    if (!empty($estudiante->id_estudiante)) {
-        if ($estudiante->desactivar()) {
-            echo json_encode(["message" => "Estudiante desactivado correctamente"]);
-        } else {
-            echo json_encode(["message" => "Error al desactivar estudiante"]);
-        }
-    } else {
-        echo json_encode(["message" => "ID de estudiante requerido"]);
+    if (!$estudiante->id_estudiante) {
+        echo json_encode(["status" => "error", "message" => "ID de estudiante requerido"]);
+        exit;
     }
 
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    $resultado = $estudiante->desactivar();
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Estudiante desactivado correctamente" : "Error al desactivar estudiante"
+    ]);
+
+} catch (Throwable $e) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Error interno",
+        "debug" => $e->getMessage()
+    ]);
 }
 ?>

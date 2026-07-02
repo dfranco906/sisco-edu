@@ -1,49 +1,16 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
-require_once '../../config/db.php';
-require_once '../../classes/Usuario.php';
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Usuario.php';
 
-$db = (new Database())->getConnection();
-$usuario = new Usuario($db);
-
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-
+try {
+    $db = (new Database())->getConnection();
+    $usuario = new Usuario($db);
     $stmt = $usuario->leer();
-    $num = $stmt->rowCount();
 
-    if ($num > 0) {
-
-        $usuarios_arr = array();
-        $usuarios_arr["data"] = array();
-
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            extract($row);
-
-            $item = array(
-                "id_usuario" => $id_usuario,
-                "nombre" => $nombre,
-                "apellido" => $apellido,
-                "usuario" => $usuario,
-                "email" => $email,
-                "celular" => $celular,
-                "rol" => $rol,
-                "fecha_creacion" => $fecha_creacion
-            );
-
-            array_push($usuarios_arr["data"], $item);
-        }
-
-        http_response_code(200);
-        echo json_encode($usuarios_arr);
-
-    } else {
-        http_response_code(404);
-        echo json_encode(["message" => "No hay usuarios"]);
-    }
-
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    echo json_encode(["status" => "success", "message" => "Usuarios obtenidos", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+} catch (Throwable $e) {
+    echo json_encode(["status" => "error", "message" => "Error interno", "data" => [], "debug" => $e->getMessage()]);
 }
 ?>

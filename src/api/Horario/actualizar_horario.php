@@ -1,33 +1,91 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Horario.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$horario = new Horario($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Horario.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+    exit;
+}
 
-    $horario->id_horario = $_POST['id_horario'] ?? null;
-    $horario->id_asignacion = $_POST['id_asignacion'] ?? null;
-    $horario->dia_semana = $_POST['dia_semana'] ?? null;
-    $horario->hora_inicio = $_POST['hora_inicio'] ?? null;
-    $horario->hora_fin = $_POST['hora_fin'] ?? null;
-    $horario->aula = $_POST['aula'] ?? null;
+$id_horario = $_POST['id_horario'] ?? null;
+$id_asignacion = $_POST['id_asignacion'] ?? null;
+$id_grado = $_POST['id_grado'] ?? null;
+$dia_semana = trim((string) ($_POST['dia_semana'] ?? ''));
+$hora_inicio = trim((string) ($_POST['hora_inicio'] ?? ''));
+$hora_fin = trim((string) ($_POST['hora_fin'] ?? ''));
 
-    if (!empty($horario->id_horario)) {
-        if ($horario->actualizar()) {
-            echo json_encode(["message" => "Horario actualizado correctamente"]);
-        } else {
-            echo json_encode(["message" => "Error al actualizar horario"]);
-        }
-    } else {
-        echo json_encode(["message" => "ID de horario requerido"]);
+if (!$id_horario || !$id_asignacion || !$id_grado || $dia_semana === '' || $hora_inicio === '' || $hora_fin === '') {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "Horario, asignación, grado, día y horas son obligatorios."]);
+    exit;
+}
+
+$diasValidos = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+if (!in_array($dia_semana, $diasValidos, true)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "El día seleccionado no es válido."]);
+    exit;
+}
+
+$formatoHoraValido = static function ($hora) {
+    return preg_match('/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $hora) === 1;
+};
+
+if (!$formatoHoraValido($hora_inicio) || !$formatoHoraValido($hora_fin)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "Las horas indicadas no son válidas."]);
+    exit;
+}
+
+if (strtotime($hora_fin) <= strtotime($hora_inicio)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "La hora fin debe ser mayor que la hora inicio."]);
+    exit;
+}
+
+try {
+    $db = (new Database())->getConnection();
+    $horario = new Horario($db);
+
+    if (!$horario->asignacionActivaExiste($id_asignacion)) {
+        http_response_code(422);
+        echo json_encode(["status" => "error", "message" => "La asignación seleccionada no es válida."]);
+        exit;
     }
 
-} else {
-    http_response_code(405);
-    echo json_encode(["message" => "Método no permitido"]);
+    $grado = $horario->obtenerGradoActivo($id_grado);
+    if (!$grado) {
+        http_response_code(422);
+        echo json_encode(["status" => "error", "message" => "El grado seleccionado no es válido."]);
+        exit;
+    }
+
+    if (!$grado['room_id'] || !(int) $grado['aula_valida']) {
+        http_response_code(422);
+        echo json_encode(["status" => "error", "message" => "El grado seleccionado no tiene aula asignada."]);
+        exit;
+    }
+
+    $horario->id_horario = $id_horario;
+    $horario->id_asignacion = $id_asignacion;
+    $horario->grado = $grado['nombre'];
+    $horario->dia_semana = $dia_semana;
+    $horario->hora_inicio = $hora_inicio;
+    $horario->hora_fin = $hora_fin;
+    $horario->aula = $grado['room_id'];
+
+    $resultado = $horario->actualizar();
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Horario actualizado correctamente" : "Error al actualizar horario",
+        "id_horario" => $resultado ? (int) $id_horario : null,
+        "room_id" => $resultado ? $grado['room_id'] : null
+    ]);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(["status" => "error", "message" => "Error interno al actualizar el horario."]);
 }
-?>

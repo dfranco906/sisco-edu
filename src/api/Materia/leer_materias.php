@@ -1,14 +1,16 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Materia.php';
-
 header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$materia = new Materia($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Materia.php';
 
-$stmt = $materia->leer();
-$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $db = (new Database())->getConnection();
+    $materia = new Materia($db);
+    $stmt = $materia->leer();
 
-echo json_encode($data);
+    echo json_encode(["status" => "success", "message" => "Materias obtenidas", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+} catch (Throwable $e) {
+    echo json_encode(["status" => "error", "message" => "Error interno", "data" => [], "debug" => $e->getMessage()]);
+}
 ?>

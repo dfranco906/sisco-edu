@@ -1,31 +1,43 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/Estudiante.php';
+header("Content-Type: application/json; charset=UTF-8");
 
-$db = (new Database())->getConnection();
-$estudiante = new Estudiante($db);
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../classes/Estudiante.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    exit;
+}
+
+try {
+    $db = (new Database())->getConnection();
+    $estudiante = new Estudiante($db);
 
     $estudiante->id_estudiante = $_POST['id_estudiante'] ?? null;
     $estudiante->nombre = $_POST['nombre'] ?? null;
     $estudiante->apellido = $_POST['apellido'] ?? null;
     $estudiante->cedula_identidad = $_POST['cedula_identidad'] ?? null;
+    $estudiante->id_grado = $_POST['id_grado'] ?? null;
     $estudiante->huella_id = $_POST['huella_id'] ?? null;
 
-    if (!empty($estudiante->id_estudiante)) {
-
-        if ($estudiante->actualizar()) {
-            echo "✅ Estudiante actualizado";
-        } else {
-            echo "❌ Error al actualizar";
-        }
-
-    } else {
-        echo "❌ ID requerido";
+    if (!$estudiante->id_estudiante || !$estudiante->nombre || !$estudiante->apellido || !$estudiante->cedula_identidad) {
+        echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+        exit;
     }
 
-} else {
-    echo "⛔ Método no permitido";
+    $resultado = $estudiante->actualizar();
+
+    echo json_encode([
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Estudiante actualizado correctamente" : "Error al actualizar estudiante"
+    ]);
+
+} catch (Throwable $e) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Error interno",
+        "debug" => $e->getMessage()
+    ]);
 }
 ?>

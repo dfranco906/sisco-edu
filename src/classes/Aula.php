@@ -36,6 +36,17 @@ class Aula {
         return $stmt;
     }
 
+    public function leerDesactivadas() {
+        $query = "SELECT * FROM " . $this->table_name . "
+                  WHERE activo = 0
+                  ORDER BY id_aula DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt;
+    }
+
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
                   SET nombre=:nombre,
@@ -62,6 +73,39 @@ class Aula {
         $stmt->bindParam(":id", $this->id_aula);
 
         return $stmt->execute();
+    }
+
+    public function restaurar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET activo = 1
+                  WHERE id_aula=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_aula);
+
+        return $stmt->execute();
+    }
+
+    public function contarGradosAsociados() {
+        $query = "SELECT COUNT(*) FROM grados
+                  WHERE id_aula=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_aula);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function eliminar() {
+        $query = "DELETE FROM " . $this->table_name . "
+                  WHERE id_aula=:id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_aula);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
     }
 }
 ?>

@@ -22,4 +22,4 @@ if (!isset($_SESSION['id_usuario'])) {
 </head>
 <body class="min-h-screen" style="background: var(--color-bg);">
 
-<div class="flex min-h-screen">
+<div class="app-shell flex min-h-screen">

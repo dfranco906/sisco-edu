@@ -56,7 +56,7 @@ if ($error === "campos") {
                     type="text" 
                     name="usuario" 
                     required
-                    class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2"
+                    class="app-input w-full"
                     placeholder="Ej: admin1"
                 >
             </div>
@@ -69,15 +69,14 @@ if ($error === "campos") {
                     type="password" 
                     name="password" 
                     required
-                    class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2"
+                    class="app-input w-full"
                     placeholder="••••••••"
                 >
             </div>
 
             <button 
                 type="submit"
-                class="w-full py-3 rounded-xl text-white font-semibold transition hover:opacity-90"
-                style="background: var(--color-primary);"
+                class="btn btn-primary w-full"
             >
                 Ingresar
             </button>

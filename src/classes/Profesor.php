@@ -47,23 +47,40 @@ class Profesor {
     // ... tu código anterior (constructor y método crear) ...
 
     // Lógica para LEER (READ) todos los profesores de la BD
-    public function leer() {
-        // Escribimos la consulta SQL (traemos todos los campos)
-        // ORDER BY id_profesor DESC los ordena del más nuevo al más viejo
-        $query = "SELECT id_profesor, nombre, apellido, cedula_identidad, huella_id, fecha_registro, activo
-          FROM " . $this->table_name . "
-          WHERE activo = 1
-          ORDER BY id_profesor DESC";
+public function leer() {
+    $query = "SELECT 
+                id_profesor,
+                nombre,
+                apellido,
+                cedula_identidad,
+                huella_id,
+                activo,
+                CONCAT(nombre, ' ', apellido) AS nombre_completo
+              FROM profesores
+              WHERE activo = 1
+              ORDER BY nombre ASC";
 
-        // Preparamos la consulta
-        $stmt = $this->conn->prepare($query);
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
+public function leerDesactivados() {
+    $query = "SELECT 
+                id_profesor,
+                nombre,
+                apellido,
+                cedula_identidad,
+                huella_id,
+                activo,
+                CONCAT(nombre, ' ', apellido) AS nombre_completo
+              FROM profesores
+              WHERE activo = 0
+              ORDER BY nombre ASC";
 
-        // Ejecutamos la consulta
-        $stmt->execute();
-
-        // Retornamos el "statement" (la declaración con los datos) para que la API lo procese
-        return $stmt;
-    }
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
     // ✅ UPDATE
 public function actualizar() {
     $query = "UPDATE " . $this->table_name . "
@@ -100,6 +117,41 @@ public function desactivar() {
     $stmt->bindParam(":id", $this->id_profesor);
 
     return $stmt->execute();
+}
+public function restaurar() {
+    $query = "UPDATE " . $this->table_name . "
+              SET activo = 1
+              WHERE id_profesor = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_profesor);
+
+    return $stmt->execute();
+}
+public function contarDependencias() {
+    $query = "SELECT
+                (SELECT COUNT(*) FROM asignacion_docente WHERE id_profesor=:id1) +
+                (SELECT COUNT(*) FROM asistencias_profesores WHERE id_profesor=:id2) +
+                (SELECT COUNT(*) FROM huellas_templates WHERE id_profesor=:id3)";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([
+        ":id1" => $this->id_profesor,
+        ":id2" => $this->id_profesor,
+        ":id3" => $this->id_profesor
+    ]);
+
+    return (int) $stmt->fetchColumn();
+}
+public function eliminar() {
+    $query = "DELETE FROM " . $this->table_name . "
+              WHERE id_profesor = :id";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":id", $this->id_profesor);
+    $stmt->execute();
+
+    return $stmt->rowCount() > 0;
 }
 }
 ?>
