@@ -7,6 +7,9 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
 #include "dy50_template_transport.h"
+#include <Preferences.h>
+
+Preferences prefs;
 
 // ============================================================================
 // CONFIGURACIÓN DE HARDWARE
@@ -88,12 +91,48 @@ EstadoSync estadoSync = SYNC_IDLE;
 void msgOled(String t1, String t2 = "") {
   oled.clearDisplay();
   oled.setCursor(0, 10);
-  oled.setTextSize(2); // Texto mediano/grande
+  oled.setTextSize(2);
   oled.println(t1);
   oled.setTextSize(1);
   oled.setCursor(0, 45);
   oled.println(t2);
   oled.display();
+}
+
+// ============================================================================
+// PERSISTENCIA NVS (Preferences) — Sobrevive reinicios
+// ============================================================================
+void guardarSlotEnNVS(int slot) {
+  prefs.begin("dblocal", false);
+  String keyCI   = "ci_"   + String(slot);
+  String keyTipo = "tipo_" + String(slot);
+  String keyReg  = "reg_"  + String(slot);
+  prefs.putString(keyCI.c_str(),   dbLocal[slot].ci);
+  prefs.putString(keyTipo.c_str(), dbLocal[slot].tipo_persona);
+  prefs.putBool(keyReg.c_str(),    dbLocal[slot].registrado);
+  prefs.end();
+  Serial.printf("[NVS] Slot %d guardado en flash (CI:%s, Tipo:%s)\n",
+                slot, dbLocal[slot].ci, dbLocal[slot].tipo_persona);
+}
+
+void cargarDbLocalDesdeNVS() {
+  prefs.begin("dblocal", true); // modo solo-lectura
+  int restaurados = 0;
+  for (int i = 0; i < 201; i++) {
+    String keyReg = "reg_" + String(i);
+    if (prefs.getBool(keyReg.c_str(), false)) {
+      String keyCI   = "ci_"   + String(i);
+      String keyTipo = "tipo_" + String(i);
+      String ci   = prefs.getString(keyCI.c_str(),   "");
+      String tipo = prefs.getString(keyTipo.c_str(), "");
+      ci.toCharArray(dbLocal[i].ci,           sizeof(dbLocal[i].ci));
+      tipo.toCharArray(dbLocal[i].tipo_persona, sizeof(dbLocal[i].tipo_persona));
+      dbLocal[i].registrado = true;
+      restaurados++;
+    }
+  }
+  prefs.end();
+  Serial.printf("[NVS] dbLocal restaurado: %d usuarios cargados desde flash\n", restaurados);
 }
 
 bool guardarHuellaDY50(const String &templateHex, int slot, String &error) {
@@ -213,9 +252,13 @@ void verificarLecturaHuella() {
   }
 
   int slotMatch = finger.fingerID;
-  if (!dbLocal[slotMatch].registrado) {
-    msgOled("ERROR", "Sin datos RAM");
+  Serial.printf("[BIOM] Match en slot: %d (confianza: %d)\n", slotMatch, finger.confidence);
+
+  if (slotMatch < 0 || slotMatch > 200 || !dbLocal[slotMatch].registrado) {
+    msgOled("SIN DATOS", "Slot:" + String(slotMatch));
+    Serial.printf("[BIOM] Slot %d no tiene datos en dbLocal. Verifica sync.\n", slotMatch);
     delay(1500);
+    msgOled("AULA: " + ROOM_ID, "Listo...");
     return;
   }
 
@@ -301,9 +344,11 @@ void setup() {
 
   escanearYFijarCanalGateway();
 
-  dy50Serial.begin(57600, SERIAL_8N1, 16, 17); // Forzamos al hardware a usar los pines 16 (tx) y 17 (rx)
-  finger.begin(57600); // Vinculamos la librería al puerto ya configurado
+  dy50Serial.begin(57600, SERIAL_8N1, 16, 17);
+  finger.begin(57600);
   if (finger.verifyPassword()) {
+    msgOled("DY50: OK", "Cargando DB...");
+    cargarDbLocalDesdeNVS(); // Restaurar metadatos de huellas desde flash
     msgOled("DY50: OK", "Sistema Listo");
   } else {
     msgOled("ERROR", "DY50 no hallado");
@@ -363,8 +408,9 @@ void loop() {
         strcpy(dbLocal[idSyncSlot].ci, ciSync);
         strcpy(dbLocal[idSyncSlot].tipo_persona, tipoPersonaSync);
         dbLocal[idSyncSlot].registrado = true;
+        guardarSlotEnNVS(idSyncSlot); // Persiste en flash para sobrevivir reinicios
         msgOled("SYNC OK", "Slot: " + String(idSyncSlot));
-        Serial.println("[SYNC] Huella guardada con exito");
+        Serial.println("[SYNC] Huella guardada con exito en DY50 y NVS");
       } else {
         msgOled("ERROR DY50", error);
         Serial.printf("[SYNC] Fallo guardando huella: %s\n", error.c_str());
