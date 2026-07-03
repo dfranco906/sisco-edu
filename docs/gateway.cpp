@@ -200,7 +200,7 @@ void pedirSyncPendiente() {
     return;
   }
 
-  DynamicJsonDocument doc(60000);
+  DynamicJsonDocument doc(16384);
   deserializeJson(doc, payload);
 
   int idSync = doc["data"]["id_sync"];
@@ -209,6 +209,7 @@ void pedirSyncPendiente() {
   String roomId = doc["data"]["room_id"] | "";
   String tipo = doc["data"]["tipo_persona"] | "";
   String huella = doc["data"]["huella_base64"] | "";
+  huella.trim();
 
   Serial.printf("\n--- NUEVA ORDEN RECIBIDA ---\nDestino: %s | Alumno CI: %s\n", roomId.c_str(), ci.c_str());
 

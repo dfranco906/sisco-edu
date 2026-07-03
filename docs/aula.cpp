@@ -191,7 +191,10 @@ if (paquete.chunk_index == 0 && !flagSyncIniciado) {
 
   if (!chunksRecibidos[paquete.chunk_index]) {
     int offset = paquete.chunk_index * 160;
-    strncpy(huellaBuffer + offset, paquete.data, strlen(paquete.data));
+    int len = strlen(paquete.data);
+    if (offset + len < sizeof(huellaBuffer)) {
+        memcpy(huellaBuffer + offset, paquete.data, len);
+    }
     chunksRecibidos[paquete.chunk_index] = true;
     totalChunksRecibidos++;
     tiempoUltimoChunk = millis();
@@ -403,8 +406,11 @@ void loop() {
       Serial.printf("[SYNC] Grabando huella completa en DY50 slot %d...\n", idSyncSlot);
       msgOled("GUARDANDO", "En sensor...");
 
+      huellaBuffer[sizeof(huellaBuffer) - 1] = '\0';
+      String hexLimpio = String(huellaBuffer);
+      hexLimpio.trim();
       String error;
-      if (guardarHuellaDY50(String(huellaBuffer), idSyncSlot, error)) {
+      if (guardarHuellaDY50(hexLimpio, idSyncSlot, error)) {
         strcpy(dbLocal[idSyncSlot].ci, ciSync);
         strcpy(dbLocal[idSyncSlot].tipo_persona, tipoPersonaSync);
         dbLocal[idSyncSlot].registrado = true;
