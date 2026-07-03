@@ -68,8 +68,9 @@ RegistroUsuario dbLocal[201];
 uint32_t ultimoRegistroSlot[201] = {0};
 const uint32_t TIEMPO_COOLDOWN = 300000; // 5 min
 
-String huellaReconstruida = "";
-int chunkEsperado = 0;
+char huellaBuffer[3073];
+bool chunksRecibidos[25] = {false};
+int totalChunksRecibidos = 0;
 volatile bool pingAckRecibido = false;
 volatile bool txStatusStatus = false;
 
@@ -176,10 +177,10 @@ void onReceive(const esp_now_recv_info_t *recv_info, const uint8_t *incomingData
     return;
   }
 
-  if (paquete.chunk_index == 0) {
-    huellaReconstruida = "";
-    huellaReconstruida.reserve(2816); // Pre-asignar memoria para evitar fragmentacion
-    chunkEsperado = 0;
+if (paquete.chunk_index == 0 && !flagSyncIniciado) {
+    memset(huellaBuffer, 0, sizeof(huellaBuffer));
+    memset(chunksRecibidos, false, sizeof(chunksRecibidos));
+    totalChunksRecibidos = 0;
     idSyncSlot = paquete.id_huella;
     strncpy(ciSync, paquete.ci, sizeof(ciSync) - 1);
     ciSync[sizeof(ciSync) - 1] = '\0';
@@ -188,17 +189,16 @@ void onReceive(const esp_now_recv_info_t *recv_info, const uint8_t *incomingData
     flagSyncIniciado = true;
   }
 
-  if (paquete.chunk_index == chunkEsperado) {
-    huellaReconstruida += String(paquete.data);
-    chunkEsperado++;
+  if (!chunksRecibidos[paquete.chunk_index]) {
+    int offset = paquete.chunk_index * 160;
+    strncpy(huellaBuffer + offset, paquete.data, strlen(paquete.data));
+    chunksRecibidos[paquete.chunk_index] = true;
+    totalChunksRecibidos++;
     tiempoUltimoChunk = millis();
-  } else {
-    flagSyncError = true;
-    return;
-  }
 
-  if (paquete.chunk_index == paquete.total_chunks - 1) {
-    flagSyncCompletado = true;
+    if (totalChunksRecibidos == paquete.total_chunks) {
+      flagSyncCompletado = true;
+    }
   }
 }
 
@@ -391,7 +391,7 @@ void loop() {
     if (flagSyncError) {
       flagSyncError = false;
       estadoSync = SYNC_IDLE;
-      huellaReconstruida = String();
+      memset(huellaBuffer, 0, sizeof(huellaBuffer));
       msgOled("ERR SYNC", "Secuencia rota");
       Serial.println("[SYNC] Error: secuencia de chunks rota");
       delay(2000);
@@ -404,7 +404,7 @@ void loop() {
       msgOled("GUARDANDO", "En sensor...");
 
       String error;
-      if (guardarHuellaDY50(huellaReconstruida, idSyncSlot, error)) {
+      if (guardarHuellaDY50(String(huellaBuffer), idSyncSlot, error)) {
         strcpy(dbLocal[idSyncSlot].ci, ciSync);
         strcpy(dbLocal[idSyncSlot].tipo_persona, tipoPersonaSync);
         dbLocal[idSyncSlot].registrado = true;
@@ -416,7 +416,7 @@ void loop() {
         Serial.printf("[SYNC] Fallo guardando huella: %s\n", error.c_str());
       }
 
-      huellaReconstruida = String();
+      memset(huellaBuffer, 0, sizeof(huellaBuffer));
       estadoSync = SYNC_IDLE;
       delay(2000);
       msgOled("AULA: " + ROOM_ID, "Listo...");
@@ -424,7 +424,7 @@ void loop() {
     else if (millis() - tiempoUltimoChunk > 5000) {
       // Timeout tras 5 segundos sin recibir chunks
       estadoSync = SYNC_IDLE;
-      huellaReconstruida = String();
+      memset(huellaBuffer, 0, sizeof(huellaBuffer));
       msgOled("TIMEOUT", "Cancelando sync");
       Serial.println("[SYNC] Timeout: Se perdieron paquetes en la transmision");
       delay(2000);
