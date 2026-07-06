@@ -1,105 +1,168 @@
+Prueba 1:
+
 [RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
-  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -40,13
+  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -39,14
 [System Log]: +OK
-  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   219 ms | RSSI/SNR: -40,13
+  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   125 ms | RSSI/SNR: -38,13
 [System Log]: +OK
-  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   437 ms | RSSI/SNR: -40,13
+  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   249 ms | RSSI/SNR: -39,13
 [System Log]: +OK
-  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:  2541 ms | RSSI/SNR: -40,13
+  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   373 ms | RSSI/SNR: -41,13
 [System Log]: +OK
-  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:  2759 ms | RSSI/SNR: -40,12
+  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   497 ms | RSSI/SNR: -41,13
 [System Log]: +OK
-  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:  2977 ms | RSSI/SNR: -40,12
+  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:   621 ms | RSSI/SNR: -40,12
 [System Log]: +OK
-  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:  3195 ms | RSSI/SNR: -40,13
+  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:   745 ms | RSSI/SNR: -39,12
 [System Log]: +OK
-  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:  3413 ms | RSSI/SNR: -40,13
+  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:   869 ms | RSSI/SNR: -39,13
 [System Log]: +OK
-  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:  3631 ms | RSSI/SNR: -40,12
+  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:   993 ms | RSSI/SNR: -40,13
 [System Log]: +OK
-  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  3849 ms | RSSI/SNR: -40,12
+  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1117 ms | RSSI/SNR: -41,13
 [System Log]: +OK
-  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  4067 ms | RSSI/SNR: -40,13
+  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1241 ms | RSSI/SNR: -40,13
 [System Log]: +OK
-  Chunk duplicado ignorado (Index: 10) -> [ACK RE-ENVIADO]
-  [System Log]: +OK
-  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  6172 ms | RSSI/SNR: -40,13
+  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1366 ms | RSSI/SNR: -41,14
 [System Log]: +OK
-  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  6391 ms | RSSI/SNR: -40,13
+Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  1491 ms | RSSI/SNR: -40,13
 [System Log]: +OK
-  Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  6610 ms | RSSI/SNR: -40,13
+  Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  1616 ms | RSSI/SNR: -41,13
 [System Log]: +OK
-  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  6829 ms | RSSI/SNR: -39,12
+  Chunk duplicado ignorado (Index: 13) -> [ACK RE-ENVIADO]
 [System Log]: +OK
-  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  7048 ms | RSSI/SNR: -40,13
+  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  2299 ms | RSSI/SNR: -40,13
 [System Log]: +OK
-  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  7267 ms | RSSI/SNR: -40,13
+  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  2424 ms | RSSI/SNR: -41,13
 [System Log]: +OK
-  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  7486 ms | RSSI/SNR: -40,12
+  Chunk duplicado ignorado (Index: 15) -> [ACK RE-ENVIADO]
 [System Log]: +OK
-  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  7705 ms | RSSI/SNR: -40,12
+  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  3107 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  3232 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  3357 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  3482 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk duplicado ignorado (Index: 19) -> [ACK RE-ENVIADO]
+[System Log]: +OK
+  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  4165 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  4290 ms | RSSI/SNR: -41,14
+--------------------------------------------------
+[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
+Paquetes únicos procesados: 22
+Tiempo total de ráfaga: 4290 ms (4.29 segundos)
+--------------------------------------------------
+[System Log]: +OK
+
+Prueba 2:
+
+[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
+  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -47,14
+[System Log]: +OK
+  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   124 ms | RSSI/SNR: -45,13
+[System Log]: +OK
+  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   248 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   372 ms | RSSI/SNR: -42,12
+[System Log]: +OK
+  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   496 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:   620 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:   744 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:   868 ms | RSSI/SNR: -41,12
+[System Log]: +OK
+  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:   992 ms | RSSI/SNR: -40,12
+[System Log]: +OK
+  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1116 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1240 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1365 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  1490 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  1615 ms | RSSI/SNR: -42,14
+[System Log]: +OK
+  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  1740 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  1865 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  1990 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  2115 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  2240 ms | RSSI/SNR: -42,13
 [System Log]: +OK
   Chunk duplicado ignorado (Index: 18) -> [ACK RE-ENVIADO]
 [System Log]: +OK
-  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  9810 ms | RSSI/SNR: -40,14
+  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  2923 ms | RSSI/SNR: -40,13
 [System Log]: +OK
-  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum: 10029 ms | RSSI/SNR: -40,13
+  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  3048 ms | RSSI/SNR: -41,14
 [System Log]: +OK
-  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum: 10248 ms | RSSI/SNR: -40,13
+  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  3173 ms | RSSI/SNR: -41,14
 --------------------------------------------------
 [ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
 Paquetes únicos procesados: 22
-Tiempo total de ráfaga: 10248 ms (10.25 segundos)
-
+Tiempo total de ráfaga: 3173 ms (3.17 segundos)
+--------------------------------------------------
 [System Log]: +OK
+
+Prueba 3:
 
 [RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
-  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -40,14
+  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   218 ms | RSSI/SNR: -39,14
+  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   124 ms | RSSI/SNR: -37,12
 [System Log]: +OK
-  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   436 ms | RSSI/SNR: -40,13
+  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   248 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   654 ms | RSSI/SNR: -39,13
+  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   372 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   872 ms | RSSI/SNR: -39,13
+  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:  1055 ms | RSSI/SNR: -37,12
 [System Log]: +OK
-  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:  1090 ms | RSSI/SNR: -39,12
+  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:  1179 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:  1308 ms | RSSI/SNR: -40,12
+  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:  1303 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:  1526 ms | RSSI/SNR: -41,12
+  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:  1427 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:  1744 ms | RSSI/SNR: -39,12
+  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:  1551 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1962 ms | RSSI/SNR: -39,12
+  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1675 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  2180 ms | RSSI/SNR: -41,12
+  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1799 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  2399 ms | RSSI/SNR: -39,13
+  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1924 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  2618 ms | RSSI/SNR: -39,13
+  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  2049 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  2837 ms | RSSI/SNR: -40,13
+Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  2174 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  3056 ms | RSSI/SNR: -42,13
+  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  2299 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  3275 ms | RSSI/SNR: -42,12
+  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  2424 ms | RSSI/SNR: -38,13
 [System Log]: +OK
-  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  5380 ms | RSSI/SNR: -45,13
+  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  2549 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  5599 ms | RSSI/SNR: -44,13
+  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  2674 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  5818 ms | RSSI/SNR: -44,13
+  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  2799 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  6037 ms | RSSI/SNR: -44,13
+  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  2924 ms | RSSI/SNR: -37,13
 [System Log]: +OK
-  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  6256 ms | RSSI/SNR: -44,13
+  Chunk duplicado ignorado (Index: 19) -> [ACK RE-ENVIADO]
 [System Log]: +OK
-  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  6475 ms | RSSI/SNR: -44,12
+  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  3607 ms | RSSI/SNR: -36,13
+[System Log]: +OK
+  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  3732 ms | RSSI/SNR: -36,14
 --------------------------------------------------
 [ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
 Paquetes únicos procesados: 22
-Tiempo total de ráfaga: 6475 ms (6.47 segundos)
+Tiempo total de ráfaga: 3732 ms (3.73 segundos)
 --------------------------------------------------
 [System Log]: +OK
