@@ -1,5 +1,5 @@
 // PRUEBA AISLADA - DY50 ORIGEN
-// Enrola en slot 1 y exporta exclusivamente los 1536 bytes de payload del
+// Enrola en slot 1 y exporta exclusivamente los 1408 bytes de payload del
 // template. No incluye headers, longitudes ni checksums del framing UART.
 
 #include <Adafruit_Fingerprint.h>
@@ -102,7 +102,8 @@ bool exportTemplate(String &templateHex, String &crcHex, String &error) {
 
   templateHex = Dy50TemplateTransport::encodeHex(templateData, bytesRead);
   crcHex = String(Dy50TemplateTransport::crc32(templateData, bytesRead), HEX);
-  while (crcHex.length() < 8) crcHex = "0" + crcHex;
+  while (crcHex.length() < 8)
+    crcHex = "0" + crcHex;
   return true;
 }
 
@@ -113,7 +114,8 @@ void setup() {
 
   if (!finger.verifyPassword()) {
     Serial.println("[TEST] ERROR: DY50 origen no responde");
-    while (true) delay(1000);
+    while (true)
+      delay(1000);
   }
 
   finger.getParameters();
@@ -139,18 +141,16 @@ void setup() {
     String crcHex;
     String error;
     if (!exportTemplate(templateHex, crcHex, error)) {
-      sendJson(500,
-               "{\"status\":\"error\",\"message\":\"" + error + "\"}");
+      sendJson(500, "{\"status\":\"error\",\"message\":\"" + error + "\"}");
       return;
     }
 
     const String response =
         "{\"status\":\"success\",\"format\":\"HEX\","
-        "\"bytes\":" + String(Dy50TemplateTransport::TEMPLATE_BYTES) +
-        ",\"chars\":" +
-        String(Dy50TemplateTransport::TEMPLATE_BYTES * 2) +
-        ",\"crc32\":\"" + crcHex + "\",\"template\":\"" +
-        templateHex + "\"}";
+        "\"bytes\":" +
+        String(Dy50TemplateTransport::TEMPLATE_BYTES) +
+        ",\"chars\":" + String(Dy50TemplateTransport::TEMPLATE_BYTES * 2) +
+        ",\"crc32\":\"" + crcHex + "\",\"template\":\"" + templateHex + "\"}";
     sendJson(200, response);
   });
 

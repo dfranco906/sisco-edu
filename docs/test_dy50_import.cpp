@@ -1,5 +1,5 @@
 // PRUEBA AISLADA - DY50 DESTINO
-// Recibe 3072 caracteres HEX (1536 bytes), ejecuta DownChar hacia CharBuffer1,
+// Recibe 2816 caracteres HEX (1408 bytes), ejecuta DownChar hacia CharBuffer1,
 // guarda en slot 1, relee el template y exige igualdad byte a byte antes de
 // habilitar la prueba de reconocimiento.
 
@@ -30,8 +30,9 @@ bool installTemplate(const String &templateHex, String &error) {
   static uint8_t readbackData[Dy50TemplateTransport::TEMPLATE_BYTES];
 
   size_t decodedBytes = 0;
-  if (!Dy50TemplateTransport::decodeHex(
-          templateHex, templateData, sizeof(templateData), decodedBytes, error)) {
+  if (!Dy50TemplateTransport::decodeHex(templateHex, templateData,
+                                        sizeof(templateData), decodedBytes,
+                                        error)) {
     return false;
   }
   if (decodedBytes != Dy50TemplateTransport::TEMPLATE_BYTES) {
@@ -48,8 +49,8 @@ bool installTemplate(const String &templateHex, String &error) {
   if (!Dy50TemplateTransport::beginDownChar(sensorSerial, 1, error)) {
     return false;
   }
-  if (!Dy50TemplateTransport::sendTemplate(
-          sensorSerial, templateData, decodedBytes, error)) {
+  if (!Dy50TemplateTransport::sendTemplate(sensorSerial, templateData,
+                                           decodedBytes, error)) {
     return false;
   }
 
@@ -76,8 +77,9 @@ bool installTemplate(const String &templateHex, String &error) {
   }
 
   size_t readbackBytes = 0;
-  if (!Dy50TemplateTransport::readTemplate(
-          sensorSerial, readbackData, sizeof(readbackData), readbackBytes, error)) {
+  if (!Dy50TemplateTransport::readTemplate(sensorSerial, readbackData,
+                                           sizeof(readbackData), readbackBytes,
+                                           error)) {
     return false;
   }
   if (readbackBytes != decodedBytes) {
@@ -102,10 +104,12 @@ bool installTemplate(const String &templateHex, String &error) {
 }
 
 void verifyFinger() {
-  if (!templateVerified) return;
+  if (!templateVerified)
+    return;
 
   int result = finger.getImage();
-  if (result == FINGERPRINT_NOFINGER) return;
+  if (result == FINGERPRINT_NOFINGER)
+    return;
   if (result != FINGERPRINT_OK) {
     Serial.printf("[TEST] getImage error 0x%02X\n", result);
     delay(500);
@@ -138,7 +142,8 @@ void setup() {
 
   if (!finger.verifyPassword()) {
     Serial.println("[TEST] ERROR: DY50 destino no responde");
-    while (true) delay(1000);
+    while (true)
+      delay(1000);
   }
 
   finger.getParameters();
@@ -156,32 +161,30 @@ void setup() {
 
   server.on("/estado", HTTP_GET, []() {
     String crcHex = String(installedCrc32, HEX);
-    while (crcHex.length() < 8) crcHex = "0" + crcHex;
-    sendJson(200,
-             "{\"status\":\"success\",\"slot_local\":1,"
-             "\"template_verified\":" +
-                 String(templateVerified ? "true" : "false") +
-                 ",\"crc32\":\"" + crcHex + "\"}");
+    while (crcHex.length() < 8)
+      crcHex = "0" + crcHex;
+    sendJson(200, "{\"status\":\"success\",\"slot_local\":1,"
+                  "\"template_verified\":" +
+                      String(templateVerified ? "true" : "false") +
+                      ",\"crc32\":\"" + crcHex + "\"}");
   });
 
   server.on("/importar_template", HTTP_POST, []() {
-    const bool allowOverwrite =
-        server.hasArg("allow_overwrite") &&
-        server.arg("allow_overwrite") == "1";
+    const bool allowOverwrite = server.hasArg("allow_overwrite") &&
+                                server.arg("allow_overwrite") == "1";
 
     if (!allowOverwrite && finger.loadModel(TEST_SLOT) == FINGERPRINT_OK) {
-      sendJson(409,
-               "{\"status\":\"error\",\"code\":\"SLOT_OCUPADO\","
-               "\"message\":\"Slot 1 ya contiene una huella. Use un sensor de prueba vacío o allow_overwrite=1.\"}");
+      sendJson(409, "{\"status\":\"error\",\"code\":\"SLOT_OCUPADO\","
+                    "\"message\":\"Slot 1 ya contiene una huella. Use un "
+                    "sensor de prueba vacío o allow_overwrite=1.\"}");
       return;
     }
 
     const String templateHex = server.arg("plain");
-    if (templateHex.length() !=
-        Dy50TemplateTransport::TEMPLATE_BYTES * 2) {
-      sendJson(422,
-               "{\"status\":\"error\",\"code\":\"LONGITUD_INVALIDA\","
-               "\"received_chars\":" + String(templateHex.length()) + "}");
+    if (templateHex.length() != Dy50TemplateTransport::TEMPLATE_BYTES * 2) {
+      sendJson(422, "{\"status\":\"error\",\"code\":\"LONGITUD_INVALIDA\","
+                    "\"received_chars\":" +
+                        String(templateHex.length()) + "}");
       return;
     }
 
@@ -189,18 +192,19 @@ void setup() {
     String error;
     if (!installTemplate(templateHex, error)) {
       Serial.println("[TEST] IMPORTACIÓN FALLÓ: " + error);
-      sendJson(422,
-               "{\"status\":\"error\",\"code\":\"IMPORT_FAILED\","
-               "\"message\":\"" + error + "\"}");
+      sendJson(422, "{\"status\":\"error\",\"code\":\"IMPORT_FAILED\","
+                    "\"message\":\"" +
+                        error + "\"}");
       return;
     }
 
     String crcHex = String(installedCrc32, HEX);
-    while (crcHex.length() < 8) crcHex = "0" + crcHex;
-    sendJson(200,
-             "{\"status\":\"success\",\"slot_local\":1,"
-             "\"bytes\":1536,\"readback_verified\":true,"
-             "\"crc32\":\"" + crcHex + "\"}");
+    while (crcHex.length() < 8)
+      crcHex = "0" + crcHex;
+    sendJson(200, "{\"status\":\"success\",\"slot_local\":1,"
+                  "\"bytes\":1408,\"readback_verified\":true,"
+                  "\"crc32\":\"" +
+                      crcHex + "\"}");
   });
 
   server.begin();

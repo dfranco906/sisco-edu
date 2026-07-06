@@ -24,11 +24,11 @@ if ($source.status -ne 'success') {
 }
 
 $template = [string]$source.template
-if ($source.bytes -ne 1536 -or $template.Length -ne 3072) {
+if ($source.bytes -ne 1408 -or $template.Length -ne 2816) {
     throw "Longitud inválida: bytes=$($source.bytes), chars=$($template.Length)"
 }
-if ($template -notmatch '^[0-9A-Fa-f]{3072}$') {
-    throw 'El template exportado no es HEX puro de 3072 caracteres'
+if ($template -notmatch '^[0-9A-Fa-f]{2816}$') {
+    throw 'El template exportado no es HEX puro de 2816 caracteres'
 }
 
 Write-Host "Importando en slot 1 de $DestinationIp (CRC32 origen: $($source.crc32))"

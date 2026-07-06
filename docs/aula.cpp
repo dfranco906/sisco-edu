@@ -6,6 +6,10 @@
 #include <Adafruit_Fingerprint.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
+#include "dy50_template_transport.h"
+#include <Preferences.h>
+
+Preferences prefs;
 
 // ============================================================================
 // CONFIGURACIÓN DE HARDWARE
@@ -33,7 +37,7 @@ uint32_t tiempoLimiteEstado = 0;
 // ============================================================================
 // ESTRUCTURAS DE DATOS
 // ============================================================================
-typedef struct {
+typedef struct __attribute__((packed)) {
   int id_sync;
   int id_huella;
   int total_chunks;
@@ -44,7 +48,7 @@ typedef struct {
   char data[161];
 } PaqueteHuella;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
   char room_id[16];
   char ci[15];
   char tipo_persona[15];
@@ -52,7 +56,7 @@ typedef struct {
   char fecha_hora[20];
 } PaqueteAsistencia;
 
-typedef struct { char msg[4]; } PaquetePing;
+typedef struct __attribute__((packed)) { char msg[4]; } PaquetePing;
 
 struct RegistroUsuario {
   char ci[15];
@@ -64,10 +68,23 @@ RegistroUsuario dbLocal[201];
 uint32_t ultimoRegistroSlot[201] = {0};
 const uint32_t TIEMPO_COOLDOWN = 300000; // 5 min
 
-String huellaReconstruida = "";
-int chunkEsperado = 0;
+char huellaBuffer[3073];
+bool chunksRecibidos[25] = {false};
+int totalChunksRecibidos = 0;
 volatile bool pingAckRecibido = false;
 volatile bool txStatusStatus = false;
+
+// Variables volatiles para desacoplar el callback ESP-NOW del loop principal
+volatile bool flagSyncIniciado = false;
+volatile bool flagSyncCompletado = false;
+volatile bool flagSyncError = false;
+volatile uint32_t tiempoUltimoChunk = 0;
+volatile int idSyncSlot = 0;
+char ciSync[15] = "";
+char tipoPersonaSync[15] = "";
+
+enum EstadoSync { SYNC_IDLE, SYNC_RECIBIENDO, SYNC_PROCESANDO };
+EstadoSync estadoSync = SYNC_IDLE;
 
 // ============================================================================
 // FUNCIONES DE PANTALLA OLED
@@ -75,12 +92,70 @@ volatile bool txStatusStatus = false;
 void msgOled(String t1, String t2 = "") {
   oled.clearDisplay();
   oled.setCursor(0, 10);
-  oled.setTextSize(2); // Texto mediano/grande
+  oled.setTextSize(2);
   oled.println(t1);
   oled.setTextSize(1);
   oled.setCursor(0, 45);
   oled.println(t2);
   oled.display();
+}
+
+// ============================================================================
+// PERSISTENCIA NVS (Preferences) — Sobrevive reinicios
+// ============================================================================
+void guardarSlotEnNVS(int slot) {
+  prefs.begin("dblocal", false);
+  String keyCI   = "ci_"   + String(slot);
+  String keyTipo = "tipo_" + String(slot);
+  String keyReg  = "reg_"  + String(slot);
+  prefs.putString(keyCI.c_str(),   dbLocal[slot].ci);
+  prefs.putString(keyTipo.c_str(), dbLocal[slot].tipo_persona);
+  prefs.putBool(keyReg.c_str(),    dbLocal[slot].registrado);
+  prefs.end();
+  Serial.printf("[NVS] Slot %d guardado en flash (CI:%s, Tipo:%s)\n",
+                slot, dbLocal[slot].ci, dbLocal[slot].tipo_persona);
+}
+
+void cargarDbLocalDesdeNVS() {
+  prefs.begin("dblocal", true); // modo solo-lectura
+  int restaurados = 0;
+  for (int i = 0; i < 201; i++) {
+    String keyReg = "reg_" + String(i);
+    if (prefs.getBool(keyReg.c_str(), false)) {
+      String keyCI   = "ci_"   + String(i);
+      String keyTipo = "tipo_" + String(i);
+      String ci   = prefs.getString(keyCI.c_str(),   "");
+      String tipo = prefs.getString(keyTipo.c_str(), "");
+      ci.toCharArray(dbLocal[i].ci,           sizeof(dbLocal[i].ci));
+      tipo.toCharArray(dbLocal[i].tipo_persona, sizeof(dbLocal[i].tipo_persona));
+      dbLocal[i].registrado = true;
+      restaurados++;
+    }
+  }
+  prefs.end();
+  Serial.printf("[NVS] dbLocal restaurado: %d usuarios cargados desde flash\n", restaurados);
+}
+
+bool guardarHuellaDY50(const String &templateHex, int slot, String &error) {
+  static uint8_t templateData[Dy50TemplateTransport::TEMPLATE_BYTES];
+  size_t decodedBytes = 0;
+  if (!Dy50TemplateTransport::decodeHex(templateHex, templateData, sizeof(templateData), decodedBytes, error)) {
+    return false;
+  }
+  if (decodedBytes != Dy50TemplateTransport::TEMPLATE_BYTES) {
+    error = "LONG_INVALIDA_" + String(decodedBytes);
+    return false;
+  }
+  if (!Dy50TemplateTransport::beginDownChar(dy50Serial, 1, error)) return false;
+  if (!Dy50TemplateTransport::sendTemplate(dy50Serial, templateData, decodedBytes, error)) return false;
+  
+  delay(150);
+  uint8_t storeResult = finger.storeModel(slot);
+  if (storeResult != FINGERPRINT_OK) {
+    error = "STORE_FAIL_0x" + String(storeResult, HEX);
+    return false;
+  }
+  return true;
 }
 
 // ============================================================================
@@ -92,37 +167,41 @@ void onSend(const wifi_tx_info_t *tx_info, esp_now_send_status_t status) {
 }
 
 void onReceive(const esp_now_recv_info_t *recv_info, const uint8_t *incomingData, int len) {
-  if (len != sizeof(PaqueteHuella)) return;
+  if (len != sizeof(PaqueteHuella)) {
+    return;
+  }
 
   PaqueteHuella paquete;
   memcpy(&paquete, incomingData, sizeof(paquete));
-  if (String(paquete.room_id) != ROOM_ID) return;
-
-  if (paquete.chunk_index == 0) {
-    huellaReconstruida = "";
-    chunkEsperado = 0;
-    msgOled("SYNC...", "CI: " + String(paquete.ci));
+  if (String(paquete.room_id) != ROOM_ID) {
+    return;
   }
 
-  if (paquete.chunk_index == chunkEsperado) {
-    huellaReconstruida += String(paquete.data);
-    chunkEsperado++;
-  } else { return; }
+if (paquete.chunk_index == 0 && !flagSyncIniciado) {
+    memset(huellaBuffer, 0, sizeof(huellaBuffer));
+    memset(chunksRecibidos, false, sizeof(chunksRecibidos));
+    totalChunksRecibidos = 0;
+    idSyncSlot = paquete.id_huella;
+    strncpy(ciSync, paquete.ci, sizeof(ciSync) - 1);
+    ciSync[sizeof(ciSync) - 1] = '\0';
+    strncpy(tipoPersonaSync, paquete.tipo_persona, sizeof(tipoPersonaSync) - 1);
+    tipoPersonaSync[sizeof(tipoPersonaSync) - 1] = '\0';
+    flagSyncIniciado = true;
+  }
 
-  if (paquete.chunk_index == paquete.total_chunks - 1) {
-    int slotAsignado = paquete.id_huella;
-   
-    // Aquí iría el guardado físico real: finger.storeModel(slotAsignado)
-    // Usamos el flujo exitoso para la integración lógica
-    strcpy(dbLocal[slotAsignado].ci, paquete.ci);
-    strcpy(dbLocal[slotAsignado].tipo_persona, paquete.tipo_persona);
-    dbLocal[slotAsignado].registrado = true;
+  if (!chunksRecibidos[paquete.chunk_index]) {
+    int offset = paquete.chunk_index * 160;
+    int len = strlen(paquete.data);
+    if (offset + len < sizeof(huellaBuffer)) {
+        memcpy(huellaBuffer + offset, paquete.data, len);
+    }
+    chunksRecibidos[paquete.chunk_index] = true;
+    totalChunksRecibidos++;
+    tiempoUltimoChunk = millis();
 
-    msgOled("SYNC OK", "Slot: " + String(slotAsignado));
-   
-    huellaReconstruida = String();// Reinicializa el objeto desde cero vaciando su buffer
-    delay(1000);
-    msgOled("AULA: " + ROOM_ID, "Listo...");
+    if (totalChunksRecibidos == paquete.total_chunks) {
+      flagSyncCompletado = true;
+    }
   }
 }
 
@@ -176,9 +255,13 @@ void verificarLecturaHuella() {
   }
 
   int slotMatch = finger.fingerID;
-  if (!dbLocal[slotMatch].registrado) {
-    msgOled("ERROR", "Sin datos RAM");
+  Serial.printf("[BIOM] Match en slot: %d (confianza: %d)\n", slotMatch, finger.confidence);
+
+  if (slotMatch < 0 || slotMatch > 200 || !dbLocal[slotMatch].registrado) {
+    msgOled("SIN DATOS", "Slot:" + String(slotMatch));
+    Serial.printf("[BIOM] Slot %d no tiene datos en dbLocal. Verifica sync.\n", slotMatch);
     delay(1500);
+    msgOled("AULA: " + ROOM_ID, "Listo...");
     return;
   }
 
@@ -264,9 +347,11 @@ void setup() {
 
   escanearYFijarCanalGateway();
 
-  dy50Serial.begin(57600, SERIAL_8N1, 16, 17); // Forzamos al hardware a usar los pines 16 (tx) y 17 (rx)
-  finger.begin(57600); // Vinculamos la librería al puerto ya configurado
+  dy50Serial.begin(57600, SERIAL_8N1, 16, 17);
+  finger.begin(57600);
   if (finger.verifyPassword()) {
+    msgOled("DY50: OK", "Cargando DB...");
+    cargarDbLocalDesdeNVS(); // Restaurar metadatos de huellas desde flash
     msgOled("DY50: OK", "Sistema Listo");
   } else {
     msgOled("ERROR", "DY50 no hallado");
@@ -279,8 +364,8 @@ void setup() {
 // LOOP PRINCIPAL
 // ============================================================================
 void loop() {
-  // 1. Botón presionado para Salida Anticipada
-  if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL) {
+  // 1. Boton presionado para Salida Anticipada
+  if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL && estadoSync == SYNC_IDLE) {
     estadoActual = ESPERANDO_PROFE;
     tiempoLimiteEstado = millis() + 15000;
     msgOled("SALIDA", "Dedo de Profe...");
@@ -295,8 +380,68 @@ void loop() {
     msgOled("AULA: " + ROOM_ID, "Listo...");
   }
 
-  // 3. Sensor Biométrico
-  verificarLecturaHuella();
+  // 3. Desacoplamiento de Sincronizacion (fuera de la interrupcion ESP-NOW)
+  if (flagSyncIniciado) {
+    flagSyncIniciado = false;
+    estadoActual = NORMAL; // Cancelamos cualquier flujo de asistencia
+    msgOled("SYNC...", "CI: " + String(ciSync));
+    Serial.printf("[SYNC] Iniciando recepcion huella para CI: %s en slot: %d\n", ciSync, idSyncSlot);
+    estadoSync = SYNC_RECIBIENDO;
+    tiempoUltimoChunk = millis();
+  }
+
+  if (estadoSync == SYNC_RECIBIENDO) {
+    if (flagSyncError) {
+      flagSyncError = false;
+      estadoSync = SYNC_IDLE;
+      memset(huellaBuffer, 0, sizeof(huellaBuffer));
+      msgOled("ERR SYNC", "Secuencia rota");
+      Serial.println("[SYNC] Error: secuencia de chunks rota");
+      delay(2000);
+      msgOled("AULA: " + ROOM_ID, "Listo...");
+    }
+    else if (flagSyncCompletado) {
+      flagSyncCompletado = false;
+      estadoSync = SYNC_PROCESANDO;
+      Serial.printf("[SYNC] Grabando huella completa en DY50 slot %d...\n", idSyncSlot);
+      msgOled("GUARDANDO", "En sensor...");
+
+      huellaBuffer[sizeof(huellaBuffer) - 1] = '\0';
+      String hexLimpio = String(huellaBuffer);
+      hexLimpio.trim();
+      String error;
+      if (guardarHuellaDY50(hexLimpio, idSyncSlot, error)) {
+        strcpy(dbLocal[idSyncSlot].ci, ciSync);
+        strcpy(dbLocal[idSyncSlot].tipo_persona, tipoPersonaSync);
+        dbLocal[idSyncSlot].registrado = true;
+        guardarSlotEnNVS(idSyncSlot); // Persiste en flash para sobrevivir reinicios
+        msgOled("SYNC OK", "Slot: " + String(idSyncSlot));
+        Serial.println("[SYNC] Huella guardada con exito en DY50 y NVS");
+      } else {
+        msgOled("ERROR DY50", error);
+        Serial.printf("[SYNC] Fallo guardando huella: %s\n", error.c_str());
+      }
+
+      memset(huellaBuffer, 0, sizeof(huellaBuffer));
+      estadoSync = SYNC_IDLE;
+      delay(2000);
+      msgOled("AULA: " + ROOM_ID, "Listo...");
+    }
+    else if (millis() - tiempoUltimoChunk > 5000) {
+      // Timeout tras 5 segundos sin recibir chunks
+      estadoSync = SYNC_IDLE;
+      memset(huellaBuffer, 0, sizeof(huellaBuffer));
+      msgOled("TIMEOUT", "Cancelando sync");
+      Serial.println("[SYNC] Timeout: Se perdieron paquetes en la transmision");
+      delay(2000);
+      msgOled("AULA: " + ROOM_ID, "Listo...");
+    }
+  }
+
+  // 4. Sensor Biometrico (solo si no estamos sincronizando)
+  if (estadoSync == SYNC_IDLE) {
+    verificarLecturaHuella();
+  }
  
   delay(30);
 }

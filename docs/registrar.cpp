@@ -11,6 +11,7 @@
 #include <Adafruit_Fingerprint.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "dy50_template_transport.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -99,37 +100,37 @@ void setup() {
       return;
     }
 
-    // Reservamos espacio en memoria para el string hexadecimal (1536 bytes * 2 caracteres por byte = 3072 caracteres)
-    String templateHex = "";
-    templateHex.reserve(3072);
+    // getModel() envía UpChar al sensor y lee solo el paquete de confirmación (0x07).
+    // El sensor responde con múltiples paquetes de datos (0x02) conteniendo el template.
+    // Usamos Dy50TemplateTransport::readTemplate() para leerlos, descartar el framing
+    // UART (headers, dirección, PID, longitud, checksum) y validar el tamaño.
 
-    uint32_t timeout = millis();
-    int bytesLeidos = 0;
+    Dy50TemplateTransport::drainInput(mySerial);
 
-    // Leemos los 1536 bytes provenientes del buffer serial del AS608
-    while ((millis() - timeout < 2000) && (bytesLeidos < 1536)) {
-      if (mySerial.available()) {
-        uint8_t b = mySerial.read();
-        if (b < 16) templateHex += "0"; // Añadir cero a la izquierda para valores menores a 0x10
-        templateHex += String(b, HEX);
-        bytesLeidos++;
-      }
+    static uint8_t templateData[Dy50TemplateTransport::TEMPLATE_BYTES];
+    size_t bytesRead = 0;
+    String errorMsg;
+    if (!Dy50TemplateTransport::readTemplate(mySerial, templateData, sizeof(templateData), bytesRead, errorMsg)) {
+      actualizarPantalla("ERR TRANS", errorMsg);
+      server.send(500, "application/json",
+        "{\"status\":\"error\",\"message\":\"" + errorMsg + "\"}");
+      return;
     }
 
-    // Validamos que se hayan extraído los datos completos antes de responder
-    if (bytesLeidos == 1536) {
-      actualizarPantalla("EXPORTADO", "Template enviado a la web");
-     
-      // Construimos el JSON de respuesta conteniendo el string hexadecimal completo
-      String jsonRespuesta = "{\"status\":\"success\",\"bytes\":" + String(bytesLeidos) + ",\"template\":\"" + templateHex + "\"}";
-      server.send(200, "application/json", jsonRespuesta);
-     
-      delay(1500);
-      actualizarPantalla("ONLINE", "IP: " + WiFi.localIP().toString());
-    } else {
-      actualizarPantalla("ERR TRANS", "Paquete incompleto en lectura");
-      server.send(500, "application/json", "{\"status\":\"error\",\"message\":\"Transmision incompleta. Se leyeron solo " + String(bytesLeidos) + " bytes.\"}");
-    }
+    String templateHex = Dy50TemplateTransport::encodeHex(templateData, bytesRead);
+    String crcHex = String(Dy50TemplateTransport::crc32(templateData, bytesRead), HEX);
+    while (crcHex.length() < 8) crcHex = "0" + crcHex;
+
+    actualizarPantalla("EXPORTADO", String(bytesRead) + " bytes ok");
+
+    String jsonRespuesta = "{\"status\":\"success\",\"format\":\"HEX\","
+      "\"bytes\":" + String(bytesRead) +
+      ",\"crc32\":\"" + crcHex +
+      "\",\"template\":\"" + templateHex + "\"}";
+    server.send(200, "application/json", jsonRespuesta);
+
+    delay(1500);
+    actualizarPantalla("ONLINE", "IP: " + WiFi.localIP().toString());
   });
 
   // Endpoint para Limpiar la Ranura Temporal
