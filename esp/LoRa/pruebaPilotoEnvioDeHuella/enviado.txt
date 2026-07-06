@@ -1,168 +1,247 @@
-Prueba 1:
+PRUEBA 1:
+14:31:59.632 -> ets Jul 29 2019 12:21:46
+14:31:59.632 -> 
+14:31:59.632 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:31:59.632 -> configsip: 0, SPIWP:0xee
+14:31:59.632 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:31:59.673 -> mode:DIO, clock div:1
+14:31:59.673 -> load:0x3fff0030,len:4876
+14:31:59.673 -> ho 0 tail 12 room 4
+14:31:59.673 -> load:0x40078000,len:16560
+14:31:59.673 -> load:0x40080400,len:3500
+14:31:59.673 -> entry 0x400805b4
+14:31:59.799 -> 
+14:31:59.799 -> ==================================================
+14:31:59.799 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+14:31:59.799 -> ==================================================
+14:31:59.799 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+14:32:04.838 -> 
+14:32:04.838 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+14:32:04.929 ->   -> Paquete [1/22] [OK] en 109 ms
+14:32:05.068 ->   -> Paquete [2/22] [OK] en 109 ms
+14:32:05.153 ->   -> Paquete [3/22] [OK] en 109 ms
+14:32:05.317 ->   -> Paquete [4/22] [OK] en 109 ms
+14:32:05.401 ->   -> Paquete [5/22] [OK] en 109 ms
+14:32:05.527 ->   -> Paquete [6/22] [OK] en 109 ms
+14:32:05.649 ->   -> Paquete [7/22] [OK] en 109 ms
+14:32:05.816 ->   -> Paquete [8/22] [OK] en 109 ms
+14:32:05.899 ->   -> Paquete [9/22] [OK] en 109 ms
+14:32:06.021 ->   -> Paquete [10/22] [OK] en 109 ms
+14:32:06.145 ->   -> Paquete [11/22] [OK] en 109 ms
+14:32:06.274 ->   -> Paquete [12/22] [OK] en 109 ms
+14:32:06.396 ->   -> Paquete [13/22] [OK] en 109 ms
+14:32:06.890 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (1/8)...
+14:32:07.106 ->   -> Paquete [14/22] [OK] en 109 ms
+14:32:07.248 ->   -> Paquete [15/22] [OK] en 109 ms
+14:32:07.698 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (1/8)...
+14:32:07.932 ->   -> Paquete [16/22] [OK] en 109 ms
+14:32:08.013 ->   -> Paquete [17/22] [OK] en 109 ms
+14:32:08.137 ->   -> Paquete [18/22] [OK] en 109 ms
+14:32:08.263 ->   -> Paquete [19/22] [OK] en 109 ms
+14:32:08.761 ->   -> [ALERTA] Paquete [20/22] reintentando rápido (1/8)...
+14:32:09.010 ->   -> Paquete [20/22] [OK] en 109 ms
+14:32:09.071 ->   -> Paquete [21/22] [OK] en 109 ms
+14:32:09.196 ->   -> Paquete [22/22] [OK] en 109 ms
+14:32:09.228 -> --------------------------------------------------
+14:32:09.228 -> >>> HUELLA 1 TRANSMITIDA EN 4.41 SEGUNDOS <<<
+14:32:09.228 -> --------------------------------------------------
+14:32:09.228 -> 
+14:32:09.228 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+14:32:14.248 -> 
+14:32:14.248 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+14:32:14.330 ->   -> Paquete [1/22] [OK] en 109 ms
+14:32:14.454 ->   -> Paquete [2/22] [OK] en 109 ms
+14:32:14.579 ->   -> Paquete [3/22] [OK] en 109 ms
+14:32:14.702 ->   -> Paquete [4/22] [OK] en 109 ms
+14:32:14.827 ->   -> Paquete [5/22] [OK] en 109 ms
+14:32:14.953 ->   -> Paquete [6/22] [OK] en 109 ms
+14:32:15.079 ->   -> Paquete [7/22] [OK] en 109 ms
+14:32:15.215 ->   -> Paquete [8/22] [OK] en 109 ms
+14:32:15.357 ->   -> Paquete [9/22] [OK] en 109 ms
+14:32:15.445 ->   -> Paquete [10/22] [OK] en 109 ms
+14:32:15.569 ->   -> Paquete [11/22] [OK] en 109 ms
+14:32:15.743 ->   -> Paquete [12/22] [OK] en 109 ms
+14:32:15.822 ->   -> Paquete [13/22] [OK] en 109 ms
+14:32:15.994 ->   -> Paquete [14/22] [OK] en 109 ms
+14:32:16.072 ->   -> Paquete [15/22] [OK] en 109 ms
+14:32:15.357 ->   -> Paquete [9/22] [OK] en 109 ms
+14:32:15.445 ->   -> Paquete [10/22] [OK] en 109 ms
+14:32:15.569 ->   -> Paquete [11/22] [OK] en 109 ms
+14:32:15.743 ->   -> Paquete [12/22] [OK] en 109 ms
+14:32:15.822 ->   -> Paquete [13/22] [OK] en 109 ms
+14:32:15.994 ->   -> Paquete [14/22] [OK] en 109 ms
+14:32:16.072 ->   -> Paquete [15/22] [OK] en 109 ms
+14:32:16.197 ->   -> Paquete [16/22] [OK] en 109 ms
+14:32:16.322 ->   -> Paquete [17/22] [OK] en 109 ms
+14:32:16.447 ->   -> Paquete [18/22] [OK] en 109 ms
+14:32:16.963 ->   -> [ALERTA] Paquete [19/22] reintentando rápido (1/8)...
+14:32:17.150 ->   -> Paquete [19/22] [OK] en 109 ms
+14:32:17.308 ->   -> Paquete [20/22] [OK] en 109 ms
+14:32:17.380 ->   -> Paquete [21/22] [OK] en 109 ms
+14:32:17.504 ->   -> Paquete [22/22] [OK] en 109 ms
+14:32:17.538 -> --------------------------------------------------
+14:32:17.538 -> >>> HUELLA 2 TRANSMITIDA EN 3.30 SEGUNDOS <<<
+14:32:17.538 -> --------------------------------------------------
 
-[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
-  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -39,14
-[System Log]: +OK
-  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   125 ms | RSSI/SNR: -38,13
-[System Log]: +OK
-  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   249 ms | RSSI/SNR: -39,13
-[System Log]: +OK
-  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   373 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   497 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:   621 ms | RSSI/SNR: -40,12
-[System Log]: +OK
-  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:   745 ms | RSSI/SNR: -39,12
-[System Log]: +OK
-  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:   869 ms | RSSI/SNR: -39,13
-[System Log]: +OK
-  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:   993 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1117 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1241 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1366 ms | RSSI/SNR: -41,14
-[System Log]: +OK
-Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  1491 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  1616 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk duplicado ignorado (Index: 13) -> [ACK RE-ENVIADO]
-[System Log]: +OK
-  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  2299 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  2424 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk duplicado ignorado (Index: 15) -> [ACK RE-ENVIADO]
-[System Log]: +OK
-  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  3107 ms | RSSI/SNR: -39,13
-[System Log]: +OK
-  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  3232 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  3357 ms | RSSI/SNR: -39,13
-[System Log]: +OK
-  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  3482 ms | RSSI/SNR: -41,14
-[System Log]: +OK
-  Chunk duplicado ignorado (Index: 19) -> [ACK RE-ENVIADO]
-[System Log]: +OK
-  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  4165 ms | RSSI/SNR: -41,14
-[System Log]: +OK
-  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  4290 ms | RSSI/SNR: -41,14
---------------------------------------------------
-[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
-Paquetes únicos procesados: 22
-Tiempo total de ráfaga: 4290 ms (4.29 segundos)
---------------------------------------------------
-[System Log]: +OK
+PRUEBA 2:
+14:32:45.336 -> ets Jul 29 2019 12:21:46
+14:32:45.336 -> 
+14:32:45.336 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:32:45.398 -> configsip: 0, SPIWP:0xee
+14:32:45.398 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:32:45.398 -> mode:DIO, clock div:1
+14:32:45.398 -> load:0x3fff0030,len:4876
+14:32:45.398 -> ho 0 tail 12 room 4
+14:32:45.398 -> load:0x40078000,len:16560
+14:32:45.398 -> load:0x40080400,len:3500
+14:32:45.398 -> entry 0x400805b4
+14:32:45.495 -> 
+14:32:45.495 -> ==================================================
+14:32:45.537 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+14:32:45.537 -> ==================================================
+14:32:45.537 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+14:32:50.524 -> 
+14:32:50.524 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+14:32:51.030 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
+14:32:51.218 ->   -> Paquete [1/22] [OK] en 109 ms
+14:32:51.300 ->   -> Paquete [2/22] [OK] en 109 ms
+14:32:51.424 ->   -> Paquete [3/22] [OK] en 109 ms
+14:32:51.547 ->   -> Paquete [4/22] [OK] en 109 ms
+14:32:52.059 ->   -> [ALERTA] Paquete [5/22] reintentando rápido (1/8)...
+14:32:52.233 ->   -> Paquete [5/22] [OK] en 109 ms
+14:32:52.356 ->   -> Paquete [6/22] [OK] en 109 ms
+14:32:52.496 ->   -> Paquete [7/22] [OK] en 109 ms
+14:32:52.635 ->   -> Paquete [8/22] [OK] en 109 ms
+14:32:52.729 ->   -> Paquete [9/22] [OK] en 109 ms
+14:32:52.852 ->   -> Paquete [10/22] [OK] en 109 ms
+14:32:52.977 ->   -> Paquete [11/22] [OK] en 109 ms
+14:32:53.100 ->   -> Paquete [12/22] [OK] en 109 ms
+14:32:53.244 ->   -> Paquete [13/22] [OK] en 109 ms
+14:32:53.383 ->   -> Paquete [14/22] [OK] en 109 ms
+14:32:53.475 ->   -> Paquete [15/22] [OK] en 109 ms
+14:32:53.646 ->   -> Paquete [16/22] [OK] en 109 ms
+14:32:53.771 ->   -> Paquete [17/22] [OK] en 109 ms
+14:32:53.850 ->   -> Paquete [18/22] [OK] en 109 ms
+14:32:53.975 ->   -> Paquete [19/22] [OK] en 109 ms
+14:32:54.491 ->   -> [ALERTA] Paquete [20/22] reintentando rápido (1/8)...
+14:32:54.659 ->   -> Paquete [20/22] [OK] en 109 ms
+14:32:54.783 ->   -> Paquete [21/22] [OK] en 109 ms
+14:32:54.909 ->   -> Paquete [22/22] [OK] en 109 ms
+14:32:54.941 -> --------------------------------------------------
+14:32:54.941 -> >>> HUELLA 1 TRANSMITIDA EN 4.42 SEGUNDOS <<<
+14:32:54.941 -> --------------------------------------------------
+14:32:54.941 -> 
+14:32:54.941 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+14:32:59.962 -> 
+14:32:59.962 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+14:33:00.042 ->   -> Paquete [1/22] [OK] en 109 ms
+14:33:00.538 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
+14:33:00.791 ->   -> Paquete [2/22] [OK] en 109 ms
+14:33:00.852 ->   -> Paquete [3/22] [OK] en 109 ms
+14:33:00.976 ->   -> Paquete [4/22] [OK] en 109 ms
+14:33:01.099 ->   -> Paquete [5/22] [OK] en 109 ms
+14:33:01.240 ->   -> Paquete [6/22] [OK] en 109 ms
+14:33:01.398 ->   -> Paquete [7/22] [OK] en 109 ms
+14:33:01.470 ->   -> Paquete [8/22] [OK] en 109 ms
+14:33:01.595 ->   -> Paquete [9/22] [OK] en 109 ms
+14:33:02.117 ->   -> [ALERTA] Paquete [10/22] reintentando rápido (1/8)...
+14:33:02.647 ->   -> [ALERTA] Paquete [10/22] reintentando rápido (2/8)...
+14:33:02.881 ->   -> Paquete [10/22] [OK] en 109 ms
+14:33:02.962 ->   -> Paquete [11/22] [OK] en 109 ms
+14:33:03.130 ->   -> Paquete [12/22] [OK] en 109 ms
+14:33:03.241 ->   -> Paquete [13/22] [OK] en 109 ms
+14:33:03.366 ->   -> Paquete [14/22] [OK] en 109 ms
+14:33:03.511 ->   -> Paquete [15/22] [OK] en 109 ms
+14:33:03.616 ->   -> Paquete [16/22] [OK] en 109 ms
+14:33:03.756 ->   -> Paquete [17/22] [OK] en 109 ms
+14:33:03.881 ->   -> Paquete [18/22] [OK] en 109 ms
+14:33:03.961 ->   -> Paquete [19/22] [OK] en 109 ms
+14:33:04.085 ->   -> Paquete [20/22] [OK] en 109 ms
+14:33:04.211 ->   -> Paquete [21/22] [OK] en 109 ms
+14:33:04.336 ->   -> Paquete [22/22] [OK] en 109 ms
+14:33:04.379 -> --------------------------------------------------
+14:33:04.379 -> >>> HUELLA 2 TRANSMITIDA EN 4.42 SEGUNDOS <<<
+14:33:04.379 -> --------------------------------------------------
 
-Prueba 2:
-
-[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
-  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -47,14
-[System Log]: +OK
-  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   124 ms | RSSI/SNR: -45,13
-[System Log]: +OK
-  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   248 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   372 ms | RSSI/SNR: -42,12
-[System Log]: +OK
-  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   496 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:   620 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:   744 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:   868 ms | RSSI/SNR: -41,12
-[System Log]: +OK
-  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:   992 ms | RSSI/SNR: -40,12
-[System Log]: +OK
-  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1116 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1240 ms | RSSI/SNR: -39,13
-[System Log]: +OK
-  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1365 ms | RSSI/SNR: -41,14
-[System Log]: +OK
-  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  1490 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  1615 ms | RSSI/SNR: -42,14
-[System Log]: +OK
-  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  1740 ms | RSSI/SNR: -41,13
-[System Log]: +OK
-  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  1865 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  1990 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  2115 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  2240 ms | RSSI/SNR: -42,13
-[System Log]: +OK
-  Chunk duplicado ignorado (Index: 18) -> [ACK RE-ENVIADO]
-[System Log]: +OK
-  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  2923 ms | RSSI/SNR: -40,13
-[System Log]: +OK
-  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  3048 ms | RSSI/SNR: -41,14
-[System Log]: +OK
-  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  3173 ms | RSSI/SNR: -41,14
---------------------------------------------------
-[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
-Paquetes únicos procesados: 22
-Tiempo total de ráfaga: 3173 ms (3.17 segundos)
---------------------------------------------------
-[System Log]: +OK
-
-Prueba 3:
-
-[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
-  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   124 ms | RSSI/SNR: -37,12
-[System Log]: +OK
-  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   248 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   372 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:  1055 ms | RSSI/SNR: -37,12
-[System Log]: +OK
-  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:  1179 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:  1303 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:  1427 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:  1551 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1675 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1799 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1924 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  2049 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  2174 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  2299 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  2424 ms | RSSI/SNR: -38,13
-[System Log]: +OK
-  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  2549 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  2674 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  2799 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  2924 ms | RSSI/SNR: -37,13
-[System Log]: +OK
-  Chunk duplicado ignorado (Index: 19) -> [ACK RE-ENVIADO]
-[System Log]: +OK
-  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  3607 ms | RSSI/SNR: -36,13
-[System Log]: +OK
-  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  3732 ms | RSSI/SNR: -36,14
---------------------------------------------------
-[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
-Paquetes únicos procesados: 22
-Tiempo total de ráfaga: 3732 ms (3.73 segundos)
---------------------------------------------------
-[System Log]: +OK
+PRUEBA 3:
+14:33:09.962 -> ets Jul 29 2019 12:21:46
+14:33:09.962 -> 
+14:33:09.962 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:33:10.009 -> configsip: 0, SPIWP:0xee
+14:33:10.009 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:33:10.009 -> mode:DIO, clock div:1
+14:33:10.009 -> load:0x3fff0030,len:4876
+14:33:10.009 -> ho 0 tail 12 room 4
+14:33:10.009 -> load:0x40078000,len:16560
+14:33:10.009 -> load:0x40080400,len:3500
+14:33:10.009 -> entry 0x400805b4
+14:33:10.132 -> 
+14:33:10.132 -> ==================================================
+14:33:10.132 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+14:33:10.132 -> ==================================================
+14:33:10.179 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+14:33:15.131 -> 
+14:33:15.178 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+14:33:15.271 ->   -> Paquete [1/22] [OK] en 109 ms
+14:33:15.411 ->   -> Paquete [2/22] [OK] en 109 ms
+14:33:15.507 ->   -> Paquete [3/22] [OK] en 109 ms
+14:33:15.615 ->   -> Paquete [4/22] [OK] en 109 ms
+14:33:15.785 ->   -> Paquete [5/22] [OK] en 109 ms
+14:33:15.864 ->   -> Paquete [6/22] [OK] en 109 ms
+14:33:15.987 ->   -> Paquete [7/22] [OK] en 109 ms
+14:33:16.112 ->   -> Paquete [8/22] [OK] en 109 ms
+14:33:16.238 ->   -> Paquete [9/22] [OK] en 109 ms
+14:33:16.362 ->   -> Paquete [10/22] [OK] en 109 ms
+14:33:16.877 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (1/8)...
+14:33:17.043 ->   -> Paquete [11/22] [OK] en 109 ms
+14:33:17.167 ->   -> Paquete [12/22] [OK] en 109 ms
+14:33:17.293 ->   -> Paquete [13/22] [OK] en 109 ms
+14:33:17.417 ->   -> Paquete [14/22] [OK] en 109 ms
+14:33:17.542 ->   -> Paquete [15/22] [OK] en 109 ms
+14:33:18.086 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (1/8)...
+14:33:18.251 ->   -> Paquete [16/22] [OK] en 109 ms
+14:33:18.391 ->   -> Paquete [17/22] [OK] en 109 ms
+14:33:18.475 ->   -> Paquete [18/22] [OK] en 109 ms
+14:33:19.015 ->   -> [ALERTA] Paquete [19/22] reintentando rápido (1/8)...
+14:33:19.187 ->   -> Paquete [19/22] [OK] en 109 ms
+14:33:19.329 ->   -> Paquete [20/22] [OK] en 109 ms
+14:33:19.454 ->   -> Paquete [21/22] [OK] en 109 ms
+14:33:19.533 ->   -> Paquete [22/22] [OK] en 109 ms
+14:33:19.580 -> --------------------------------------------------
+14:33:19.580 -> >>> HUELLA 1 TRANSMITIDA EN 4.41 SEGUNDOS <<<
+14:33:19.580 -> --------------------------------------------------
+14:33:19.580 -> 
+14:33:19.580 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+14:33:24.604 -> 
+14:33:24.604 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+14:33:24.667 ->   -> Paquete [1/22] [OK] en 109 ms
+14:33:25.167 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
+14:33:25.397 ->   -> Paquete [2/22] [OK] en 109 ms
+14:33:25.476 ->   -> Paquete [3/22] [OK] en 109 ms
+14:33:25.617 ->   -> Paquete [4/22] [OK] en 109 ms
+14:33:25.743 ->   -> Paquete [5/22] [OK] en 109 ms
+14:33:25.883 ->   -> Paquete [6/22] [OK] en 109 ms
+14:33:25.972 ->   -> Paquete [7/22] [OK] en 109 ms
+14:33:26.095 ->   -> Paquete [8/22] [OK] en 109 ms
+14:33:26.274 ->   -> Paquete [9/22] [OK] en 109 ms
+14:33:26.344 ->   -> Paquete [10/22] [OK] en 109 ms
+14:33:26.467 ->   -> Paquete [11/22] [OK] en 109 ms
+14:33:26.987 ->   -> [ALERTA] Paquete [12/22] reintentando rápido (1/8)...
+14:33:27.565 ->   -> [ALERTA] Paquete [12/22] reintentando rápido (2/8)...
+14:33:27.752 ->   -> Paquete [12/22] [OK] en 109 ms
+14:33:27.834 ->   -> Paquete [13/22] [OK] en 109 ms
+14:33:28.331 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (1/8)...
+14:33:28.887 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (2/8)...
+14:33:29.122 ->   -> Paquete [14/22] [OK] en 109 ms
+14:33:29.203 ->   -> Paquete [15/22] [OK] en 109 ms
+14:33:29.372 ->   -> Paquete [16/22] [OK] en 109 ms
+14:33:29.822 ->   -> [ALERTA] Paquete [17/22] reintentando rápido (1/8)...
+14:33:30.040 ->   -> Paquete [17/22] [OK] en 109 ms
+14:33:30.165 ->   -> Paquete [18/22] [OK] en 109 ms
+14:33:30.306 ->   -> Paquete [19/22] [OK] en 109 ms
+14:33:30.429 ->   -> Paquete [20/22] [OK] en 109 ms
+14:33:30.509 ->   -> Paquete [21/22] [OK] en 109 ms
+14:33:30.678 ->   -> Paquete [22/22] [OK] en 109 ms
+14:33:30.678 -> --------------------------------------------------
+14:33:30.678 -> >>> HUELLA 2 TRANSMITIDA EN 6.09 SEGUNDOS <<<
+14:33:30.678 -> --------------------------------------------------
