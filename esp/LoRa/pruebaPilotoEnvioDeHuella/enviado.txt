@@ -1,247 +1,332 @@
-PRUEBA 1:
-14:31:59.632 -> ets Jul 29 2019 12:21:46
-14:31:59.632 -> 
-14:31:59.632 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
-14:31:59.632 -> configsip: 0, SPIWP:0xee
-14:31:59.632 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
-14:31:59.673 -> mode:DIO, clock div:1
-14:31:59.673 -> load:0x3fff0030,len:4876
-14:31:59.673 -> ho 0 tail 12 room 4
-14:31:59.673 -> load:0x40078000,len:16560
-14:31:59.673 -> load:0x40080400,len:3500
-14:31:59.673 -> entry 0x400805b4
-14:31:59.799 -> 
-14:31:59.799 -> ==================================================
-14:31:59.799 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
-14:31:59.799 -> ==================================================
-14:31:59.799 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
-14:32:04.838 -> 
-14:32:04.838 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
-14:32:04.929 ->   -> Paquete [1/22] [OK] en 109 ms
-14:32:05.068 ->   -> Paquete [2/22] [OK] en 109 ms
-14:32:05.153 ->   -> Paquete [3/22] [OK] en 109 ms
-14:32:05.317 ->   -> Paquete [4/22] [OK] en 109 ms
-14:32:05.401 ->   -> Paquete [5/22] [OK] en 109 ms
-14:32:05.527 ->   -> Paquete [6/22] [OK] en 109 ms
-14:32:05.649 ->   -> Paquete [7/22] [OK] en 109 ms
-14:32:05.816 ->   -> Paquete [8/22] [OK] en 109 ms
-14:32:05.899 ->   -> Paquete [9/22] [OK] en 109 ms
-14:32:06.021 ->   -> Paquete [10/22] [OK] en 109 ms
-14:32:06.145 ->   -> Paquete [11/22] [OK] en 109 ms
-14:32:06.274 ->   -> Paquete [12/22] [OK] en 109 ms
-14:32:06.396 ->   -> Paquete [13/22] [OK] en 109 ms
-14:32:06.890 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (1/8)...
-14:32:07.106 ->   -> Paquete [14/22] [OK] en 109 ms
-14:32:07.248 ->   -> Paquete [15/22] [OK] en 109 ms
-14:32:07.698 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (1/8)...
-14:32:07.932 ->   -> Paquete [16/22] [OK] en 109 ms
-14:32:08.013 ->   -> Paquete [17/22] [OK] en 109 ms
-14:32:08.137 ->   -> Paquete [18/22] [OK] en 109 ms
-14:32:08.263 ->   -> Paquete [19/22] [OK] en 109 ms
-14:32:08.761 ->   -> [ALERTA] Paquete [20/22] reintentando rápido (1/8)...
-14:32:09.010 ->   -> Paquete [20/22] [OK] en 109 ms
-14:32:09.071 ->   -> Paquete [21/22] [OK] en 109 ms
-14:32:09.196 ->   -> Paquete [22/22] [OK] en 109 ms
-14:32:09.228 -> --------------------------------------------------
-14:32:09.228 -> >>> HUELLA 1 TRANSMITIDA EN 4.41 SEGUNDOS <<<
-14:32:09.228 -> --------------------------------------------------
-14:32:09.228 -> 
-14:32:09.228 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
-14:32:14.248 -> 
-14:32:14.248 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
-14:32:14.330 ->   -> Paquete [1/22] [OK] en 109 ms
-14:32:14.454 ->   -> Paquete [2/22] [OK] en 109 ms
-14:32:14.579 ->   -> Paquete [3/22] [OK] en 109 ms
-14:32:14.702 ->   -> Paquete [4/22] [OK] en 109 ms
-14:32:14.827 ->   -> Paquete [5/22] [OK] en 109 ms
-14:32:14.953 ->   -> Paquete [6/22] [OK] en 109 ms
-14:32:15.079 ->   -> Paquete [7/22] [OK] en 109 ms
-14:32:15.215 ->   -> Paquete [8/22] [OK] en 109 ms
-14:32:15.357 ->   -> Paquete [9/22] [OK] en 109 ms
-14:32:15.445 ->   -> Paquete [10/22] [OK] en 109 ms
-14:32:15.569 ->   -> Paquete [11/22] [OK] en 109 ms
-14:32:15.743 ->   -> Paquete [12/22] [OK] en 109 ms
-14:32:15.822 ->   -> Paquete [13/22] [OK] en 109 ms
-14:32:15.994 ->   -> Paquete [14/22] [OK] en 109 ms
-14:32:16.072 ->   -> Paquete [15/22] [OK] en 109 ms
-14:32:15.357 ->   -> Paquete [9/22] [OK] en 109 ms
-14:32:15.445 ->   -> Paquete [10/22] [OK] en 109 ms
-14:32:15.569 ->   -> Paquete [11/22] [OK] en 109 ms
-14:32:15.743 ->   -> Paquete [12/22] [OK] en 109 ms
-14:32:15.822 ->   -> Paquete [13/22] [OK] en 109 ms
-14:32:15.994 ->   -> Paquete [14/22] [OK] en 109 ms
-14:32:16.072 ->   -> Paquete [15/22] [OK] en 109 ms
-14:32:16.197 ->   -> Paquete [16/22] [OK] en 109 ms
-14:32:16.322 ->   -> Paquete [17/22] [OK] en 109 ms
-14:32:16.447 ->   -> Paquete [18/22] [OK] en 109 ms
-14:32:16.963 ->   -> [ALERTA] Paquete [19/22] reintentando rápido (1/8)...
-14:32:17.150 ->   -> Paquete [19/22] [OK] en 109 ms
-14:32:17.308 ->   -> Paquete [20/22] [OK] en 109 ms
-14:32:17.380 ->   -> Paquete [21/22] [OK] en 109 ms
-14:32:17.504 ->   -> Paquete [22/22] [OK] en 109 ms
-14:32:17.538 -> --------------------------------------------------
-14:32:17.538 -> >>> HUELLA 2 TRANSMITIDA EN 3.30 SEGUNDOS <<<
-14:32:17.538 -> --------------------------------------------------
+PRUEBA 1 - 10 METROS - MISMO PISO
+15:02:13.172 -> ets Jul 29 2019 12:21:46
+15:02:13.172 -> 
+15:02:13.172 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+15:02:13.172 -> configsip: 0, SPIWP:0xee
+15:02:13.172 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+15:02:13.172 -> mode:DIO, clock div:1
+15:02:13.172 -> load:0x3fff0030,len:4876
+15:02:13.172 -> ho 0 tail 12 room 4
+15:02:13.172 -> load:0x40078000,len:16560
+15:02:13.172 -> load:0x40080400,len:3500
+15:02:13.172 -> entry 0x400805b4
+15:02:13.172 -> 
+15:02:13.172 -> ==================================================
+15:02:13.172 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+15:02:13.210 -> ==================================================
+15:02:13.210 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+15:02:18.222 -> 
+15:02:18.222 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+15:02:18.298 ->   -> Paquete [1/22] [OK] en 109 ms
+15:02:18.456 ->   -> Paquete [2/22] [OK] en 109 ms
+15:02:18.529 ->   -> Paquete [3/22] [OK] en 109 ms
+15:02:18.651 ->   -> Paquete [4/22] [OK] en 109 ms
+15:02:18.815 ->   -> Paquete [5/22] [OK] en 109 ms
+15:02:18.954 ->   -> Paquete [6/22] [OK] en 109 ms
+15:02:19.024 ->   -> Paquete [7/22] [OK] en 109 ms
+15:02:19.148 ->   -> Paquete [8/22] [OK] en 109 ms
+15:02:19.271 ->   -> Paquete [9/22] [OK] en 109 ms
+15:02:19.440 ->   -> Paquete [10/22] [OK] en 109 ms
+15:02:19.519 ->   -> Paquete [11/22] [OK] en 109 ms
+15:02:20.013 ->   -> [ALERTA] Paquete [12/22] reintentando rápido (1/8)...
+15:02:20.204 ->   -> Paquete [12/22] [OK] en 109 ms
+15:02:20.328 ->   -> Paquete [13/22] [OK] en 109 ms
+15:02:20.453 ->   -> Paquete [14/22] [OK] en 109 ms
+15:02:20.577 ->   -> Paquete [15/22] [OK] en 109 ms
+15:02:20.703 ->   -> Paquete [16/22] [OK] en 109 ms
+15:02:21.200 ->   -> [ALERTA] Paquete [17/22] reintentando rápido (1/8)...
+15:02:21.417 ->   -> Paquete [17/22] [OK] en 109 ms
+15:02:21.560 ->   -> Paquete [18/22] [OK] en 109 ms
+15:02:21.637 ->   -> Paquete [19/22] [OK] en 109 ms
+15:02:22.153 ->   -> [ALERTA] Paquete [20/22] reintentando rápido (1/8)...
+15:02:22.338 ->   -> Paquete [20/22] [OK] en 109 ms
+15:02:22.855 ->   -> [ALERTA] Paquete [21/22] reintentando rápido (1/8)...
+15:02:23.417 ->   -> [ALERTA] Paquete [21/22] reintentando rápido (2/8)...
+15:02:23.563 ->   -> Paquete [21/22] [OK] en 109 ms
+15:02:23.687 ->   -> Paquete [22/22] [OK] en 109 ms
+15:02:23.718 -> --------------------------------------------------
+15:02:23.718 -> >>> HUELLA 1 TRANSMITIDA EN 5.53 SEGUNDOS <<<
+15:02:23.718 -> --------------------------------------------------
+15:02:23.718 -> 
+15:02:23.718 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+15:02:28.734 -> 
+15:02:28.734 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+15:02:29.191 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
+15:02:29.419 ->   -> Paquete [1/22] [OK] en 109 ms
+15:02:29.563 ->   -> Paquete [2/22] [OK] en 109 ms
+15:02:30.061 ->   -> [ALERTA] Paquete [3/22] reintentando rápido (1/8)...
+15:02:30.215 ->   -> Paquete [3/22] [OK] en 109 ms
+15:02:30.355 ->   -> Paquete [4/22] [OK] en 109 ms
+15:02:30.434 ->   -> Paquete [5/22] [OK] en 109 ms
+15:02:30.558 ->   -> Paquete [6/22] [OK] en 109 ms
+15:02:30.683 ->   -> Paquete [7/22] [OK] en 109 ms
+15:02:30.851 ->   -> Paquete [8/22] [OK] en 109 ms
+15:02:30.930 ->   -> Paquete [9/22] [OK] en 109 ms
+15:02:31.099 ->   -> Paquete [10/22] [OK] en 109 ms
+15:02:31.181 ->   -> Paquete [11/22] [OK] en 109 ms
+15:02:31.303 ->   -> Paquete [12/22] [OK] en 109 ms
+15:02:31.426 ->   -> Paquete [13/22] [OK] en 109 ms
+15:02:31.960 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (1/8)...
+15:02:32.146 ->   -> Paquete [14/22] [OK] en 109 ms
+15:02:32.235 ->   -> Paquete [15/22] [OK] en 109 ms
+15:02:32.756 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (1/8)...
+15:02:33.319 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (2/8)...
+15:02:33.506 ->   -> Paquete [16/22] [OK] en 109 ms
+15:02:33.665 ->   -> Paquete [17/22] [OK] en 109 ms
+15:02:33.725 ->   -> Paquete [18/22] [OK] en 109 ms
+15:02:33.848 ->   -> Paquete [19/22] [OK] en 109 ms
+15:02:34.380 ->   -> [ALERTA] Paquete [20/22] reintentando rápido (1/8)...
+15:02:34.548 ->   -> Paquete [20/22] [OK] en 109 ms
+15:02:35.066 ->   -> [ALERTA] Paquete [21/22] reintentando rápido (1/8)...
+15:02:35.235 ->   -> Paquete [21/22] [OK] en 109 ms
+15:02:35.374 ->   -> Paquete [22/22] [OK] en 109 ms
+15:02:35.374 -> --------------------------------------------------
+15:02:35.374 -> >>> HUELLA 2 TRANSMITIDA EN 6.64 SEGUNDOS <<<
+15:02:35.374 -> --------------------------------------------------
 
-PRUEBA 2:
-14:32:45.336 -> ets Jul 29 2019 12:21:46
-14:32:45.336 -> 
-14:32:45.336 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
-14:32:45.398 -> configsip: 0, SPIWP:0xee
-14:32:45.398 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
-14:32:45.398 -> mode:DIO, clock div:1
-14:32:45.398 -> load:0x3fff0030,len:4876
-14:32:45.398 -> ho 0 tail 12 room 4
-14:32:45.398 -> load:0x40078000,len:16560
-14:32:45.398 -> load:0x40080400,len:3500
-14:32:45.398 -> entry 0x400805b4
-14:32:45.495 -> 
-14:32:45.495 -> ==================================================
-14:32:45.537 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
-14:32:45.537 -> ==================================================
-14:32:45.537 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
-14:32:50.524 -> 
-14:32:50.524 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
-14:32:51.030 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
-14:32:51.218 ->   -> Paquete [1/22] [OK] en 109 ms
-14:32:51.300 ->   -> Paquete [2/22] [OK] en 109 ms
-14:32:51.424 ->   -> Paquete [3/22] [OK] en 109 ms
-14:32:51.547 ->   -> Paquete [4/22] [OK] en 109 ms
-14:32:52.059 ->   -> [ALERTA] Paquete [5/22] reintentando rápido (1/8)...
-14:32:52.233 ->   -> Paquete [5/22] [OK] en 109 ms
-14:32:52.356 ->   -> Paquete [6/22] [OK] en 109 ms
-14:32:52.496 ->   -> Paquete [7/22] [OK] en 109 ms
-14:32:52.635 ->   -> Paquete [8/22] [OK] en 109 ms
-14:32:52.729 ->   -> Paquete [9/22] [OK] en 109 ms
-14:32:52.852 ->   -> Paquete [10/22] [OK] en 109 ms
-14:32:52.977 ->   -> Paquete [11/22] [OK] en 109 ms
-14:32:53.100 ->   -> Paquete [12/22] [OK] en 109 ms
-14:32:53.244 ->   -> Paquete [13/22] [OK] en 109 ms
-14:32:53.383 ->   -> Paquete [14/22] [OK] en 109 ms
-14:32:53.475 ->   -> Paquete [15/22] [OK] en 109 ms
-14:32:53.646 ->   -> Paquete [16/22] [OK] en 109 ms
-14:32:53.771 ->   -> Paquete [17/22] [OK] en 109 ms
-14:32:53.850 ->   -> Paquete [18/22] [OK] en 109 ms
-14:32:53.975 ->   -> Paquete [19/22] [OK] en 109 ms
-14:32:54.491 ->   -> [ALERTA] Paquete [20/22] reintentando rápido (1/8)...
-14:32:54.659 ->   -> Paquete [20/22] [OK] en 109 ms
-14:32:54.783 ->   -> Paquete [21/22] [OK] en 109 ms
-14:32:54.909 ->   -> Paquete [22/22] [OK] en 109 ms
-14:32:54.941 -> --------------------------------------------------
-14:32:54.941 -> >>> HUELLA 1 TRANSMITIDA EN 4.42 SEGUNDOS <<<
-14:32:54.941 -> --------------------------------------------------
-14:32:54.941 -> 
-14:32:54.941 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
-14:32:59.962 -> 
-14:32:59.962 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
-14:33:00.042 ->   -> Paquete [1/22] [OK] en 109 ms
-14:33:00.538 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
-14:33:00.791 ->   -> Paquete [2/22] [OK] en 109 ms
-14:33:00.852 ->   -> Paquete [3/22] [OK] en 109 ms
-14:33:00.976 ->   -> Paquete [4/22] [OK] en 109 ms
-14:33:01.099 ->   -> Paquete [5/22] [OK] en 109 ms
-14:33:01.240 ->   -> Paquete [6/22] [OK] en 109 ms
-14:33:01.398 ->   -> Paquete [7/22] [OK] en 109 ms
-14:33:01.470 ->   -> Paquete [8/22] [OK] en 109 ms
-14:33:01.595 ->   -> Paquete [9/22] [OK] en 109 ms
-14:33:02.117 ->   -> [ALERTA] Paquete [10/22] reintentando rápido (1/8)...
-14:33:02.647 ->   -> [ALERTA] Paquete [10/22] reintentando rápido (2/8)...
-14:33:02.881 ->   -> Paquete [10/22] [OK] en 109 ms
-14:33:02.962 ->   -> Paquete [11/22] [OK] en 109 ms
-14:33:03.130 ->   -> Paquete [12/22] [OK] en 109 ms
-14:33:03.241 ->   -> Paquete [13/22] [OK] en 109 ms
-14:33:03.366 ->   -> Paquete [14/22] [OK] en 109 ms
-14:33:03.511 ->   -> Paquete [15/22] [OK] en 109 ms
-14:33:03.616 ->   -> Paquete [16/22] [OK] en 109 ms
-14:33:03.756 ->   -> Paquete [17/22] [OK] en 109 ms
-14:33:03.881 ->   -> Paquete [18/22] [OK] en 109 ms
-14:33:03.961 ->   -> Paquete [19/22] [OK] en 109 ms
-14:33:04.085 ->   -> Paquete [20/22] [OK] en 109 ms
-14:33:04.211 ->   -> Paquete [21/22] [OK] en 109 ms
-14:33:04.336 ->   -> Paquete [22/22] [OK] en 109 ms
-14:33:04.379 -> --------------------------------------------------
-14:33:04.379 -> >>> HUELLA 2 TRANSMITIDA EN 4.42 SEGUNDOS <<<
-14:33:04.379 -> --------------------------------------------------
+PRUEBA 2 - 40 METROS - DOS PISOS ABAJO
+15:04:48.034 -> ets Jul 29 2019 12:21:46
+15:04:48.034 -> 
+15:04:48.034 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+15:04:48.034 -> configsip: 0, SPIWP:0xee
+15:04:48.034 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+15:04:48.034 -> mode:DIO, clock div:1
+15:04:48.034 -> load:0x3fff0030,len:4876
+15:04:48.034 -> ho 0 tail 12 room 4
+15:04:48.080 -> load:0x40078000,len:16560
+15:04:48.080 -> load:0x40080400,len:3500
+15:04:48.080 -> entry 0x400805b4
+15:04:48.236 -> 
+15:04:48.236 -> ==================================================
+15:04:48.236 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+15:04:48.236 -> ==================================================
+15:04:48.236 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+15:04:53.529 -> 
+15:04:53.529 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+15:04:53.675 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
+15:04:54.478 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (2/8)...
+15:04:54.823 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (3/8)...
+15:04:55.369 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (4/8)...
+15:04:55.900 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (5/8)...
+15:04:56.488 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (6/8)...
+15:04:56.676 ->   -> Paquete [1/22] [OK] en 109 ms
+15:04:57.145 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
+15:04:57.364 ->   -> Paquete [2/22] [OK] en 109 ms
+15:04:57.862 ->   -> [ALERTA] Paquete [3/22] reintentando rápido (1/8)...
+15:04:58.049 ->   -> Paquete [3/22] [OK] en 109 ms
+15:04:58.531 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (1/8)...
+15:04:59.066 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (2/8)...
+15:04:59.686 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (3/8)...
+15:05:00.193 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (4/8)...
+15:05:00.747 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (5/8)...
+15:05:01.304 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (6/8)...
+15:05:01.896 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (7/8)...
+15:05:02.426 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (8/8)...
+15:05:02.521 -> 
+15:05:02.521 -> [ERROR CRÍTICO] Enlace interrumpido en el paquete [4].
+15:05:02.571 -> 
+15:05:02.571 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+15:05:07.544 -> 
+15:05:07.544 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+15:05:07.982 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
+15:05:08.538 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (2/8)...
+15:05:09.098 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (3/8)...
+15:05:09.697 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (4/8)...
+15:05:10.244 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (5/8)...
+15:05:10.464 ->   -> Paquete [1/22] [OK] en 109 ms
+15:05:10.529 ->   -> Paquete [2/22] [OK] en 109 ms
+15:05:10.684 ->   -> Paquete [3/22] [OK] en 109 ms
+15:05:11.622 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (1/8)...
+15:05:11.706 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (2/8)...
+15:05:12.302 ->   -> [ALERTA] Paquete [4/22] reintentando rápido (3/8)...
+15:05:12.487 ->   -> Paquete [4/22] [OK] en 109 ms
+15:05:12.617 ->   -> Paquete [5/22] [OK] en 109 ms
+15:05:12.738 ->   -> Paquete [6/22] [OK] en 109 ms
+15:05:12.825 ->   -> Paquete [7/22] [OK] en 109 ms
+15:05:12.949 ->   -> Paquete [8/22] [OK] en 109 ms
+15:05:13.486 ->   -> [ALERTA] Paquete [9/22] reintentando rápido (1/8)...
+15:05:13.656 ->   -> Paquete [9/22] [OK] en 109 ms
+15:05:14.167 ->   -> [ALERTA] Paquete [10/22] reintentando rápido (1/8)...
+15:05:14.353 ->   -> Paquete [10/22] [OK] en 109 ms
+15:05:14.810 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (1/8)...
+15:05:15.432 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (2/8)...
+15:05:16.623 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (3/8)...
+15:05:16.623 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (4/8)...
+15:05:17.296 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (5/8)...
+15:05:17.605 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (6/8)..
+15:05:18.272 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (7/8)...
+15:05:18.759 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (8/8)...
+15:05:18.802 -> 
+15:05:18.837 -> [ERROR CRÍTICO] Enlace interrumpido en el paquete [11].
 
-PRUEBA 3:
-14:33:09.962 -> ets Jul 29 2019 12:21:46
-14:33:09.962 -> 
-14:33:09.962 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
-14:33:10.009 -> configsip: 0, SPIWP:0xee
-14:33:10.009 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
-14:33:10.009 -> mode:DIO, clock div:1
-14:33:10.009 -> load:0x3fff0030,len:4876
-14:33:10.009 -> ho 0 tail 12 room 4
-14:33:10.009 -> load:0x40078000,len:16560
-14:33:10.009 -> load:0x40080400,len:3500
-14:33:10.009 -> entry 0x400805b4
-14:33:10.132 -> 
-14:33:10.132 -> ==================================================
-14:33:10.132 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
-14:33:10.132 -> ==================================================
-14:33:10.179 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
-14:33:15.131 -> 
-14:33:15.178 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
-14:33:15.271 ->   -> Paquete [1/22] [OK] en 109 ms
-14:33:15.411 ->   -> Paquete [2/22] [OK] en 109 ms
-14:33:15.507 ->   -> Paquete [3/22] [OK] en 109 ms
-14:33:15.615 ->   -> Paquete [4/22] [OK] en 109 ms
-14:33:15.785 ->   -> Paquete [5/22] [OK] en 109 ms
-14:33:15.864 ->   -> Paquete [6/22] [OK] en 109 ms
-14:33:15.987 ->   -> Paquete [7/22] [OK] en 109 ms
-14:33:16.112 ->   -> Paquete [8/22] [OK] en 109 ms
-14:33:16.238 ->   -> Paquete [9/22] [OK] en 109 ms
-14:33:16.362 ->   -> Paquete [10/22] [OK] en 109 ms
-14:33:16.877 ->   -> [ALERTA] Paquete [11/22] reintentando rápido (1/8)...
-14:33:17.043 ->   -> Paquete [11/22] [OK] en 109 ms
-14:33:17.167 ->   -> Paquete [12/22] [OK] en 109 ms
-14:33:17.293 ->   -> Paquete [13/22] [OK] en 109 ms
-14:33:17.417 ->   -> Paquete [14/22] [OK] en 109 ms
-14:33:17.542 ->   -> Paquete [15/22] [OK] en 109 ms
-14:33:18.086 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (1/8)...
-14:33:18.251 ->   -> Paquete [16/22] [OK] en 109 ms
-14:33:18.391 ->   -> Paquete [17/22] [OK] en 109 ms
-14:33:18.475 ->   -> Paquete [18/22] [OK] en 109 ms
-14:33:19.015 ->   -> [ALERTA] Paquete [19/22] reintentando rápido (1/8)...
-14:33:19.187 ->   -> Paquete [19/22] [OK] en 109 ms
-14:33:19.329 ->   -> Paquete [20/22] [OK] en 109 ms
-14:33:19.454 ->   -> Paquete [21/22] [OK] en 109 ms
-14:33:19.533 ->   -> Paquete [22/22] [OK] en 109 ms
-14:33:19.580 -> --------------------------------------------------
-14:33:19.580 -> >>> HUELLA 1 TRANSMITIDA EN 4.41 SEGUNDOS <<<
-14:33:19.580 -> --------------------------------------------------
-14:33:19.580 -> 
-14:33:19.580 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
-14:33:24.604 -> 
-14:33:24.604 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
-14:33:24.667 ->   -> Paquete [1/22] [OK] en 109 ms
-14:33:25.167 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
-14:33:25.397 ->   -> Paquete [2/22] [OK] en 109 ms
-14:33:25.476 ->   -> Paquete [3/22] [OK] en 109 ms
-14:33:25.617 ->   -> Paquete [4/22] [OK] en 109 ms
-14:33:25.743 ->   -> Paquete [5/22] [OK] en 109 ms
-14:33:25.883 ->   -> Paquete [6/22] [OK] en 109 ms
-14:33:25.972 ->   -> Paquete [7/22] [OK] en 109 ms
-14:33:26.095 ->   -> Paquete [8/22] [OK] en 109 ms
-14:33:26.274 ->   -> Paquete [9/22] [OK] en 109 ms
-14:33:26.344 ->   -> Paquete [10/22] [OK] en 109 ms
-14:33:26.467 ->   -> Paquete [11/22] [OK] en 109 ms
-14:33:26.987 ->   -> [ALERTA] Paquete [12/22] reintentando rápido (1/8)...
-14:33:27.565 ->   -> [ALERTA] Paquete [12/22] reintentando rápido (2/8)...
-14:33:27.752 ->   -> Paquete [12/22] [OK] en 109 ms
-14:33:27.834 ->   -> Paquete [13/22] [OK] en 109 ms
-14:33:28.331 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (1/8)...
-14:33:28.887 ->   -> [ALERTA] Paquete [14/22] reintentando rápido (2/8)...
-14:33:29.122 ->   -> Paquete [14/22] [OK] en 109 ms
-14:33:29.203 ->   -> Paquete [15/22] [OK] en 109 ms
-14:33:29.372 ->   -> Paquete [16/22] [OK] en 109 ms
-14:33:29.822 ->   -> [ALERTA] Paquete [17/22] reintentando rápido (1/8)...
-14:33:30.040 ->   -> Paquete [17/22] [OK] en 109 ms
-14:33:30.165 ->   -> Paquete [18/22] [OK] en 109 ms
-14:33:30.306 ->   -> Paquete [19/22] [OK] en 109 ms
-14:33:30.429 ->   -> Paquete [20/22] [OK] en 109 ms
-14:33:30.509 ->   -> Paquete [21/22] [OK] en 109 ms
-14:33:30.678 ->   -> Paquete [22/22] [OK] en 109 ms
-14:33:30.678 -> --------------------------------------------------
-14:33:30.678 -> >>> HUELLA 2 TRANSMITIDA EN 6.09 SEGUNDOS <<<
-14:33:30.678 -> --------------------------------------------------
+PRUEBA 2 - SEGUNDO INTENTO - 40 METROS - 2 PISOS ABAJO
+15:06:01.598 -> ets Jul 29 2019 12:21:46
+15:06:01.631 -> 
+15:06:01.631 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+15:06:01.631 -> configsip: 0, SPIWP:0xee
+15:06:01.631 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+15:06:01.631 -> mode:DIO, clock div:1
+15:06:01.631 -> load:0x3fff0030,len:4876
+15:06:01.631 -> ho 0 tail 12 room 4
+15:06:01.631 -> load:0x40078000,len:16560
+15:06:01.631 -> load:0x40080400,len:3500
+15:06:01.631 -> entry 0x400805b4
+15:06:01.760 -> 
+15:06:01.760 -> ==================================================
+15:06:01.803 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+15:06:01.803 -> ==================================================
+15:06:01.803 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+15:06:06.771 -> 
+15:06:06.771 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+15:06:07.268 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
+15:06:07.808 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (2/8)...
+15:06:08.030 ->   -> Paquete [1/22] [OK] en 109 ms
+15:06:08.527 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
+15:06:09.086 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (2/8)...
+15:06:09.631 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (3/8)...
+15:06:10.207 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (4/8)...
+15:06:10.785 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (5/8)...
+15:06:10.936 ->   -> Paquete [2/22] [OK] en 109 ms
+15:06:11.076 ->   -> Paquete [3/22] [OK] en 109 ms
+15:06:11.165 ->   -> Paquete [4/22] [OK] en 109 ms
+15:06:11.289 ->   -> Paquete [5/22] [OK] en 109 ms
+15:06:11.781 ->   -> [ALERTA] Paquete [6/22] reintentando rápido (1/8)...
+15:06:12.372 ->   -> [ALERTA] Paquete [6/22] reintentando rápido (2/8)...
+15:06:12.556 ->   -> Paquete [6/22] [OK] en 109 ms
+15:06:13.069 ->   -> [ALERTA] Paquete [7/22] reintentando rápido (1/8)...
+15:06:13.229 ->   -> Paquete [7/22] [OK] en 109 ms
+15:06:13.335 ->   -> Paquete [8/22] [OK] en 109 ms
+15:06:13.460 ->   -> Paquete [9/22] [OK] en 109 ms
+15:06:13.584 ->   -> Paquete [10/22] [OK] en 109 ms
+15:06:13.711 ->   -> Paquete [11/22] [OK] en 109 ms
+15:06:13.845 ->   -> Paquete [12/22] [OK] en 109 ms
+15:06:13.958 ->   -> Paquete [13/22] [OK] en 109 ms
+15:06:14.099 ->   -> Paquete [14/22] [OK] en 109 ms
+15:06:14.210 ->   -> Paquete [15/22] [OK] en 109 ms
+15:06:14.329 ->   -> Paquete [16/22] [OK] en 109 ms
+15:06:14.453 ->   -> Paquete [17/22] [OK] en 109 ms
+15:06:14.576 ->   -> Paquete [18/22] [OK] en 109 ms
+15:06:14.703 ->   -> Paquete [19/22] [OK] en 109 ms
+15:06:14.826 ->   -> Paquete [20/22] [OK] en 109 ms
+15:06:14.949 ->   -> Paquete [21/22] [OK] en 109 ms
+15:06:15.073 ->   -> Paquete [22/22] [OK] en 109 ms
+15:06:15.104 -> --------------------------------------------------
+15:06:15.104 -> >>> HUELLA 1 TRANSMITIDA EN 8.32 SEGUNDOS <<<
+15:06:15.104 -> --------------------------------------------------
+15:06:15.104 -> 
+15:06:15.104 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+15:06:20.101 -> 
+15:06:20.101 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+15:06:20.242 ->   -> Paquete [1/22] [OK] en 109 ms
+15:06:20.701 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
+15:06:20.909 ->   -> Paquete [2/22] [OK] en 109 ms
+15:06:21.397 ->   -> [ALERTA] Paquete [3/22] reintentando rápido (1/8)...
+15:06:21.619 ->   -> Paquete [3/22] [OK] en 109 ms
+15:06:21.732 ->   -> Paquete [4/22] [OK] en 109 ms
+15:06:21.867 ->   -> Paquete [5/22] [OK] en 109 ms
+15:06:21.992 ->   -> Paquete [6/22] [OK] en 109 ms
+15:06:22.071 ->   -> Paquete [7/22] [OK] en 109 ms
+15:06:22.196 ->   -> Paquete [8/22] [OK] en 109 ms
+15:06:22.687 ->   -> [ALERTA] Paquete [9/22] reintentando rápido (1/8)...
+15:06:23.247 ->   -> [ALERTA] Paquete [9/22] reintentando rápido (2/8)...
+15:06:23.475 ->   -> Paquete [9/22] [OK] en 109 ms
+15:06:23.560 ->   -> Paquete [10/22] [OK] en 109 ms
+15:06:23.683 ->   -> Paquete [11/22] [OK] en 109 ms
+15:06:23.808 ->   -> Paquete [12/22] [OK] en 109 ms
+15:06:23.973 ->   -> Paquete [13/22] [OK] en 109 ms
+15:06:24.055 ->   -> Paquete [14/22] [OK] en 109 ms
+15:06:24.597 ->   -> [ALERTA] Paquete [15/22] reintentando rápido (1/8)...
+15:06:24.783 ->   -> Paquete [15/22] [OK] en 109 ms
+15:06:24.908 ->   -> Paquete [16/22] [OK] en 109 ms
+15:06:25.034 ->   -> Paquete [17/22] [OK] en 109 ms
+15:06:25.480 ->   -> [ALERTA] Paquete [18/22] reintentando rápido (1/8)...
+15:06:25.702 ->   -> Paquete [18/22] [OK] en 109 ms
+15:06:25.840 ->   -> Paquete [19/22] [OK] en 109 ms
+15:06:25.962 ->   -> Paquete [20/22] [OK] en 109 ms
+15:06:26.043 ->   -> Paquete [21/22] [OK] en 109 ms
+15:06:26.212 ->   -> Paquete [22/22] [OK] en 109 ms
+15:06:26.212 -> --------------------------------------------------
+15:06:26.212 -> >>> HUELLA 2 TRANSMITIDA EN 6.08 SEGUNDOS <<<
+15:06:26.212 -> --------------------------------------------------
+
+PRUEBA 3 - 80 METROS - 2 PISOS ABAJO
+15:08:05.173 -> ets Jul 29 2019 12:21:46
+15:08:05.173 -> 
+15:08:05.173 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+15:08:05.173 -> configsip: 0, SPIWP:0xee
+15:08:05.173 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+15:08:05.216 -> mode:DIO, clock div:1
+15:08:05.216 -> load:0x3fff0030,len:4876
+15:08:05.216 -> ho 0 tail 12 room 4
+15:08:05.216 -> load:0x40078000,len:16560
+15:08:05.216 -> load:0x40080400,len:3500
+15:08:05.216 -> entry 0x400805b4
+15:08:05.343 -> 
+15:08:05.343 -> ==================================================
+15:08:05.371 -> [PILOTO] INICIALIZANDO EMISOR OPTIMIZADO (ID 101)
+15:08:05.371 -> ==================================================
+15:08:05.371 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+15:08:10.333 -> 
+15:08:10.333 -> >>> TRANSMITIENDO HUELLA 1 OPTIMIZADA <<<
+15:08:10.863 ->   -> [ALERTA] Paquete [1/22] reintentando rápido (1/8)...
+15:08:11.049 ->   -> Paquete [1/22] [OK] en 109 ms
+15:08:11.519 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (1/8)...
+15:08:12.094 ->   -> [ALERTA] Paquete [2/22] reintentando rápido (2/8)...
+15:08:12.280 ->   -> Paquete [2/22] [OK] en 109 ms
+15:08:12.367 ->   -> Paquete [3/22] [OK] en 109 ms
+15:08:12.529 ->   -> Paquete [4/22] [OK] en 109 ms
+15:08:12.653 ->   -> Paquete [5/22] [OK] en 109 ms
+15:08:12.796 ->   -> Paquete [6/22] [OK] en 109 ms
+15:08:12.863 ->   -> Paquete [7/22] [OK] en 109 ms
+15:08:12.988 ->   -> Paquete [8/22] [OK] en 109 ms
+15:08:13.111 ->   -> Paquete [9/22] [OK] en 109 ms
+15:08:13.236 ->   -> Paquete [10/22] [OK] en 109 ms
+15:08:13.360 ->   -> Paquete [11/22] [OK] en 109 ms
+15:08:13.484 ->   -> Paquete [12/22] [OK] en 109 ms
+15:08:13.609 ->   -> Paquete [13/22] [OK] en 109 ms
+15:08:13.732 ->   -> Paquete [14/22] [OK] en 109 ms
+15:08:13.858 ->   -> Paquete [15/22] [OK] en 109 ms
+15:08:14.352 ->   -> [ALERTA] Paquete [16/22] reintentando rápido (1/8)...
+15:08:14.584 ->   -> Paquete [16/22] [OK] en 109 ms
+15:08:15.053 ->   -> [ALERTA] Paquete [17/22] reintentando rápido (1/8)...
+15:08:15.629 ->   -> [ALERTA] Paquete [17/22] reintentando rápido (2/8)...
+15:08:15.814 ->   -> Paquete [17/22] [OK] en 109 ms
+15:08:15.904 ->   -> Paquete [18/22] [OK] en 109 ms
+15:08:16.399 ->   -> [ALERTA] Paquete [19/22] reintentando rápido (1/8)...
+15:08:16.997 ->   -> [ALERTA] Paquete [19/22] reintentando rápido (2/8)...
+15:08:17.184 ->   -> Paquete [19/22] [OK] en 109 ms
+15:08:17.272 ->   -> Paquete [20/22] [OK] en 109 ms
+15:08:17.396 ->   -> Paquete [21/22] [OK] en 109 ms
+15:08:17.543 ->   -> Paquete [22/22] [OK] en 109 ms
+15:08:17.544 -> --------------------------------------------------
+15:08:17.544 -> >>> HUELLA 1 TRANSMITIDA EN 7.20 SEGUNDOS <<<
+15:08:17.544 -> --------------------------------------------------
+15:08:17.589 -> 
+15:08:17.589 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+15:08:22.546 -> 
+15:08:22.546 -> >>> TRANSMITIENDO HUELLA 2 OPTIMIZADA <<<
+15:08:22.675 ->   -> Paquete [1/22] [OK] en 109 ms
+15:08:22.816 ->   -> Paquete [2/22] [OK] en 109 ms
+15:08:22.902 ->   -> Paquete [3/22] [OK] en 109 ms
+15:08:23.026 ->   -> Paquete [4/22] [OK] en 109 ms
+15:08:23.151 ->   -> Paquete [5/22] [OK] en 109 ms
+15:08:23.274 ->   -> Paquete [6/22] [OK] en 109 ms
+15:08:23.436 ->   -> Paquete [7/22] [OK] en 109 ms
+15:08:23.523 ->   -> Paquete [8/22] [OK] en 109 ms
+15:08:23.646 ->   -> Paquete [9/22] [OK] en 109 ms
+15:08:23.810 ->   -> Paquete [10/22] [OK] en 109 ms
+15:08:23.934 ->   -> Paquete [11/22] [OK] en 109 ms
+15:08:24.018 ->   -> Paquete [12/22] [OK] en 109 ms
+15:08:24.141 ->   -> Paquete [13/22] [OK] en 109 ms
+15:08:24.265 ->   -> Paquete [14/22] [OK] en 109 ms
+15:08:24.389 ->   -> Paquete [15/22] [OK] en 109 ms
+15:08:24.513 ->   -> Paquete [16/22] [OK] en 109 ms
+15:08:24.675 ->   -> Paquete [17/22] [OK] en 109 ms
+15:08:24.805 ->   -> Paquete [18/22] [OK] en 109 ms
+15:08:24.887 ->   -> Paquete [19/22] [OK] en 109 ms
+15:08:25.011 ->   -> Paquete [20/22] [OK] en 109 ms
+15:08:25.135 ->   -> Paquete [21/22] [OK] en 109 ms
+15:08:25.259 ->   -> Paquete [22/22] [OK] en 109 ms
+15:08:25.298 -> --------------------------------------------------
+15:08:25.298 -> >>> HUELLA 2 TRANSMITIDA EN 2.73 SEGUNDOS <<<
+15:08:25.298 -> --------------------------------------------------
