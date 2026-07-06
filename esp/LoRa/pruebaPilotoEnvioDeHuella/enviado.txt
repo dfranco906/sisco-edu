@@ -1,0 +1,365 @@
+PRUEBA 1 - 10 metros - en el mismo piso
+13:12:22.534 -> ets Jul 29 2019 12:21:46
+13:12:22.568 -> 
+13:12:22.568 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+13:12:22.568 -> configsip: 0, SPIWP:0xee
+13:12:22.568 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+13:12:22.568 -> mode:DIO, clock div:1
+13:12:22.568 -> load:0x3fff0030,len:4876
+13:12:22.568 -> ho 0 tail 12 room 4
+13:12:22.568 -> load:0x40078000,len:16560
+13:12:22.568 -> load:0x40080400,len:3500
+13:12:22.568 -> entry 0x400805b4
+13:12:22.694 -> 
+13:12:22.694 -> ==================================================
+13:12:22.740 -> [PILOTO] INICIALIZANDO EMISOR LORA (ID 101)
+13:12:22.740 -> ==================================================
+13:12:22.740 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+13:12:27.730 -> 
+13:12:27.730 -> >>> TRANSMITIENDO HUELLA 1 (1408 bytes | 22 paquetes) <<<
+13:12:27.873 -> [LoRa Local Msg]: +OK
+13:12:27.997 ->   -> Paquete [1/22] OK_LOCAL | Procesado total en: 294 ms
+13:12:28.170 -> [LoRa Local Msg]: +OK
+13:12:28.290 ->   -> Paquete [2/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:28.423 -> [LoRa Local Msg]: +OK
+13:12:28.605 ->   -> Paquete [3/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:28.744 -> [LoRa Local Msg]: +OK
+13:12:28.877 ->   -> Paquete [4/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:29.056 -> [LoRa Local Msg]: +OK
+13:12:29.196 ->   -> Paquete [5/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:29.322 -> [LoRa Local Msg]: +OK
+13:12:29.465 ->   -> Paquete [6/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:29.597 -> [LoRa Local Msg]: +OK
+13:12:29.760 ->   -> Paquete [7/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:29.889 -> [LoRa Local Msg]: +OK
+13:12:30.069 ->   -> Paquete [8/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:30.210 -> [LoRa Local Msg]: +OK
+13:12:30.342 ->   -> Paquete [9/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:30.506 -> [LoRa Local Msg]: +OK
+13:12:30.635 ->   -> Paquete [10/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:30.800 -> [LoRa Local Msg]: +OK
+13:12:30.927 ->   -> Paquete [11/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:31.062 -> [LoRa Local Msg]: +OK
+13:12:31.252 ->   -> Paquete [12/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:31.391 -> [LoRa Local Msg]: +OK
+13:12:31.516 ->   -> Paquete [13/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:31.648 -> [LoRa Local Msg]: +OK
+13:12:31.830 ->   -> Paquete [14/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:31.969 -> [LoRa Local Msg]: +OK
+13:12:32.140 ->   -> Paquete [15/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:32.281 -> [LoRa Local Msg]: +OK
+13:12:32.392 ->   -> Paquete [16/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:32.527 -> [LoRa Local Msg]: +OK
+13:12:32.687 ->   -> Paquete [17/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:32.843 -> [LoRa Local Msg]: +OK
+13:12:32.979 ->   -> Paquete [18/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:33.152 -> [LoRa Local Msg]: +OK
+13:12:33.272 ->   -> Paquete [19/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:33.449 -> [LoRa Local Msg]: +OK
+13:12:33.565 ->   -> Paquete [20/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:33.744 -> [LoRa Local Msg]: +OK
+13:12:33.884 ->   -> Paquete [21/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:34.008 -> [LoRa Local Msg]: +OK
+13:12:34.166 ->   -> Paquete [22/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:34.166 -> --------------------------------------------------
+13:12:34.166 -> >>> HUELLA 1 ENVIADA en 6447 ms (6.45 segundos) <<<
+13:12:34.166 -> --------------------------------------------------
+13:12:34.212 -> 
+13:12:34.212 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+13:12:39.200 -> 
+13:12:39.200 -> >>> TRANSMITIENDO HUELLA 2 (1408 bytes | 22 paquetes) <<<
+13:12:39.339 -> [LoRa Local Msg]: +OK
+13:12:39.465 ->   -> Paquete [1/22] OK_LOCAL | Procesado total en: 294 ms
+13:12:39.638 -> [LoRa Local Msg]: +OK
+13:12:39.764 ->   -> Paquete [2/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:39.893 -> [LoRa Local Msg]: +OK
+13:12:40.054 ->   -> Paquete [3/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:40.230 -> [LoRa Local Msg]: +OK
+13:12:40.370 ->   -> Paquete [4/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:40.509 -> [LoRa Local Msg]: +OK
+13:12:40.682 ->   -> Paquete [5/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:40.806 -> [LoRa Local Msg]: +OK
+13:12:40.932 ->   -> Paquete [6/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:41.066 -> [LoRa Local Msg]: +OK
+13:12:41.228 ->   -> Paquete [7/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:41.383 -> [LoRa Local Msg]: +OK
+13:12:41.554 ->   -> Paquete [8/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:41.695 -> [LoRa Local Msg]: +OK
+13:12:41.835 ->   -> Paquete [9/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:41.976 -> [LoRa Local Msg]: +OK
+13:12:42.105 ->   -> Paquete [10/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:42.272 -> [LoRa Local Msg]: +OK
+13:12:42.396 ->   -> Paquete [11/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:42.531 -> [LoRa Local Msg]: +OK
+13:12:42.692 ->   -> Paquete [12/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:42.863 -> [LoRa Local Msg]: +OK
+13:12:42.988 ->   -> Paquete [13/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:43.117 -> [LoRa Local Msg]: +OK
+13:12:43.301 ->   -> Paquete [14/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:43.410 -> [LoRa Local Msg]: +OK
+13:12:43.568 ->   -> Paquete [15/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:43.702 -> [LoRa Local Msg]: +OK
+13:12:43.861 ->   -> Paquete [16/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:43.994 -> [LoRa Local Msg]: +OK
+13:12:44.159 ->   -> Paquete [17/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:44.288 -> [LoRa Local Msg]: +OK
+13:12:44.468 ->   -> Paquete [18/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:44.609 -> [LoRa Local Msg]: +OK
+13:12:44.739 ->   -> Paquete [19/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:44.873 -> [LoRa Local Msg]: +OK
+13:12:45.034 ->   -> Paquete [20/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:45.168 -> [LoRa Local Msg]: +OK
+13:12:45.330 ->   -> Paquete [21/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:45.461 -> [LoRa Local Msg]: +OK
+13:12:45.624 ->   -> Paquete [22/22] OK_LOCAL | Procesado total en: 293 ms
+13:12:45.671 -> --------------------------------------
+13:12:45.671 -> >>> HUELLA 2 ENVIADA en 6447 ms (6.45 segundos) <<<
+13:12:45.671 -> --------------------------------------------------
+13:12:45.671 -> 
+13:12:45.671 -> ==================================================
+13:12:45.671 -> [PILOTO] SIMULACIÓN DE EMISIÓN COMPLETADA
+13:12:45.671 -> ==================================================
+
+PRUEBA 2 - 30 metros - 2 pisos abajo
+13:14:10.809 -> ets Jul 29 2019 12:21:46
+13:14:10.809 -> 
+13:14:10.809 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+13:14:10.809 -> configsip: 0, SPIWP:0xee
+13:14:10.809 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+13:14:10.855 -> mode:DIO, clock div:1
+13:14:10.855 -> load:0x3fff0030,len:4876
+13:14:10.855 -> ho 0 tail 12 room 4
+13:14:10.855 -> load:0x40078000,len:16560
+13:14:10.855 -> load:0x40080400,len:3500
+13:14:10.855 -> entry 0x400805b4
+13:14:10.966 -> 
+13:14:10.966 -> ==================================================
+13:14:10.966 -> [PILOTO] INICIALIZANDO EMISOR LORA (ID 101)
+13:14:11.012 -> ==================================================
+13:14:11.012 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+13:14:16.013 -> 
+13:14:16.013 -> >>> TRANSMITIENDO HUELLA 1 (1408 bytes | 22 paquetes) <<<
+13:14:16.104 -> [LoRa Local Msg]: +OK
+13:14:16.265 ->   -> Paquete [1/22] OK_LOCAL | Procesado total en: 294 ms
+13:14:16.399 -> [LoRa Local Msg]: +OK
+13:14:16.560 ->   -> Paquete [2/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:16.692 -> [LoRa Local Msg]: +OK
+13:14:16.855 ->   -> Paquete [3/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:16.985 -> [LoRa Local Msg]: +OK
+13:14:17.166 ->   -> Paquete [4/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:17.306 -> [LoRa Local Msg]: +OK
+13:14:17.437 ->   -> Paquete [5/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:17.599 -> [LoRa Local Msg]: +OK
+13:14:17.731 ->   -> Paquete [6/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:17.896 -> [LoRa Local Msg]: +OK
+13:14:18.023 ->   -> Paquete [7/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:18.156 -> [LoRa Local Msg]: +OK
+13:14:18.316 ->   -> Paquete [8/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:18.449 -> [LoRa Local Msg]: +OK
+13:14:18.609 ->   -> Paquete [9/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:18.743 -> [LoRa Local Msg]: +OK
+13:14:18.903 ->   -> Paquete [10/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:19.077 -> [LoRa Local Msg]: +OK
+13:14:19.196 ->   -> Paquete [11/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:19.358 -> [LoRa Local Msg]: +OK
+13:14:19.489 ->   -> Paquete [12/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:19.622 -> [LoRa Local Msg]: +OK
+13:14:19.810 ->   -> Paquete [13/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:19.950 -> [LoRa Local Msg]: +OK
+13:14:20.076 ->   -> Paquete [14/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:20.245 -> [LoRa Local Msg]: +OK
+13:14:20.372 ->   -> Paquete [15/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:20.501 -> [LoRa Local Msg]: +OK
+13:14:20.701 ->   -> Paquete [16/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:20.839 -> [LoRa Local Msg]: +OK
+13:14:20.969 ->   -> Paquete [17/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:21.087 -> [LoRa Local Msg]: +OK
+13:14:21.273 ->   -> Paquete [18/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:21.397 -> [LoRa Local Msg]: +OK
+13:14:21.583 ->   -> Paquete [19/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:21.673 -> [LoRa Local Msg]: +OK
+13:14:21.834 ->   -> Paquete [20/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:22.006 -> [LoRa Local Msg]: +OK
+13:14:22.126 ->   -> Paquete [21/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:22.299 -> [LoRa Local Msg]: +OK
+13:14:22.425 ->   -> Paquete [22/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:22.425 -> --------------------------------------------------
+13:14:22.470 -> >>> HUELLA 1 ENVIADA en 6447 ms (6.45 segundos) <<<
+13:14:22.470 -> --------------------------------------------------
+13:14:22.470 -> 
+13:14:22.470 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+13:14:27.475 -> 
+13:14:27.475 -> >>> TRANSMITIENDO HUELLA 2 (1408 bytes | 22 paquetes) <<<
+13:14:27.600 -> [LoRa Local Msg]: +OK
+13:14:27.734 ->   -> Paquete [1/22] OK_LOCAL | Procesado total en: 294 ms
+13:14:27.868 -> [LoRa Local Msg]: +OK
+13:14:28.052 ->   -> Paquete [2/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:28.191 -> [LoRa Local Msg]: +OK
+13:14:28.364 ->   -> Paquete [3/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:28.454 -> [LoRa Local Msg]: +OK
+13:14:28.613 ->   -> Paquete [4/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:28.748 -> [LoRa Local Msg]: +OK
+13:14:28.905 ->   -> Paquete [5/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:29.083 -> [LoRa Local Msg]: +OK
+13:14:29.223 ->   -> Paquete [6/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:29.364 -> [LoRa Local Msg]: +OK
+13:14:29.492 ->   -> Paquete [7/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:29.627 -> [LoRa Local Msg]: +OK
+13:14:29.787 ->   -> Paquete [8/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:29.958 -> [LoRa Local Msg]: +OK
+13:14:30.101 ->   -> Paquete [9/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:30.238 -> [LoRa Local Msg]: +OK
+13:14:30.426 ->   -> Paquete [10/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:30.551 -> [LoRa Local Msg]: +OK
+13:14:30.687 ->   -> Paquete [11/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:30.799 -> [LoRa Local Msg]: +OK
+13:14:30.983 ->   -> Paquete [12/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:31.125 -> [LoRa Local Msg]: +OK
+13:14:31.296 ->   -> Paquete [13/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:31.384 -> [LoRa Local Msg]: +OK
+13:14:31.545 ->   -> Paquete [14/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:31.678 -> [LoRa Local Msg]: +OK
+13:14:31.856 ->   -> Paquete [15/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:31.996 -> [LoRa Local Msg]: +OK
+13:14:32.131 ->   -> Paquete [16/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:32.292 -> [LoRa Local Msg]: +OK
+13:14:32.464 ->   -> Paquete [17/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:32.555 -> [LoRa Local Msg]: +OK
+13:14:32.715 ->   -> Paquete [18/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:32.848 -> [LoRa Local Msg]: +OK
+13:14:33.009 ->   -> Paquete [19/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:33.142 -> [LoRa Local Msg]: +OK
+13:14:33.304 ->   -> Paquete [20/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:33.434 -> [LoRa Local Msg]: +OK
+13:14:33.599 ->   -> Paquete [21/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:33.728 -> [LoRa Local Msg]: +OK
+13:14:33.894 ->   -> Paquete [22/22] OK_LOCAL | Procesado total en: 293 ms
+13:14:33.894 -> --------------------------------------------------
+13:14:33.941 -> >>> HUELLA 2 ENVIADA en 6447 ms (6.45 segundos) <<<
+13:14:33.941 -> --------------------------------------------------
+13:14:33.941 -> 
+13:14:33.941 -> ==================================================
+13:14:33.941 -> [PILOTO] SIMULACIÓN DE EMISIÓN COMPLETADA
+13:14:33.941 -> ==================================================
+
+PRUEBA 3 - 80 metros - a 2 pisos de altura
+13:16:29.126 -> ets Jul 29 2019 12:21:46
+13:16:29.183 -> 
+13:16:29.183 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+13:16:29.183 -> configsip: 0, SPIWP:0xee
+13:16:29.183 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+13:16:29.183 -> mode:DIO, clock div:1
+13:16:29.183 -> load:0x3fff0030,len:4876
+13:16:29.183 -> ho 0 tail 12 room 4
+13:16:29.183 -> load:0x40078000,len:16560
+13:16:29.183 -> load:0x40080400,len:3500
+13:16:29.183 -> entry 0x400805b4
+13:16:29.287 -> 
+13:16:29.287 -> ==================================================
+13:16:29.330 -> [PILOTO] INICIALIZANDO EMISOR LORA (ID 101)
+13:16:29.330 -> ==================================================
+13:16:29.330 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
+13:16:34.327 -> 
+13:16:34.327 -> >>> TRANSMITIENDO HUELLA 1 (1408 bytes | 22 paquetes) <<<
+13:16:34.452 -> [LoRa Local Msg]: +OK
+13:16:34.590 ->   -> Paquete [1/22] OK_LOCAL | Procesado total en: 294 ms
+13:16:34.762 -> [LoRa Local Msg]: +OK
+13:16:34.904 ->   -> Paquete [2/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:35.043 -> [LoRa Local Msg]: +OK
+13:16:35.176 ->   -> Paquete [3/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:35.356 -> [LoRa Local Msg]: +OK
+13:16:35.470 ->   -> Paquete [4/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:35.604 -> [LoRa Local Msg]: +OK
+13:16:35.809 ->   -> Paquete [5/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:35.896 -> [LoRa Local Msg]: +OK
+13:16:36.058 ->   -> Paquete [6/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:36.229 -> [LoRa Local Msg]: +OK
+13:16:36.350 ->   -> Paquete [7/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:36.525 -> [LoRa Local Msg]: +OK
+13:16:36.649 ->   -> Paquete [8/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:36.775 -> [LoRa Local Msg]: +OK
+13:16:36.946 ->   -> Paquete [9/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:37.085 -> [LoRa Local Msg]: +OK
+13:16:37.242 ->   -> Paquete [10/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:37.401 -> [LoRa Local Msg]: +OK
+13:16:37.525 ->   -> Paquete [11/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:37.656 -> [LoRa Local Msg]: +OK
+13:16:37.835 ->   -> Paquete [12/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:37.975 -> [LoRa Local Msg]: +OK
+13:16:38.107 ->   -> Paquete [13/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:38.286 -> [LoRa Local Msg]: +OK
+13:16:38.425 ->   -> Paquete [14/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:38.566 -> [LoRa Local Msg]: +OK
+13:16:38.693 ->   -> Paquete [15/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:38.863 -> [LoRa Local Msg]: +OK
+13:16:38.989 ->   -> Paquete [16/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:39.157 -> [LoRa Local Msg]: +OK
+13:16:39.299 ->   -> Paquete [17/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:39.424 -> [LoRa Local Msg]: +OK
+13:16:39.593 ->   -> Paquete [18/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:39.707 -> [LoRa Local Msg]: +OK
+13:16:39.891 ->   -> Paquete [19/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:40.031 -> [LoRa Local Msg]: +OK
+13:16:40.158 ->   -> Paquete [20/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:40.292 -> [LoRa Local Msg]: +OK
+13:16:40.452 ->   -> Paquete [21/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:40.623 -> [LoRa Local Msg]: +OK
+13:16:40.749 ->   -> Paquete [22/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:40.796 -> --------------------------------------------------
+13:16:40.796 -> >>> HUELLA 1 ENVIADA en 6447 ms (6.45 segundos) <<<
+13:16:40.796 -> --------------------------------------------------
+13:16:40.796 -> 
+13:16:40.796 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
+13:16:45.819 -> 
+13:16:45.819 -> >>> TRANSMITIENDO HUELLA 2 (1408 bytes | 22 paquetes) <<<
+13:16:45.926 -> [LoRa Local Msg]: +OK
+13:16:46.061 ->   -> Paquete [1/22] OK_LOCAL | Procesado total en: 294 ms
+13:16:46.207 -> [LoRa Local Msg]: +OK
+13:16:46.393 ->   -> Paquete [2/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:46.533 -> [LoRa Local Msg]: +OK
+13:16:46.674 ->   -> Paquete [3/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:46.799 -> [LoRa Local Msg]: +OK
+13:16:46.984 ->   -> Paquete [4/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:47.073 -> [LoRa Local Msg]: +OK
+13:16:47.234 ->   -> Paquete [5/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:47.366 -> [LoRa Local Msg]: +OK
+13:16:47.530 ->   -> Paquete [6/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:47.686 -> [LoRa Local Msg]: +OK
+13:16:47.818 ->   -> Paquete [7/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:47.982 -> [LoRa Local Msg]: +OK
+13:16:48.110 ->   -> Paquete [8/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:48.244 -> [LoRa Local Msg]: +OK
+13:16:48.404 ->   -> Paquete [9/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:48.539 -> [LoRa Local Msg]: +OK
+13:16:48.698 ->   -> Paquete [10/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:48.832 -> [LoRa Local Msg]: +OK
+13:16:48.990 ->   -> Paquete [11/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:49.163 -> [LoRa Local Msg]: +OK
+13:16:49.306 ->   -> Paquete [12/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:49.445 -> [LoRa Local Msg]: +OK
+13:16:49.577 ->   -> Paquete [13/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:49.742 -> [LoRa Local Msg]: +OK
+13:16:49.869 ->   -> Paquete [14/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:50.005 -> [LoRa Local Msg]: +OK
+13:16:50.162 ->   -> Paquete [15/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:50.332 -> [LoRa Local Msg]: +OK
+13:16:50.457 ->   -> Paquete [16/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:50.588 -> [LoRa Local Msg]: +OK
+13:16:50.752 ->   -> Paquete [17/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:50.882 -> [LoRa Local Msg]: +OK
+13:16:51.063 ->   -> Paquete [18/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:51.205 -> [LoRa Local Msg]: +OK
+13:16:51.335 ->   -> Paquete [19/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:51.501 -> [LoRa Local Msg]: +OK
+13:16:51.673 ->   -> Paquete [20/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:51.762 -> [LoRa Local Msg]: +OK
+13:16:51.921 ->   -> Paquete [21/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:52.055 -> [LoRa Local Msg]: +OK
+13:16:52.217 ->   -> Paquete [22/22] OK_LOCAL | Procesado total en: 293 ms
+13:16:52.262 -> --------------------------------------------------
+13:16:52.262 -> >>> HUELLA 2 ENVIADA en 6447 ms (6.45 segundos) <<<
+13:16:52.262 -> --------------------------------------------------
+13:16:52.262 -> 
+13:16:52.262 -> ==================================================
+13:16:52.262 -> [PILOTO] SIMULACIÓN DE EMISIÓN COMPLETADA
+13:16:52.262 -> ==================================================
