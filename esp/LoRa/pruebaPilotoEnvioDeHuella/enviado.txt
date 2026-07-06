@@ -1,80 +1,168 @@
-13:55:44.647 -> ets Jul 29 2019 12:21:46
-13:55:44.647 -> 
-13:55:44.647 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
-13:55:44.647 -> configsip: 0, SPIWP:0xee
-13:55:44.647 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
-13:55:44.692 -> mode:DIO, clock div:1
-13:55:44.692 -> load:0x3fff0030,len:4876
-13:55:44.692 -> ho 0 tail 12 room 4
-13:55:44.692 -> load:0x40078000,len:16560
-13:55:44.692 -> load:0x40080400,len:3500
-13:55:44.692 -> entry 0x400805b4
-13:55:44.818 -> 
-13:55:44.818 -> ==================================================
-13:55:44.818 -> [PILOTO] INICIALIZANDO EMISOR LORA SEGURO (ID 101)
-13:55:44.818 -> ==================================================
-13:55:44.818 -> [TIMER] Esperando 5 segundos antes de transmitir la Huella 1...
-13:55:49.837 -> 
-13:55:49.837 -> >>> TRANSMITIENDO HUELLA 1 CON VERIFICACIÓN DE ENLACE <<<
-13:55:50.023 ->   -> Paquete [1/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:50.275 ->   -> Paquete [2/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:50.429 ->   -> Paquete [3/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:52.141 ->   -> [ALERTA] Paquete [4/22] PERDIDO o SIN RESPUESTA. Reintento 1/5...
-13:55:52.560 ->   -> Paquete [4/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:52.782 ->   -> Paquete [5/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:52.966 ->   -> Paquete [6/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:53.235 ->   -> Paquete [7/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:53.404 ->   -> Paquete [8/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:53.674 ->   -> Paquete [9/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:53.894 ->   -> Paquete [10/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:55.534 ->   -> [ALERTA] Paquete [11/22] PERDIDO o SIN RESPUESTA. Reintento 1/5...
-13:55:55.966 ->   -> Paquete [11/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:56.202 ->   -> Paquete [12/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:56.422 ->   -> Paquete [13/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:56.601 ->   -> Paquete [14/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:56.859 ->   -> Paquete [15/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:57.077 ->   -> Paquete [16/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:57.257 ->   -> Paquete [17/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:57.475 ->   -> Paquete [18/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:59.178 ->   -> [ALERTA] Paquete [19/22] PERDIDO o SIN RESPUESTA. Reintento 1/5...
-13:55:59.617 ->   -> Paquete [19/22] [CONFIRMADO REMOTO] en 178 ms
-13:55:59.802 ->   -> Paquete [20/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:00.054 ->   -> Paquete [21/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:00.240 ->   -> Paquete [22/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:00.279 -> --------------------------------------------------
-13:56:00.318 -> >>> HUELLA 1 TRANSMITIDA EXITOSAMENTE CON 100% DE INTEGRIDAD EN 10.47 SEG <<<
-13:56:00.318 -> --------------------------------------------------
-13:56:00.318 -> 
-13:56:00.318 -> [TIMER] Huella 1 finalizada. Esperando 5 segundos antes de Huella 2...
-13:56:05.330 -> 
-13:56:05.330 -> >>> TRANSMITIENDO HUELLA 2 CON VERIFICACIÓN DE ENLACE <<<
-13:56:05.469 ->   -> Paquete [1/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:05.722 ->   -> Paquete [2/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:05.907 ->   -> Paquete [3/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:06.126 ->   -> Paquete [4/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:06.344 ->   -> Paquete [5/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:06.593 ->   -> Paquete [6/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:06.813 ->   -> Paquete [7/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:06.995 ->   -> Paquete [8/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:07.229 ->   -> Paquete [9/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:07.431 ->   -> Paquete [10/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:07.650 ->   -> Paquete [11/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:07.904 ->   -> Paquete [12/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:08.088 ->   -> Paquete [13/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:08.339 ->   -> Paquete [14/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:08.557 ->   -> Paquete [15/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:08.744 ->   -> Paquete [16/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:10.445 ->   -> [ALERTA] Paquete [17/22] PERDIDO o SIN RESPUESTA. Reintento 1/5...
-13:56:10.849 ->   -> Paquete [17/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:11.115 ->   -> Paquete [18/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:11.290 ->   -> Paquete [19/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:11.554 ->   -> Paquete [20/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:11.728 ->   -> Paquete [21/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:11.943 ->   -> Paquete [22/22] [CONFIRMADO REMOTO] en 178 ms
-13:56:11.984 -> --------------------------------------------------
-13:56:12.019 -> >>> HUELLA 2 TRANSMITIDA EXITOSAMENTE CON 100% DE INTEGRIDAD EN 6.69 SEG <<<
-13:56:12.019 -> --------------------------------------------------
-13:56:12.019 -> 
-13:56:12.019 -> ==================================================
-13:56:12.019 -> [PILOTO] SIMULACIÓN DE EMISIÓN COMPLETADA
-13:56:12.019 -> ==================================================
+Prueba 1:
+
+[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
+  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -39,14
+[System Log]: +OK
+  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   125 ms | RSSI/SNR: -38,13
+[System Log]: +OK
+  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   249 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   373 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   497 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:   621 ms | RSSI/SNR: -40,12
+[System Log]: +OK
+  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:   745 ms | RSSI/SNR: -39,12
+[System Log]: +OK
+  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:   869 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:   993 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1117 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1241 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1366 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  1491 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  1616 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk duplicado ignorado (Index: 13) -> [ACK RE-ENVIADO]
+[System Log]: +OK
+  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  2299 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  2424 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk duplicado ignorado (Index: 15) -> [ACK RE-ENVIADO]
+[System Log]: +OK
+  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  3107 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  3232 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  3357 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  3482 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk duplicado ignorado (Index: 19) -> [ACK RE-ENVIADO]
+[System Log]: +OK
+  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  4165 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  4290 ms | RSSI/SNR: -41,14
+--------------------------------------------------
+[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
+Paquetes únicos procesados: 22
+Tiempo total de ráfaga: 4290 ms (4.29 segundos)
+--------------------------------------------------
+[System Log]: +OK
+
+Prueba 2:
+
+[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
+  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -47,14
+[System Log]: +OK
+  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   124 ms | RSSI/SNR: -45,13
+[System Log]: +OK
+  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   248 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   372 ms | RSSI/SNR: -42,12
+[System Log]: +OK
+  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:   496 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:   620 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:   744 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:   868 ms | RSSI/SNR: -41,12
+[System Log]: +OK
+  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:   992 ms | RSSI/SNR: -40,12
+[System Log]: +OK
+  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1116 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1240 ms | RSSI/SNR: -39,13
+[System Log]: +OK
+  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1365 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  1490 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  1615 ms | RSSI/SNR: -42,14
+[System Log]: +OK
+  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  1740 ms | RSSI/SNR: -41,13
+[System Log]: +OK
+  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  1865 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  1990 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  2115 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  2240 ms | RSSI/SNR: -42,13
+[System Log]: +OK
+  Chunk duplicado ignorado (Index: 18) -> [ACK RE-ENVIADO]
+[System Log]: +OK
+  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  2923 ms | RSSI/SNR: -40,13
+[System Log]: +OK
+  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  3048 ms | RSSI/SNR: -41,14
+[System Log]: +OK
+  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  3173 ms | RSSI/SNR: -41,14
+--------------------------------------------------
+[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
+Paquetes únicos procesados: 22
+Tiempo total de ráfaga: 3173 ms (3.17 segundos)
+--------------------------------------------------
+[System Log]: +OK
+
+Prueba 3:
+
+[RECEPTOR] >>> Comenzando recepción de nueva huella biométrica... <<<
+  Chunk #01 [GUARDADO] | Index: 00 | Tiempo acum:     0 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #02 [GUARDADO] | Index: 01 | Tiempo acum:   124 ms | RSSI/SNR: -37,12
+[System Log]: +OK
+  Chunk #03 [GUARDADO] | Index: 02 | Tiempo acum:   248 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #04 [GUARDADO] | Index: 03 | Tiempo acum:   372 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #05 [GUARDADO] | Index: 04 | Tiempo acum:  1055 ms | RSSI/SNR: -37,12
+[System Log]: +OK
+  Chunk #06 [GUARDADO] | Index: 05 | Tiempo acum:  1179 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #07 [GUARDADO] | Index: 06 | Tiempo acum:  1303 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #08 [GUARDADO] | Index: 07 | Tiempo acum:  1427 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #09 [GUARDADO] | Index: 08 | Tiempo acum:  1551 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #10 [GUARDADO] | Index: 09 | Tiempo acum:  1675 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #11 [GUARDADO] | Index: 10 | Tiempo acum:  1799 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #12 [GUARDADO] | Index: 11 | Tiempo acum:  1924 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #13 [GUARDADO] | Index: 12 | Tiempo acum:  2049 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+Chunk #14 [GUARDADO] | Index: 13 | Tiempo acum:  2174 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #15 [GUARDADO] | Index: 14 | Tiempo acum:  2299 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #16 [GUARDADO] | Index: 15 | Tiempo acum:  2424 ms | RSSI/SNR: -38,13
+[System Log]: +OK
+  Chunk #17 [GUARDADO] | Index: 16 | Tiempo acum:  2549 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #18 [GUARDADO] | Index: 17 | Tiempo acum:  2674 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #19 [GUARDADO] | Index: 18 | Tiempo acum:  2799 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk #20 [GUARDADO] | Index: 19 | Tiempo acum:  2924 ms | RSSI/SNR: -37,13
+[System Log]: +OK
+  Chunk duplicado ignorado (Index: 19) -> [ACK RE-ENVIADO]
+[System Log]: +OK
+  Chunk #21 [GUARDADO] | Index: 20 | Tiempo acum:  3607 ms | RSSI/SNR: -36,13
+[System Log]: +OK
+  Chunk #22 [GUARDADO] | Index: 21 | Tiempo acum:  3732 ms | RSSI/SNR: -36,14
+--------------------------------------------------
+[ÉXITO] HUELLA RECONSTRUIDA AL 100% SIN PÉRDIDAS
+Paquetes únicos procesados: 22
+Tiempo total de ráfaga: 3732 ms (3.73 segundos)
+--------------------------------------------------
+[System Log]: +OK
