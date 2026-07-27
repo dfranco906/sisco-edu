@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $profesor->nombre = $_POST['nombre'] ?? null;
     $profesor->apellido = $_POST['apellido'] ?? null;
     $profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
+    $profesor->user_id_global = $_POST['user_id_global'] ?? ('PROF_' . uniqid() . '_' . random_int(100, 999));
 
     if (!$profesor->nombre || !$profesor->apellido || !$profesor->cedula_identidad) {
         http_response_code(422);

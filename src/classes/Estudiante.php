@@ -4,6 +4,7 @@ class Estudiante {
 
     public $id_estudiante, $nombre, $apellido, $cedula_identidad;
     public $id_grado;
+    public $user_id_global;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -14,7 +15,8 @@ class Estudiante {
                   SET nombre=:nombre,
                       apellido=:apellido,
                       cedula_identidad=:cedula,
-                      id_grado=:id_grado";
+                      id_grado=:id_grado,
+                      user_id_global=:user_id_global";
 
         $stmt = $this->conn->prepare($query);
 
@@ -22,7 +24,8 @@ class Estudiante {
             ":nombre" => $this->nombre,
             ":apellido" => $this->apellido,
             ":cedula" => $this->cedula_identidad,
-            ":id_grado" => $this->id_grado
+            ":id_grado" => $this->id_grado,
+            ":user_id_global" => $this->user_id_global
         ]);
     }
 
@@ -81,6 +84,11 @@ class Estudiante {
             ":cedula" => $this->cedula_identidad,
             ":id" => $this->id_estudiante
         ];
+
+        if (!empty($this->user_id_global)) {
+            $campos[] = "user_id_global=:user_id_global";
+            $params[":user_id_global"] = $this->user_id_global;
+        }
 
         if (!empty($this->id_grado)) {
             $campos[] = "id_grado=:id_grado";

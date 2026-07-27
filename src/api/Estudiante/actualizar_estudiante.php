@@ -20,6 +20,14 @@ try {
     $estudiante->cedula_identidad = $_POST['cedula_identidad'] ?? null;
     $estudiante->id_grado = $_POST['id_grado'] ?? null;
 
+    if ($_POST['user_id_global'] ?? null) {
+        $estudiante->user_id_global = $_POST['user_id_global'];
+    } else {
+        $stmtActual = $db->prepare("SELECT user_id_global FROM estudiantes WHERE id_estudiante = :id");
+        $stmtActual->execute([":id" => $estudiante->id_estudiante]);
+        $estudiante->user_id_global = $stmtActual->fetchColumn() ?: ('EST_' . uniqid() . '_' . random_int(100, 999));
+    }
+
     if (!$estudiante->id_estudiante || !$estudiante->nombre || !$estudiante->apellido || !$estudiante->cedula_identidad) {
         echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
         exit;
