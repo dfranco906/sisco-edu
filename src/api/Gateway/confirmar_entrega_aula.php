@@ -17,19 +17,19 @@ $db = (new Database())->getConnection();
 
 $id_sync = $_POST['id_sync'] ?? null;
 $id_huella = $_POST['id_huella'] ?? null;
-$room_id = $_POST['room_id'] ?? null;
+$id_aula = $_POST['id_aula'] ?? null;
 $ci = $_POST['ci'] ?? null;
 $slot_local = $_POST['slot_local'] ?? null;
 $tipo_persona = $_POST['tipo_persona'] ?? null;
 
-if (!$id_sync || !$id_huella || !$room_id || !$ci || !$slot_local || !$tipo_persona) {
+if (!$id_sync || !$id_huella || !$id_aula || !$ci || !$slot_local || !$tipo_persona) {
     echo json_encode(["status" => "error", "message" => "Faltan datos"]);
     exit;
 }
 
 try {
     $stmtSync = $db->prepare("
-        SELECT s.room_id, h.id_estudiante, h.id_profesor
+        SELECT s.id_aula, h.user_id_global, h.id_estudiante, h.id_profesor
         FROM sync_biometrica s
         INNER JOIN huellas_templates h ON h.id_huella = s.id_huella
         WHERE s.id_sync = :id_sync
@@ -49,42 +49,42 @@ try {
     }
 
     if ($sync["id_estudiante"] !== null) {
-        $room_id_sync = trim((string) $sync["room_id"]);
+        $id_aula_sync = $sync["id_aula"];
 
-        if ($room_id_sync === '' || strcasecmp($room_id_sync, "GENERAL") === 0) {
+        if (!$id_aula_sync) {
             http_response_code(422);
             echo json_encode([
                 "status" => "error",
-                "message" => "El estudiante no tiene room_id asignado. No se puede sincronizar la huella al aula."
+                "message" => "El estudiante no tiene aula asignada. No se puede sincronizar la huella al aula."
             ]);
             exit;
         }
 
-        if ($room_id !== $room_id_sync) {
+        if ($id_aula !== $id_aula_sync) {
             http_response_code(422);
             echo json_encode([
                 "status" => "error",
-                "message" => "El room_id confirmado no coincide con el aula de la sincronización."
+                "message" => "El aula confirmada no coincide con la de la sincronización."
             ]);
             exit;
         }
 
-        $room_id = $room_id_sync;
+        $id_aula = $id_aula_sync;
     }
 
     $db->beginTransaction();
 
     $stmt = $db->prepare("
         INSERT INTO aula_huellas_sync
-        (id_sync, id_huella, room_id, ci, slot_local, tipo_persona, estado)
+        (id_sync, id_huella, id_aula, ci, slot_local, tipo_persona, estado)
         VALUES
-        (:id_sync, :id_huella, :room_id, :ci, :slot_local, :tipo_persona, 'RECIBIDO')
+        (:id_sync, :id_huella, :id_aula, :ci, :slot_local, :tipo_persona, 'RECIBIDO')
     ");
 
     $stmt->execute([
         ":id_sync" => $id_sync,
         ":id_huella" => $id_huella,
-        ":room_id" => $room_id,
+        ":id_aula" => $id_aula,
         ":ci" => $ci,
         ":slot_local" => $slot_local,
         ":tipo_persona" => $tipo_persona

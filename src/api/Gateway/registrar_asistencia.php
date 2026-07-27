@@ -16,13 +16,13 @@ if ($key !== GATEWAY_API_KEY) {
 
 $db = (new Database())->getConnection();
 
-$room_id = $_POST['room_id'] ?? null;
+$id_aula = $_POST['id_aula'] ?? null;
 $ci = $_POST['ci'] ?? null;
 $tipo_persona = $_POST['tipo_persona'] ?? null;
 $estado = $_POST['estado'] ?? null; // ENTRADA / SALIDA / etc.
 $fecha_hora = $_POST['fecha_hora'] ?? null;
 
-if (!$room_id || !$ci || !$tipo_persona) {
+if (!$id_aula || !$ci || !$tipo_persona) {
     http_response_code(400);
     echo json_encode(["status" => "error", "message" => "Faltan datos requeridos"]);
     exit;
@@ -49,7 +49,7 @@ if (!$user_id_global) {
 // Crear el registro de EventoAsistencia
 $evento = new EventoAsistencia($db);
 $evento->user_id_global = $user_id_global;
-$evento->room_id = $room_id;
+$evento->id_aula = $id_aula;
 // Si viene fecha_hora del gateway la usamos, de lo contrario la fecha y hora actual
 $evento->timestamp_evento = $fecha_hora ?: date('Y-m-d H:i:s');
 $evento->origen_node_id = 'GATEWAY_ESP32';

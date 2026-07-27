@@ -2,7 +2,7 @@
 $titulo = "Asistencias de estudiantes desactivadas";
 $api = "src/api/AsistenciaEstudiante/leer_asistencias_estudiantes_desactivadas.php";
 
-$columnas = ["id_asistencia_estudiante", "id_estudiante", "huella_id", "nombre", "apellido", "grado", "fecha", "hora", "estado", "activo"];
+$columnas = ["id_asistencia_estudiante", "user_id_global", "tipo_usuario", "nombre", "apellido", "grado", "fecha_hora", "estado", "activo"];
 
 $filtros = [
     "buscar" => ["nombre", "apellido"],
@@ -10,7 +10,7 @@ $filtros = [
     "selects" => [
         ["campo" => "id_estudiante", "label" => "Estudiante", "labelFields" => ["nombre", "apellido"]],
         ["campo" => "grado", "label" => "Grado"],
-        ["campo" => "fecha", "label" => "Fecha", "orden" => "desc"],
+        ["campo" => "fecha_hora", "label" => "Fecha", "orden" => "desc"],
         ["campo" => "estado", "label" => "Estado", "formato" => "titulo"]
     ]
 ];

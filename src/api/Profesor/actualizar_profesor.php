@@ -14,10 +14,9 @@ $db = (new Database())->getConnection();
 $profesor = new Profesor($db);
 
 $profesor->id_profesor = $_POST['id_profesor'] ?? null;
-$profesor->nombre = $_POST['nombre'] ?? null;
-$profesor->apellido = $_POST['apellido'] ?? null;
-$profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
-$profesor->huella_id = $_POST['huella_id'] ?? null;
+    $profesor->nombre = $_POST['nombre'] ?? null;
+    $profesor->apellido = $_POST['apellido'] ?? null;
+    $profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
 
 if (!$profesor->id_profesor || !$profesor->nombre || !$profesor->apellido || !$profesor->cedula_identidad) {
     echo json_encode(["status" => "error", "message" => "Datos incompletos"]);

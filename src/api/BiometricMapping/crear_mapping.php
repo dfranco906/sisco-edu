@@ -8,10 +8,10 @@ $db = (new Database())->getConnection();
 $mapping = new BiometricMapping($db);
 
 $mapping->user_id_global = $_POST['user_id_global'] ?? null;
-$mapping->room_id = $_POST['room_id'] ?? null;
+$mapping->id_aula = $_POST['id_aula'] ?? null;
 $mapping->sensor_slot = $_POST['sensor_slot'] ?? null;
 
-if (!$mapping->user_id_global || !$mapping->room_id || !$mapping->sensor_slot) {
+if (!$mapping->user_id_global || !$mapping->id_aula || !$mapping->sensor_slot) {
     http_response_code(400);
     echo json_encode([
         "status" => "error",

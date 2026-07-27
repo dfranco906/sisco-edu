@@ -3,12 +3,11 @@ $titulo = "Asistencias de Estudiantes";
 $api = "src/api/AsistenciaEstudiante/leer_asistencias_estudiantes.php";
 $columnas = [
     "id_asistencia_estudiante",
-    "id_estudiante",
-    "huella_id",
+    "user_id_global",
+    "tipo_usuario",
     "nombre",
     "apellido",
-    "fecha",
-    "hora",
+    "fecha_hora",
     "estado"
 ];
 $filtros = [
@@ -17,7 +16,7 @@ $filtros = [
     "selects" => [
         ["campo" => "id_estudiante", "label" => "Estudiante", "labelFields" => ["nombre", "apellido"]],
         ["campo" => "grado", "label" => "Grado"],
-        ["campo" => "fecha", "label" => "Fecha", "orden" => "desc"],
+        ["campo" => "fecha_hora", "label" => "Fecha", "orden" => "desc"],
         ["campo" => "estado", "label" => "Estado", "formato" => "titulo"]
     ]
 ];
@@ -32,8 +31,7 @@ $formCrear = [
             "value" => "id_estudiante",
             "labelField" => "nombre_completo"
         ],
-        ["name" => "fecha", "label" => "Fecha", "type" => "date"],
-        ["name" => "hora", "label" => "Hora", "type" => "time"],
+        ["name" => "fecha_hora", "label" => "Fecha y hora", "type" => "datetime-local"],
         [
             "name" => "estado",
             "label" => "Estado",
@@ -50,5 +48,5 @@ $apiActualizar = "src/api/AsistenciaEstudiante/actualizar_asistencia_estudiante.
 $apiDesactivar = "src/api/AsistenciaEstudiante/desactivar_asistencia_estudiante.php";
 $urlDesactivados = "mvc/views/asistencias_estudiantes/desactivados.php";
 $idCampo = "id_asistencia_estudiante";
-$camposEditar = ["id_estudiante", "huella_id", "fecha", "hora", "estado"];
+$camposEditar = ["id_estudiante", "fecha_hora", "estado"];
 require_once __DIR__ . '/../partials/table_page.php';

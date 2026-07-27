@@ -6,9 +6,9 @@ $db = (new Database())->getConnection();
 $huella = new HuellaTemplate($db);
 
 $huella->user_id_global = $_POST['user_id_global'] ?? null;
-$huella->id_estudiante = $_POST['id_estudiante'] ?? null;
 $huella->fingerprint_data = $_POST['fingerprint_data'] ?? null;
 $huella->formato = $_POST['formato'] ?? 'HEX';
+$huella->slot_index = $_POST['slot_index'] ?? 0;
 
 echo $huella->crear()
     ? "✅ Huella guardada correctamente"

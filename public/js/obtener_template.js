@@ -1,4 +1,4 @@
-async function descargarYGuardarTemplate(idPersona, tipoPersona = "estudiante") {
+async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante") {
     const ipESP32 = "192.168.100.122";
 
     mostrarEstadoHuella("Conectando con ESP32...", true);
@@ -29,8 +29,8 @@ async function descargarYGuardarTemplate(idPersona, tipoPersona = "estudiante") 
         mostrarEstadoHuella("Guardando huella en la base de datos...");
 
         const formData = new FormData();
-        formData.append("id_persona", idPersona);
-        formData.append("tipo_persona", tipoPersona);
+        formData.append("user_id_global", userIdGlobal);
+        formData.append("tipo_usuario", tipoUsuario);
         formData.append("template", data.template);
         formData.append("bytes", data.bytes);
 

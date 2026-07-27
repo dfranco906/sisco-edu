@@ -7,11 +7,11 @@ class Horario
 
     public $id_horario;
     public $id_asignacion;
-    public $grado;
+    public $id_grado;
     public $dia_semana;
     public $hora_inicio;
     public $hora_fin;
-    public $aula;
+    public $id_aula;
 
     public function __construct($db)
     {
@@ -21,20 +21,8 @@ class Horario
     public function obtenerGradoActivo($id_grado)
     {
         $stmt = $this->conn->prepare("
-            SELECT
-                g.id_grado,
-                g.nombre,
-                NULLIF(TRIM(g.room_id), '') AS room_id,
-                a.nombre AS aula_nombre,
-                a.codigo AS aula_codigo,
-                CASE
-                    WHEN a.id_aula IS NOT NULL
-                     AND a.activo = 1
-                     AND a.codigo = g.room_id THEN 1
-                    ELSE 0
-                END AS aula_valida
+            SELECT g.id_aula
             FROM grados g
-            LEFT JOIN aulas a ON a.id_aula = g.id_aula
             WHERE g.id_grado = :id_grado
               AND g.activo = 1
             LIMIT 1
@@ -61,18 +49,18 @@ class Horario
     {
         $stmt = $this->conn->prepare("
             INSERT INTO horarios
-                (id_asignacion, grado, dia_semana, hora_inicio, hora_fin, aula)
+                (id_asignacion, id_grado, dia_semana, hora_inicio, hora_fin, id_aula)
             VALUES
-                (:id_asignacion, :grado, :dia_semana, :hora_inicio, :hora_fin, :aula)
+                (:id_asignacion, :id_grado, :dia_semana, :hora_inicio, :hora_fin, :id_aula)
         ");
 
         return $stmt->execute([
             ":id_asignacion" => $this->id_asignacion,
-            ":grado" => $this->grado,
+            ":id_grado" => $this->id_grado,
             ":dia_semana" => $this->dia_semana,
             ":hora_inicio" => $this->hora_inicio,
             ":hora_fin" => $this->hora_fin,
-            ":aula" => $this->aula
+            ":id_aula" => $this->id_aula
         ]);
     }
 
@@ -82,39 +70,25 @@ class Horario
             SELECT
                 h.id_horario,
                 h.id_asignacion,
-                COALESCE(
-                    (
-                        SELECT g1.id_grado
-                        FROM grados g1
-                        WHERE g1.activo = 1
-                          AND g1.nombre = h.grado
-                          AND g1.room_id = h.aula
-                        ORDER BY g1.id_grado
-                        LIMIT 1
-                    ),
-                    (
-                        SELECT CASE WHEN COUNT(*) = 1 THEN MIN(g2.id_grado) ELSE NULL END
-                        FROM grados g2
-                        WHERE g2.activo = 1
-                          AND g2.nombre = h.grado
-                    )
-                ) AS id_grado,
-                h.grado,
+                h.id_grado,
                 h.dia_semana,
                 h.hora_inicio,
                 h.hora_fin,
-                h.aula,
-                h.aula AS room_id,
+                h.id_aula,
                 h.activo,
+                g.nombre AS grado,
+                a.nombre AS aula,
                 m.nombre AS materia,
                 CONCAT(p.nombre, ' ', p.apellido) AS profesor
             FROM horarios h
+            LEFT JOIN grados g ON h.id_grado = g.id_grado
+            LEFT JOIN aulas a ON h.id_aula = a.id_aula
             LEFT JOIN asignacion_docente ad ON h.id_asignacion = ad.id_asignacion
             LEFT JOIN materias m ON ad.id_materia = m.id_materia
             LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
             WHERE h.activo = :activo
             ORDER BY
-                h.grado,
+                g.nombre,
                 FIELD(h.dia_semana, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'),
                 h.hora_inicio
         ");
@@ -138,21 +112,21 @@ class Horario
         $stmt = $this->conn->prepare("
             UPDATE " . $this->table_name . "
             SET id_asignacion = :id_asignacion,
-                grado = :grado,
+                id_grado = :id_grado,
                 dia_semana = :dia_semana,
                 hora_inicio = :hora_inicio,
                 hora_fin = :hora_fin,
-                aula = :aula
+                id_aula = :id_aula
             WHERE id_horario = :id_horario
         ");
 
         return $stmt->execute([
             ":id_asignacion" => $this->id_asignacion,
-            ":grado" => $this->grado,
+            ":id_grado" => $this->id_grado,
             ":dia_semana" => $this->dia_semana,
             ":hora_inicio" => $this->hora_inicio,
             ":hora_fin" => $this->hora_fin,
-            ":aula" => $this->aula,
+            ":id_aula" => $this->id_aula,
             ":id_horario" => $this->id_horario
         ]);
     }

@@ -5,7 +5,7 @@ class SyncBiometrica {
 
     public $id_sync;
     public $id_huella;
-    public $room_id;
+    public $id_aula;
     public $estado;
     public $intentos;
 
@@ -16,14 +16,14 @@ class SyncBiometrica {
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . "
                   SET id_huella=:id_huella,
-                      room_id=:room_id,
+                      id_aula=:id_aula,
                       estado=:estado,
                       intentos=:intentos";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":id_huella", $this->id_huella);
-        $stmt->bindParam(":room_id", $this->room_id);
+        $stmt->bindParam(":id_aula", $this->id_aula);
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":intentos", $this->intentos);
 
@@ -43,7 +43,7 @@ class SyncBiometrica {
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
                   SET id_huella=:id_huella,
-                      room_id=:room_id,
+                      id_aula=:id_aula,
                       estado=:estado,
                       intentos=:intentos,
                       fecha_actualizacion=NOW()
@@ -52,7 +52,7 @@ class SyncBiometrica {
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":id_huella", $this->id_huella);
-        $stmt->bindParam(":room_id", $this->room_id);
+        $stmt->bindParam(":id_aula", $this->id_aula);
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":intentos", $this->intentos);
         $stmt->bindParam(":id", $this->id_sync);
@@ -72,16 +72,16 @@ class SyncBiometrica {
         return $stmt->execute();
     }
     public function marcarError() {
-    $query = "UPDATE " . $this->table_name . "
-              SET estado='ERROR',
-                  intentos = intentos + 1,
-                  fecha_actualizacion = NOW()
-              WHERE id_sync = :id";
+        $query = "UPDATE " . $this->table_name . "
+                  SET estado='ERROR',
+                      intentos = intentos + 1,
+                      fecha_actualizacion = NOW()
+                  WHERE id_sync = :id";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_sync);
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_sync);
 
-    return $stmt->execute();
-}
+        return $stmt->execute();
+    }
 }
 ?>

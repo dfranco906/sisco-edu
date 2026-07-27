@@ -7,7 +7,7 @@ $nodo = new NodoEsp32($db);
 
 $nodo->id_nodo = $_POST['id_nodo'] ?? null;
 $nodo->node_id = $_POST['node_id'] ?? null;
-$nodo->room_id = $_POST['room_id'] ?? null;
+$nodo->id_aula = $_POST['id_aula'] ?? null;
 $nodo->tipo = $_POST['tipo'] ?? null;
 $nodo->estado = $_POST['estado'] ?? null;
 

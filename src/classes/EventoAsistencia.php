@@ -5,7 +5,7 @@ class EventoAsistencia {
 
     public $id_evento;
     public $user_id_global;
-    public $room_id;
+    public $id_aula;
     public $timestamp_evento;
     public $origen_node_id;
     public $sincronizado;
@@ -17,7 +17,7 @@ class EventoAsistencia {
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . "
                   SET user_id_global=:user_id_global,
-                      room_id=:room_id,
+                      id_aula=:id_aula,
                       timestamp_evento=:timestamp_evento,
                       origen_node_id=:origen_node_id,
                       sincronizado=:sincronizado";
@@ -25,7 +25,7 @@ class EventoAsistencia {
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":user_id_global", $this->user_id_global);
-        $stmt->bindParam(":room_id", $this->room_id);
+        $stmt->bindParam(":id_aula", $this->id_aula);
         $stmt->bindParam(":timestamp_evento", $this->timestamp_evento);
         $stmt->bindParam(":origen_node_id", $this->origen_node_id);
         $stmt->bindParam(":sincronizado", $this->sincronizado);
@@ -47,7 +47,7 @@ class EventoAsistencia {
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
                   SET user_id_global=:user_id_global,
-                      room_id=:room_id,
+                      id_aula=:id_aula,
                       timestamp_evento=:timestamp_evento,
                       origen_node_id=:origen_node_id,
                       sincronizado=:sincronizado
@@ -56,7 +56,7 @@ class EventoAsistencia {
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":user_id_global", $this->user_id_global);
-        $stmt->bindParam(":room_id", $this->room_id);
+        $stmt->bindParam(":id_aula", $this->id_aula);
         $stmt->bindParam(":timestamp_evento", $this->timestamp_evento);
         $stmt->bindParam(":origen_node_id", $this->origen_node_id);
         $stmt->bindParam(":sincronizado", $this->sincronizado);

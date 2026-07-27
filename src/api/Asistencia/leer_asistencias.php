@@ -20,8 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
             $data[] = [
                 "id_asistencia" => $id_asistencia,
-                "huella_id" => $huella_id,
+                "user_id_global" => $user_id_global,
                 "tipo_usuario" => $tipo_usuario,
+                "id_aula" => $id_aula,
                 "fecha_hora" => $fecha_hora,
                 "estado" => $estado
             ];

@@ -129,7 +129,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
                 <label class="font-semibold">
                     Aula asignada
-                    <input id="crear-room-id" type="text" class="app-input app-input-readonly mt-2 w-full"
+                    <input id="crear-id-aula" type="text" class="app-input app-input-readonly mt-2 w-full"
                            placeholder="Seleccione un grado" readonly aria-readonly="true">
                     <span class="app-help">Se obtiene desde el grado y no puede modificarse manualmente.</span>
                 </label>
@@ -195,7 +195,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
                 <label class="font-semibold">
                     Aula asignada
-                    <input id="editar-room-id" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
+                    <input id="editar-id-aula" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
                     <span class="app-help">El aula se asigna automáticamente según el grado seleccionado.</span>
                 </label>
 

@@ -5,9 +5,9 @@ class HuellaTemplate {
 
     public $id_huella;
     public $user_id_global;
-    public $id_estudiante;
     public $fingerprint_data;
     public $formato;
+    public $slot_index;
     public $pendiente_sync;
 
     public function __construct($db) {
@@ -17,17 +17,17 @@ class HuellaTemplate {
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . "
                   SET user_id_global=:user_id_global,
-                      id_estudiante=:id_estudiante,
                       fingerprint_data=:fingerprint_data,
                       formato=:formato,
+                      slot_index=:slot_index,
                       pendiente_sync=1";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":user_id_global", $this->user_id_global);
-        $stmt->bindParam(":id_estudiante", $this->id_estudiante);
         $stmt->bindParam(":fingerprint_data", $this->fingerprint_data);
         $stmt->bindParam(":formato", $this->formato);
+        $stmt->bindParam(":slot_index", $this->slot_index);
 
         return $stmt->execute();
     }
@@ -46,18 +46,18 @@ class HuellaTemplate {
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
                   SET user_id_global=:user_id_global,
-                      id_estudiante=:id_estudiante,
                       fingerprint_data=:fingerprint_data,
                       formato=:formato,
+                      slot_index=:slot_index,
                       pendiente_sync=:pendiente_sync
                   WHERE id_huella=:id";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":user_id_global", $this->user_id_global);
-        $stmt->bindParam(":id_estudiante", $this->id_estudiante);
         $stmt->bindParam(":fingerprint_data", $this->fingerprint_data);
         $stmt->bindParam(":formato", $this->formato);
+        $stmt->bindParam(":slot_index", $this->slot_index);
         $stmt->bindParam(":pendiente_sync", $this->pendiente_sync);
         $stmt->bindParam(":id", $this->id_huella);
 

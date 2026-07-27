@@ -6,25 +6,15 @@ $db = (new Database())->getConnection();
 
 $id_solicitud = $_POST['id_solicitud'] ?? null;
 $id_estudiante = $_POST['id_estudiante'] ?? null;
-$huella_id = $_POST['huella_id'] ?? null;
+$id_huella = $_POST['id_huella'] ?? null;
 
-if (!$id_solicitud || !$id_estudiante || !$huella_id) {
+if (!$id_solicitud || !$id_estudiante || !$id_huella) {
     echo json_encode(["status" => "error", "message" => "Faltan datos"]);
     exit;
 }
 
 try {
     $db->beginTransaction();
-
-    $stmt1 = $db->prepare("
-        UPDATE estudiantes
-        SET huella_id = :huella_id
-        WHERE id_estudiante = :id_estudiante
-    ");
-    $stmt1->execute([
-        ":huella_id" => $huella_id,
-        ":id_estudiante" => $id_estudiante
-    ]);
 
     $stmt2 = $db->prepare("
         UPDATE solicitudes_huella
@@ -33,8 +23,9 @@ try {
             mensaje = 'Huella registrada correctamente'
         WHERE id_solicitud = :id_solicitud
     ");
+
     $stmt2->execute([
-        ":huella_id" => $huella_id,
+        ":huella_id" => $id_huella,
         ":id_solicitud" => $id_solicitud
     ]);
 
@@ -42,6 +33,6 @@ try {
 
     echo json_encode(["status" => "success", "message" => "Huella guardada"]);
 } catch (Exception $e) {
-    $db->rollBack();
+    if ($db->inTransaction()) $db->rollBack();
     echo json_encode(["status" => "error", "message" => "Error al guardar huella"]);
 }

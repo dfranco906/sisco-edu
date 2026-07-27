@@ -2,14 +2,13 @@
 $titulo = "Grados desactivados";
 $api = "src/api/Grado/leer_grados_desactivados.php";
 
-$columnas = ["id_grado", "nombre", "aula", "room_id", "activo"];
+$columnas = ["id_grado", "nombre", "aula", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "aula", "room_id"],
+    "buscar" => ["nombre", "aula"],
     "placeholder" => "Buscar grado desactivado...",
     "selects" => [
-        ["campo" => "aula", "label" => "Aula"],
-        ["campo" => "room_id", "label" => "Room ID"]
+        ["campo" => "aula", "label" => "Aula"]
     ]
 ];
 

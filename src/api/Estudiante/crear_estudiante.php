@@ -12,7 +12,6 @@ try {
     $estudiante->apellido = $_POST['apellido'] ?? null;
     $estudiante->cedula_identidad = $_POST['cedula_identidad'] ?? null;
     $estudiante->id_grado = $_POST['id_grado'] ?? null;
-    $estudiante->huella_id = $_POST['huella_id'] ?? null;
 
     if (!$estudiante->nombre || !$estudiante->apellido || !$estudiante->cedula_identidad || !$estudiante->id_grado) {
         echo json_encode(["status" => "error", "message" => "Datos incompletos"]);

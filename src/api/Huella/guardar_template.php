@@ -8,7 +8,6 @@ $db = (new Database())->getConnection();
 $id_persona = $_POST['id_persona'] ?? $_POST['id_estudiante'] ?? null;
 $tipo_persona = $_POST['tipo_persona'] ?? 'estudiante';
 $template = $_POST['template'] ?? null;
-$room_id_recibido = isset($_POST['room_id']) ? trim((string) $_POST['room_id']) : null;
 
 function avisarGatewaySync(): array
 {
@@ -71,16 +70,14 @@ try {
         $tabla = "profesores";
         $idCampo = "id_profesor";
         $user_id_global = "PROF_" . $id_persona;
-        $room_id = "GENERAL";
+        $id_aula = null;
     } else {
         $tabla = "estudiantes";
         $idCampo = "id_estudiante";
         $user_id_global = "EST_" . $id_persona;
 
         $stmtEstudiante = $db->prepare("
-            SELECT
-                NULLIF(TRIM(e.room_id), '') AS room_estudiante,
-                NULLIF(TRIM(g.room_id), '') AS room_grado
+            SELECT g.id_aula
             FROM estudiantes e
             LEFT JOIN grados g
                 ON g.id_grado = e.id_grado
@@ -98,25 +95,13 @@ try {
             exit;
         }
 
-        if ($room_id_recibido !== null && $room_id_recibido !== '') {
-            $stmtRoom = $db->prepare("
-                SELECT codigo
-                FROM aulas
-                WHERE codigo = :room_id
-                  AND activo = 1
-                LIMIT 1
-            ");
-            $stmtRoom->execute([":room_id" => $room_id_recibido]);
-            $room_id = $stmtRoom->fetchColumn() ?: null;
-        } else {
-            $room_id = $estudiante["room_estudiante"] ?? $estudiante["room_grado"] ?? null;
-        }
+        $id_aula = $estudiante["id_aula"] ?? null;
 
-        if (!$room_id || strcasecmp($room_id, "GENERAL") === 0) {
+        if (!$id_aula) {
             http_response_code(422);
             echo json_encode([
                 "status" => "error",
-                "message" => "El estudiante no tiene room_id asignado. No se puede sincronizar la huella al aula."
+                "message" => "El estudiante no tiene aula asignada. No se puede sincronizar la huella."
             ]);
             exit;
         }
@@ -139,30 +124,16 @@ try {
 
     $id_huella = $db->lastInsertId();
 
-    $stmt2 = $db->prepare("
-        UPDATE {$tabla}
-        SET huella_id = :id_huella,
-            user_id_global = :user_id_global,
-            pendiente_sync = 1
-        WHERE {$idCampo} = :id_persona
-    ");
-
-    $stmt2->execute([
-        ":id_huella" => $id_huella,
-        ":user_id_global" => $user_id_global,
-        ":id_persona" => $id_persona
-    ]);
-
     $stmt3 = $db->prepare("
         INSERT INTO sync_biometrica
-        (id_huella, room_id, estado, intentos)
+        (id_huella, id_aula, estado, intentos)
         VALUES
-        (:id_huella, :room_id, 'PENDIENTE', 0)
+        (:id_huella, :id_aula, 'PENDIENTE', 0)
     ");
 
     $stmt3->execute([
         ":id_huella" => $id_huella,
-        ":room_id" => $room_id
+        ":id_aula" => $id_aula
     ]);
     
     $id_sync = $db->lastInsertId();

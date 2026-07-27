@@ -1,157 +1,151 @@
 <?php
-// src/classes/Profesor.php
-
 class Profesor {
     private $conn;
     private $table_name = "profesores";
 
-    // Propiedades de la clase (Mapeadas de la tabla 'profesores')
     public $nombre;
     public $apellido;
     public $cedula_identidad;
-    public $huella_id;
+    public $user_id_global;
     public $id_profesor;
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    // Lógica para insertar en la BD
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
                   SET nombre=:nombre, 
                       apellido=:apellido, 
                       cedula_identidad=:cedula, 
-                      huella_id=:huella";
+                      user_id_global=:user_id_global";
 
         $stmt = $this->conn->prepare($query);
 
-        // Sanitización (Limpieza de datos para evitar inyecciones de código)
         $this->nombre = htmlspecialchars(strip_tags($this->nombre));
         $this->apellido = htmlspecialchars(strip_tags($this->apellido));
         $this->cedula_identidad = htmlspecialchars(strip_tags($this->cedula_identidad));
-        // Si no hay huella, enviamos NULL para que no rompa la base de datos
-        $this->huella_id = !empty($this->huella_id) ? $this->huella_id : NULL;
+        $this->user_id_global = !empty($this->user_id_global) ? $this->user_id_global : NULL;
 
-        // Binding (Asignar los valores a los parámetros :nombre, etc.)
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":apellido", $this->apellido);
         $stmt->bindParam(":cedula", $this->cedula_identidad);
-        $stmt->bindParam(":huella", $this->huella_id);
+        $stmt->bindParam(":user_id_global", $this->user_id_global);
 
         if($stmt->execute()) {
             return true;
         }
         return false;
     }
-    // ... tu código anterior (constructor y método crear) ...
 
-    // Lógica para LEER (READ) todos los profesores de la BD
-public function leer() {
-    $query = "SELECT 
-                id_profesor,
-                nombre,
-                apellido,
-                cedula_identidad,
-                huella_id,
-                activo,
-                CONCAT(nombre, ' ', apellido) AS nombre_completo
-              FROM profesores
-              WHERE activo = 1
-              ORDER BY nombre ASC";
+    public function leer() {
+        $query = "SELECT 
+                    id_profesor,
+                    nombre,
+                    apellido,
+                    cedula_identidad,
+                    user_id_global,
+                    activo,
+                    CONCAT(nombre, ' ', apellido) AS nombre_completo
+                  FROM profesores
+                  WHERE activo = 1
+                  ORDER BY nombre ASC";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt;
-}
-public function leerDesactivados() {
-    $query = "SELECT 
-                id_profesor,
-                nombre,
-                apellido,
-                cedula_identidad,
-                huella_id,
-                activo,
-                CONCAT(nombre, ' ', apellido) AS nombre_completo
-              FROM profesores
-              WHERE activo = 0
-              ORDER BY nombre ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt;
-}
-    // ✅ UPDATE
-public function actualizar() {
-    $query = "UPDATE " . $this->table_name . "
-              SET nombre = :nombre,
-                  apellido = :apellido,
-                  cedula_identidad = :cedula,
-                  huella_id = :huella
-              WHERE id_profesor = :id";
+    public function leerDesactivados() {
+        $query = "SELECT 
+                    id_profesor,
+                    nombre,
+                    apellido,
+                    cedula_identidad,
+                    user_id_global,
+                    activo,
+                    CONCAT(nombre, ' ', apellido) AS nombre_completo
+                  FROM profesores
+                  WHERE activo = 0
+                  ORDER BY nombre ASC";
 
-    $stmt = $this->conn->prepare($query);
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
 
-    // Sanitizar
-    $this->nombre = htmlspecialchars(strip_tags($this->nombre));
-    $this->apellido = htmlspecialchars(strip_tags($this->apellido));
-    $this->cedula_identidad = htmlspecialchars(strip_tags($this->cedula_identidad));
-    $this->huella_id = !empty($this->huella_id) ? $this->huella_id : NULL;
-    $this->id_profesor = htmlspecialchars(strip_tags($this->id_profesor));
+    public function actualizar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET nombre = :nombre,
+                      apellido = :apellido,
+                      cedula_identidad = :cedula,
+                      user_id_global = :user_id_global
+                  WHERE id_profesor = :id";
 
-    // Bind
-    $stmt->bindParam(":nombre", $this->nombre);
-    $stmt->bindParam(":apellido", $this->apellido);
-    $stmt->bindParam(":cedula", $this->cedula_identidad);
-    $stmt->bindParam(":huella", $this->huella_id);
-    $stmt->bindParam(":id", $this->id_profesor);
+        $stmt = $this->conn->prepare($query);
 
-    return $stmt->execute();
-}
-public function desactivar() {
-    $query = "UPDATE " . $this->table_name . "
-              SET activo = 0
-              WHERE id_profesor = :id";
+        $this->nombre = htmlspecialchars(strip_tags($this->nombre));
+        $this->apellido = htmlspecialchars(strip_tags($this->apellido));
+        $this->cedula_identidad = htmlspecialchars(strip_tags($this->cedula_identidad));
+        $this->user_id_global = !empty($this->user_id_global) ? $this->user_id_global : NULL;
+        $this->id_profesor = htmlspecialchars(strip_tags($this->id_profesor));
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_profesor);
+        $stmt->bindParam(":nombre", $this->nombre);
+        $stmt->bindParam(":apellido", $this->apellido);
+        $stmt->bindParam(":cedula", $this->cedula_identidad);
+        $stmt->bindParam(":user_id_global", $this->user_id_global);
+        $stmt->bindParam(":id", $this->id_profesor);
 
-    return $stmt->execute();
-}
-public function restaurar() {
-    $query = "UPDATE " . $this->table_name . "
-              SET activo = 1
-              WHERE id_profesor = :id";
+        return $stmt->execute();
+    }
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_profesor);
+    public function desactivar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET activo = 0
+                  WHERE id_profesor = :id";
 
-    return $stmt->execute();
-}
-public function contarDependencias() {
-    $query = "SELECT
-                (SELECT COUNT(*) FROM asignacion_docente WHERE id_profesor=:id1) +
-                (SELECT COUNT(*) FROM asistencias_profesores WHERE id_profesor=:id2) +
-                (SELECT COUNT(*) FROM huellas_templates WHERE id_profesor=:id3)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_profesor);
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute([
-        ":id1" => $this->id_profesor,
-        ":id2" => $this->id_profesor,
-        ":id3" => $this->id_profesor
-    ]);
+        return $stmt->execute();
+    }
 
-    return (int) $stmt->fetchColumn();
-}
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
-              WHERE id_profesor = :id";
+    public function restaurar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET activo = 1
+                  WHERE id_profesor = :id";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_profesor);
-    $stmt->execute();
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_profesor);
 
-    return $stmt->rowCount() > 0;
-}
+        return $stmt->execute();
+    }
+
+    public function contarDependencias() {
+        $query = "SELECT
+                    (SELECT COUNT(*) FROM asignacion_docente WHERE id_profesor=:id1) +
+                    (SELECT COUNT(*) FROM asistencias_profesores WHERE id_profesor=:id2) +
+                    (SELECT COUNT(*) FROM huellas_templates WHERE id_profesor=:id3)";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ":id1" => $this->id_profesor,
+            ":id2" => $this->id_profesor,
+            ":id3" => $this->id_profesor
+        ]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function eliminar() {
+        $query = "DELETE FROM " . $this->table_name . "
+                  WHERE id_profesor = :id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_profesor);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
 }
 ?>

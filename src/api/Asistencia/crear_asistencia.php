@@ -10,11 +10,13 @@ $asistencia = new Asistencia($db);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $asistencia->huella_id = $_POST['huella_id'] ?? null;
+    $asistencia->user_id_global = $_POST['user_id_global'] ?? null;
+    $asistencia->id_aula = $_POST['id_aula'] ?? null;
     $asistencia->tipo_usuario = $_POST['tipo_usuario'] ?? null;
     $asistencia->estado = $_POST['estado'] ?? 'Presente';
+    $asistencia->fecha_hora = $_POST['fecha_hora'] ?? date('c');
 
-    if (!empty($asistencia->huella_id) && !empty($asistencia->tipo_usuario)) {
+    if (!empty($asistencia->user_id_global) && !empty($asistencia->tipo_usuario) && !empty($asistencia->id_aula)) {
 
         if ($asistencia->crear()) {
             http_response_code(201);

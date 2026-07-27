@@ -14,13 +14,13 @@ if ($key !== GATEWAY_API_KEY) {
 
 $db = (new Database())->getConnection();
 
-$room_id = $_GET['room_id'] ?? 'GENERAL';
+$id_aula = $_GET['id_aula'] ?? 'GENERAL';
 
 $stmt = $db->prepare("
     SELECT 
         s.id_sync,
         s.id_huella,
-        s.room_id,
+        s.id_aula,
         h.user_id_global,
         h.fingerprint_data AS huella_base64,
         h.formato,
@@ -35,17 +35,17 @@ $stmt = $db->prepare("
         p.apellido AS apellido_profesor
     FROM sync_biometrica s
     INNER JOIN huellas_templates h ON s.id_huella = h.id_huella
-    LEFT JOIN estudiantes e ON h.id_estudiante = e.id_estudiante
-    LEFT JOIN profesores p ON h.id_profesor = p.id_profesor
+    LEFT JOIN estudiantes e ON h.user_id_global = e.user_id_global
+    LEFT JOIN profesores p ON h.user_id_global = p.user_id_global
     WHERE s.estado = 'PENDIENTE'
       AND h.activo = 1
-      AND (s.room_id = :room_id OR s.room_id = 'GENERAL')
-      AND NOT (s.room_id = 'GENERAL' AND h.id_estudiante IS NOT NULL)
+      AND (s.id_aula = :id_aula OR s.id_aula IS NULL)
+      AND NOT (s.id_aula IS NULL AND h.user_id_global IN (SELECT user_id_global FROM estudiantes WHERE activo = 1))
     ORDER BY s.id_sync ASC
     LIMIT 1
 ");
 
-$stmt->execute([":room_id" => $room_id]);
+$stmt->execute([":id_aula" => $id_aula]);
 $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$data) {
@@ -69,7 +69,7 @@ echo json_encode([
         "id_huella" => $data["id_huella"],
         "tipo_persona" => $tipo,
         "ci" => $ci,
-        "room_id" => $data["room_id"],
+        "id_aula" => $data["id_aula"],
         "grado" => $data["grado"] ?? null,
         "huella_base64" => $data["huella_base64"],
         "formato" => $data["formato"]

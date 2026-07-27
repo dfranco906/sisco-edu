@@ -5,36 +5,20 @@ class Grado {
     public $id_grado;
     public $nombre;
     public $id_aula;
-    public $room_id;
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    private function obtenerRoomIdAula() {
-        $stmt = $this->conn->prepare("
-            SELECT codigo FROM aulas 
-            WHERE id_aula = :id_aula AND activo = 1
-        ");
-        $stmt->execute([":id_aula" => $this->id_aula]);
-        $aula = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $aula ? $aula["codigo"] : null;
-    }
-
     public function crear() {
-        $this->room_id = $this->obtenerRoomIdAula();
-        if (!$this->room_id) return false;
-
         $stmt = $this->conn->prepare("
-            INSERT INTO grados(nombre, id_aula, room_id)
-            VALUES(:nombre, :id_aula, :room_id)
+            INSERT INTO grados(nombre, id_aula)
+            VALUES(:nombre, :id_aula)
         ");
 
         return $stmt->execute([
             ":nombre" => $this->nombre,
-            ":id_aula" => $this->id_aula,
-            ":room_id" => $this->room_id
+            ":id_aula" => $this->id_aula
         ]);
     }
 
@@ -45,9 +29,8 @@ class Grado {
                 g.nombre,
                 g.id_aula,
                 a.nombre AS aula,
-                g.room_id,
                 g.activo,
-                CONCAT(g.nombre, ' - ', a.nombre, ' - ', g.room_id) AS descripcion
+                CONCAT(g.nombre, ' - ', a.nombre) AS descripcion
             FROM grados g
             INNER JOIN aulas a ON g.id_aula = a.id_aula
             WHERE g.activo = 1
@@ -64,9 +47,8 @@ class Grado {
                 g.nombre,
                 g.id_aula,
                 a.nombre AS aula,
-                g.room_id,
                 g.activo,
-                CONCAT(g.nombre, ' - ', a.nombre, ' - ', g.room_id) AS descripcion
+                CONCAT(g.nombre, ' - ', a.nombre) AS descripcion
             FROM grados g
             INNER JOIN aulas a ON g.id_aula = a.id_aula
             WHERE g.activo = 0
@@ -77,21 +59,16 @@ class Grado {
     }
 
     public function actualizar() {
-        $this->room_id = $this->obtenerRoomIdAula();
-        if (!$this->room_id) return false;
-
         $stmt = $this->conn->prepare("
             UPDATE grados
             SET nombre=:nombre,
-                id_aula=:id_aula,
-                room_id=:room_id
+                id_aula=:id_aula
             WHERE id_grado=:id_grado
         ");
 
         return $stmt->execute([
             ":nombre" => $this->nombre,
             ":id_aula" => $this->id_aula,
-            ":room_id" => $this->room_id,
             ":id_grado" => $this->id_grado
         ]);
     }

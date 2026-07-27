@@ -2,7 +2,7 @@
 $titulo = "Profesores desactivados";
 $api = "src/api/Profesor/leer_profesores_desactivados.php";
 
-$columnas = ["id_profesor", "nombre", "apellido", "cedula_identidad", "huella_id", "activo"];
+$columnas = ["id_profesor", "nombre", "apellido", "cedula_identidad", "activo"];
 
 $filtros = [
     "buscar" => ["nombre", "apellido", "cedula_identidad"],

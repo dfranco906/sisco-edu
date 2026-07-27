@@ -31,15 +31,17 @@ $stmt = $db->prepare("
 
         e.id_estudiante,
         e.cedula_identidad AS ci_estudiante,
-        COALESCE(NULLIF(TRIM(e.room_id), ''), NULLIF(TRIM(g.room_id), '')) AS room_estudiante,
+        g.id_aula AS id_aula_estudiante,
+        a.nombre AS aula_estudiante,
 
         p.id_profesor,
         p.cedula_identidad AS ci_profesor
 
     FROM huellas_templates h
-    LEFT JOIN estudiantes e ON h.id_estudiante = e.id_estudiante
+    LEFT JOIN estudiantes e ON h.user_id_global = e.user_id_global
     LEFT JOIN grados g ON e.id_grado = g.id_grado AND g.activo = 1
-    LEFT JOIN profesores p ON h.id_profesor = p.id_profesor
+    LEFT JOIN aulas a ON g.id_aula = a.id_aula
+    LEFT JOIN profesores p ON h.user_id_global = p.user_id_global
     WHERE h.id_huella = :huella_id
       AND h.activo = 1
     LIMIT 1
@@ -55,13 +57,13 @@ if (!$data) {
 
 $tipo = $data["id_estudiante"] ? "estudiante" : "profesor";
 $ci = $tipo === "estudiante" ? $data["ci_estudiante"] : $data["ci_profesor"];
-$room_id = $tipo === "estudiante" ? ($data["room_estudiante"] ?? null) : "GENERAL";
+$id_aula = $tipo === "estudiante" ? ($data["id_aula_estudiante"] ?? null) : null;
 
-if ($tipo === "estudiante" && (!$room_id || strcasecmp($room_id, "GENERAL") === 0)) {
+if ($tipo === "estudiante" && !$id_aula) {
     http_response_code(422);
     echo json_encode([
         "status" => "error",
-        "message" => "El estudiante no tiene room_id asignado. No se puede sincronizar la huella al aula."
+        "message" => "El estudiante no tiene aula asignada. No se puede sincronizar la huella."
     ]);
     exit;
 }
@@ -73,7 +75,8 @@ echo json_encode([
         "user_id_global" => $data["user_id_global"],
         "tipo_persona" => $tipo,
         "ci" => $ci,
-        "room_id" => $room_id,
+        "id_aula" => $id_aula,
+        "aula" => $data["aula_estudiante"] ?? null,
         "huella_base64" => $data["huella_base64"],
         "formato" => $data["formato"]
     ]

@@ -5,7 +5,7 @@ class NodoEsp32 {
 
     public $id_nodo;
     public $node_id;
-    public $room_id;
+    public $id_aula;
     public $tipo;
     public $estado;
 
@@ -15,12 +15,12 @@ class NodoEsp32 {
 
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . "
-                  SET node_id=:node_id, room_id=:room_id, tipo=:tipo";
+                  SET node_id=:node_id, id_aula=:id_aula, tipo=:tipo";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":node_id", $this->node_id);
-        $stmt->bindParam(":room_id", $this->room_id);
+        $stmt->bindParam(":id_aula", $this->id_aula);
         $stmt->bindParam(":tipo", $this->tipo);
 
         return $stmt->execute();
@@ -40,7 +40,7 @@ class NodoEsp32 {
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
                   SET node_id=:node_id,
-                      room_id=:room_id,
+                      id_aula=:id_aula,
                       tipo=:tipo,
                       estado=:estado
                   WHERE id_nodo=:id";
@@ -48,7 +48,7 @@ class NodoEsp32 {
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":node_id", $this->node_id);
-        $stmt->bindParam(":room_id", $this->room_id);
+        $stmt->bindParam(":id_aula", $this->id_aula);
         $stmt->bindParam(":tipo", $this->tipo);
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":id", $this->id_nodo);
