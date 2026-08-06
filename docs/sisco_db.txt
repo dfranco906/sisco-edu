@@ -373,7 +373,7 @@ INSERT INTO `materias` (`id_materia`, `nombre`, `descripcion`, `carga_horaria_se
 CREATE TABLE `nodos_esp32` (
   `id_nodo` int(11) NOT NULL,
   `node_id` varchar(100) NOT NULL,
-  `room_id` varchar(50) DEFAULT NULL,
+  `id_aula` int(11) DEFAULT NULL,
   `tipo` enum('CAPTURA','GATEWAY','AULA') NOT NULL,
   `estado` enum('online','offline') DEFAULT 'offline',
   `ultimo_heartbeat` timestamp NULL DEFAULT NULL,
@@ -385,8 +385,8 @@ CREATE TABLE `nodos_esp32` (
 -- Volcado de datos para la tabla `nodos_esp32`
 --
 
-INSERT INTO `nodos_esp32` (`id_nodo`, `node_id`, `room_id`, `tipo`, `estado`, `ultimo_heartbeat`, `activo`, `fecha_creacion`) VALUES
-(1, 'ESP32_AULA_1', 'AULA_1', 'AULA', 'online', NULL, 0, '2026-05-18 14:52:42');
+INSERT INTO `nodos_esp32` (`id_nodo`, `node_id`, `id_aula`, `tipo`, `estado`, `ultimo_heartbeat`, `activo`, `fecha_creacion`) VALUES
+(1, 'ESP32_AULA_1', 1, 'AULA', 'online', NULL, 0, '2026-05-18 14:52:42');
 
 -- --------------------------------------------------------
 
@@ -399,25 +399,23 @@ CREATE TABLE `profesores` (
   `nombre` varchar(100) NOT NULL,
   `apellido` varchar(100) NOT NULL,
   `cedula_identidad` varchar(20) NOT NULL,
-  `huella_id` int(11) DEFAULT NULL,
   `user_id_global` varchar(50) DEFAULT NULL,
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
-  `activo` tinyint(1) DEFAULT 1,
-  `pendiente_sync` tinyint(1) DEFAULT 0
+  `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `profesores`
 --
 
-INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad`, `huella_id`, `user_id_global`, `fecha_registro`, `activo`, `pendiente_sync`) VALUES
-(1, 'Juan Actualizado', 'Perez Actualizado', '1234567 ', 13, 'PROF_1', '2026-04-23 16:58:23', 1, 1),
-(7, 'Nahuel', 'Montiel', '7392273', 11, 'PROF_7', '2026-06-08 16:33:40', 1, 1),
-(8, 'Nahuel Actualizado', 'Perez Actualizado', '7392275 Actualizado', NULL, NULL, '2026-06-08 16:45:41', 1, 0),
-(9, 'Nahuel Actualizado', 'Montaner Actualizado', '7392278 Actualizada', NULL, NULL, '2026-06-08 17:08:34', 1, 0),
-(10, 'Nahuel', 'Montaner', '7392279', NULL, NULL, '2026-06-08 17:23:26', 1, 0),
-(11, 'Nahuel Actualizado', 'Montaner Actualizado', '7392271', NULL, NULL, '2026-06-08 17:29:56', 1, 0),
-(12, 'Pepe', 'Peron', '00001234', NULL, NULL, '2026-06-18 18:25:38', 1, 0);
+INSERT INTO `profesores` (`id_profesor`, `nombre`, `apellido`, `cedula_identidad`, `user_id_global`, `fecha_registro`, `activo`) VALUES
+(1, 'Juan Actualizado', 'Perez Actualizado', '1234567 ', 'PROF_1', '2026-04-23 16:58:23', 1),
+(7, 'Nahuel', 'Montiel', '7392273', 'PROF_7', '2026-06-08 16:33:40', 1),
+(8, 'Nahuel Actualizado', 'Perez Actualizado', '7392275 Actualizado', NULL, '2026-06-08 16:45:41', 1),
+(9, 'Nahuel Actualizado', 'Montaner Actualizado', '7392278 Actualizada', NULL, '2026-06-08 17:08:34', 1),
+(10, 'Nahuel', 'Montaner', '7392279', NULL, '2026-06-08 17:23:26', 1),
+(11, 'Nahuel Actualizado', 'Montaner Actualizado', '7392271', NULL, '2026-06-08 17:29:56', 1),
+(12, 'Pepe', 'Peron', '00001234', NULL, '2026-06-18 18:25:38', 1);
 
 -- --------------------------------------------------------
 
@@ -453,7 +451,7 @@ INSERT INTO `solicitudes_huella` (`id_solicitud`, `id_estudiante`, `estado`, `hu
 CREATE TABLE `sync_biometrica` (
   `id_sync` int(11) NOT NULL,
   `id_huella` int(11) NOT NULL,
-  `room_id` varchar(50) NOT NULL,
+  `id_aula` int(11) DEFAULT NULL,
   `estado` enum('PENDIENTE','ENVIADO','CONFIRMADO','ERROR') DEFAULT 'PENDIENTE',
   `intentos` int(11) DEFAULT 0,
   `mensaje` varchar(255) DEFAULT NULL,
@@ -465,13 +463,13 @@ CREATE TABLE `sync_biometrica` (
 -- Volcado de datos para la tabla `sync_biometrica`
 --
 
-INSERT INTO `sync_biometrica` (`id_sync`, `id_huella`, `room_id`, `estado`, `intentos`, `mensaje`, `fecha_creacion`, `fecha_actualizacion`) VALUES
-(12, 12, 'GENERAL', 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 18:15:31', '2026-06-18 18:43:21'),
-(13, 13, 'GENERAL', 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 18:29:32', '2026-06-18 18:48:05'),
-(14, 14, 'GENERAL', 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 18:50:31', '2026-06-18 18:50:31'),
-(15, 15, 'GENERAL', 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 19:00:14', '2026-06-18 19:00:14'),
-(16, 16, 'GENERAL', 'CONFIRMADO', 1, 'Huella enviada e instalada en el aula de forma integra', '2026-06-18 19:15:45', '2026-06-18 19:15:47'),
-(17, 17, 'GENERAL', 'CONFIRMADO', 1, 'Huella enviada e instalada en el aula de forma integra', '2026-06-18 19:27:49', '2026-06-18 19:27:50');
+INSERT INTO `sync_biometrica` (`id_sync`, `id_huella`, `id_aula`, `estado`, `intentos`, `mensaje`, `fecha_creacion`, `fecha_actualizacion`) VALUES
+(12, 12, NULL, 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 18:15:31', '2026-06-18 18:43:21'),
+(13, 13, NULL, 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 18:29:32', '2026-06-18 18:48:05'),
+(14, 14, NULL, 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 18:50:31', '2026-06-18 18:50:31'),
+(15, 15, NULL, 'ERROR', 1, 'Fallo el enlace de radio de ESP-NOW entre pisos', '2026-06-18 19:00:14', '2026-06-18 19:00:14'),
+(16, 16, NULL, 'CONFIRMADO', 1, 'Huella enviada e instalada en el aula de forma integra', '2026-06-18 19:15:45', '2026-06-18 19:15:47'),
+(17, 17, NULL, 'CONFIRMADO', 1, 'Huella enviada e instalada en el aula de forma integra', '2026-06-18 19:27:49', '2026-06-18 19:27:50');
 
 -- --------------------------------------------------------
 

@@ -13,7 +13,7 @@ const char *password = "123456789";
 
 String BASE = "http://192.168.0.165/sisco-edu/";
 String API_KEY = "SISCO_GATEWAY_2026_SECRETO";
-String ROOM_ID = "AULA_A"; // Filtro por defecto para syncs
+String ROOM_ID = "AULA_A";
 
 const char *headerKeys[] = {"X-GATEWAY-KEY"};
 const size_t headerKeysCount = 1;
@@ -26,14 +26,14 @@ WebServer server(80);
 HardwareSerial loraSerial(2);
 
 // Identificadores LoRa y constantes de transmisión
-const int MI_LORA_ID = 100;          // ID del Gateway Central
-const int TOTAL_BYTES_HUELLA = 1408;  // Bytes binarios puros del sensor DY50
+const int MI_LORA_ID = 100;
+const int TOTAL_BYTES_HUELLA = 1408;
 const int CHUNK_BYTES = 64;
-const int TOTAL_CHUNKS = TOTAL_BYTES_HUELLA / CHUNK_BYTES; // 22 chunks
-const int MAX_REINTENTOS = 8;        // ARQ reintentos máximos por chunk
+const int TOTAL_CHUNKS = TOTAL_BYTES_HUELLA / CHUNK_BYTES;
+const int MAX_REINTENTOS = 8;
 
 // ============================================================================
-// TOPOLOGÍA MULTIPUNTO LORA: Tabla de Rutas de Aulas
+// TOPOLOGÍA MULTIPUNTO LORA
 // ============================================================================
 typedef struct {
   char room_id[16];
@@ -47,7 +47,7 @@ DispositivoAula tablaAulas[MAX_AULAS] = {
     {"AULA_C", 103}
 };
 
-// Prototipos de funciones
+// Prototipos
 void pedirSyncPendiente();
 bool buscarLoraIdPorAula(String roomId, int &loraId);
 bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
@@ -70,7 +70,6 @@ void setup() {
   Serial.println("[GATEWAY] INICIALIZANDO NODO CENTRAL LORA (ID 100)");
   Serial.println("==================================================");
 
-  // Conexión Wi-Fi al servidor central
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
@@ -80,12 +79,11 @@ void setup() {
     Serial.print(".");
   }
 
-  Serial.println("\n[GATEWAY] Wi-Fi Conectado con éxito");
+  Serial.println("\n[GATEWAY] Wi-Fi Conectado con exito");
   Serial.print("IP Gateway: "); Serial.println(WiFi.localIP());
 
   server.collectHeaders(headerKeys, headerKeysCount);
 
-  // Endpoint HTTP que dispara la orden de sincronización desde el Backend PHP
   server.on("/sync", HTTP_POST, []() {
     String key = server.header("X-GATEWAY-KEY");
     if (key != API_KEY) {
@@ -111,33 +109,31 @@ void loop() {
 }
 
 // ============================================================================
-// PARSEO ASÍNCRONO DE MENSAJES LORA ENTRANTES
+// PARSEO ASINCRONO DE MENSAJES LORA ENTRANTES
 // ============================================================================
 void atenderMensajesLoRa() {
-  if (loraSerial.available()) {
-    String linea = loraSerial.readStringUntil('\n');
-    linea.trim();
+  if (!loraSerial.available()) return;
 
-    if (linea.startsWith("+RCV=")) {
-      // Formato esperado: +RCV=<SENDER_ID>,<LEN>,<PAYLOAD>,<RSSI>,<SNR>
-      // Ejemplo Asistencia: +RCV=101,35,AST:AULA_A:1234567:estudiante:PRESENTE,-70,12
-      int primeraComa = linea.indexOf(',');
-      int segundaComa = linea.indexOf(',', primeraComa + 1);
-      int terceraComa = linea.indexOf(',', segundaComa + 1);
+  String linea = loraSerial.readStringUntil('\n');
+  linea.trim();
 
-      if (segundaComa != -1 && terceraComa != -1) {
-        String payload = linea.substring(segundaComa + 1, terceraComa);
-        if (payload.startsWith("AST:")) {
-          Serial.printf("[LORA RCV AST] Trama de Asistencia: %s\n", payload.c_str());
-          procesarAsistenciaEntrante(payload);
-        }
-      }
-    }
+  if (!linea.startsWith("+RCV=")) return;
+
+  int primeraComa = linea.indexOf(',');
+  int segundaComa = linea.indexOf(',', primeraComa + 1);
+  int terceraComa = linea.indexOf(',', segundaComa + 1);
+
+  if (segundaComa == -1 || terceraComa == -1) return;
+
+  String payload = linea.substring(segundaComa + 1, terceraComa);
+
+  if (payload.startsWith("AST:")) {
+    Serial.printf("[LORA RCV AST] Trama de Asistencia: %s\n", payload.c_str());
+    procesarAsistenciaEntrante(payload);
   }
 }
 
 void procesarAsistenciaEntrante(String payload) {
-  // Formato: "AST:<ROOM_ID>:<CI>:<TIPO_PERSONA>:<ESTADO>"
   int p1 = payload.indexOf(':');
   int p2 = payload.indexOf(':', p1 + 1);
   int p3 = payload.indexOf(':', p2 + 1);
@@ -154,7 +150,7 @@ void procesarAsistenciaEntrante(String payload) {
 }
 
 // ============================================================================
-// BÚSQUEDA DE RUTAS Y TABLA LORA
+// BUSQUEDA DE RUTAS
 // ============================================================================
 bool buscarLoraIdPorAula(String roomId, int &loraId) {
   for (int i = 0; i < MAX_AULAS; i++) {
@@ -167,7 +163,7 @@ bool buscarLoraIdPorAula(String roomId, int &loraId) {
 }
 
 // ============================================================================
-// PROTOCOLO ARQ STOP-AND-WAIT DE TRANSMISIÓN LORA
+// PROTOCOLO ARQ STOP-AND-WAIT
 // ============================================================================
 bool esperarOKLocal(unsigned long timeoutMs) {
   unsigned long start = millis();
@@ -200,13 +196,26 @@ bool esperarAckRemoto(int loraIdDestino, int chunkIdx, unsigned long timeoutMs) 
   return false;
 }
 
+void enviarComandoLoRa(int loraIdDestino, const String &payload) {
+  loraSerial.print("AT+SEND=");
+  loraSerial.print(loraIdDestino);
+  loraSerial.print(",");
+  loraSerial.print(payload.length());
+  loraSerial.print(",");
+  loraSerial.print(payload);
+  loraSerial.write(0x0D);
+  loraSerial.write(0x0A);
+}
+
+// ============================================================================
+// TRANSMISION DE HUELLA CON PREAMBULO DE METADATOS Y ARQ
+// ============================================================================
 bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
                          String ci, String roomId, String tipo, String huella) {
-  // 2816 caracteres HEX -> 22 chunks de 128 caracteres (64 bytes binarios)
   const int charsPerChunk = 128;
   int totalChunks = (huella.length() + charsPerChunk - 1) / charsPerChunk;
 
-  Serial.printf("\n[LORA ARQ] Transmitiendo ráfaga biométrica a LoRa ID %d (%d chunks)\n",
+  Serial.printf("\n[LORA ARQ] Transmitiendo rafaga biometrica a LoRa ID %d (%d chunks)\n",
                 loraIdDestino, totalChunks);
 
   unsigned long tiempoInicio = millis();
@@ -214,23 +223,22 @@ bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
   for (int chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
     String hexChunk = huella.substring(chunkIdx * charsPerChunk,
                                        min((chunkIdx + 1) * charsPerChunk, (int)huella.length()));
+
     String payloadConIndice = String(chunkIdx) + ":" + hexChunk;
+
+    // En chunk 0, incrustar metadatos: "0:CI:TIPO:HEX_DATA"
+    // El aula detecta los dos puntos adicionales al inicio del chunk 0
+    if (chunkIdx == 0) {
+      payloadConIndice = "0:" + ci + ":" + tipo + ":" + hexChunk;
+    }
 
     bool paqueteConfirmado = false;
     int reintentos = 0;
 
     while (!paqueteConfirmado && reintentos < MAX_REINTENTOS) {
-      // Limpiar buffer serial antes de transmitir
       while (loraSerial.available()) { loraSerial.read(); }
 
-      loraSerial.print("AT+SEND=");
-      loraSerial.print(loraIdDestino);
-      loraSerial.print(",");
-      loraSerial.print(payloadConIndice.length());
-      loraSerial.print(",");
-      loraSerial.print(payloadConIndice);
-      loraSerial.write(0x0D);
-      loraSerial.write(0x0A);
+      enviarComandoLoRa(loraIdDestino, payloadConIndice);
 
       if (esperarOKLocal(200)) {
         paqueteConfirmado = esperarAckRemoto(loraIdDestino, chunkIdx, 400);
@@ -238,23 +246,23 @@ bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
 
       if (paqueteConfirmado) {
         Serial.printf("  -> Chunk [%d/%d] ACK OK\n", chunkIdx + 1, totalChunks);
-        delay(15); // Pausa de recuperación del módem RF
+        delay(15);
       } else {
         reintentos++;
-        Serial.printf("  -> [REINTENTO %d/%d] Chunk [%d/%d] sin ACK...\n",
+        Serial.printf("  -> [REINTENTO %d/%d] Chunk [%d/%d] sin ACK\n",
                       reintentos, MAX_REINTENTOS, chunkIdx + 1, totalChunks);
-        delay(80); // Pausa para evitar colisiones en canal libre
+        delay(80);
       }
     }
 
     if (!paqueteConfirmado) {
-      Serial.printf("[LORA ARQ ERROR] Transmisión interrumpida en chunk %d\n", chunkIdx + 1);
+      Serial.printf("[LORA ARQ ERROR] Transmision interrumpida en chunk %d\n", chunkIdx + 1);
       return false;
     }
   }
 
   float tiempoSeg = (millis() - tiempoInicio) / 1000.0;
-  Serial.printf("[LORA ARQ ÉXITO] Sincronización enviada con éxito en %.2f segundos\n", tiempoSeg);
+  Serial.printf("[LORA ARQ EXITO] Sincronizacion enviada en %.2f segundos\n", tiempoSeg);
   return true;
 }
 
@@ -290,7 +298,7 @@ void pedirSyncPendiente() {
   String huella  = doc["data"]["huella_base64"] | "";
   huella.trim();
 
-  Serial.printf("\n--- NUEVA ORDEN DE SYNCRONIZACIÓN RECIBIDA ---\n");
+  Serial.printf("\n--- NUEVA ORDEN DE SYNCRONIZACION RECIBIDA ---\n");
   Serial.printf("Destino Aula: %s | CI: %s | ID Huella: %d\n", roomId.c_str(), ci.c_str(), idHuella);
 
   int loraIdObjetivo = 0;

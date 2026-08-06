@@ -8,11 +8,11 @@
 #include "dy50_template_transport.h"
 
 // ============================================================================
-// CONFIGURACIÓN DE HARDWARE Y NODO AULA
+// CONFIGURACION DE HARDWARE Y NODO AULA
 // ============================================================================
 String ROOM_ID = "AULA_A";
-const int MI_LORA_ID = 101;        // ID LoRa de esta aula
-const int GATEWAY_LORA_ID = 100;   // ID LoRa del Gateway Central
+const int MI_LORA_ID = 101;
+const int GATEWAY_LORA_ID = 100;
 const int TOTAL_CHUNKS_ESPERADOS = 22;
 
 // Pines Sensor DY50 (HardwareSerial 2)
@@ -21,7 +21,7 @@ const int TOTAL_CHUNKS_ESPERADOS = 22;
 HardwareSerial dy50Serial(2);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&dy50Serial);
 
-// Pines Módulo LoRa AT (HardwareSerial 1)
+// Pines Modulo LoRa AT (HardwareSerial 1)
 #define LORA_RX 26
 #define LORA_TX 27
 HardwareSerial loraSerial(1);
@@ -31,14 +31,14 @@ HardwareSerial loraSerial(1);
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-// Botón de Salida Anticipada
+// Boton de Salida Anticipada
 #define PIN_BOTON_SALIDA 4
 
 // Persistencia NVS
 Preferences prefs;
 
 // ============================================================================
-// MÁQUINA DE ESTADOS Y ESTRUCTURAS DE DATOS
+// MAQUINA DE ESTADOS Y ESTRUCTURAS DE DATOS
 // ============================================================================
 enum EstadoSistema { NORMAL, ESPERANDO_PROFE, SALIDA_ACTIVA };
 EstadoSistema estadoActual = NORMAL;
@@ -46,17 +46,16 @@ uint32_t tiempoLimiteEstado = 0;
 
 struct RegistroUsuario {
   char ci[15];
-  char tipo_persona[15]; // "ALUMNO", "PROFESOR", "COORDINADOR"
+  char tipo_persona[15];
   bool registrado = false;
 };
 RegistroUsuario dbLocal[201];
 
 uint32_t ultimoRegistroSlot[201] = {0};
-const uint32_t TIEMPO_COOLDOWN = 300000; // 5 min
+const uint32_t TIEMPO_COOLDOWN = 300000;
 
-// Buffer para la reconstrucción de huellas (2816 HEX + null terminator)
+// Buffer para la reconstruccion de huellas
 char huellaBuffer[2817];
-bool chunksRecibidos[25] = {false};
 int chunksGuardadosValidos = 0;
 int ultimoIndiceProcesado = -1;
 unsigned long tiempoPrimerChunk = 0;
@@ -69,7 +68,7 @@ char tipoSyncActual[15] = "";
 enum EstadoSync { SYNC_IDLE, SYNC_RECIBIENDO, SYNC_PROCESANDO };
 EstadoSync estadoSync = SYNC_IDLE;
 
-// Prototipos de funciones
+// Prototipos
 void msgOled(String t1, String t2 = "");
 void guardarSlotEnNVS(int slot);
 void cargarDbLocalDesdeNVS();
@@ -85,7 +84,6 @@ void verificarLecturaHuella();
 void setup() {
   Serial.begin(115200);
 
-  // Inicializar OLED
   if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     for (;;);
   }
@@ -94,10 +92,8 @@ void setup() {
 
   pinMode(PIN_BOTON_SALIDA, INPUT_PULLUP);
 
-  // Inicializar comunicación LoRa (HardwareSerial 1)
   loraSerial.begin(115200, SERIAL_8N1, LORA_RX, LORA_TX);
 
-  // Inicializar comunicación DY50 (HardwareSerial 2)
   dy50Serial.begin(57600, SERIAL_8N1, DY50_RX, DY50_TX);
   finger.begin(57600);
 
@@ -120,10 +116,8 @@ void setup() {
 // LOOP PRINCIPAL
 // ============================================================================
 void loop() {
-  // 1. Lectura asíncrona de comandos radio LoRa
   atenderComandosLoRa();
 
-  // 2. Control de Botón para Salida Anticipada
   if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL && estadoSync == SYNC_IDLE) {
     estadoActual = ESPERANDO_PROFE;
     tiempoLimiteEstado = millis() + 15000;
@@ -131,7 +125,6 @@ void loop() {
     delay(500);
   }
 
-  // 3. Timeout de estado de salida anticipada
   if (estadoActual != NORMAL && millis() > tiempoLimiteEstado) {
     estadoActual = NORMAL;
     msgOled("CANCELADO", "Tiempo expirado");
@@ -139,7 +132,6 @@ void loop() {
     msgOled("AULA: " + ROOM_ID, "Listo...");
   }
 
-  // 4. Timeout de sincronización por radio (5 segundos sin recibir chunks)
   if (estadoSync == SYNC_RECIBIENDO && (millis() - tiempoUltimoChunk > 5000)) {
     estadoSync = SYNC_IDLE;
     memset(huellaBuffer, 0, sizeof(huellaBuffer));
@@ -151,7 +143,6 @@ void loop() {
     msgOled("AULA: " + ROOM_ID, "Listo...");
   }
 
-  // 5. Verificación de Huella Biométrica (solo si el radio está libre)
   if (estadoSync == SYNC_IDLE) {
     verificarLecturaHuella();
   }
@@ -174,7 +165,7 @@ void msgOled(String t1, String t2) {
 }
 
 // ============================================================================
-// PERSISTENCIA NVS (Preferences)
+// PERSISTENCIA NVS
 // ============================================================================
 void guardarSlotEnNVS(int slot) {
   prefs.begin("dblocal", false);
@@ -210,7 +201,7 @@ void cargarDbLocalDesdeNVS() {
 }
 
 // ============================================================================
-// GRAVADO FÍSICO DE HUELLA EN SENSOR DY50
+// GRABADO FISICO DE HUELLA EN SENSOR DY50
 // ============================================================================
 bool guardarHuellaDY50(const String &templateHex, int slot, String &error) {
   static uint8_t templateData[Dy50TemplateTransport::TEMPLATE_BYTES];
@@ -236,7 +227,21 @@ bool guardarHuellaDY50(const String &templateHex, int slot, String &error) {
 }
 
 // ============================================================================
-// ATENCIÓN DE TRAMAS ENTRANTES LORA AT (+RCV=...)
+// ENVIO DE COMANDO AT+SEND (funcion auxiliar)
+// ============================================================================
+void enviarComandoLoRa(int loraIdDestino, const String &payload) {
+  loraSerial.print("AT+SEND=");
+  loraSerial.print(loraIdDestino);
+  loraSerial.print(",");
+  loraSerial.print(payload.length());
+  loraSerial.print(",");
+  loraSerial.print(payload);
+  loraSerial.write(0x0D);
+  loraSerial.write(0x0A);
+}
+
+// ============================================================================
+// ATENCION DE TRAMAS ENTRANTES LORA AT (+RCV=...)
 // ============================================================================
 void atenderComandosLoRa() {
   if (!loraSerial.available()) return;
@@ -246,8 +251,6 @@ void atenderComandosLoRa() {
 
   if (!linea.startsWith("+RCV=")) return;
 
-  // Formato: +RCV=<SENDER_ID>,<LEN>,<PAYLOAD>,<RSSI>,<SNR>
-  // Ejemplo: +RCV=100,132,0:A1B2C3...,-65,12
   int primeraComa = linea.indexOf(',');
   int segundaComa = linea.indexOf(',', primeraComa + 1);
   int terceraComa = linea.indexOf(',', segundaComa + 1);
@@ -255,7 +258,7 @@ void atenderComandosLoRa() {
   if (segundaComa == -1 || terceraComa == -1) return;
 
   int emisorId = linea.substring(5, primeraComa).toInt();
-  if (emisorId != GATEWAY_LORA_ID) return; // Filtrar emisores desconocidos
+  if (emisorId != GATEWAY_LORA_ID) return;
 
   String payload = linea.substring(segundaComa + 1, terceraComa);
   int dosPuntos = payload.indexOf(':');
@@ -263,40 +266,67 @@ void atenderComandosLoRa() {
   if (dosPuntos == -1) return;
 
   int chunkIdx = payload.substring(0, dosPuntos).toInt();
-  String hexChunk = payload.substring(dosPuntos + 1);
+  String restoChunk = payload.substring(dosPuntos + 1);
 
-  // 1. Responder ACK Inmediatamente por radio al Gateway (ID 100)
+  // Responder ACK inmediato
   enviarAckLoRa(chunkIdx);
-
-  // 2. Control de ráfaga e integración de datos
   tiempoUltimoChunk = millis();
 
+  // Chunk 0 especial: contiene metadatos "CI:TIPO:HEX_DATA"
   if (chunkIdx == 0 && estadoSync == SYNC_IDLE) {
-    memset(huellaBuffer, 0, sizeof(huellaBuffer));
-    memset(chunksRecibidos, false, sizeof(chunksRecibidos));
-    chunksGuardadosValidos = 0;
-    ultimoIndiceProcesado = -1;
-    tiempoPrimerChunk = millis();
-    estadoSync = SYNC_RECIBIENDO;
-    msgOled("SYNC...", "Recibiendo radio");
-    Serial.println("\n[LORA] >>> Iniciando recepción de huella biométrica... <<<");
+    int p1 = restoChunk.indexOf(':');
+    if (p1 != -1) {
+      int p2 = restoChunk.indexOf(':', p1 + 1);
+      if (p2 != -1) {
+        String ciMeta   = restoChunk.substring(0, p1);
+        String tipoMeta = restoChunk.substring(p1 + 1, p2);
+        String hexMeta  = restoChunk.substring(p2 + 1);
+
+        ciMeta.toCharArray(ciSyncActual, sizeof(ciSyncActual));
+        tipoMeta.toCharArray(tipoSyncActual, sizeof(tipoSyncActual));
+
+        memset(huellaBuffer, 0, sizeof(huellaBuffer));
+        chunksGuardadosValidos = 0;
+        ultimoIndiceProcesado = -1;
+        tiempoPrimerChunk = millis();
+        estadoSync = SYNC_RECIBIENDO;
+        msgOled("SYNC...", "Recibiendo radio");
+
+        Serial.printf("\n[LORA] >>> Recibiendo huella CI=%s TIPO=%s <<<\n", ciMeta.c_str(), tipoMeta.c_str());
+
+        int offset = 0;
+        int len = hexMeta.length();
+        if (len > 0 && offset + len < (int)sizeof(huellaBuffer)) {
+          memcpy(huellaBuffer + offset, hexMeta.c_str(), len);
+        }
+        chunksGuardadosValidos = 1;
+        ultimoIndiceProcesado = 0;
+
+        Serial.printf("  Chunk #00/%02d [ACK OK] (metadatos+data)\n", TOTAL_CHUNKS_ESPERADOS);
+        return;
+      }
+    }
   }
 
-  if (chunkIdx > ultimoIndiceProcesado && chunkIdx < TOTAL_CHUNKS_ESPERADOS) {
+  if (chunkIdx == 0 && estadoSync == SYNC_RECIBIENDO) {
+    Serial.printf("  Chunk duplicado ignorado (#00) -> [ACK RE-ENVIADO]\n", chunkIdx);
+    return;
+  }
+
+  if (chunkIdx > ultimoIndiceProcesado && chunkIdx < TOTAL_CHUNKS_ESPERADOS && estadoSync == SYNC_RECIBIENDO) {
     int offset = chunkIdx * 128;
-    int len = hexChunk.length();
-    if (offset + len < sizeof(huellaBuffer)) {
-      memcpy(huellaBuffer + offset, hexChunk.c_str(), len);
+    int len = restoChunk.length();
+    if (offset + len < (int)sizeof(huellaBuffer)) {
+      memcpy(huellaBuffer + offset, restoChunk.c_str(), len);
     }
 
     chunksGuardadosValidos++;
     ultimoIndiceProcesado = chunkIdx;
 
     Serial.printf("  Chunk #%02d/%02d [ACK OK] | RSSI/SNR: %s\n",
-                  chunksGuardadosValidos, TOTAL_CHUNKS_ESPERADOS,
+                  chunkIdx, TOTAL_CHUNKS_ESPERADOS - 1,
                   linea.substring(terceraComa + 1).c_str());
 
-    // Al acumular los 22 chunks esperados, procesar grabado
     if (chunksGuardadosValidos == TOTAL_CHUNKS_ESPERADOS) {
       estadoSync = SYNC_PROCESANDO;
       msgOled("GUARDANDO", "En sensor...");
@@ -305,16 +335,24 @@ void atenderComandosLoRa() {
       String hexLimpio = String(huellaBuffer);
       hexLimpio.trim();
 
-      String error;
-      if (guardarHuellaDY50(hexLimpio, idSyncSlotActual, error)) {
-        strcpy(dbLocal[idSyncSlotActual].ci, ciSyncActual);
-        strcpy(dbLocal[idSyncSlotActual].tipo_persona, tipoSyncActual);
-        dbLocal[idSyncSlotActual].registrado = true;
-        guardarSlotEnNVS(idSyncSlotActual);
+      int slotDisponible = -1;
+      for (int s = 1; s < 201; s++) {
+        if (!dbLocal[s].registrado) { slotDisponible = s; break; }
+      }
+      if (slotDisponible == -1) slotDisponible = idSyncSlotActual;
 
-        msgOled("SYNC OK", "Slot: " + String(idSyncSlotActual));
-        Serial.printf("[LORA ÉXITO] Huella grabada en slot %d en %.2f segundos\n",
-                      idSyncSlotActual, (millis() - tiempoPrimerChunk) / 1000.0);
+      String error;
+      if (guardarHuellaDY50(hexLimpio, slotDisponible, error)) {
+        strcpy(dbLocal[slotDisponible].ci, ciSyncActual);
+        strcpy(dbLocal[slotDisponible].tipo_persona, tipoSyncActual);
+        dbLocal[slotDisponible].registrado = true;
+        guardarSlotEnNVS(slotDisponible);
+
+        idSyncSlotActual = slotDisponible;
+
+        msgOled("SYNC OK", "Slot: " + String(slotDisponible));
+        Serial.printf("[LORA EXITO] Huella grabada en slot %d en %.2f segundos\n",
+                      slotDisponible, (millis() - tiempoPrimerChunk) / 1000.0);
       } else {
         msgOled("ERROR DY50", error);
         Serial.printf("[LORA ERROR] Fallo grabado DY50: %s\n", error.c_str());
@@ -334,41 +372,26 @@ void atenderComandosLoRa() {
 
 void enviarAckLoRa(int chunkIdx) {
   String ackMsg = "ACK" + String(chunkIdx);
-  loraSerial.print("AT+SEND=");
-  loraSerial.print(GATEWAY_LORA_ID);
-  loraSerial.print(",");
-  loraSerial.print(ackMsg.length());
-  loraSerial.print(",");
-  loraSerial.print(ackMsg);
-  loraSerial.write(0x0D);
-  loraSerial.write(0x0A);
+  enviarComandoLoRa(GATEWAY_LORA_ID, ackMsg);
 }
 
-// ----------------------------------------------------------------------------
-// ENVÍO DE ASISTENCIA VÍA LORA HACIA EL GATEWAY CENTRAL
-// ----------------------------------------------------------------------------
+// ============================================================================
+// ENVIO DE ASISTENCIA VIA LORA HACIA EL GATEWAY CENTRAL
+// ============================================================================
 void enviarAsistenciaPorLoRa(String ci, String tipoPersona, String estado) {
-  // Payload: "AST:<ROOM_ID>:<CI>:<TIPO_PERSONA>:<ESTADO>"
   String payload = "AST:" + ROOM_ID + ":" + ci + ":" + tipoPersona + ":" + estado;
 
   Serial.printf("\n[LORA AST] Transmitiendo asistencia al Gateway (ID %d)...\n", GATEWAY_LORA_ID);
   Serial.printf("Payload: %s\n", payload.c_str());
 
-  loraSerial.print("AT+SEND=");
-  loraSerial.print(GATEWAY_LORA_ID);
-  loraSerial.print(",");
-  loraSerial.print(payload.length());
-  loraSerial.print(",");
-  loraSerial.print(payload);
-  loraSerial.write(0x0D);
-  loraSerial.write(0x0A);
+  enviarComandoLoRa(GATEWAY_LORA_ID, payload);
 
   msgOled("ENVIADO", ci);
 }
 
-// ----------------------------------------------------------------------------
-// PROCESAMIENTO BIOMÉTRICO LOCAL
-// ----------------------------------------------------------------------------
+// ============================================================================
+// PROCESAMIENTO BIOMETRICO LOCAL
+// ============================================================================
 void verificarLecturaHuella() {
   int status = finger.getImage();
   if (status != FINGERPRINT_OK) return;
@@ -397,7 +420,6 @@ void verificarLecturaHuella() {
 
   String rol = String(dbLocal[slotMatch].tipo_persona);
 
-  // Lógica de salida anticipada
   if (estadoActual == ESPERANDO_PROFE) {
     if (rol == "PROFESOR" || rol == "COORDINADOR") {
       estadoActual = SALIDA_ACTIVA;
@@ -422,8 +444,8 @@ void verificarLecturaHuella() {
   String estadoEnvio = (estadoActual == SALIDA_ACTIVA) ? "RET_ANTICIPADO" : "PRESENTE";
 
   enviarAsistenciaPorLoRa(String(dbLocal[slotMatch].ci),
-                         String(dbLocal[slotMatch].tipo_persona),
-                         estadoEnvio);
+                          String(dbLocal[slotMatch].tipo_persona),
+                          estadoEnvio);
 
   ultimoRegistroSlot[slotMatch] = millis();
   if (estadoActual == SALIDA_ACTIVA) estadoActual = NORMAL;
