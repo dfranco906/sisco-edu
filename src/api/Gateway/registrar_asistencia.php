@@ -1,64 +1,17 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../classes/EventoAsistencia.php';
-
-$headers = getallheaders();
-$key = $headers['X-GATEWAY-KEY'] ?? '';
-
-if ($key !== GATEWAY_API_KEY) {
-    http_response_code(404);
-    echo json_encode(["status" => "not_found"]);
-    exit;
-}
-
+if ((getallheaders()['X-GATEWAY-KEY'] ?? '') !== GATEWAY_API_KEY) { http_response_code(404); echo json_encode(["status" => "not_found"]); exit; }
+$id_aula = filter_input(INPUT_POST, 'id_aula', FILTER_VALIDATE_INT);
+$ci = trim($_POST['ci'] ?? ''); $tipo = strtolower(trim($_POST['tipo_persona'] ?? '')); $estado = strtoupper(trim($_POST['estado'] ?? 'PRESENTE'));
+if (!$id_aula || !$ci || !in_array($tipo, ['estudiante','profesor'], true)) { http_response_code(400); echo json_encode(["status"=>"error", "message"=>"Faltan datos requeridos"]); exit; }
 $db = (new Database())->getConnection();
-
-$id_aula = $_POST['id_aula'] ?? null;
-$ci = $_POST['ci'] ?? null;
-$tipo_persona = $_POST['tipo_persona'] ?? null;
-$estado = $_POST['estado'] ?? null; // ENTRADA / SALIDA / etc.
-$fecha_hora = $_POST['fecha_hora'] ?? null;
-
-if (!$id_aula || !$ci || !$tipo_persona) {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Faltan datos requeridos"]);
-    exit;
-}
-
-// Buscar el user_id_global correspondiente usando la cédula y el tipo de persona
-$user_id_global = null;
-if ($tipo_persona === 'estudiante') {
-    $stmt = $db->prepare("SELECT user_id_global FROM estudiantes WHERE cedula_identidad = :ci AND activo = 1 LIMIT 1");
-    $stmt->execute([":ci" => $ci]);
-    $user_id_global = $stmt->fetchColumn();
-} elseif ($tipo_persona === 'profesor') {
-    $stmt = $db->prepare("SELECT user_id_global FROM profesores WHERE cedula_identidad = :ci AND activo = 1 LIMIT 1");
-    $stmt->execute([":ci" => $ci]);
-    $user_id_global = $stmt->fetchColumn();
-}
-
-if (!$user_id_global) {
-    http_response_code(404);
-    echo json_encode(["status" => "error", "message" => "Persona no encontrada en el sistema con esa C.I."]);
-    exit;
-}
-
-// Crear el registro de EventoAsistencia
-$evento = new EventoAsistencia($db);
-$evento->user_id_global = $user_id_global;
-$evento->id_aula = $id_aula;
-// Si viene fecha_hora del gateway la usamos, de lo contrario la fecha y hora actual
-$evento->timestamp_evento = $fecha_hora ?: date('Y-m-d H:i:s');
-$evento->origen_node_id = 'GATEWAY_ESP32';
-$evento->sincronizado = 1;
-
-if ($evento->crear()) {
-    echo json_encode(["status" => "success", "message" => "Asistencia registrada correctamente"]);
-} else {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error al guardar el evento de asistencia"]);
-}
-?>
+$stmt = $db->prepare("SELECT user_id_global FROM " . ($tipo === 'estudiante' ? 'estudiantes' : 'profesores') . " WHERE cedula_identidad=:ci AND activo=1 LIMIT 1");
+$stmt->execute([':ci'=>$ci]); $userId = $stmt->fetchColumn();
+if (!$userId) { http_response_code(404); echo json_encode(["status"=>"error", "message"=>"Persona no encontrada"]); exit; }
+$evento = new EventoAsistencia($db); $evento->user_id_global=$userId; $evento->id_aula=$id_aula; $evento->estado=$estado;
+$evento->timestamp_evento=date('Y-m-d H:i:s'); $evento->origen_node_id='GATEWAY_ESP32'; $evento->sincronizado=1;
+if ($evento->crear()) echo json_encode(["status"=>"success", "message"=>"Asistencia registrada"]);
+else { http_response_code(500); echo json_encode(["status"=>"error", "message"=>"Error al guardar evento"]); }

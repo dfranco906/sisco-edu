@@ -47,3 +47,7 @@ $RECYCLE.BIN/
 # No es recomendable subir dumps de SQL muy pesados al repo
 *.sql
 *.sql.gz
+# Migraciones versionadas (no son dumps locales).
+!database/
+!database/migrations/
+!database/migrations/*.sql

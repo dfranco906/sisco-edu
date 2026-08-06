@@ -1,363 +1,182 @@
-// CODIGO PARA ESP-GATEWAY (LoRa RYLR896/998 AT + HTTP Central)
+// ESP GATEWAY: RYLR998 + Wi-Fi + API Sisco-Edu
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
 
-// ============================================================================
-// CONFIGURACIÓN DE RED Y HARDWARE
-// ============================================================================
 const char *ssid = "esp";
 const char *password = "123456789";
-
-String BASE = "http://192.168.0.165/sisco-edu/";
-String API_KEY = "SISCO_GATEWAY_2026_SECRETO";
-String ROOM_ID = "AULA_A";
-
-const char *headerKeys[] = {"X-GATEWAY-KEY"};
-const size_t headerKeysCount = 1;
-
-WebServer server(80);
-
-// Pines UART LoRa AT (HardwareSerial 2)
+const char *BASE = "http://192.168.0.165/sisco-edu/";
+const char *API_KEY = "SISCO_GATEWAY_2026_SECRETO";
+const int MI_LORA_ID = 100;
+const int LORA_NETWORK_ID = 18;
+const int CHARS_POR_CHUNK = 128;
+const int MAX_REINTENTOS = 8;
 #define LORA_RX 16
 #define LORA_TX 17
 HardwareSerial loraSerial(2);
+WebServer server(80);
+const char *headerKeys[] = {"X-GATEWAY-KEY"};
 
-// Identificadores LoRa y constantes de transmisión
-const int MI_LORA_ID = 100;
-const int TOTAL_BYTES_HUELLA = 1408;
-const int CHUNK_BYTES = 64;
-const int TOTAL_CHUNKS = TOTAL_BYTES_HUELLA / CHUNK_BYTES;
-const int MAX_REINTENTOS = 8;
+struct DispositivoAula { int idAula; int loraId; };
+// Mantener esta tabla alineada con aulas.id_aula y las direcciones RYLR998.
+DispositivoAula tablaAulas[] = {{18, 101}, {15, 102}, {16, 103}};
+const size_t CANTIDAD_AULAS = sizeof(tablaAulas) / sizeof(tablaAulas[0]);
 
-// ============================================================================
-// TOPOLOGÍA MULTIPUNTO LORA
-// ============================================================================
-typedef struct {
-  char room_id[16];
-  int lora_id;
-} DispositivoAula;
-
-const int MAX_AULAS = 5;
-DispositivoAula tablaAulas[MAX_AULAS] = {
-    {"AULA_A", 101},
-    {"AULA_B", 102},
-    {"AULA_C", 103}
-};
-
-// Prototipos
-void pedirSyncPendiente();
-bool buscarLoraIdPorAula(String roomId, int &loraId);
-bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
-                         String ci, String roomId, String tipo, String huella);
-bool esperarOKLocal(unsigned long timeoutMs = 200);
-bool esperarAckRemoto(int loraIdDestino, int chunkIdx, unsigned long timeoutMs = 400);
-void confirmarSync(int idSync, String estado, String mensaje);
 void atenderMensajesLoRa();
-void procesarAsistenciaEntrante(String payload);
-void procesarEnvioAsistenciaBackend(String roomId, String ci, String tipoPersona, String estado);
+void pedirSyncPendiente();
+bool pedirSyncAula(const DispositivoAula &aula);
+bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella);
+bool esperarOKLocal(unsigned long timeoutMs = 500);
+bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs = 900);
+void enviarComandoLoRa(int destino, const String &payload);
+void confirmarSync(int idSync, const String &estado, const String &mensaje);
+void confirmarEntregaAula(const String &payload);
+void procesarAsistenciaEntrante(const String &payload);
+String campo(const String &texto, int indice);
+String urlEncode(const String &texto);
 
-// ============================================================================
-// SETUP
-// ============================================================================
 void setup() {
   Serial.begin(115200);
-  loraSerial.begin(115200, SERIAL_8N1, LORA_RX, LORA_TX);
+  loraSerial.begin(115200, SERIAL_8N1, LORA_RX, LORA_TX); loraSerial.setTimeout(120);
+  loraSerial.printf("AT+ADDRESS=%d\r\n", MI_LORA_ID); delay(100); while (loraSerial.available()) loraSerial.read();
+  loraSerial.printf("AT+NETWORKID=%d\r\n", LORA_NETWORK_ID); delay(100); while (loraSerial.available()) loraSerial.read();
 
-  Serial.println("\n==================================================");
-  Serial.println("[GATEWAY] INICIALIZANDO NODO CENTRAL LORA (ID 100)");
-  Serial.println("==================================================");
+  WiFi.mode(WIFI_STA); WiFi.begin(ssid, password);
+  const unsigned long limite = millis() + 20000;
+  while (WiFi.status() != WL_CONNECTED && (int32_t)(millis() - limite) < 0) { delay(300); Serial.print('.'); }
+  Serial.println(WiFi.status() == WL_CONNECTED ? "\nWi-Fi conectado" : "\nWi-Fi no disponible; se reintentara en loop");
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  Serial.print("Conectando Wi-Fi...");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\n[GATEWAY] Wi-Fi Conectado con exito");
-  Serial.print("IP Gateway: "); Serial.println(WiFi.localIP());
-
-  server.collectHeaders(headerKeys, headerKeysCount);
-
+  server.collectHeaders(headerKeys, 1);
   server.on("/sync", HTTP_POST, []() {
-    String key = server.header("X-GATEWAY-KEY");
-    if (key != API_KEY) {
-      server.send(404, "application/json", "{\"status\":\"not_found\"}");
-      return;
-    }
-    server.send(200, "application/json",
-                "{\"status\":\"ok\",\"message\":\"Gateway recibio orden de sincronizar\"}");
+    if (server.header("X-GATEWAY-KEY") != API_KEY) { server.send(404, "application/json", "{\"status\":\"not_found\"}"); return; }
+    server.send(202, "application/json", "{\"status\":\"accepted\"}");
     pedirSyncPendiente();
   });
-
   server.begin();
-  Serial.println("[GATEWAY] Servidor HTTP listo en /sync");
-  Serial.println("[GATEWAY] Escuchando tramas LoRa entrantes...");
 }
 
-// ============================================================================
-// LOOP PRINCIPAL
-// ============================================================================
 void loop() {
-  server.handleClient();
-  atenderMensajesLoRa();
+  server.handleClient(); atenderMensajesLoRa();
+  static unsigned long ultimoReintentoWifi = 0;
+  if (WiFi.status() != WL_CONNECTED && millis() - ultimoReintentoWifi > 10000) { ultimoReintentoWifi = millis(); WiFi.reconnect(); }
 }
 
-// ============================================================================
-// PARSEO ASINCRONO DE MENSAJES LORA ENTRANTES
-// ============================================================================
-void atenderMensajesLoRa() {
-  if (!loraSerial.available()) return;
+void enviarComandoLoRa(int destino, const String &payload) { loraSerial.printf("AT+SEND=%d,%u,%s\r\n", destino, payload.length(), payload.c_str()); }
 
-  String linea = loraSerial.readStringUntil('\n');
-  linea.trim();
-
-  if (!linea.startsWith("+RCV=")) return;
-
-  int primeraComa = linea.indexOf(',');
-  int segundaComa = linea.indexOf(',', primeraComa + 1);
-  int terceraComa = linea.indexOf(',', segundaComa + 1);
-
-  if (segundaComa == -1 || terceraComa == -1) return;
-
-  String payload = linea.substring(segundaComa + 1, terceraComa);
-
-  if (payload.startsWith("AST:")) {
-    Serial.printf("[LORA RCV AST] Trama de Asistencia: %s\n", payload.c_str());
-    procesarAsistenciaEntrante(payload);
-  }
+String campo(const String &texto, int indice) {
+  int inicio = 0;
+  for (int i = 0; i < indice; ++i) { inicio = texto.indexOf(':', inicio); if (inicio < 0) return ""; ++inicio; }
+  int fin = texto.indexOf(':', inicio); return fin < 0 ? texto.substring(inicio) : texto.substring(inicio, fin);
+}
+String urlEncode(const String &texto) {
+  const char *hex = "0123456789ABCDEF"; String salida;
+  for (size_t i = 0; i < texto.length(); ++i) { unsigned char c = texto[i]; if (isalnum(c) || c == '-' || c == '_' || c == '.') salida += (char)c; else { salida += '%'; salida += hex[c >> 4]; salida += hex[c & 15]; } }
+  return salida;
 }
 
-void procesarAsistenciaEntrante(String payload) {
-  int p1 = payload.indexOf(':');
-  int p2 = payload.indexOf(':', p1 + 1);
-  int p3 = payload.indexOf(':', p2 + 1);
-  int p4 = payload.indexOf(':', p3 + 1);
-
-  if (p1 != -1 && p2 != -1 && p3 != -1 && p4 != -1) {
-    String roomId      = payload.substring(p1 + 1, p2);
-    String ci          = payload.substring(p2 + 1, p3);
-    String tipoPersona = payload.substring(p3 + 1, p4);
-    String estado      = payload.substring(p4 + 1);
-
-    procesarEnvioAsistenciaBackend(roomId, ci, tipoPersona, estado);
-  }
-}
-
-// ============================================================================
-// BUSQUEDA DE RUTAS
-// ============================================================================
-bool buscarLoraIdPorAula(String roomId, int &loraId) {
-  for (int i = 0; i < MAX_AULAS; i++) {
-    if (String(tablaAulas[i].room_id) == roomId) {
-      loraId = tablaAulas[i].lora_id;
-      return true;
-    }
-  }
-  return false;
-}
-
-// ============================================================================
-// PROTOCOLO ARQ STOP-AND-WAIT
-// ============================================================================
 bool esperarOKLocal(unsigned long timeoutMs) {
-  unsigned long start = millis();
-  while (millis() - start < timeoutMs) {
-    if (loraSerial.available()) {
-      String resp = loraSerial.readStringUntil('\n');
-      resp.trim();
-      if (resp.indexOf("+OK") != -1) return true;
-      if (resp.indexOf("+ERR") != -1) return false;
-    }
-    yield();
+  const unsigned long inicio = millis();
+  while (millis() - inicio < timeoutMs) {
+    if (!loraSerial.available()) { delay(1); continue; }
+    String respuesta = loraSerial.readStringUntil('\n'); respuesta.trim();
+    if (respuesta == "+OK") return true;
+    if (respuesta.startsWith("+ERR")) return false;
   }
   return false;
 }
 
-bool esperarAckRemoto(int loraIdDestino, int chunkIdx, unsigned long timeoutMs) {
-  unsigned long start = millis();
-  String tokenAckEsperado = "ACK" + String(chunkIdx);
-
-  while (millis() - start < timeoutMs) {
-    if (loraSerial.available()) {
-      String resp = loraSerial.readStringUntil('\n');
-      resp.trim();
-      if (resp.indexOf("+RCV=") != -1 && resp.indexOf(tokenAckEsperado) != -1) {
-        return true;
-      }
-    }
-    yield();
+bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
+  const String esperado = "ACK" + String(chunk); const unsigned long inicio = millis();
+  while (millis() - inicio < timeoutMs) {
+    if (!loraSerial.available()) { delay(1); continue; }
+    String linea = loraSerial.readStringUntil('\n'); linea.trim();
+    if (!linea.startsWith("+RCV=")) continue;
+    int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
+    if (c1 < 0 || c2 < 0 || c3 < 0) continue;
+    if (linea.substring(5, c1).toInt() == loraId && linea.substring(c2 + 1, c3) == esperado) return true;
   }
   return false;
 }
 
-void enviarComandoLoRa(int loraIdDestino, const String &payload) {
-  loraSerial.print("AT+SEND=");
-  loraSerial.print(loraIdDestino);
-  loraSerial.print(",");
-  loraSerial.print(payload.length());
-  loraSerial.print(",");
-  loraSerial.print(payload);
-  loraSerial.write(0x0D);
-  loraSerial.write(0x0A);
-}
-
-// ============================================================================
-// TRANSMISION DE HUELLA CON PREAMBULO DE METADATOS Y ARQ
-// ============================================================================
-bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
-                         String ci, String roomId, String tipo, String huella) {
-  const int charsPerChunk = 128;
-  int totalChunks = (huella.length() + charsPerChunk - 1) / charsPerChunk;
-
-  Serial.printf("\n[LORA ARQ] Transmitiendo rafaga biometrica a LoRa ID %d (%d chunks)\n",
-                loraIdDestino, totalChunks);
-
-  unsigned long tiempoInicio = millis();
-
-  for (int chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
-    String hexChunk = huella.substring(chunkIdx * charsPerChunk,
-                                       min((chunkIdx + 1) * charsPerChunk, (int)huella.length()));
-
-    String payloadConIndice = String(chunkIdx) + ":" + hexChunk;
-
-    // En chunk 0, incrustar metadatos: "0:CI:TIPO:HEX_DATA"
-    // El aula detecta los dos puntos adicionales al inicio del chunk 0
-    if (chunkIdx == 0) {
-      payloadConIndice = "0:" + ci + ":" + tipo + ":" + hexChunk;
+bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella) {
+  if (huella.length() != 2816 || (huella.length() & 1)) { Serial.println("Template HEX invalido"); return false; }
+  const int total = (huella.length() + CHARS_POR_CHUNK - 1) / CHARS_POR_CHUNK;
+  for (int chunk = 0; chunk < total; ++chunk) {
+    const String datos = huella.substring(chunk * CHARS_POR_CHUNK, min((chunk + 1) * CHARS_POR_CHUNK, (int)huella.length()));
+    const String trama = chunk == 0
+      ? "0:" + String(idSync) + ":" + String(idHuella) + ":" + String(idAula) + ":" + ci + ":" + tipo + ":" + String(total) + ":" + datos
+      : String(chunk) + ":" + datos;
+    if (trama.length() > 240) { Serial.println("Trama excede limite RYLR998"); return false; }
+    bool confirmado = false;
+    for (int intento = 0; intento < MAX_REINTENTOS && !confirmado; ++intento) {
+      while (loraSerial.available()) loraSerial.read();
+      enviarComandoLoRa(loraId, trama);
+      confirmado = esperarOKLocal() && esperarAckRemoto(loraId, chunk);
+      if (!confirmado) delay(100);
     }
-
-    bool paqueteConfirmado = false;
-    int reintentos = 0;
-
-    while (!paqueteConfirmado && reintentos < MAX_REINTENTOS) {
-      while (loraSerial.available()) { loraSerial.read(); }
-
-      enviarComandoLoRa(loraIdDestino, payloadConIndice);
-
-      if (esperarOKLocal(200)) {
-        paqueteConfirmado = esperarAckRemoto(loraIdDestino, chunkIdx, 400);
-      }
-
-      if (paqueteConfirmado) {
-        Serial.printf("  -> Chunk [%d/%d] ACK OK\n", chunkIdx + 1, totalChunks);
-        delay(15);
-      } else {
-        reintentos++;
-        Serial.printf("  -> [REINTENTO %d/%d] Chunk [%d/%d] sin ACK\n",
-                      reintentos, MAX_REINTENTOS, chunkIdx + 1, totalChunks);
-        delay(80);
-      }
-    }
-
-    if (!paqueteConfirmado) {
-      Serial.printf("[LORA ARQ ERROR] Transmision interrumpida en chunk %d\n", chunkIdx + 1);
-      return false;
-    }
+    if (!confirmado) { Serial.printf("Sin ACK en fragmento %d\n", chunk); return false; }
   }
-
-  float tiempoSeg = (millis() - tiempoInicio) / 1000.0;
-  Serial.printf("[LORA ARQ EXITO] Sincronizacion enviada en %.2f segundos\n", tiempoSeg);
   return true;
 }
 
-// ============================================================================
-// SOLICITUD DE SYNCS PENDIENTES AL BACKEND PHP
-// ============================================================================
 void pedirSyncPendiente() {
   if (WiFi.status() != WL_CONNECTED) return;
-
-  HTTPClient http;
-  String url = BASE + "src/api/Gateway/obtener_sync_aula.php?room_id=" + ROOM_ID;
-
-  http.begin(url);
-  http.addHeader("X-GATEWAY-KEY", API_KEY);
-
-  int code = http.GET();
-  String payload = http.getString();
-
-  if (code != 200 || payload.indexOf("\"status\":\"success\"") < 0) {
-    Serial.println("[GATEWAY] No hay sincronizaciones pendientes en el Backend.");
-    http.end();
-    return;
-  }
-
-  DynamicJsonDocument doc(16384);
-  deserializeJson(doc, payload);
-
-  int idSync     = doc["data"]["id_sync"];
-  int idHuella   = doc["data"]["id_huella"];
-  String ci      = doc["data"]["ci"] | "";
-  String roomId  = doc["data"]["room_id"] | "";
-  String tipo    = doc["data"]["tipo_persona"] | "";
-  String huella  = doc["data"]["huella_base64"] | "";
-  huella.trim();
-
-  Serial.printf("\n--- NUEVA ORDEN DE SYNCRONIZACION RECIBIDA ---\n");
-  Serial.printf("Destino Aula: %s | CI: %s | ID Huella: %d\n", roomId.c_str(), ci.c_str(), idHuella);
-
-  int loraIdObjetivo = 0;
-  if (!buscarLoraIdPorAula(roomId, loraIdObjetivo)) {
-    Serial.printf("[ERROR] No existe ID LoRa asignado para el aula '%s'\n", roomId.c_str());
-    confirmarSync(idSync, "ERROR", "El Gateway no tiene mapeado el ID LoRa de esa aula");
-    http.end();
-    return;
-  }
-
-  bool enviado = enviarHuellaPorLoRa(loraIdObjetivo, idSync, idHuella, ci, roomId, tipo, huella);
-
-  if (enviado) {
-    confirmarSync(idSync, "CONFIRMADO", "Huella enviada e instalada en el aula via LoRa");
-  } else {
-    confirmarSync(idSync, "ERROR", "Fallo el enlace de radio LoRa ARQ entre pisos");
-  }
-
-  http.end();
+  for (size_t i = 0; i < CANTIDAD_AULAS; ++i) pedirSyncAula(tablaAulas[i]);
 }
 
-void confirmarSync(int idSync, String estado, String mensaje) {
+bool pedirSyncAula(const DispositivoAula &aula) {
   HTTPClient http;
-  String url = BASE + "src/api/Gateway/confirmar_sync.php";
-  http.begin(url);
+  const String url = String(BASE) + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(aula.idAula);
+  if (!http.begin(url)) return false;
   http.addHeader("X-GATEWAY-KEY", API_KEY);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-  String body = "id_sync=" + String(idSync) + "&estado=" + estado + "&mensaje=" + mensaje;
-  http.POST(body);
-  http.end();
+  const int codigo = http.GET(); const String respuesta = http.getString(); http.end();
+  if (codigo != 200) return false;
+  DynamicJsonDocument doc(8192);
+  if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") return false;
+  const int idSync = doc["data"]["id_sync"] | 0, idHuella = doc["data"]["id_huella"] | 0, idAula = doc["data"]["id_aula"] | 0;
+  const String ci = doc["data"]["ci"] | "", tipo = doc["data"]["tipo_persona"] | "", huella = doc["data"]["huella_base64"] | "";
+  if (!idSync || !idHuella || idAula != aula.idAula || !ci.length() || !tipo.length()) { confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS"); return false; }
+  if (!enviarHuellaPorLoRa(aula.loraId, idSync, idHuella, idAula, ci, tipo, huella)) { confirmarSync(idSync, "ERROR", "FALLO_ENLACE_LORA"); return false; }
+  // El estado queda ENVIADO hasta que el aula confirme que storeModel() tuvo exito.
+  return true;
 }
 
-void procesarEnvioAsistenciaBackend(String roomId, String ci, String tipoPersona, String estado) {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[ERROR] No hay Wi-Fi para retransmitir la asistencia al Backend.");
-    return;
-  }
+void confirmarSync(int idSync, const String &estado, const String &mensaje) {
+  if (!idSync || WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/confirmar_sync.php")) return;
+  http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http.POST("id_sync=" + String(idSync) + "&estado=" + urlEncode(estado) + "&mensaje=" + urlEncode(mensaje)); http.end();
+}
 
-  HTTPClient http;
-  String url = BASE + "src/api/Gateway/registrar_asistencia.php";
+void confirmarEntregaAula(const String &payload) {
+  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:detalle
+  const int idSync = campo(payload, 1).toInt(), idHuella = campo(payload, 2).toInt(), idAula = campo(payload, 3).toInt(), slot = campo(payload, 4).toInt();
+  const String ci = campo(payload, 5), tipo = campo(payload, 6);
+  if (!idSync || !idHuella || !idAula || !slot || !ci.length() || !tipo.length()) return;
+  if (WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/confirmar_entrega_aula.php")) return;
+  http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  const String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo);
+  http.POST(cuerpo); http.end();
+}
 
-  http.begin(url);
-  http.addHeader("X-GATEWAY-KEY", API_KEY);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+void procesarAsistenciaEntrante(const String &payload) {
+  // AST:id_aula:ci:tipo:estado
+  const int idAula = campo(payload, 1).toInt(); const String ci = campo(payload, 2), tipo = campo(payload, 3), estado = campo(payload, 4);
+  if (!idAula || !ci.length() || !tipo.length() || !estado.length() || WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/registrar_asistencia.php")) return;
+  http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http.POST("id_aula=" + String(idAula) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&estado=" + urlEncode(estado)); http.end();
+}
 
-  String body = "room_id=" + roomId +
-                "&ci=" + ci +
-                "&tipo_persona=" + tipoPersona +
-                "&estado=" + estado +
-                "&fecha_hora=AUTO";
-
-  Serial.println("\n--- REENVIANDO ASISTENCIA RECIBIDA POR LORA AL BACKEND ---");
-  Serial.printf("Aula: %s | C.I: %s | Rol: %s | Evento: %s\n",
-                roomId.c_str(), ci.c_str(), tipoPersona.c_str(), estado.c_str());
-
-  int code = http.POST(body);
-  String respuesta = http.getString();
-
-  Serial.printf("Respuesta Servidor Central [HTTP %d]: %s\n\n", code, respuesta.c_str());
-  http.end();
+void atenderMensajesLoRa() {
+  if (!loraSerial.available()) return;
+  String linea = loraSerial.readStringUntil('\n'); linea.trim(); if (!linea.startsWith("+RCV=")) return;
+  int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1); if (c1 < 0 || c2 < 0 || c3 < 0) return;
+  const String payload = linea.substring(c2 + 1, c3);
+  if (payload.startsWith("AST:")) procesarAsistenciaEntrante(payload);
+  else if (payload.startsWith("SYNCOK:")) confirmarEntregaAula(payload);
+  else if (payload.startsWith("SYNCERR:")) confirmarSync(campo(payload, 1).toInt(), "ERROR", campo(payload, 7));
 }
