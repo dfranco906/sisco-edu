@@ -7,7 +7,7 @@
 const char* ssid = "esp";
 const char* password = "123456789";
 
-String BASE = "http://192.168.100.110/tiago3roBTI2026/sisco-edu/";
+String BASE = "http://192.168.100.109/tiago3roBTI2026/sisco-edu/";
 String API_KEY = "SISCO_GATEWAY_2026_SECRETO";
 const int ID_AULA = 18;
 const size_t TEMPLATE_BYTES = 1536;

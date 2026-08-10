@@ -8,7 +8,7 @@
 
 const char *ssid = "esp";
 const char *password = "123456789";
-const char *BASE = "http://192.168.0.165/sisco-edu/";
+const char *BASE = "http://192.168.100.109/tiago3roBTI2026/sisco-edu/";
 const char *API_KEY = "SISCO_GATEWAY_2026_SECRETO";
 const int MI_LORA_ID = 100;
 const int LORA_NETWORK_ID = 18;
@@ -86,6 +86,7 @@ void setup() {
   });
   server.begin();
   Serial.println("[HTTP] Servidor del gateway iniciado en el puerto 80");
+  Serial.printf("[HTTP] API central configurada: %s\n", BASE);
   if (WiFi.status() == WL_CONNECTED) {
     Serial.printf("[HTTP] Endpoint de sincronizacion: http://%s/sync\n",
                   WiFi.localIP().toString().c_str());
@@ -221,7 +222,12 @@ bool pedirSyncAula(const DispositivoAula &aula) {
   const int templateBytes = doc["data"]["bytes"] | 0;
   const String ci = doc["data"]["ci"] | "", tipo = doc["data"]["tipo_persona"] | "", huella = doc["data"]["huella_base64"] | "";
   if (!idSync || !idHuella || idAula != aula.idAula || templateBytes != Dy50TemplateTransport::TEMPLATE_BYTES || !ci.length() || !tipo.length()) {
-    Serial.printf("[SYNC] Aula %d: datos de sincronizacion invalidos\n", aula.idAula);
+    Serial.printf("[SYNC] Aula %d: datos invalidos (sync=%d, huella=%d, id_aula=%d, bytes=%d/%u, ci=%s, tipo=%s, hex=%u/%u)\n",
+                  aula.idAula, idSync, idHuella, idAula, templateBytes,
+                  (unsigned int)Dy50TemplateTransport::TEMPLATE_BYTES,
+                  ci.length() ? "OK" : "FALTA", tipo.length() ? "OK" : "FALTA",
+                  (unsigned int)huella.length(),
+                  (unsigned int)(Dy50TemplateTransport::TEMPLATE_BYTES * 2));
     confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS");
     return false;
   }

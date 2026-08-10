@@ -11,7 +11,7 @@
 const char *ssid = "esp";
 const char *password = "123456789";
 
-String BASE = "http://192.168.0.165/sisco-edu/";
+String BASE = "http://192.168.100.109/tiago3roBTI2026/sisco-edu/";
 String API_KEY = "SISCO_GATEWAY_2026_SECRETO";
 const int ID_AULA = 18; // Filtro por defecto para syncs
 
