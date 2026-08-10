@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../config/biometria.php';
+
 class HuellaTemplate {
     private $conn;
     private $table_name = "huellas_templates";
@@ -15,6 +17,12 @@ class HuellaTemplate {
     }
 
     public function crear() {
+        if (strtoupper((string)$this->formato) !== 'HEX'
+            || !es_template_huella_hex_valido(trim((string)$this->fingerprint_data))) {
+            return false;
+        }
+        $this->formato = 'HEX';
+        $this->fingerprint_data = strtolower(trim($this->fingerprint_data));
         $query = "INSERT INTO " . $this->table_name . "
                   SET user_id_global=:user_id_global,
                       fingerprint_data=:fingerprint_data,
@@ -44,6 +52,12 @@ class HuellaTemplate {
     }
 
     public function actualizar() {
+        if (strtoupper((string)$this->formato) !== 'HEX'
+            || !es_template_huella_hex_valido(trim((string)$this->fingerprint_data))) {
+            return false;
+        }
+        $this->formato = 'HEX';
+        $this->fingerprint_data = strtolower(trim($this->fingerprint_data));
         $query = "UPDATE " . $this->table_name . "
                   SET user_id_global=:user_id_global,
                       fingerprint_data=:fingerprint_data,

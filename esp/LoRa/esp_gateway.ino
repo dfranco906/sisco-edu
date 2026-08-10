@@ -218,8 +218,9 @@ bool pedirSyncAula(const DispositivoAula &aula) {
     return false;
   }
   const int idSync = doc["data"]["id_sync"] | 0, idHuella = doc["data"]["id_huella"] | 0, idAula = doc["data"]["id_aula"] | 0;
+  const int templateBytes = doc["data"]["bytes"] | 0;
   const String ci = doc["data"]["ci"] | "", tipo = doc["data"]["tipo_persona"] | "", huella = doc["data"]["huella_base64"] | "";
-  if (!idSync || !idHuella || idAula != aula.idAula || !ci.length() || !tipo.length()) {
+  if (!idSync || !idHuella || idAula != aula.idAula || templateBytes != Dy50TemplateTransport::TEMPLATE_BYTES || !ci.length() || !tipo.length()) {
     Serial.printf("[SYNC] Aula %d: datos de sincronizacion invalidos\n", aula.idAula);
     confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS");
     return false;

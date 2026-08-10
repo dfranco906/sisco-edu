@@ -2,6 +2,7 @@
 header("Content-Type: application/json; charset=UTF-8");
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/biometria.php';
 
 if ((getallheaders()['X-GATEWAY-KEY'] ?? '') !== GATEWAY_API_KEY) {
     http_response_code(404); echo json_encode(["status" => "not_found"]); exit;
@@ -25,7 +26,7 @@ if (!$data) { echo json_encode(["status" => "empty", "message" => "No hay sincro
 $tipo = $data['id_estudiante'] !== null ? 'estudiante' : ($data['id_profesor'] !== null ? 'profesor' : null);
 $ci = $tipo === 'estudiante' ? $data['ci_estudiante'] : $data['ci_profesor'];
 $hex = trim((string)$data['huella_hex']);
-if (!$tipo || !$ci || strtoupper((string)$data['formato']) !== 'HEX' || !preg_match('/^[0-9a-fA-F]{3072}$/', $hex)) {
+if (!$tipo || !$ci || strtoupper((string)$data['formato']) !== 'HEX' || !es_template_huella_hex_valido($hex)) {
     $db->prepare("UPDATE sync_biometrica SET estado='ERROR', mensaje='Template o persona invalida', fecha_actualizacion=NOW() WHERE id_sync=:id")
        ->execute([':id' => $data['id_sync']]);
     http_response_code(422); echo json_encode(["status" => "error", "message" => "Sync invalida"]); exit;
@@ -34,5 +35,5 @@ $db->prepare("UPDATE sync_biometrica SET estado='ENVIADO', intentos=intentos+1, 
    ->execute([':id' => $data['id_sync']]);
 echo json_encode(["status" => "success", "data" => [
     "id_sync" => (int)$data['id_sync'], "id_huella" => (int)$data['id_huella'], "id_aula" => (int)$data['id_aula'],
-    "tipo_persona" => $tipo, "ci" => $ci, "huella_base64" => $hex, "formato" => "HEX"
+    "tipo_persona" => $tipo, "ci" => $ci, "huella_base64" => $hex, "formato" => "HEX", "bytes" => HUELLA_TEMPLATE_BYTES
 ]]);

@@ -9,7 +9,9 @@ const char* password = "123456789";
 
 String BASE = "http://192.168.100.110/tiago3roBTI2026/sisco-edu/";
 String API_KEY = "SISCO_GATEWAY_2026_SECRETO";
-String ROOM_ID = "GENERAL";
+const int ID_AULA = 18;
+const size_t TEMPLATE_BYTES = 1536;
+const size_t TEMPLATE_HEX_CHARS = TEMPLATE_BYTES * 2;
 
 // MAC real del ESP Aula
 uint8_t aulaMac[] = {0xB0, 0xCB, 0xD8, 0x8E, 0x72, 0x74};
@@ -27,10 +29,10 @@ volatile bool txSuccess = false;
 typedef struct {
   int id_sync;
   int id_huella;
+  int id_aula;
   int total_chunks;
   int chunk_index;
   char ci[15];          // Ajustado para C.I. de Paraguay (Max 15 chars)
-  char room_id[16];     // Ajustado (Ej: "AULA_1")
   char tipo_persona[15]; // Ajustado (Ej: "ALUMNO")
   char data[161];       // Chunks de 160 bytes para no saturar ESP-NOW
 } PaqueteHuella;
@@ -42,7 +44,8 @@ void onSend(const wifi_tx_info_t *tx_info, esp_now_send_status_t status) {
 }
 
 void pedirSyncPendiente();
-bool enviarHuellaPorEspNow(int idSync, int idHuella, String ci, String roomId, String tipo, String huella);
+bool templateHexValido(const String &huella);
+bool enviarHuellaPorEspNow(int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella);
 void confirmarSync(int idSync, String estado, String mensaje);
 
 void setup() {
@@ -111,7 +114,7 @@ void pedirSyncPendiente() {
   }
 
   HTTPClient http;
-  String url = BASE + "src/api/Gateway/obtener_sync_aula.php?room_id=" + ROOM_ID;
+  String url = BASE + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(ID_AULA);
 
   http.begin(url);
   http.addHeader("X-GATEWAY-KEY", API_KEY);
@@ -128,7 +131,7 @@ void pedirSyncPendiente() {
     return;
   }
 
-  DynamicJsonDocument doc(60000);
+  DynamicJsonDocument doc(8192);
   DeserializationError error = deserializeJson(doc, payload);
 
   if (error) {
@@ -139,14 +142,22 @@ void pedirSyncPendiente() {
 
   int idSync = doc["data"]["id_sync"];
   int idHuella = doc["data"]["id_huella"];
+  int idAula = doc["data"]["id_aula"] | 0;
+  int templateBytes = doc["data"]["bytes"] | 0;
   String ci = doc["data"]["ci"] | "";
-  String roomId = doc["data"]["room_id"] | "";
   String tipo = doc["data"]["tipo_persona"] | "";
-  String huella = doc["data"]["huella_base64"] | ""; // O formato Hexadecimal
+  String huella = doc["data"]["huella_base64"] | "";
+
+  if (idAula != ID_AULA || templateBytes != TEMPLATE_BYTES || !templateHexValido(huella)) {
+    Serial.println("Template o aula incompatible con el nodo ESP-NOW");
+    confirmarSync(idSync, "ERROR", "Template HEX incompatible: se requieren 1536 bytes");
+    http.end();
+    return;
+  }
 
   Serial.printf("Procesando ID Sync: %d | Alumno CI: %s\n", idSync, ci.c_str());
 
-  bool enviado = enviarHuellaPorEspNow(idSync, idHuella, ci, roomId, tipo, huella);
+  bool enviado = enviarHuellaPorEspNow(idSync, idHuella, idAula, ci, tipo, huella);
 
   if (enviado) {
     confirmarSync(idSync, "CONFIRMADO", "Huella enviada e instalada en el aula de forma integra");
@@ -157,7 +168,17 @@ void pedirSyncPendiente() {
   http.end();
 }
 
-bool enviarHuellaPorEspNow(int idSync, int idHuella, String ci, String roomId, String tipo, String huella) {
+bool templateHexValido(const String &huella) {
+  if (huella.length() != TEMPLATE_HEX_CHARS) return false;
+  for (size_t i = 0; i < huella.length(); ++i) {
+    const char c = huella[i];
+    if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) return false;
+  }
+  return true;
+}
+
+bool enviarHuellaPorEspNow(int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella) {
+  if (!templateHexValido(huella)) return false;
   const int chunkSize = 160; // Ajustado al tamaño de nuestro buffer optimizado
   int total = (huella.length() + chunkSize - 1) / chunkSize;
 
@@ -169,11 +190,11 @@ bool enviarHuellaPorEspNow(int idSync, int idHuella, String ci, String roomId, S
 
     p.id_sync = idSync;
     p.id_huella = idHuella;
+    p.id_aula = idAula;
     p.total_chunks = total;
     p.chunk_index = i;
 
     ci.toCharArray(p.ci, sizeof(p.ci));
-    roomId.toCharArray(p.room_id, sizeof(p.room_id));
     tipo.toCharArray(p.tipo_persona, sizeof(p.tipo_persona));
 
     String parte = huella.substring(i * chunkSize, min((i + 1) * chunkSize, (int)huella.length()));

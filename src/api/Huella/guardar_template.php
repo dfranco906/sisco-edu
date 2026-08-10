@@ -2,12 +2,18 @@
 header("Content-Type: application/json; charset=UTF-8");
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/biometria.php';
 $db = (new Database())->getConnection();
 $tipo = strtolower(trim($_POST['tipo_persona'] ?? $_POST['tipo_usuario'] ?? 'estudiante'));
 $template = trim($_POST['template'] ?? '');
 $idRecibido = filter_input(INPUT_POST, 'id_persona', FILTER_VALIDATE_INT) ?: filter_input(INPUT_POST, 'id_estudiante', FILTER_VALIDATE_INT);
 $userIdRecibido = trim($_POST['user_id_global'] ?? '');
-if (!in_array($tipo, ['estudiante','profesor'], true) || !preg_match('/^[0-9a-fA-F]{3072}$/', $template)) { http_response_code(422); echo json_encode(['status'=>'error','message'=>'Datos o template HEX invalido']); exit; }
+$bytesRecibidos = filter_input(INPUT_POST, 'bytes', FILTER_VALIDATE_INT);
+if (!in_array($tipo, ['estudiante','profesor'], true)
+    || !es_template_huella_hex_valido($template)
+    || ($bytesRecibidos !== null && $bytesRecibidos !== false && $bytesRecibidos !== HUELLA_TEMPLATE_BYTES)) {
+    http_response_code(422); echo json_encode(['status'=>'error','message'=>'Datos o template HEX de 1536 bytes invalido']); exit;
+}
 function avisarGatewaySync(): bool {
     if (!function_exists('curl_init')) return false;
     $ch=curl_init(GATEWAY_SYNC_URL); if (!$ch) return false;

@@ -2,10 +2,18 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/biometria.php';
+
+if ((getallheaders()['X-GATEWAY-KEY'] ?? '') !== GATEWAY_API_KEY) {
+    http_response_code(404);
+    echo json_encode(["status" => "not_found"]);
+    exit;
+}
 
 $db = (new Database())->getConnection();
 
-$huella_id = $_GET['huella_id'] ?? null;
+$huella_id = filter_input(INPUT_GET, 'huella_id', FILTER_VALIDATE_INT);
 
 if (!$huella_id) {
     echo json_encode([
@@ -48,6 +56,16 @@ if (!$data) {
     ]);
     exit;
 }
+
+$template = trim((string)$data["fingerprint_data"]);
+if (strtoupper((string)$data["formato"]) !== 'HEX' || !es_template_huella_hex_valido($template)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "Template incompatible: se requieren 1536 bytes HEX"]);
+    exit;
+}
+$data["fingerprint_data"] = $template;
+$data["formato"] = "HEX";
+$data["bytes"] = HUELLA_TEMPLATE_BYTES;
 
 $tipo = $data["id_estudiante"] ? "estudiante" : "profesor";
 

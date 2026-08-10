@@ -13,7 +13,7 @@ const char *password = "123456789";
 
 String BASE = "http://192.168.0.165/sisco-edu/";
 String API_KEY = "SISCO_GATEWAY_2026_SECRETO";
-String ROOM_ID = "AULA_A"; // Filtro por defecto para syncs
+const int ID_AULA = 18; // Filtro por defecto para syncs
 
 const char *headerKeys[] = {"X-GATEWAY-KEY"};
 const size_t headerKeysCount = 1;
@@ -36,28 +36,28 @@ const int MAX_REINTENTOS = 8;        // ARQ reintentos máximos por chunk
 // TOPOLOGÍA MULTIPUNTO LORA: Tabla de Rutas de Aulas
 // ============================================================================
 typedef struct {
-  char room_id[16];
+  int id_aula;
   int lora_id;
 } DispositivoAula;
 
 const int MAX_AULAS = 5;
 DispositivoAula tablaAulas[MAX_AULAS] = {
-    {"AULA_A", 101},
-    {"AULA_B", 102},
-    {"AULA_C", 103}
+    {18, 101},
+    {15, 102},
+    {16, 103}
 };
 
 // Prototipos de funciones
 void pedirSyncPendiente();
-bool buscarLoraIdPorAula(String roomId, int &loraId);
+bool buscarLoraIdPorAula(int idAula, int &loraId);
 bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
-                         String ci, String roomId, String tipo, String huella);
+                         String ci, int idAula, String tipo, String huella);
 bool esperarOKLocal(unsigned long timeoutMs = 200);
 bool esperarAckRemoto(int loraIdDestino, int chunkIdx, unsigned long timeoutMs = 400);
 void confirmarSync(int idSync, String estado, String mensaje);
 void atenderMensajesLoRa();
 void procesarAsistenciaEntrante(String payload);
-void procesarEnvioAsistenciaBackend(String roomId, String ci, String tipoPersona, String estado);
+void procesarEnvioAsistenciaBackend(int idAula, String ci, String tipoPersona, String estado);
 
 // ============================================================================
 // SETUP
@@ -120,7 +120,7 @@ void atenderMensajesLoRa() {
 
     if (linea.startsWith("+RCV=")) {
       // Formato esperado: +RCV=<SENDER_ID>,<LEN>,<PAYLOAD>,<RSSI>,<SNR>
-      // Ejemplo Asistencia: +RCV=101,35,AST:AULA_A:1234567:estudiante:PRESENTE,-70,12
+      // Ejemplo Asistencia: +RCV=101,31,AST:18:1234567:estudiante:PRESENTE,-70,12
       int primeraComa = linea.indexOf(',');
       int segundaComa = linea.indexOf(',', primeraComa + 1);
       int terceraComa = linea.indexOf(',', segundaComa + 1);
@@ -137,28 +137,28 @@ void atenderMensajesLoRa() {
 }
 
 void procesarAsistenciaEntrante(String payload) {
-  // Formato: "AST:<ROOM_ID>:<CI>:<TIPO_PERSONA>:<ESTADO>"
+  // Formato: "AST:<ID_AULA>:<CI>:<TIPO_PERSONA>:<ESTADO>"
   int p1 = payload.indexOf(':');
   int p2 = payload.indexOf(':', p1 + 1);
   int p3 = payload.indexOf(':', p2 + 1);
   int p4 = payload.indexOf(':', p3 + 1);
 
   if (p1 != -1 && p2 != -1 && p3 != -1 && p4 != -1) {
-    String roomId      = payload.substring(p1 + 1, p2);
+    int idAula         = payload.substring(p1 + 1, p2).toInt();
     String ci          = payload.substring(p2 + 1, p3);
     String tipoPersona = payload.substring(p3 + 1, p4);
     String estado      = payload.substring(p4 + 1);
 
-    procesarEnvioAsistenciaBackend(roomId, ci, tipoPersona, estado);
+    procesarEnvioAsistenciaBackend(idAula, ci, tipoPersona, estado);
   }
 }
 
 // ============================================================================
 // BÚSQUEDA DE RUTAS Y TABLA LORA
 // ============================================================================
-bool buscarLoraIdPorAula(String roomId, int &loraId) {
+bool buscarLoraIdPorAula(int idAula, int &loraId) {
   for (int i = 0; i < MAX_AULAS; i++) {
-    if (String(tablaAulas[i].room_id) == roomId) {
+    if (tablaAulas[i].id_aula == idAula) {
       loraId = tablaAulas[i].lora_id;
       return true;
     }
@@ -201,7 +201,7 @@ bool esperarAckRemoto(int loraIdDestino, int chunkIdx, unsigned long timeoutMs) 
 }
 
 bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
-                         String ci, String roomId, String tipo, String huella) {
+                         String ci, int idAula, String tipo, String huella) {
   // 3072 caracteres HEX -> 24 chunks de 128 caracteres (64 bytes binarios)
   const int charsPerChunk = 128;
   int totalChunks = (huella.length() + charsPerChunk - 1) / charsPerChunk;
@@ -265,7 +265,7 @@ void pedirSyncPendiente() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  String url = BASE + "src/api/Gateway/obtener_sync_aula.php?room_id=" + ROOM_ID;
+  String url = BASE + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(ID_AULA);
 
   http.begin(url);
   http.addHeader("X-GATEWAY-KEY", API_KEY);
@@ -285,23 +285,31 @@ void pedirSyncPendiente() {
   int idSync     = doc["data"]["id_sync"];
   int idHuella   = doc["data"]["id_huella"];
   String ci      = doc["data"]["ci"] | "";
-  String roomId  = doc["data"]["room_id"] | "";
+  int idAula     = doc["data"]["id_aula"] | 0;
+  int templateBytes = doc["data"]["bytes"] | 0;
   String tipo    = doc["data"]["tipo_persona"] | "";
   String huella  = doc["data"]["huella_base64"] | "";
   huella.trim();
 
+  if (idAula != ID_AULA || templateBytes != TOTAL_BYTES_HUELLA
+      || huella.length() != TOTAL_BYTES_HUELLA * 2) {
+    confirmarSync(idSync, "ERROR", "Template HEX incompatible: se requieren 1536 bytes");
+    http.end();
+    return;
+  }
+
   Serial.printf("\n--- NUEVA ORDEN DE SYNCRONIZACIÓN RECIBIDA ---\n");
-  Serial.printf("Destino Aula: %s | CI: %s | ID Huella: %d\n", roomId.c_str(), ci.c_str(), idHuella);
+  Serial.printf("Destino Aula: %d | CI: %s | ID Huella: %d\n", idAula, ci.c_str(), idHuella);
 
   int loraIdObjetivo = 0;
-  if (!buscarLoraIdPorAula(roomId, loraIdObjetivo)) {
-    Serial.printf("[ERROR] No existe ID LoRa asignado para el aula '%s'\n", roomId.c_str());
+  if (!buscarLoraIdPorAula(idAula, loraIdObjetivo)) {
+    Serial.printf("[ERROR] No existe ID LoRa asignado para el aula %d\n", idAula);
     confirmarSync(idSync, "ERROR", "El Gateway no tiene mapeado el ID LoRa de esa aula");
     http.end();
     return;
   }
 
-  bool enviado = enviarHuellaPorLoRa(loraIdObjetivo, idSync, idHuella, ci, roomId, tipo, huella);
+  bool enviado = enviarHuellaPorLoRa(loraIdObjetivo, idSync, idHuella, ci, idAula, tipo, huella);
 
   if (enviado) {
     confirmarSync(idSync, "CONFIRMADO", "Huella enviada e instalada en el aula via LoRa");
@@ -324,7 +332,7 @@ void confirmarSync(int idSync, String estado, String mensaje) {
   http.end();
 }
 
-void procesarEnvioAsistenciaBackend(String roomId, String ci, String tipoPersona, String estado) {
+void procesarEnvioAsistenciaBackend(int idAula, String ci, String tipoPersona, String estado) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[ERROR] No hay Wi-Fi para retransmitir la asistencia al Backend.");
     return;
@@ -337,15 +345,15 @@ void procesarEnvioAsistenciaBackend(String roomId, String ci, String tipoPersona
   http.addHeader("X-GATEWAY-KEY", API_KEY);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-  String body = "room_id=" + roomId +
+  String body = "id_aula=" + String(idAula) +
                 "&ci=" + ci +
                 "&tipo_persona=" + tipoPersona +
                 "&estado=" + estado +
                 "&fecha_hora=AUTO";
 
   Serial.println("\n--- REENVIANDO ASISTENCIA RECIBIDA POR LORA AL BACKEND ---");
-  Serial.printf("Aula: %s | C.I: %s | Rol: %s | Evento: %s\n",
-                roomId.c_str(), ci.c_str(), tipoPersona.c_str(), estado.c_str());
+  Serial.printf("Aula: %d | C.I: %s | Rol: %s | Evento: %s\n",
+                idAula, ci.c_str(), tipoPersona.c_str(), estado.c_str());
 
   int code = http.POST(body);
   String respuesta = http.getString();

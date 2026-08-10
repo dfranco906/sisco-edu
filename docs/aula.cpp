@@ -11,6 +11,7 @@
 // CONFIGURACIÓN DE HARDWARE Y NODO AULA
 // ============================================================================
 String ROOM_ID = "AULA_A";
+const int ID_AULA = 18;
 const int MI_LORA_ID = 101;        // ID LoRa de esta aula
 const int GATEWAY_LORA_ID = 100;   // ID LoRa del Gateway Central
 const int CHARS_POR_CHUNK = 128;
@@ -351,8 +352,8 @@ void enviarAckLoRa(int chunkIdx) {
 // ENVÍO DE ASISTENCIA VÍA LORA HACIA EL GATEWAY CENTRAL
 // ----------------------------------------------------------------------------
 void enviarAsistenciaPorLoRa(String ci, String tipoPersona, String estado) {
-  // Payload: "AST:<ROOM_ID>:<CI>:<TIPO_PERSONA>:<ESTADO>"
-  String payload = "AST:" + ROOM_ID + ":" + ci + ":" + tipoPersona + ":" + estado;
+  // Payload: "AST:<ID_AULA>:<CI>:<TIPO_PERSONA>:<ESTADO>"
+  String payload = "AST:" + String(ID_AULA) + ":" + ci + ":" + tipoPersona + ":" + estado;
 
   Serial.printf("\n[LORA AST] Transmitiendo asistencia al Gateway (ID %d)...\n", GATEWAY_LORA_ID);
   Serial.printf("Payload: %s\n", payload.c_str());

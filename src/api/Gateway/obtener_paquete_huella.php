@@ -3,6 +3,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/biometria.php';
 
 $headers = getallheaders();
 $key = $headers['X-GATEWAY-KEY'] ?? '';
@@ -55,6 +56,13 @@ if (!$data) {
     exit;
 }
 
+$template = trim((string)$data["huella_base64"]);
+if (strtoupper((string)$data["formato"]) !== 'HEX' || !es_template_huella_hex_valido($template)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "Template incompatible: se requieren 1536 bytes HEX"]);
+    exit;
+}
+
 $tipo = $data["id_estudiante"] ? "estudiante" : "profesor";
 $ci = $tipo === "estudiante" ? $data["ci_estudiante"] : $data["ci_profesor"];
 $id_aula = $tipo === "estudiante" ? ($data["id_aula_estudiante"] ?? null) : null;
@@ -77,7 +85,8 @@ echo json_encode([
         "ci" => $ci,
         "id_aula" => $id_aula,
         "aula" => $data["aula_estudiante"] ?? null,
-        "huella_base64" => $data["huella_base64"],
-        "formato" => $data["formato"]
+        "huella_base64" => $template,
+        "formato" => "HEX",
+        "bytes" => HUELLA_TEMPLATE_BYTES
     ]
 ]);

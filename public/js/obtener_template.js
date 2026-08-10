@@ -26,6 +26,15 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
             return;
         }
 
+        const templateValido = data.bytes === 1536
+            && typeof data.template === "string"
+            && /^[0-9a-fA-F]{3072}$/.test(data.template);
+        if (!templateValido) {
+            mostrarEstadoHuella("El ESP32 devolvio un template incompatible; se esperaban 1536 bytes HEX.", false, true);
+            bloquearBotonesHuella(false);
+            return;
+        }
+
         mostrarEstadoHuella("Guardando huella en la base de datos...");
 
         const formData = new FormData();
