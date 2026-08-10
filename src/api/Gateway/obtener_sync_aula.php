@@ -25,7 +25,7 @@ if (!$data) { echo json_encode(["status" => "empty", "message" => "No hay sincro
 $tipo = $data['id_estudiante'] !== null ? 'estudiante' : ($data['id_profesor'] !== null ? 'profesor' : null);
 $ci = $tipo === 'estudiante' ? $data['ci_estudiante'] : $data['ci_profesor'];
 $hex = trim((string)$data['huella_hex']);
-if (!$tipo || !$ci || strtoupper((string)$data['formato']) !== 'HEX' || !preg_match('/^[0-9a-fA-F]{2816}$/', $hex)) {
+if (!$tipo || !$ci || strtoupper((string)$data['formato']) !== 'HEX' || !preg_match('/^[0-9a-fA-F]{3072}$/', $hex)) {
     $db->prepare("UPDATE sync_biometrica SET estado='ERROR', mensaje='Template o persona invalida', fecha_actualizacion=NOW() WHERE id_sync=:id")
        ->execute([':id' => $data['id_sync']]);
     http_response_code(422); echo json_encode(["status" => "error", "message" => "Sync invalida"]); exit;

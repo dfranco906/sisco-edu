@@ -1,6 +1,6 @@
 /*
  * Nodo registrador biometrico Sisco-Edu.
- * Exporta templates DY50/AS608 en HEX (1408 bytes / 2816 caracteres),
+ * Exporta templates DY50/AS608 en HEX (1536 bytes / 3072 caracteres),
  * formato requerido por guardar_template.php y el transporte LoRa RYLR998.
  */
 #include <Arduino.h>

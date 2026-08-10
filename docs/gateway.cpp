@@ -27,9 +27,9 @@ HardwareSerial loraSerial(2);
 
 // Identificadores LoRa y constantes de transmisión
 const int MI_LORA_ID = 100;          // ID del Gateway Central
-const int TOTAL_BYTES_HUELLA = 1408;  // Bytes binarios puros del sensor DY50
+const int TOTAL_BYTES_HUELLA = 1536;  // Bytes binarios puros del sensor DY50
 const int CHUNK_BYTES = 64;
-const int TOTAL_CHUNKS = TOTAL_BYTES_HUELLA / CHUNK_BYTES; // 22 chunks
+const int TOTAL_CHUNKS = TOTAL_BYTES_HUELLA / CHUNK_BYTES; // 24 chunks
 const int MAX_REINTENTOS = 8;        // ARQ reintentos máximos por chunk
 
 // ============================================================================
@@ -202,7 +202,7 @@ bool esperarAckRemoto(int loraIdDestino, int chunkIdx, unsigned long timeoutMs) 
 
 bool enviarHuellaPorLoRa(int loraIdDestino, int idSync, int idHuella,
                          String ci, String roomId, String tipo, String huella) {
-  // 2816 caracteres HEX -> 22 chunks de 128 caracteres (64 bytes binarios)
+  // 3072 caracteres HEX -> 24 chunks de 128 caracteres (64 bytes binarios)
   const int charsPerChunk = 128;
   int totalChunks = (huella.length() + charsPerChunk - 1) / charsPerChunk;
 

@@ -4,6 +4,7 @@
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
+#include "dy50_template_transport.h"
 
 const char *ssid = "esp";
 const char *password = "123456789";
@@ -161,7 +162,7 @@ bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
 }
 
 bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella) {
-  if (huella.length() != 2816 || (huella.length() & 1)) { Serial.println("[LORA] Template HEX invalido"); return false; }
+  if (huella.length() != Dy50TemplateTransport::TEMPLATE_BYTES * 2 || (huella.length() & 1)) { Serial.println("[LORA] Template HEX invalido"); return false; }
   const int total = (huella.length() + CHARS_POR_CHUNK - 1) / CHARS_POR_CHUNK;
   Serial.printf("[LORA] Enviando huella %d al aula %d (destino %d, %d fragmentos)\n",
                 idHuella, idAula, loraId, total);

@@ -8,7 +8,7 @@
 HardwareSerial loraSerial(2);
 
 const int EMISOR_ID = 101; // ID del nodo emisor
-const int TOTAL_CHUNKS_ESPERADOS = 22;
+const int TOTAL_CHUNKS_ESPERADOS = 24;
 
 unsigned long tiempoPrimerChunk = 0;
 int chunksGuardadosValidos = 0;

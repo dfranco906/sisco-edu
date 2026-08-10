@@ -8,7 +8,7 @@
 HardwareSerial loraSerial(2);
 
 const int RECEPTOR_ID = 102;
-const int TOTAL_BYTES = 1408;
+const int TOTAL_BYTES = 1536;
 const int CHUNK_BYTES = 64;
 const int TOTAL_CHUNKS = TOTAL_BYTES / CHUNK_BYTES;
 const int MAX_REINTENTOS =

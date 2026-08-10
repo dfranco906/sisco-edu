@@ -7,7 +7,7 @@ $tipo = strtolower(trim($_POST['tipo_persona'] ?? $_POST['tipo_usuario'] ?? 'est
 $template = trim($_POST['template'] ?? '');
 $idRecibido = filter_input(INPUT_POST, 'id_persona', FILTER_VALIDATE_INT) ?: filter_input(INPUT_POST, 'id_estudiante', FILTER_VALIDATE_INT);
 $userIdRecibido = trim($_POST['user_id_global'] ?? '');
-if (!in_array($tipo, ['estudiante','profesor'], true) || !preg_match('/^[0-9a-fA-F]{2816}$/', $template)) { http_response_code(422); echo json_encode(['status'=>'error','message'=>'Datos o template HEX invalido']); exit; }
+if (!in_array($tipo, ['estudiante','profesor'], true) || !preg_match('/^[0-9a-fA-F]{3072}$/', $template)) { http_response_code(422); echo json_encode(['status'=>'error','message'=>'Datos o template HEX invalido']); exit; }
 function avisarGatewaySync(): bool {
     if (!function_exists('curl_init')) return false;
     $ch=curl_init(GATEWAY_SYNC_URL); if (!$ch) return false;

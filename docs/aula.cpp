@@ -13,7 +13,10 @@
 String ROOM_ID = "AULA_A";
 const int MI_LORA_ID = 101;        // ID LoRa de esta aula
 const int GATEWAY_LORA_ID = 100;   // ID LoRa del Gateway Central
-const int TOTAL_CHUNKS_ESPERADOS = 22;
+const int CHARS_POR_CHUNK = 128;
+const int TOTAL_CHUNKS_ESPERADOS =
+    (Dy50TemplateTransport::TEMPLATE_BYTES * 2 + CHARS_POR_CHUNK - 1) /
+    CHARS_POR_CHUNK;
 
 // Pines Sensor DY50 (HardwareSerial 2)
 #define DY50_RX 16
@@ -54,9 +57,9 @@ RegistroUsuario dbLocal[201];
 uint32_t ultimoRegistroSlot[201] = {0};
 const uint32_t TIEMPO_COOLDOWN = 300000; // 5 min
 
-// Buffer para la reconstrucción de huellas (2816 HEX + null terminator)
-char huellaBuffer[2817];
-bool chunksRecibidos[25] = {false};
+// Buffer para la reconstrucción de huellas (3072 HEX + null terminator)
+char huellaBuffer[Dy50TemplateTransport::TEMPLATE_BYTES * 2 + 1];
+bool chunksRecibidos[TOTAL_CHUNKS_ESPERADOS] = {false};
 int chunksGuardadosValidos = 0;
 int ultimoIndiceProcesado = -1;
 unsigned long tiempoPrimerChunk = 0;
@@ -283,7 +286,7 @@ void atenderComandosLoRa() {
   }
 
   if (chunkIdx > ultimoIndiceProcesado && chunkIdx < TOTAL_CHUNKS_ESPERADOS) {
-    int offset = chunkIdx * 128;
+    int offset = chunkIdx * CHARS_POR_CHUNK;
     int len = hexChunk.length();
     if (offset + len < sizeof(huellaBuffer)) {
       memcpy(huellaBuffer + offset, hexChunk.c_str(), len);
@@ -296,7 +299,7 @@ void atenderComandosLoRa() {
                   chunksGuardadosValidos, TOTAL_CHUNKS_ESPERADOS,
                   linea.substring(terceraComa + 1).c_str());
 
-    // Al acumular los 22 chunks esperados, procesar grabado
+    // Al acumular los 24 chunks esperados, procesar grabado
     if (chunksGuardadosValidos == TOTAL_CHUNKS_ESPERADOS) {
       estadoSync = SYNC_PROCESANDO;
       msgOled("GUARDANDO", "En sensor...");
