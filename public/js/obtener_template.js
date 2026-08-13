@@ -57,7 +57,17 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
         });
 
         if (resBackend.ok && resultado.status === "success") {
-            mostrarEstadoHuella("Huella guardada correctamente. Sincronización Gateway pendiente.", false);
+            let mensaje = "Huella guardada correctamente. Sincronización Gateway pendiente.";
+            try {
+                const limpieza = await limpiarSlotTemporalRemoto(baseESP32);
+                if (!limpieza.ok) {
+                    mensaje += `\nAdvertencia: ${limpieza.mensaje}`;
+                }
+            } catch (errorLimpieza) {
+                console.warn("La huella se guardo, pero no se pudo limpiar el slot temporal", errorLimpieza);
+                mensaje += "\nAdvertencia: no se pudo limpiar la ranura temporal del sensor.";
+            }
+            mostrarEstadoHuella(mensaje, false);
             setTimeout(() => location.reload(), 1500);
         } else {
             mostrarEstadoHuella((resultado.message || `Error HTTP ${resBackend.status}`) + (resultado.debug ? "\n" + resultado.debug : ""), false, true);
@@ -116,6 +126,14 @@ async function esperarResultadoCaptura(baseESP32, timeoutMs = 90000) {
     }
 
     throw new DOMException("Tiempo de captura agotado", "AbortError");
+}
+
+async function limpiarSlotTemporalRemoto(baseESP32) {
+    const { respuesta, data } = await solicitarJson(`${baseESP32}/limpiar`, {}, 10000);
+    return {
+        ok: respuesta.ok && data.status === "success",
+        mensaje: data.message || `No se pudo limpiar el sensor (HTTP ${respuesta.status})`
+    };
 }
 
 function mostrarEstadoHuella(mensaje, cargando = false, error = false) {

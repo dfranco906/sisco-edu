@@ -17,7 +17,6 @@ static_assert(Dy50TemplateTransport::TEMPLATE_BYTES == HUELLA_TEMPLATE_BYTES,
 
 constexpr char WIFI_SSID[] = "esp";
 constexpr char WIFI_PASSWORD[] = "123456789";
-constexpr uint16_t SLOT_TEMPORAL = 1;
 constexpr int DY50_RX = 16;
 constexpr int DY50_TX = 17;
 constexpr int SCREEN_WIDTH = 128;
@@ -82,7 +81,8 @@ bool enrolarHuella() {
   if (finger.image2Tz(2) != FINGERPRINT_OK) { ultimoError = "MUESTRA_2_INVALIDA"; return false; }
   pantalla("PROCESANDO", "Comparando muestras");
   if (finger.createModel() != FINGERPRINT_OK) { ultimoError = "HUELLAS_NO_COINCIDEN"; return false; }
-  if (finger.storeModel(SLOT_TEMPORAL) != FINGERPRINT_OK) { ultimoError = "NO_SE_PUDO_GUARDAR"; return false; }
+  // createModel() deja el template combinado en CharBuffer1. El nodo
+  // registrador solo necesita exportarlo, no persistirlo en la flash DY50.
   templateDisponible = true;
   pantalla("CAPTURADA", "Lista para exportar");
   return true;
@@ -107,7 +107,6 @@ void configurarRutas() {
     cors();
     if (enrolamientoPendiente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
     if (!templateDisponible) { jsonError(404, "No hay huella capturada"); return; }
-    if (finger.loadModel(SLOT_TEMPORAL) != FINGERPRINT_OK) { templateDisponible = false; jsonError(404, "Template temporal no encontrado"); return; }
     if (finger.getModel() != FINGERPRINT_OK) { jsonError(500, "No se pudo iniciar la exportacion"); return; }
 
     // No vaciar el UART aqui: getModel() deja los paquetes PID_DATA del template
@@ -127,12 +126,10 @@ void configurarRutas() {
 
   server.on("/limpiar", HTTP_GET, []() {
     cors();
-    const uint8_t resultado = finger.deleteModel(SLOT_TEMPORAL);
-    if (resultado == FINGERPRINT_OK || resultado == FINGERPRINT_NOTFOUND) {
-      templateDisponible = false;
-      pantalla("ONLINE", WiFi.localIP().toString());
-      server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Ranura temporal limpia\"}");
-    } else jsonError(500, "No se pudo limpiar la ranura temporal");
+    templateDisponible = false;
+    ultimoError = "";
+    pantalla("ONLINE", WiFi.localIP().toString());
+    server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Template temporal liberado\"}");
   });
 
   server.onNotFound([]() { cors(); jsonError(404, "Ruta no encontrada"); });
