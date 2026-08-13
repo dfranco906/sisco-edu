@@ -1,5 +1,6 @@
 async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante") {
     const ipESP32 = "192.168.100.125";
+    const baseESP32 = `http://${ipESP32}`;
 
     mostrarEstadoHuella("Conectando con ESP32...", true);
 
@@ -7,21 +8,28 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
         bloquearBotonesHuella(true);
 
         mostrarEstadoHuella("Registrando huella en el sensor...");
-        const registro = await fetch(`http://${ipESP32}/registrar`);
-        const dataRegistro = await registro.json();
+        const { respuesta: registro, data: dataRegistro } = await solicitarJson(`${baseESP32}/registrar`);
 
-        if (dataRegistro.status !== "success") {
-            mostrarEstadoHuella("Error al registrar: " + dataRegistro.message, false, true);
+        if (!registro.ok || dataRegistro.status !== "success") {
+            mostrarEstadoHuella("Error al registrar: " + (dataRegistro.message || `HTTP ${registro.status}`), false, true);
             bloquearBotonesHuella(false);
             return;
         }
 
-        mostrarEstadoHuella("Obteniendo template biométrico...");
-        const respuesta = await fetch(`http://${ipESP32}/obtener_template`);
-        const data = await respuesta.json();
+        mostrarEstadoHuella("Complete las dos lecturas en el sensor...", true);
+        const estadoCaptura = await esperarResultadoCaptura(baseESP32);
+        if (!estadoCaptura.template_disponible) {
+            const detalle = estadoCaptura.ultimo_error || "No se genero un template biometrico";
+            mostrarEstadoHuella("Error al capturar la huella: " + detalle, false, true);
+            bloquearBotonesHuella(false);
+            return;
+        }
 
-        if (data.status !== "success") {
-            mostrarEstadoHuella("Error al obtener template: " + data.message, false, true);
+        mostrarEstadoHuella("Obteniendo template biometrico...", true);
+        const { respuesta, data } = await solicitarJson(`${baseESP32}/obtener_template`);
+
+        if (!respuesta.ok || data.status !== "success") {
+            mostrarEstadoHuella("Error al obtener template: " + (data.message || `HTTP ${respuesta.status}`), false, true);
             bloquearBotonesHuella(false);
             return;
         }
@@ -43,26 +51,71 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
         formData.append("template", data.template);
         formData.append("bytes", data.bytes);
 
-        const resBackend = await fetch(window.BASE_URL + "src/api/Huella/guardar_template.php", {
+        const { respuesta: resBackend, data: resultado } = await solicitarJson(window.BASE_URL + "src/api/Huella/guardar_template.php", {
             method: "POST",
             body: formData
         });
 
-        const resultado = await resBackend.json();
-
-        if (resultado.status === "success") {
+        if (resBackend.ok && resultado.status === "success") {
             mostrarEstadoHuella("Huella guardada correctamente. Sincronización Gateway pendiente.", false);
             setTimeout(() => location.reload(), 1500);
         } else {
-            mostrarEstadoHuella(resultado.message + (resultado.debug ? "\n" + resultado.debug : ""), false, true);
+            mostrarEstadoHuella((resultado.message || `Error HTTP ${resBackend.status}`) + (resultado.debug ? "\n" + resultado.debug : ""), false, true);
             bloquearBotonesHuella(false);
         }
 
     } catch (error) {
         console.error(error);
-        mostrarEstadoHuella("No se pudo comunicar con el ESP32 o backend.", false, true);
+        const detalle = error.name === "AbortError"
+            ? "La captura excedio el tiempo de espera"
+            : error.message;
+        mostrarEstadoHuella("No se pudo completar el registro: " + detalle, false, true);
         bloquearBotonesHuella(false);
     }
+}
+
+async function solicitarJson(url, opciones = {}, timeoutMs = 90000) {
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), timeoutMs);
+
+    try {
+        const respuesta = await fetch(url, {
+            ...opciones,
+            cache: "no-store",
+            signal: controlador.signal
+        });
+        let data;
+        try {
+            data = await respuesta.json();
+        } catch (_) {
+            throw new Error(`Respuesta JSON invalida de ${url}`);
+        }
+        return { respuesta, data };
+    } finally {
+        clearTimeout(temporizador);
+    }
+}
+
+async function esperarResultadoCaptura(baseESP32, timeoutMs = 90000) {
+    const limite = Date.now() + timeoutMs;
+
+    while (Date.now() < limite) {
+        const restante = limite - Date.now();
+        const { respuesta, data } = await solicitarJson(
+            `${baseESP32}/estado`,
+            {},
+            Math.max(1000, restante)
+        );
+
+        if (!respuesta.ok || data.status !== "success") {
+            throw new Error(data.message || `No se pudo consultar el estado (HTTP ${respuesta.status})`);
+        }
+        if (!data.capturando) return data;
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    throw new DOMException("Tiempo de captura agotado", "AbortError");
 }
 
 function mostrarEstadoHuella(mensaje, cargando = false, error = false) {

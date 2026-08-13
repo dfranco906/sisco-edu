@@ -42,10 +42,8 @@ void pantalla(const String &linea1, const String &linea2 = "") {
 
 void cors() { server.sendHeader("Access-Control-Allow-Origin", "*"); }
 
-String jsonError(int codigo, const String &mensaje) {
-  cors();
+void jsonError(int codigo, const String &mensaje) {
   server.send(codigo, "application/json", "{\"status\":\"error\",\"message\":\"" + mensaje + "\"}");
-  return "";
 }
 
 bool esperarDedo(const String &titulo, const String &subtitulo, uint32_t timeoutMs = 30000) {
@@ -94,13 +92,15 @@ void configurarRutas() {
   server.on("/registrar", HTTP_GET, []() {
     cors();
     if (enrolamientoPendiente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
+    templateDisponible = false;
+    ultimoError = "";
     enrolamientoPendiente = true;
     server.send(202, "application/json", "{\"status\":\"success\",\"message\":\"Captura iniciada\"}");
   });
 
   server.on("/estado", HTTP_GET, []() {
     cors();
-    server.send(200, "application/json", "{\"status\":\"success\",\"capturando\":" + String(enrolamientoPendiente ? "true" : "false") + ",\"template_disponible\":" + String(templateDisponible ? "true" : "false") + "}");
+    server.send(200, "application/json", "{\"status\":\"success\",\"capturando\":" + String(enrolamientoPendiente ? "true" : "false") + ",\"template_disponible\":" + String(templateDisponible ? "true" : "false") + ",\"ultimo_error\":\"" + ultimoError + "\"}");
   });
 
   server.on("/obtener_template", HTTP_GET, []() {
@@ -135,7 +135,7 @@ void configurarRutas() {
     } else jsonError(500, "No se pudo limpiar la ranura temporal");
   });
 
-  server.onNotFound([]() { jsonError(404, "Ruta no encontrada"); });
+  server.onNotFound([]() { cors(); jsonError(404, "Ruta no encontrada"); });
 }
 
 void setup() {
