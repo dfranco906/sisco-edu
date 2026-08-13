@@ -11,6 +11,10 @@
 #include <Adafruit_SSD1306.h>
 #include "dy50_template_transport.h"
 
+constexpr size_t HUELLA_TEMPLATE_BYTES = 1536;
+static_assert(Dy50TemplateTransport::TEMPLATE_BYTES == HUELLA_TEMPLATE_BYTES,
+              "dy50_template_transport.h desactualizado: se requieren 1536 bytes");
+
 constexpr char WIFI_SSID[] = "esp";
 constexpr char WIFI_PASSWORD[] = "123456789";
 constexpr uint16_t SLOT_TEMPORAL = 1;
@@ -136,6 +140,10 @@ void configurarRutas() {
 
 void setup() {
   Serial.begin(115200);
+  delay(300);
+  Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX\n",
+                (unsigned int)HUELLA_TEMPLATE_BYTES,
+                (unsigned int)(HUELLA_TEMPLATE_BYTES * 2));
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) for (;;) delay(1000);
   pantalla("INICIANDO", "Nodo registrador");
   dy50Serial.begin(57600, SERIAL_8N1, DY50_RX, DY50_TX);

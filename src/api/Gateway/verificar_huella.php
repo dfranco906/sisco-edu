@@ -39,8 +39,10 @@ $stmt = $db->prepare("
         p.apellido AS profesor_apellido,
         p.cedula_identidad AS profesor_cedula
     FROM huellas_templates h
-    LEFT JOIN estudiantes e ON h.id_estudiante = e.id_estudiante
-    LEFT JOIN profesores p ON h.id_profesor = p.id_profesor
+    LEFT JOIN estudiantes e ON e.activo = 1
+        AND (e.id_estudiante = h.id_estudiante OR (h.id_estudiante IS NULL AND e.user_id_global = h.user_id_global))
+    LEFT JOIN profesores p ON p.activo = 1
+        AND (p.id_profesor = h.id_profesor OR (h.id_profesor IS NULL AND p.user_id_global = h.user_id_global))
     WHERE h.id_huella = :huella_id
       AND h.activo = 1
     LIMIT 1

@@ -16,8 +16,10 @@ $stmt = $db->prepare("SELECT s.id_sync, s.id_huella, s.id_aula, h.user_id_global
         p.id_profesor, p.cedula_identidad AS ci_profesor
     FROM sync_biometrica s
     INNER JOIN huellas_templates h ON h.id_huella = s.id_huella AND h.activo = 1
-    LEFT JOIN estudiantes e ON e.user_id_global = h.user_id_global AND e.activo = 1
-    LEFT JOIN profesores p ON p.user_id_global = h.user_id_global AND p.activo = 1
+    LEFT JOIN estudiantes e ON e.activo = 1
+        AND (e.id_estudiante = h.id_estudiante OR (h.id_estudiante IS NULL AND e.user_id_global = h.user_id_global))
+    LEFT JOIN profesores p ON p.activo = 1
+        AND (p.id_profesor = h.id_profesor OR (h.id_profesor IS NULL AND p.user_id_global = h.user_id_global))
     WHERE s.estado = 'PENDIENTE' AND s.id_aula = :id_aula
     ORDER BY s.id_sync ASC LIMIT 1");
 $stmt->execute([':id_aula' => $id_aula]);

@@ -2,6 +2,7 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../config/biometria.php';
 require_once __DIR__ . '/../../classes/SyncBiometrica.php';
 
 $db = (new Database())->getConnection();
@@ -19,13 +20,17 @@ if (!$id_huella) {
 $stmtHuella = $db->prepare("
     SELECT
         h.user_id_global,
+        h.fingerprint_data,
+        h.formato,
         e.id_estudiante,
         p.id_profesor,
         g.id_aula AS id_aula_estudiante
     FROM huellas_templates h
-    LEFT JOIN estudiantes e ON h.user_id_global = e.user_id_global AND e.activo = 1
+    LEFT JOIN estudiantes e ON e.activo = 1
+        AND (e.id_estudiante = h.id_estudiante OR (h.id_estudiante IS NULL AND e.user_id_global = h.user_id_global))
     LEFT JOIN grados g ON e.id_grado = g.id_grado AND g.activo = 1
-    LEFT JOIN profesores p ON h.user_id_global = p.user_id_global AND p.activo = 1
+    LEFT JOIN profesores p ON p.activo = 1
+        AND (p.id_profesor = h.id_profesor OR (h.id_profesor IS NULL AND p.user_id_global = h.user_id_global))
     WHERE h.id_huella = :id_huella
       AND h.activo = 1
     LIMIT 1
@@ -36,6 +41,13 @@ $huella = $stmtHuella->fetch(PDO::FETCH_ASSOC);
 if (!$huella) {
     http_response_code(404);
     echo json_encode(["status" => "error", "message" => "Huella no encontrada"]);
+    exit;
+}
+
+$template = trim((string)$huella["fingerprint_data"]);
+if (strtoupper((string)$huella["formato"]) !== 'HEX' || !es_template_huella_hex_valido($template)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "Template incompatible: se requieren 1536 bytes HEX"]);
     exit;
 }
 

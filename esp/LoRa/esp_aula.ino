@@ -12,8 +12,14 @@ const char *CODIGO_AULA = "AULA_A";
 const int MI_LORA_ID = 101;
 const int GATEWAY_LORA_ID = 100;
 const int LORA_NETWORK_ID = 18;
-const int CHARS_POR_CHUNK = 128;
-const int MAX_CHUNKS_HUELLA = (Dy50TemplateTransport::TEMPLATE_BYTES * 2 + CHARS_POR_CHUNK - 1) / CHARS_POR_CHUNK;
+constexpr size_t HUELLA_TEMPLATE_BYTES = 1536;
+constexpr size_t HUELLA_TEMPLATE_HEX_CHARS = HUELLA_TEMPLATE_BYTES * 2;
+constexpr int CHARS_POR_CHUNK = 128;
+constexpr int MAX_CHUNKS_HUELLA = HUELLA_TEMPLATE_HEX_CHARS / CHARS_POR_CHUNK;
+static_assert(Dy50TemplateTransport::TEMPLATE_BYTES == HUELLA_TEMPLATE_BYTES,
+              "dy50_template_transport.h desactualizado: se requieren 1536 bytes");
+static_assert(HUELLA_TEMPLATE_HEX_CHARS % CHARS_POR_CHUNK == 0,
+              "El template debe dividirse en fragmentos LoRa completos");
 
 #define DY50_RX 16
 #define DY50_TX 17
@@ -39,7 +45,7 @@ uint32_t ultimoRegistroSlot[201] = {0};
 
 struct RegistroUsuario { char ci[15]; char tipo[15]; bool registrado; };
 RegistroUsuario dbLocal[201] = {};
-char huellaBuffer[Dy50TemplateTransport::TEMPLATE_BYTES * 2 + 1] = {};
+char huellaBuffer[HUELLA_TEMPLATE_HEX_CHARS + 1] = {};
 int ultimoIndiceProcesado = -1;
 int totalChunksEsperados = 0;
 size_t longitudHuellaHex = 0;
@@ -63,6 +69,11 @@ String campo(const String &texto, int indice);
 
 void setup() {
   Serial.begin(115200);
+  delay(300);
+  Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
+                (unsigned int)HUELLA_TEMPLATE_BYTES,
+                (unsigned int)HUELLA_TEMPLATE_HEX_CHARS,
+                MAX_CHUNKS_HUELLA);
   pinMode(PIN_BOTON_SALIDA, INPUT_PULLUP);
   if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) for (;;) delay(1000);
   oled.setTextColor(SSD1306_WHITE);
@@ -130,7 +141,7 @@ void cargarDbLocalDesdeNVS() {
 }
 
 bool guardarHuellaDY50(const String &hex, int slot, String &error) {
-  static uint8_t data[Dy50TemplateTransport::TEMPLATE_BYTES];
+  static uint8_t data[HUELLA_TEMPLATE_BYTES];
   size_t bytes = 0;
   if (!Dy50TemplateTransport::decodeHex(hex, data, sizeof(data), bytes, error) || bytes != sizeof(data)) {
     if (error.length() == 0) error = "TAMANO_TEMPLATE_INVALIDO";
@@ -182,25 +193,41 @@ void atenderComandosLoRa() {
     const int idSync = campo(resto, 0).toInt(), idHuella = campo(resto, 1).toInt(), idAula = campo(resto, 2).toInt();
     const String ci = campo(resto, 3), tipo = campo(resto, 4), totalTexto = campo(resto, 5), hex = campo(resto, 6);
     const int total = totalTexto.toInt();
-    if (!idSync || !idHuella || idAula != ID_AULA || ci.length() == 0 || tipo.length() == 0 || total < 1 || total > MAX_CHUNKS_HUELLA || hex.length() == 0 || hex.length() > CHARS_POR_CHUNK) return;
+    const bool tipoValido = tipo == "estudiante" || tipo == "profesor";
+    if (!idSync || !idHuella || idAula != ID_AULA || ci.length() == 0 || ci.length() >= sizeof(ciSyncActual) || !tipoValido || tipo.length() >= sizeof(tipoSyncActual) || total != MAX_CHUNKS_HUELLA || hex.length() != CHARS_POR_CHUNK) {
+      Serial.printf("[SYNC] Inicio rechazado: sync=%d, huella=%d, aula=%d/%d, total=%d/%d, primer_chunk=%u/%d, ci=%s, tipo=%s\n",
+                    idSync, idHuella, idAula, ID_AULA, total, MAX_CHUNKS_HUELLA,
+                    (unsigned int)hex.length(), CHARS_POR_CHUNK,
+                    ci.length() ? "OK" : "FALTA", tipoValido ? "OK" : "INVALIDO");
+      return;
+    }
     limpiarSyncRecibida();
     idSyncActual = idSync; idHuellaActual = idHuella; idAulaSyncActual = idAula;
     ci.toCharArray(ciSyncActual, sizeof(ciSyncActual)); tipo.toCharArray(tipoSyncActual, sizeof(tipoSyncActual));
     memcpy(huellaBuffer, hex.c_str(), hex.length()); longitudHuellaHex = hex.length();
     totalChunksEsperados = total; ultimoIndiceProcesado = 0; tiempoPrimerChunk = tiempoUltimoChunk = millis(); estadoSync = SYNC_RECIBIENDO;
+    Serial.printf("[SYNC] Inicio aceptado: sync=%d, huella=%d, %d fragmentos de %d caracteres\n",
+                  idSyncActual, idHuellaActual, totalChunksEsperados, CHARS_POR_CHUNK);
     enviarAckLoRa(0); msgOled("SYNC", "Recibiendo..."); return;
   }
 
-  if (estadoSync != SYNC_RECIBIENDO || chunk < 0 || chunk >= totalChunksEsperados) return;
+  if (estadoSync != SYNC_RECIBIENDO || chunk < 0 || chunk >= totalChunksEsperados) {
+    Serial.printf("[SYNC] Fragmento %d rechazado: estado=%d, total=%d\n", chunk, estadoSync, totalChunksEsperados);
+    return;
+  }
   if (chunk <= ultimoIndiceProcesado) { enviarAckLoRa(chunk); return; }
-  if (chunk != ultimoIndiceProcesado + 1 || resto.length() == 0 || resto.length() > CHARS_POR_CHUNK) return;
+  if (chunk != ultimoIndiceProcesado + 1 || resto.length() != CHARS_POR_CHUNK) {
+    Serial.printf("[SYNC] Fragmento %d rechazado: esperado=%d, longitud=%u/%d\n",
+                  chunk, ultimoIndiceProcesado + 1, (unsigned int)resto.length(), CHARS_POR_CHUNK);
+    return;
+  }
   const size_t offset = (size_t)chunk * CHARS_POR_CHUNK;
-  if (offset + resto.length() > sizeof(huellaBuffer) - 1) { notificarResultadoSync(false, 0, "BUFFER_OVERFLOW"); limpiarSyncRecibida(); estadoSync = SYNC_IDLE; return; }
+  if (offset + resto.length() > HUELLA_TEMPLATE_HEX_CHARS) { notificarResultadoSync(false, 0, "BUFFER_OVERFLOW"); limpiarSyncRecibida(); estadoSync = SYNC_IDLE; return; }
   memcpy(huellaBuffer + offset, resto.c_str(), resto.length()); longitudHuellaHex = offset + resto.length(); ultimoIndiceProcesado = chunk; tiempoUltimoChunk = millis(); enviarAckLoRa(chunk);
   if (chunk != totalChunksEsperados - 1) return;
 
   estadoSync = SYNC_PROCESANDO; msgOled("GUARDANDO", "En DY50");
-  if (longitudHuellaHex != Dy50TemplateTransport::TEMPLATE_BYTES * 2) {
+  if (longitudHuellaHex != HUELLA_TEMPLATE_HEX_CHARS) {
     notificarResultadoSync(false, 0, "LONGITUD_INVALIDA");
   } else {
     huellaBuffer[longitudHuellaHex] = '\0';

@@ -4,7 +4,6 @@
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
-#include "dy50_template_transport.h"
 
 const char *ssid = "esp";
 const char *password = "123456789";
@@ -12,7 +11,12 @@ const char *BASE = "http://192.168.100.109/tiago3roBTI2026/sisco-edu/";
 const char *API_KEY = "SISCO_GATEWAY_2026_SECRETO";
 const int MI_LORA_ID = 100;
 const int LORA_NETWORK_ID = 18;
-const int CHARS_POR_CHUNK = 128;
+constexpr size_t HUELLA_TEMPLATE_BYTES = 1536;
+constexpr size_t HUELLA_TEMPLATE_HEX_CHARS = HUELLA_TEMPLATE_BYTES * 2;
+constexpr int CHARS_POR_CHUNK = 128;
+constexpr int TOTAL_CHUNKS_HUELLA = HUELLA_TEMPLATE_HEX_CHARS / CHARS_POR_CHUNK;
+static_assert(HUELLA_TEMPLATE_HEX_CHARS % CHARS_POR_CHUNK == 0,
+              "El template debe dividirse en fragmentos LoRa completos");
 const int MAX_REINTENTOS = 8;
 #define LORA_RX 16
 #define LORA_TX 17
@@ -44,6 +48,10 @@ void setup() {
   Serial.println("\n========================================");
   Serial.println("  SISCO-EDU - GATEWAY LoRa / Wi-Fi");
   Serial.println("========================================");
+  Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
+                (unsigned int)HUELLA_TEMPLATE_BYTES,
+                (unsigned int)HUELLA_TEMPLATE_HEX_CHARS,
+                TOTAL_CHUNKS_HUELLA);
   Serial.printf("[INICIO] Configurando LoRa: RX=%d, TX=%d, direccion=%d, red=%d\n",
                 LORA_RX, LORA_TX, MI_LORA_ID, LORA_NETWORK_ID);
   loraSerial.begin(115200, SERIAL_8N1, LORA_RX, LORA_TX);
@@ -163,8 +171,9 @@ bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
 }
 
 bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella) {
-  if (huella.length() != Dy50TemplateTransport::TEMPLATE_BYTES * 2 || (huella.length() & 1)) { Serial.println("[LORA] Template HEX invalido"); return false; }
+  if (huella.length() != HUELLA_TEMPLATE_HEX_CHARS || (huella.length() & 1)) { Serial.println("[LORA] Template HEX invalido"); return false; }
   const int total = (huella.length() + CHARS_POR_CHUNK - 1) / CHARS_POR_CHUNK;
+  if (total != TOTAL_CHUNKS_HUELLA) { Serial.println("[LORA] Cantidad de fragmentos invalida"); return false; }
   Serial.printf("[LORA] Enviando huella %d al aula %d (destino %d, %d fragmentos)\n",
                 idHuella, idAula, loraId, total);
   for (int chunk = 0; chunk < total; ++chunk) {
@@ -221,13 +230,13 @@ bool pedirSyncAula(const DispositivoAula &aula) {
   const int idSync = doc["data"]["id_sync"] | 0, idHuella = doc["data"]["id_huella"] | 0, idAula = doc["data"]["id_aula"] | 0;
   const int templateBytes = doc["data"]["bytes"] | 0;
   const String ci = doc["data"]["ci"] | "", tipo = doc["data"]["tipo_persona"] | "", huella = doc["data"]["huella_base64"] | "";
-  if (!idSync || !idHuella || idAula != aula.idAula || templateBytes != Dy50TemplateTransport::TEMPLATE_BYTES || !ci.length() || !tipo.length()) {
+  if (!idSync || !idHuella || idAula != aula.idAula || templateBytes != HUELLA_TEMPLATE_BYTES || !ci.length() || !tipo.length() || huella.length() != HUELLA_TEMPLATE_HEX_CHARS) {
     Serial.printf("[SYNC] Aula %d: datos invalidos (sync=%d, huella=%d, id_aula=%d, bytes=%d/%u, ci=%s, tipo=%s, hex=%u/%u)\n",
                   aula.idAula, idSync, idHuella, idAula, templateBytes,
-                  (unsigned int)Dy50TemplateTransport::TEMPLATE_BYTES,
+                  (unsigned int)HUELLA_TEMPLATE_BYTES,
                   ci.length() ? "OK" : "FALTA", tipo.length() ? "OK" : "FALTA",
                   (unsigned int)huella.length(),
-                  (unsigned int)(Dy50TemplateTransport::TEMPLATE_BYTES * 2));
+                  (unsigned int)HUELLA_TEMPLATE_HEX_CHARS);
     confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS");
     return false;
   }
