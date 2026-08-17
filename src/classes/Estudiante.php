@@ -10,6 +10,18 @@ class Estudiante {
         $this->conn = $db;
     }
 
+    public function gradoActivoExiste($id_grado) {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM grados g
+            INNER JOIN aulas a ON a.id_aula = g.id_aula AND a.activo = 1
+            WHERE g.id_grado = :id_grado
+              AND g.activo = 1
+        ");
+        $stmt->execute([":id_grado" => $id_grado]);
+        return (int) $stmt->fetchColumn() === 1;
+    }
+
     public function crear() {
         $query = "INSERT INTO estudiantes
                   SET nombre=:nombre,
@@ -36,11 +48,25 @@ class Estudiante {
                     e.apellido,
                     e.cedula_identidad,
                     e.user_id_global,
+                    e.id_grado,
                     g.nombre AS grado,
+                    g.id_aula,
+                    a.nombre AS aula,
+                    a.codigo AS codigo_aula,
+                    CASE
+                        WHEN e.huella_id IS NOT NULL OR EXISTS (
+                            SELECT 1
+                            FROM huellas_templates ht
+                            WHERE ht.user_id_global = e.user_id_global
+                              AND ht.activo = 1
+                        ) THEN 'Registrada'
+                        ELSE 'Pendiente'
+                    END AS huella,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
                   LEFT JOIN grados g ON e.id_grado = g.id_grado
+                  LEFT JOIN aulas a ON g.id_aula = a.id_aula
                   WHERE e.activo = 1
                   ORDER BY e.nombre ASC";
 
@@ -56,11 +82,25 @@ class Estudiante {
                     e.apellido,
                     e.cedula_identidad,
                     e.user_id_global,
+                    e.id_grado,
                     g.nombre AS grado,
+                    g.id_aula,
+                    a.nombre AS aula,
+                    a.codigo AS codigo_aula,
+                    CASE
+                        WHEN e.huella_id IS NOT NULL OR EXISTS (
+                            SELECT 1
+                            FROM huellas_templates ht
+                            WHERE ht.user_id_global = e.user_id_global
+                              AND ht.activo = 1
+                        ) THEN 'Registrada'
+                        ELSE 'Pendiente'
+                    END AS huella,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
                   LEFT JOIN grados g ON e.id_grado = g.id_grado
+                  LEFT JOIN aulas a ON g.id_aula = a.id_aula
                   WHERE e.activo = 0
                   ORDER BY e.nombre ASC";
 
@@ -128,12 +168,14 @@ class Estudiante {
     public function contarDependencias() {
         $query = "SELECT
                     (SELECT COUNT(*) FROM asistencias_estudiantes WHERE id_estudiante=:id1) +
-                    (SELECT COUNT(*) FROM solicitudes_huella WHERE id_estudiante=:id2)";
+                    (SELECT COUNT(*) FROM solicitudes_huella WHERE id_estudiante=:id2) +
+                    (SELECT COUNT(*) FROM huellas_templates WHERE id_estudiante=:id3)";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
             ":id1" => $this->id_estudiante,
-            ":id2" => $this->id_estudiante
+            ":id2" => $this->id_estudiante,
+            ":id3" => $this->id_estudiante
         ]);
 
         return (int) $stmt->fetchColumn();

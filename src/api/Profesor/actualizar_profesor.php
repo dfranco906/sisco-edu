@@ -6,35 +6,60 @@ require_once __DIR__ . '/../../classes/Profesor.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    echo json_encode(["success" => false, "status" => "error", "message" => "Método no permitido."]);
     exit;
 }
 
-$db = (new Database())->getConnection();
-$profesor = new Profesor($db);
+$idProfesor = filter_var($_POST['id_profesor'] ?? null, FILTER_VALIDATE_INT);
+$nombre = trim((string) ($_POST['nombre'] ?? ''));
+$apellido = trim((string) ($_POST['apellido'] ?? ''));
+$cedula = trim((string) ($_POST['cedula_identidad'] ?? ''));
 
-    $profesor->id_profesor = $_POST['id_profesor'] ?? null;
-    $profesor->nombre = $_POST['nombre'] ?? null;
-    $profesor->apellido = $_POST['apellido'] ?? null;
-    $profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
+if (!$idProfesor || $nombre === '' || $apellido === '' || $cedula === '') {
+    http_response_code(422);
+    echo json_encode(["success" => false, "status" => "error", "message" => "Profesor, nombre, apellido y cédula son obligatorios."]);
+    exit;
+}
 
-    if ($_POST['user_id_global'] ?? null) {
-        $profesor->user_id_global = $_POST['user_id_global'];
-    } else {
-        $stmtActual = $db->prepare("SELECT user_id_global FROM profesores WHERE id_profesor = :id");
-        $stmtActual->execute([":id" => $profesor->id_profesor]);
-        $profesor->user_id_global = $stmtActual->fetchColumn() ?: ('PROF_' . uniqid() . '_' . random_int(100, 999));
+try {
+    $db = (new Database())->getConnection();
+    $stmtActual = $db->prepare("SELECT user_id_global FROM profesores WHERE id_profesor = :id LIMIT 1");
+    $stmtActual->execute([":id" => $idProfesor]);
+    $userIdActual = $stmtActual->fetchColumn();
+
+    if ($userIdActual === false) {
+        http_response_code(404);
+        echo json_encode(["success" => false, "status" => "error", "message" => "El profesor no existe."]);
+        exit;
     }
 
-    if (!$profesor->id_profesor || !$profesor->nombre || !$profesor->apellido || !$profesor->cedula_identidad) {
-    echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
-    exit;
+    $profesor = new Profesor($db);
+    $profesor->id_profesor = $idProfesor;
+    $profesor->nombre = $nombre;
+    $profesor->apellido = $apellido;
+    $profesor->cedula_identidad = $cedula;
+    $profesor->user_id_global = trim((string) ($_POST['user_id_global'] ?? ''))
+        ?: ($userIdActual ?: ('PROF_' . uniqid() . '_' . random_int(100, 999)));
+
+    $resultado = $profesor->actualizar();
+    echo json_encode([
+        "success" => (bool) $resultado,
+        "status" => $resultado ? "success" : "error",
+        "message" => $resultado ? "Profesor actualizado correctamente." : "No se pudo actualizar el profesor.",
+        "data" => $resultado ? ["id_profesor" => $idProfesor] : null
+    ]);
+} catch (PDOException $e) {
+    error_log('actualizar_profesor: ' . $e->getMessage());
+    $duplicado = $e->getCode() === '23000';
+    http_response_code($duplicado ? 409 : 500);
+    echo json_encode([
+        "success" => false,
+        "status" => "error",
+        "message" => $duplicado ? "La cédula ya está registrada para otro profesor." : "No se pudo actualizar el profesor."
+    ]);
+} catch (Throwable $e) {
+    error_log('actualizar_profesor: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(["success" => false, "status" => "error", "message" => "No se pudo actualizar el profesor."]);
 }
-
-$resultado = $profesor->actualizar();
-
-echo json_encode([
-    "status" => $resultado ? "success" : "error",
-    "message" => $resultado ? "Profesor actualizado correctamente" : "Error al actualizar profesor"
-]);
 ?>

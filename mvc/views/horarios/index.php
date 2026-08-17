@@ -112,12 +112,20 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
         <form id="form-crear-horario" data-api="<?= base_url('src/api/Horario/crear_horario.php') ?>">
             <div class="app-form-grid">
-                <label class="font-semibold sm:col-span-2">
-                    Asignación
-                    <select name="id_asignacion" id="crear-id-asignacion" class="app-input mt-2 w-full" required>
-                        <option value="">Cargando asignaciones...</option>
+                <label class="font-semibold">
+                    Profesor
+                    <select name="id_profesor" id="crear-id-profesor" class="app-input mt-2 w-full" required>
+                        <option value="">Cargando profesores...</option>
                     </select>
-                    <span class="app-help">Las asignaciones actuales no están relacionadas con un grado.</span>
+                </label>
+
+                <label class="font-semibold">
+                    Materia
+                    <select name="id_materia" id="crear-id-materia" class="app-input mt-2 w-full" required disabled>
+                        <option value="">Seleccione primero un profesor</option>
+                    </select>
+                    <input type="hidden" name="id_asignacion" id="crear-id-asignacion">
+                    <span class="app-help">Solo se muestran materias asignadas al profesor.</span>
                 </label>
 
                 <label class="font-semibold">
@@ -183,9 +191,16 @@ require_once __DIR__ . '/../../../src/config/app.php';
         <form id="form-editar-horario" data-api="<?= base_url('src/api/Horario/actualizar_horario.php') ?>">
             <input type="hidden" name="id_horario" id="editar-id-horario">
             <div class="app-form-grid">
-                <label class="font-semibold sm:col-span-2">
-                    Asignación
-                    <select name="id_asignacion" id="editar-id-asignacion" class="app-input mt-2 w-full" required></select>
+                <label class="font-semibold">
+                    Profesor
+                    <select name="id_profesor" id="editar-id-profesor" class="app-input mt-2 w-full" required></select>
+                </label>
+
+                <label class="font-semibold">
+                    Materia
+                    <select name="id_materia" id="editar-id-materia" class="app-input mt-2 w-full" required></select>
+                    <input type="hidden" name="id_asignacion" id="editar-id-asignacion">
+                    <span class="app-help">Solo se muestran materias asignadas al profesor.</span>
                 </label>
 
                 <label class="font-semibold">
@@ -235,8 +250,8 @@ require_once __DIR__ . '/../../../src/config/app.php';
 <script>
 window.HORARIOS_CONFIG = <?= json_encode([
     'apiHorarios' => base_url('src/api/Horario/leer_horarios.php'),
-    'apiGrados' => base_url('src/api/Grado/leer_grados.php'),
-    'apiAsignaciones' => base_url('src/api/Asignaciones/leer_asignaciones.php'),
+    'apiGrados' => base_url('src/api/Grado/leer_grados.php?opciones=1'),
+    'apiAsignaciones' => base_url('src/api/Asignaciones/leer_asignaciones.php?opciones=1'),
     'apiDesactivar' => base_url('src/api/Horario/desactivar_horario.php')
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 </script>

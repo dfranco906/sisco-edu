@@ -36,13 +36,61 @@ class Horario
     {
         $stmt = $this->conn->prepare("
             SELECT COUNT(*)
-            FROM asignacion_docente
-            WHERE id_asignacion = :id_asignacion
-              AND activo = 1
+            FROM asignacion_docente ad
+            INNER JOIN profesores p ON p.id_profesor = ad.id_profesor AND p.activo = 1
+            INNER JOIN materias m ON m.id_materia = ad.id_materia AND m.activo = 1
+            WHERE ad.id_asignacion = :id_asignacion
+              AND ad.activo = 1
         ");
         $stmt->execute([":id_asignacion" => $id_asignacion]);
 
         return (int) $stmt->fetchColumn() > 0;
+    }
+
+    public function obtenerConflicto($excluirId = null)
+    {
+        $query = "SELECT
+                    h.id_horario,
+                    CASE
+                        WHEN h.id_grado = :id_grado_tipo THEN 'grado'
+                        WHEN h.id_aula = :id_aula_tipo THEN 'aula'
+                        ELSE 'profesor'
+                    END AS tipo
+                  FROM horarios h
+                  INNER JOIN asignacion_docente ad_existente
+                    ON ad_existente.id_asignacion = h.id_asignacion
+                  INNER JOIN asignacion_docente ad_nueva
+                    ON ad_nueva.id_asignacion = :id_asignacion_nueva
+                  WHERE h.activo = 1
+                    AND h.dia_semana = :dia_semana
+                    AND h.hora_inicio < :hora_fin
+                    AND h.hora_fin > :hora_inicio
+                    AND (
+                        h.id_grado = :id_grado_conflicto
+                        OR h.id_aula = :id_aula_conflicto
+                        OR ad_existente.id_profesor = ad_nueva.id_profesor
+                    )";
+
+        $params = [
+            ":id_grado_tipo" => $this->id_grado,
+            ":id_aula_tipo" => $this->id_aula,
+            ":id_asignacion_nueva" => $this->id_asignacion,
+            ":dia_semana" => $this->dia_semana,
+            ":hora_fin" => $this->hora_fin,
+            ":hora_inicio" => $this->hora_inicio,
+            ":id_grado_conflicto" => $this->id_grado,
+            ":id_aula_conflicto" => $this->id_aula
+        ];
+
+        if ($excluirId !== null) {
+            $query .= " AND h.id_horario <> :excluir_id";
+            $params[":excluir_id"] = $excluirId;
+        }
+
+        $query .= " ORDER BY h.hora_inicio LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function crear()
@@ -76,8 +124,11 @@ class Horario
                 h.hora_fin,
                 h.id_aula,
                 h.activo,
-                g.nombre AS grado,
-                a.nombre AS aula,
+                ad.id_profesor,
+                ad.id_materia,
+                COALESCE(NULLIF(g.nombre, ''), NULLIF(h.grado, ''), 'Sin grado') AS grado,
+                COALESCE(NULLIF(a.nombre, ''), NULLIF(h.aula, ''), 'Sin aula') AS aula,
+                a.codigo AS codigo_aula,
                 m.nombre AS materia,
                 CONCAT(p.nombre, ' ', p.apellido) AS profesor
             FROM horarios h
@@ -88,7 +139,7 @@ class Horario
             LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
             WHERE h.activo = :activo
             ORDER BY
-                g.nombre,
+                COALESCE(NULLIF(g.nombre, ''), NULLIF(h.grado, '')),
                 FIELD(h.dia_semana, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'),
                 h.hora_inicio
         ");

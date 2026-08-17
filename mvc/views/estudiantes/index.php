@@ -2,13 +2,14 @@
 $titulo = "Estudiantes";
 $api = "src/api/Estudiante/leer_estudiantes.php";
 
-$columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado"];
+$columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado", "aula", "huella", "activo"];
 
 $filtros = [
     "buscar" => ["nombre", "apellido", "cedula_identidad"],
     "placeholder" => "Buscar estudiante...",
     "selects" => [
-        ["campo" => "grado", "label" => "Grado"]
+        ["campo" => "grado", "label" => "Grado"],
+        ["campo" => "aula", "label" => "Aula"]
     ]
 ];
 
@@ -22,7 +23,7 @@ $formCrear = [
             "name" => "id_grado",
             "label" => "Grado",
             "type" => "select",
-            "api" => "src/api/Grado/leer_grados.php",
+            "api" => "src/api/Grado/leer_grados.php?opciones=1",
             "value" => "id_grado",
             "labelField" => "descripcion"
         ]
@@ -33,6 +34,19 @@ $apiActualizar = "src/api/Estudiante/actualizar_estudiante.php";
 $apiDesactivar = "src/api/Estudiante/desactivar_estudiante.php";
 $urlDesactivados = "mvc/views/estudiantes/desactivados.php";
 $idCampo = "id_estudiante";
-$camposEditar = ["nombre", "apellido", "cedula_identidad"];
+$camposEditar = [
+    ["name" => "nombre", "label" => "Nombre", "type" => "text"],
+    ["name" => "apellido", "label" => "Apellido", "type" => "text"],
+    ["name" => "cedula_identidad", "label" => "Cédula", "type" => "text"],
+    [
+        "name" => "id_grado",
+        "label" => "Grado",
+        "type" => "select",
+        "api" => "src/api/Grado/leer_grados.php?opciones=1",
+        "value" => "id_grado",
+        "labelField" => "descripcion",
+        "currentLabelFields" => ["grado", "aula"]
+    ]
+];
 
 require_once __DIR__ . '/../partials/table_page.php';

@@ -2,6 +2,14 @@
 require_once __DIR__ . '/../../../src/config/app.php';
 require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
+$etiquetasColumnasDefault = [
+    'anio_lectivo' => 'Año lectivo',
+    'cedula_identidad' => 'Cédula',
+    'codigo_aula' => 'Código aula',
+    'dia_semana' => 'Día',
+    'hora_inicio' => 'Hora inicio',
+    'hora_fin' => 'Hora fin'
+];
 ?>
 <?php if (isset($formCrear)): ?>
 <div id="modal-crear" class="app-modal hidden">
@@ -33,6 +41,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             data-api="<?= $campo['api'] ?>"
             data-value="<?= $campo['value'] ?>"
             data-label="<?= $campo['labelField'] ?>"
+            <?php if (!empty($campo['labelFields'])): ?>data-label-fields="<?= implode(',', $campo['labelFields']) ?>"<?php endif; ?>
             class="app-input w-full mb-4"
             required>
             <option value="">Cargando...</option>
@@ -44,7 +53,14 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         type="<?= $campo['type'] ?>"
         name="<?= $campo['name'] ?>"
         class="app-input w-full mb-4"
-        required
+        <?php if (($campo['required'] ?? true) !== false): ?>required<?php endif; ?>
+        <?php if (isset($campo['min'])): ?>min="<?= $campo['min'] ?>"<?php endif; ?>
+        <?php if (isset($campo['max'])): ?>max="<?= $campo['max'] ?>"<?php endif; ?>
+        <?php if (isset($campo['step'])): ?>step="<?= $campo['step'] ?>"<?php endif; ?>
+        <?php if (isset($campo['minlength'])): ?>minlength="<?= $campo['minlength'] ?>"<?php endif; ?>
+        <?php if (isset($campo['maxlength'])): ?>maxlength="<?= $campo['maxlength'] ?>"<?php endif; ?>
+        <?php if (isset($campo['value'])): ?>value="<?= htmlspecialchars((string) $campo['value'], ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
+        <?php if (isset($campo['placeholder'])): ?>placeholder="<?= htmlspecialchars($campo['placeholder'], ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
     >
 <?php endif; ?>
             <?php endforeach; ?>
@@ -95,7 +111,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 <thead class="bg-gray-100">
                     <tr>
                         <?php foreach ($columnas as $col): ?>
-                            <th class="p-3 text-left"><?= ucfirst(str_replace('_', ' ', $col)) ?></th>
+                            <th class="p-3 text-left"><?= $etiquetasColumnas[$col] ?? $etiquetasColumnasDefault[$col] ?? ucfirst(str_replace('_', ' ', $col)) ?></th>
                         <?php endforeach; ?>
 
                         <th class="p-3">Acciones</th>
@@ -143,7 +159,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     window.API_ELIMINAR = "<?= isset($apiEliminar) ? base_url($apiEliminar) : '' ?>";
     window.URL_DESACTIVADOS = "<?= isset($urlDesactivados) ? base_url($urlDesactivados) : '' ?>";
     window.ID_CAMPO = "<?= $idCampo ?? '' ?>";
-    window.CAMPOS_EDITAR = <?= json_encode($camposEditar ?? []) ?>;
+    window.CAMPOS_EDITAR = <?= json_encode($camposEditar ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 </script>
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
 <script src="<?= base_url('public/js/crud.js') ?>"></script>

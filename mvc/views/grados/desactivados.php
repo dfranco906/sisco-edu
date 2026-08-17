@@ -2,7 +2,7 @@
 $titulo = "Grados desactivados";
 $api = "src/api/Grado/leer_grados_desactivados.php";
 
-$columnas = ["id_grado", "nombre", "aula", "activo"];
+$columnas = ["id_grado", "nombre", "aula", "codigo_aula", "activo"];
 
 $filtros = [
     "buscar" => ["nombre", "aula"],

@@ -71,15 +71,34 @@ try {
     $horario->hora_fin = $hora_fin;
     $horario->id_aula = $grado['id_aula'];
 
+    $conflicto = $horario->obtenerConflicto($id_horario);
+    if ($conflicto) {
+        $etiquetas = [
+            'grado' => 'el grado',
+            'aula' => 'el aula',
+            'profesor' => 'el profesor'
+        ];
+        http_response_code(409);
+        echo json_encode([
+            "success" => false,
+            "status" => "error",
+            "message" => "Existe un horario superpuesto para " . ($etiquetas[$conflicto['tipo']] ?? 'la selección') . "."
+        ]);
+        exit;
+    }
+
     $resultado = $horario->actualizar();
 
     echo json_encode([
+        "success" => (bool) $resultado,
         "status" => $resultado ? "success" : "error",
         "message" => $resultado ? "Horario actualizado correctamente" : "Error al actualizar horario",
+        "data" => $resultado ? ["id_horario" => (int) $id_horario, "id_aula" => (int) $grado['id_aula']] : null,
         "id_horario" => $resultado ? (int) $id_horario : null,
-        "id_aula" => $resultado ? $grado['id_aula'] : null
+        "id_aula" => $resultado ? (int) $grado['id_aula'] : null
     ]);
 } catch (Throwable $e) {
+    error_log('actualizar_horario: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error interno al actualizar el horario."]);
+    echo json_encode(["success" => false, "status" => "error", "message" => "No se pudo actualizar el horario."]);
 }

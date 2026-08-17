@@ -40,16 +40,25 @@ class Profesor {
 
     public function leer() {
         $query = "SELECT 
-                    id_profesor,
-                    nombre,
-                    apellido,
-                    cedula_identidad,
-                    user_id_global,
-                    activo,
-                    CONCAT(nombre, ' ', apellido) AS nombre_completo
-                  FROM profesores
-                  WHERE activo = 1
-                  ORDER BY nombre ASC";
+                    p.id_profesor,
+                    p.nombre,
+                    p.apellido,
+                    p.cedula_identidad,
+                    p.user_id_global,
+                    CASE
+                        WHEN p.huella_id IS NOT NULL OR EXISTS (
+                            SELECT 1
+                            FROM huellas_templates ht
+                            WHERE ht.user_id_global = p.user_id_global
+                              AND ht.activo = 1
+                        ) THEN 'Registrada'
+                        ELSE 'Pendiente'
+                    END AS huella,
+                    p.activo,
+                    CONCAT(p.nombre, ' ', p.apellido) AS nombre_completo
+                  FROM profesores p
+                  WHERE p.activo = 1
+                  ORDER BY p.nombre ASC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -58,16 +67,25 @@ class Profesor {
 
     public function leerDesactivados() {
         $query = "SELECT 
-                    id_profesor,
-                    nombre,
-                    apellido,
-                    cedula_identidad,
-                    user_id_global,
-                    activo,
-                    CONCAT(nombre, ' ', apellido) AS nombre_completo
-                  FROM profesores
-                  WHERE activo = 0
-                  ORDER BY nombre ASC";
+                    p.id_profesor,
+                    p.nombre,
+                    p.apellido,
+                    p.cedula_identidad,
+                    p.user_id_global,
+                    CASE
+                        WHEN p.huella_id IS NOT NULL OR EXISTS (
+                            SELECT 1
+                            FROM huellas_templates ht
+                            WHERE ht.user_id_global = p.user_id_global
+                              AND ht.activo = 1
+                        ) THEN 'Registrada'
+                        ELSE 'Pendiente'
+                    END AS huella,
+                    p.activo,
+                    CONCAT(p.nombre, ' ', p.apellido) AS nombre_completo
+                  FROM profesores p
+                  WHERE p.activo = 0
+                  ORDER BY p.nombre ASC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();

@@ -2,7 +2,7 @@
 $titulo = "Asignaciones desactivadas";
 $api = "src/api/Asignaciones/leer_asignaciones_desactivadas.php";
 
-$columnas = ["id_asignacion", "profesor", "materia", "aÃ±o_lectivo", "activo"];
+$columnas = ["id_asignacion", "profesor", "materia", "anio_lectivo", "activo"];
 
 $filtros = [
     "buscar" => ["profesor", "materia"],
@@ -10,7 +10,7 @@ $filtros = [
     "selects" => [
         ["campo" => "profesor", "label" => "Profesor"],
         ["campo" => "materia", "label" => "Materia"],
-        ["campo" => "aÃ±o_lectivo", "label" => "AÃ±o lectivo"]
+        ["campo" => "anio_lectivo", "label" => "Año lectivo"]
     ]
 ];
 

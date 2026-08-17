@@ -8,6 +8,17 @@
         <p class="mt-1">Rol: <?= $_SESSION['rol']; ?></p>
     </div>
 
+    <section class="mb-8" aria-labelledby="dashboard-resumen-titulo">
+        <div class="flex items-end justify-between gap-4 mb-4">
+            <div>
+                <h3 id="dashboard-resumen-titulo" class="text-xl font-bold">Resumen del sistema</h3>
+                <p class="text-sm mt-1" style="color: var(--color-muted);">Datos activos y marcas recibidas hoy.</p>
+            </div>
+        </div>
+        <p id="dashboard-metricas-estado" class="text-sm mb-4">Cargando métricas...</p>
+        <div id="dashboard-metricas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    </section>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <?php
         $modulos = [
@@ -28,5 +39,12 @@
         <?php endforeach; ?>
     </div>
 </main>
+
+<script>
+window.DASHBOARD_CONFIG = <?= json_encode([
+    'apiResumen' => base_url('src/api/Dashboard/resumen.php')
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+</script>
+<script src="<?= base_url('public/js/dashboard.js') ?>"></script>
 
 <?php require_once 'layouts/footer.php'; ?>

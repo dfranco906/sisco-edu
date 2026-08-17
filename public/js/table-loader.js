@@ -79,31 +79,55 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
     let datosOriginales = [];
 
-    tbody.innerHTML = `<tr><td colspan="${columnas.length}" class="p-4 text-center">Cargando datos...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${columnas.length + 1}" class="p-4 text-center">Cargando datos...</td></tr>`;
 
     try {
         const res = await fetch(api);
-        const json = await res.json();
+        const texto = await res.text();
+        let json;
+
+        try {
+            json = JSON.parse(texto);
+        } catch (error) {
+            throw new Error("El servidor no devolvió JSON válido.");
+        }
+
+        if (!res.ok || json?.status === "error" || json?.success === false) {
+            throw new Error(json?.message || `No se pudieron cargar los datos (HTTP ${res.status}).`);
+        }
+
         datosOriginales = json.data ?? json;
+
+        if (!Array.isArray(datosOriginales)) {
+            throw new Error("La respuesta del servidor no contiene una lista de registros.");
+        }
 
         crearFiltros(datosOriginales, filtros);
         render(datosOriginales);
 
     } catch (error) {
         console.error(error);
-        tbody.innerHTML = `<tr><td colspan="${columnas.length}" class="p-4 text-center text-red-600">Error al cargar datos</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${columnas.length + 1}" class="p-4 text-center text-red-600">${escaparHtml(error.message || "Error al cargar datos")}</td></tr>`;
     }
 
     function render(datos) {
         tbody.innerHTML = "";
 
         if (!Array.isArray(datos) || datos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${columnas.length}" class="p-4 text-center">No hay datos registrados</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${columnas.length + 1}" class="p-4 text-center">No hay datos registrados</td></tr>`;
             return;
         }
 
+        const registrosPorId = new Map();
+
         datos.forEach(item => {
             const idRegistro = window.ID_CAMPO ? item[window.ID_CAMPO] : null;
+            const idValido = idRegistro !== null
+                && idRegistro !== undefined
+                && String(idRegistro).trim() !== "";
+            const idClave = idValido ? String(idRegistro) : "";
+            if (idValido) registrosPorId.set(idClave, item);
+
             let fila = `<tr class="border-b hover:bg-gray-50">`;
 
             columnas.forEach(col => {
@@ -112,34 +136,34 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
             fila += `
     <td class="p-3"><div class="table-actions">
-        ${window.API_ACTUALIZAR && idRegistro ? `
-        <button onclick='editarRegistro(${JSON.stringify(item)})'
+        ${window.API_ACTUALIZAR && idValido ? `
+        <button type="button" data-accion-registro="editar" data-registro-id="${escaparHtml(idClave)}"
         class="btn btn-edit">
             Editar
         </button>` : ""}
-        ${window.API_DESACTIVAR && idRegistro ? `
-        <button onclick='desactivarRegistro(${JSON.stringify(idRegistro)})'
+        ${window.API_DESACTIVAR && idValido ? `
+        <button type="button" data-accion-registro="desactivar" data-registro-id="${escaparHtml(idClave)}"
         class="btn btn-warning">
             Desactivar
         </button>` : ""}
-        ${window.API_RESTAURAR && idRegistro ? `
-        <button onclick='restaurarRegistro(${JSON.stringify(idRegistro)})'
+        ${window.API_RESTAURAR && idValido ? `
+        <button type="button" data-accion-registro="restaurar" data-registro-id="${escaparHtml(idClave)}"
         class="btn btn-restore">
             Restaurar
         </button>` : ""}
-        ${window.API_ELIMINAR && idRegistro ? `
-        <button onclick='eliminarRegistro(${JSON.stringify(idRegistro)})'
+        ${window.API_ELIMINAR && idValido ? `
+        <button type="button" data-accion-registro="eliminar" data-registro-id="${escaparHtml(idClave)}"
         class="btn btn-danger btn-sm">
             Eliminar
         </button>` : ""}
-        ${item.user_id_global && !item.id_profesor ? `
-        <button onclick="descargarYGuardarTemplate('${item.user_id_global}', 'estudiante')"
+        ${item.user_id_global && !Object.prototype.hasOwnProperty.call(item, "id_profesor") ? `
+        <button type="button" data-accion-registro="huella" data-user-id-global="${escaparHtml(item.user_id_global)}" data-tipo-persona="estudiante"
         class="btn btn-fingerprint btn-huella">
             Huella
         </button>` : ""}
 
-        ${item.user_id_global && item.id_profesor ? `
-        <button onclick="descargarYGuardarTemplate('${item.user_id_global}', 'profesor')"
+        ${item.user_id_global && Object.prototype.hasOwnProperty.call(item, "id_profesor") ? `
+        <button type="button" data-accion-registro="huella" data-user-id-global="${escaparHtml(item.user_id_global)}" data-tipo-persona="profesor"
         class="btn btn-fingerprint btn-huella">
           Huella
         </button>` : ""}
@@ -147,6 +171,24 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
             fila += `</tr>`;
             tbody.innerHTML += fila;
+        });
+
+        tbody.querySelectorAll("[data-accion-registro]").forEach((boton) => {
+            boton.addEventListener("click", () => {
+                const accion = boton.dataset.accionRegistro;
+                const id = boton.dataset.registroId;
+
+                if (accion === "editar") window.editarRegistro?.(registrosPorId.get(id));
+                if (accion === "desactivar") window.desactivarRegistro?.(id);
+                if (accion === "restaurar") window.restaurarRegistro?.(id);
+                if (accion === "eliminar") window.eliminarRegistro?.(id);
+                if (accion === "huella") {
+                    window.descargarYGuardarTemplate?.(
+                        boton.dataset.userIdGlobal,
+                        boton.dataset.tipoPersona
+                    );
+                }
+            });
         });
     }
 
@@ -233,7 +275,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
         if (buscador) buscador.addEventListener("input", aplicarFiltros);
         selects.forEach(s => s.addEventListener("change", aplicarFiltros));
 
-        limpiar.addEventListener("click", () => {
+        limpiar?.addEventListener("click", () => {
             if (buscador) buscador.value = "";
             selects.forEach(s => s.value = "");
             render(datosOriginales);

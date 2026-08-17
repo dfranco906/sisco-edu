@@ -7,10 +7,13 @@ require_once __DIR__ . '/../../classes/Asignacion.php';
 try {
     $db = (new Database())->getConnection();
     $asignacion = new Asignacion($db);
-    $stmt = $asignacion->leer();
+    $soloOpciones = filter_var($_GET['opciones'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    $stmt = $soloOpciones ? $asignacion->leerOpciones() : $asignacion->leer();
 
-    echo json_encode(["status" => "success", "message" => "Asignaciones obtenidas", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    echo json_encode(["success" => true, "status" => "success", "message" => "Asignaciones obtenidas", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 } catch (Throwable $e) {
-    echo json_encode(["status" => "error", "message" => "Error interno", "data" => [], "debug" => $e->getMessage()]);
+    http_response_code(500);
+    error_log('leer_asignaciones: ' . $e->getMessage());
+    echo json_encode(["success" => false, "status" => "error", "message" => "No se pudieron cargar las asignaciones.", "data" => []]);
 }
 ?>
