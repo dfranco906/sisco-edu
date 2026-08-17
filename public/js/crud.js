@@ -1,0 +1,239 @@
+let itemEditando = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const btnCrear = document.getElementById("btn-crear");
+    const modalCrear = document.getElementById("modal-crear");
+    const cerrarCrear = document.getElementById("cerrar-modal");
+    const formCrear = document.getElementById("form-crear");
+    const mensajeCrear = document.getElementById("mensaje-form");
+
+    const modalEditar = document.getElementById("modal-editar");
+    const cancelarEditar = document.getElementById("cancelar-editar");
+    const cerrarEditar = document.getElementById("cerrar-modal-editar");
+    const formEditar = document.getElementById("form-editar");
+    const mensajeEditar = document.getElementById("mensaje-editar");
+
+    const abrirModal = (modal) => {
+        modal?.classList.remove("hidden");
+        document.body.classList.add("modal-open");
+    };
+
+    const cerrarModal = (modal) => {
+        modal?.classList.add("hidden");
+        if (!document.querySelector(".app-modal:not(.hidden)")) document.body.classList.remove("modal-open");
+    };
+
+    if (btnCrear && modalCrear) btnCrear.onclick = () => abrirModal(modalCrear);
+    if (cerrarCrear && modalCrear) cerrarCrear.onclick = () => cerrarModal(modalCrear);
+    document.querySelectorAll(".js-cerrar-modal-crear").forEach((boton) => {
+        boton.addEventListener("click", () => cerrarModal(modalCrear));
+    });
+
+    if (cancelarEditar && modalEditar) {
+        cancelarEditar.onclick = () => cerrarModal(modalEditar);
+    }
+    if (cerrarEditar && modalEditar) cerrarEditar.onclick = () => cerrarModal(modalEditar);
+
+    [modalCrear, modalEditar].forEach((modal) => {
+        modal?.addEventListener("click", (evento) => {
+            if (evento.target === modal) cerrarModal(modal);
+        });
+    });
+
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape") {
+            cerrarModal(modalCrear);
+            cerrarModal(modalEditar);
+        }
+    });
+
+    cargarSelects();
+
+    if (formCrear) {
+        formCrear.onsubmit = async (e) => {
+            e.preventDefault();
+
+            mensajeCrear.innerHTML = "Guardando...";
+            mensajeCrear.className = "text-blue-600 font-semibold mb-3";
+
+            try {
+                const res = await fetch(formCrear.dataset.api, {
+                    method: "POST",
+                    body: new FormData(formCrear)
+                });
+
+                const data = await res.json();
+                const exito = data.status === "success";
+
+                mensajeCrear.className = exito
+                    ? "text-green-600 font-semibold mb-3"
+                    : "text-red-600 font-semibold mb-3";
+
+                mensajeCrear.innerHTML = `
+                    ${data.message ?? "Operación realizada"}
+                    ${exito ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
+                `;
+
+                if (exito) formCrear.reset();
+
+            } catch (error) {
+                console.error(error);
+                mensajeCrear.className = "text-red-600 font-semibold mb-3";
+                mensajeCrear.innerHTML = "Error al procesar la solicitud";
+            }
+        };
+    }
+
+    if (formEditar) {
+        formEditar.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(formEditar);
+            formData.append(window.ID_CAMPO, itemEditando[window.ID_CAMPO]);
+
+            mensajeEditar.innerHTML = "Actualizando...";
+            mensajeEditar.className = "text-blue-600 font-semibold mb-3";
+
+            try {
+                const res = await fetch(window.API_ACTUALIZAR, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                mensajeEditar.className = data.status === "success"
+                    ? "text-green-600 font-semibold mb-3"
+                    : "text-red-600 font-semibold mb-3";
+
+                mensajeEditar.innerHTML = `
+                    ${data.message}
+                    ${data.status === "success" ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
+                `;
+
+            } catch (error) {
+                console.error(error);
+                mensajeEditar.className = "text-red-600 font-semibold mb-3";
+                mensajeEditar.innerHTML = "Error al actualizar";
+            }
+        };
+    }
+});
+
+async function cargarSelects() {
+    const selects = document.querySelectorAll("select[data-api]");
+
+    for (const select of selects) {
+        try {
+            const res = await fetch(window.BASE_URL + select.dataset.api);
+            const json = await res.json();
+            const data = json.data ?? json;
+
+            select.innerHTML = `<option value="">Seleccione una opción</option>`;
+
+            data.forEach(item => {
+                select.innerHTML += `
+                    <option value="${item[select.dataset.value]}">
+                        ${item[select.dataset.label]}
+                    </option>
+                `;
+            });
+
+        } catch (error) {
+            console.error(error);
+            select.innerHTML = `<option value="">Error al cargar opciones</option>`;
+        }
+    }
+}
+
+window.editarRegistro = function(item) {
+    itemEditando = item;
+
+    const modal = document.getElementById("modal-editar");
+    const campos = document.getElementById("campos-editar");
+    const mensaje = document.getElementById("mensaje-editar");
+
+    mensaje.innerHTML = "";
+    campos.innerHTML = "";
+
+    const camposEditables = window.CAMPOS_EDITAR || [];
+
+    camposEditables.forEach(campo => {
+        campos.innerHTML += `
+            <label class="block mb-2 font-semibold">${campo}</label>
+            <input 
+                name="${campo}"
+                value="${item[campo] ?? ""}"
+                class="app-input w-full mb-4"
+                required
+            >
+        `;
+    });
+
+    modal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+};
+
+async function ejecutarAccionRegistro(api, id, mensajeConfirmacion) {
+    if (!api || !window.ID_CAMPO) {
+        alert("Accion no configurada para este modulo");
+        return;
+    }
+
+    if (!confirm(mensajeConfirmacion)) return;
+
+    const formData = new FormData();
+    formData.append(window.ID_CAMPO, id);
+
+    try {
+        const res = await fetch(api, {
+            method: "POST",
+            body: formData
+        });
+
+        const texto = await res.text();
+        let data;
+
+        try {
+            data = JSON.parse(texto);
+        } catch (error) {
+            data = {
+                status: res.ok ? "success" : "error",
+                message: texto || "Operacion finalizada"
+            };
+        }
+
+        alert(data.message ?? "Operacion finalizada");
+
+        if (data.status === "success") {
+            location.reload();
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error al procesar la solicitud");
+    }
+}
+
+window.desactivarRegistro = function(id) {
+    ejecutarAccionRegistro(
+        window.API_DESACTIVAR,
+        id,
+        "Seguro que desea desactivar este registro?"
+    );
+};
+
+window.restaurarRegistro = function(id) {
+    ejecutarAccionRegistro(
+        window.API_RESTAURAR,
+        id,
+        "Seguro que desea restaurar este registro?"
+    );
+};
+
+window.eliminarRegistro = function(id) {
+    ejecutarAccionRegistro(
+        window.API_ELIMINAR,
+        id,
+        "Seguro que desea eliminar este registro? Esta accion no se puede deshacer."
+    );
+};
