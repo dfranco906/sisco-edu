@@ -12,6 +12,7 @@
 #include "dy50_template_transport.h"
 
 constexpr size_t HUELLA_TEMPLATE_BYTES = 1536;
+constexpr uint16_t SLOT_TEMPORAL_REGISTRO = 1;
 static_assert(Dy50TemplateTransport::TEMPLATE_BYTES == HUELLA_TEMPLATE_BYTES,
               "dy50_template_transport.h desactualizado: se requieren 1536 bytes");
 
@@ -81,8 +82,19 @@ bool enrolarHuella() {
   if (finger.image2Tz(2) != FINGERPRINT_OK) { ultimoError = "MUESTRA_2_INVALIDA"; return false; }
   pantalla("PROCESANDO", "Comparando muestras");
   if (finger.createModel() != FINGERPRINT_OK) { ultimoError = "HUELLAS_NO_COINCIDEN"; return false; }
-  // createModel() deja el template combinado en CharBuffer1. El nodo
-  // registrador solo necesita exportarlo, no persistirlo en la flash DY50.
+  // Persistir y recargar el modelo antes de exportarlo. Esta normalizacion
+  // evita distribuir el contenido transitorio de CharBuffer1.
+  uint8_t resultado = finger.storeModel(SLOT_TEMPORAL_REGISTRO);
+  if (resultado != FINGERPRINT_OK) {
+    ultimoError = "STORE_TEMP_0x" + String(resultado, HEX);
+    return false;
+  }
+  resultado = finger.loadModel(SLOT_TEMPORAL_REGISTRO);
+  if (resultado != FINGERPRINT_OK) {
+    ultimoError = "LOAD_TEMP_0x" + String(resultado, HEX);
+    return false;
+  }
+  Serial.printf("[BIOMETRIA] Template normalizado en slot temporal %u\n", SLOT_TEMPORAL_REGISTRO);
   templateDisponible = true;
   pantalla("CAPTURADA", "Lista para exportar");
   return true;
@@ -107,6 +119,7 @@ void configurarRutas() {
     cors();
     if (enrolamientoPendiente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
     if (!templateDisponible) { jsonError(404, "No hay huella capturada"); return; }
+    if (finger.loadModel(SLOT_TEMPORAL_REGISTRO) != FINGERPRINT_OK) { jsonError(500, "No se pudo recargar el template temporal"); return; }
     if (finger.getModel() != FINGERPRINT_OK) { jsonError(500, "No se pudo iniciar la exportacion"); return; }
 
     // No vaciar el UART aqui: getModel() deja los paquetes PID_DATA del template
@@ -120,12 +133,20 @@ void configurarRutas() {
     const String hex = Dy50TemplateTransport::encodeHex(datos, bytesLeidos);
     String crc = String(Dy50TemplateTransport::crc32(datos, bytesLeidos), HEX);
     while (crc.length() < 8) crc = "0" + crc;
+    crc.toUpperCase();
+    Serial.printf("[BIOMETRIA] Exportacion verificada: bytes=%u CRC32=%s\n",
+                  (unsigned int)bytesLeidos, crc.c_str());
     pantalla("EXPORTADO", String(bytesLeidos) + " bytes HEX");
     server.send(200, "application/json", "{\"status\":\"success\",\"format\":\"HEX\",\"bytes\":" + String(bytesLeidos) + ",\"crc32\":\"" + crc + "\",\"template\":\"" + hex + "\"}");
   });
 
   server.on("/limpiar", HTTP_GET, []() {
     cors();
+    const uint8_t borrado = finger.deleteModel(SLOT_TEMPORAL_REGISTRO);
+    if (borrado != FINGERPRINT_OK && borrado != FINGERPRINT_BADLOCATION) {
+      jsonError(500, "No se pudo liberar el slot temporal: 0x" + String(borrado, HEX));
+      return;
+    }
     templateDisponible = false;
     ultimoError = "";
     pantalla("ONLINE", WiFi.localIP().toString());

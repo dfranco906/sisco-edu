@@ -41,6 +41,7 @@ void confirmarEntregaAula(const String &payload);
 void procesarAsistenciaEntrante(const String &payload);
 String campo(const String &texto, int indice);
 String urlEncode(const String &texto);
+bool crc32HexValido(const String &valor);
 
 void setup() {
   Serial.begin(115200);
@@ -139,6 +140,14 @@ String campo(const String &texto, int indice) {
   int inicio = 0;
   for (int i = 0; i < indice; ++i) { inicio = texto.indexOf(':', inicio); if (inicio < 0) return ""; ++inicio; }
   int fin = texto.indexOf(':', inicio); return fin < 0 ? texto.substring(inicio) : texto.substring(inicio, fin);
+}
+bool crc32HexValido(const String &valor) {
+  if (valor.length() != 8) return false;
+  for (size_t i = 0; i < valor.length(); ++i) {
+    const char c = valor[i];
+    if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) return false;
+  }
+  return true;
 }
 String urlEncode(const String &texto) {
   const char *hex = "0123456789ABCDEF"; String salida;
@@ -262,18 +271,21 @@ void confirmarSync(int idSync, const String &estado, const String &mensaje) {
 }
 
 void confirmarEntregaAula(const String &payload) {
-  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:detalle
+  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:CRC32_xxxxxxxx
   const int idSync = campo(payload, 1).toInt(), idHuella = campo(payload, 2).toInt(), idAula = campo(payload, 3).toInt(), slot = campo(payload, 4).toInt();
   const String ci = campo(payload, 5), tipo = campo(payload, 6);
-  if (!idSync || !idHuella || !idAula || !slot || !ci.length() || !tipo.length()) {
+  const String detalle = campo(payload, 7);
+  String crc = detalle.startsWith("CRC32_") ? detalle.substring(6) : "";
+  crc.toLowerCase();
+  if (!idSync || !idHuella || !idAula || !slot || !ci.length() || !tipo.length() || !crc32HexValido(crc)) {
     Serial.println("[SYNC] Confirmacion LoRa de aula invalida");
     return;
   }
   if (WiFi.status() != WL_CONNECTED) { Serial.println("[SYNC] Confirmacion no enviada: Wi-Fi desconectado"); return; }
-  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d\n", idAula, idHuella, slot);
+  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s)\n", idAula, idHuella, slot, crc.c_str());
   HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/confirmar_entrega_aula.php")) return;
   http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo);
+  const String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&crc32=" + crc;
   const int codigo = http.POST(cuerpo); http.end();
   Serial.printf("[SYNC] Confirmacion de entrega enviada a la API (HTTP %d)\n", codigo);
 }

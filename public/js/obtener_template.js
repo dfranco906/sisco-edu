@@ -96,6 +96,7 @@ async function solicitarJson(url, opciones = {}, timeoutMs = 90000) {
         });
         let data;
         try {
+
             data = await respuesta.json();
         } catch (_) {
             throw new Error(`Respuesta JSON invalida de ${url}`);

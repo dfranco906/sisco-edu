@@ -60,7 +60,7 @@ void enviarAckLoRa(int chunk);
 void atenderComandosLoRa();
 void verificarLecturaHuella();
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado);
-bool guardarHuellaDY50(const String &hex, int slot, String &error);
+bool guardarHuellaDY50(const String &hex, int slot, String &crcHex, String &error);
 void cargarDbLocalDesdeNVS();
 void guardarSlotEnNVS(int slot);
 void limpiarSyncRecibida();
@@ -91,8 +91,15 @@ void setup() {
   dy50Serial.begin(57600, SERIAL_8N1, DY50_RX, DY50_TX);
   finger.begin(57600);
   delay(1000);
-  if (finger.verifyPassword()) { cargarDbLocalDesdeNVS(); msgOled("DY50: OK", "Sistema listo"); }
-  else msgOled("ERROR HW", "DY50 no hallado");
+  if (finger.verifyPassword()) {
+    if (finger.getParameters() == FINGERPRINT_OK) {
+      Serial.printf("[DY50] system=0x%04X capacity=%u security=%u packet_len=%u baud=%lu\n",
+                    finger.system_id, finger.capacity, finger.security_level,
+                    finger.packet_len, (unsigned long)finger.baud_rate);
+    }
+    cargarDbLocalDesdeNVS();
+    msgOled("DY50: OK", "Sistema listo");
+  } else msgOled("ERROR HW", "DY50 no hallado");
   delay(1200);
   msgOled(String(CODIGO_AULA), "LoRa ID: " + String(MI_LORA_ID));
 }
@@ -140,17 +147,51 @@ void cargarDbLocalDesdeNVS() {
   prefs.end();
 }
 
-bool guardarHuellaDY50(const String &hex, int slot, String &error) {
+bool guardarHuellaDY50(const String &hex, int slot, String &crcHex, String &error) {
   static uint8_t data[HUELLA_TEMPLATE_BYTES];
+  static uint8_t readback[HUELLA_TEMPLATE_BYTES];
   size_t bytes = 0;
   if (!Dy50TemplateTransport::decodeHex(hex, data, sizeof(data), bytes, error) || bytes != sizeof(data)) {
     if (error.length() == 0) error = "TAMANO_TEMPLATE_INVALIDO";
     return false;
   }
+  const uint32_t crcOrigen = Dy50TemplateTransport::crc32(data, bytes);
   if (!Dy50TemplateTransport::beginDownChar(dy50Serial, 1, error)) return false;
   if (!Dy50TemplateTransport::sendTemplate(dy50Serial, data, bytes, error)) return false;
+  delay(150);
   const uint8_t resultado = finger.storeModel(slot);
   if (resultado != FINGERPRINT_OK) { error = "STORE_FAIL_0x" + String(resultado, HEX); return false; }
+
+  delay(100);
+  const uint8_t carga = finger.loadModel(slot);
+  if (carga != FINGERPRINT_OK) {
+    error = "READBACK_LOAD_0x" + String(carga, HEX);
+    finger.deleteModel(slot);
+    return false;
+  }
+  Dy50TemplateTransport::drainInput(dy50Serial);
+  const uint8_t subida = finger.getModel();
+  if (subida != FINGERPRINT_OK) {
+    error = "READBACK_UPCHAR_0x" + String(subida, HEX);
+    finger.deleteModel(slot);
+    return false;
+  }
+  size_t bytesReleidos = 0;
+  if (!Dy50TemplateTransport::readTemplate(dy50Serial, readback, sizeof(readback), bytesReleidos, error)) {
+    error = "READBACK_" + error;
+    finger.deleteModel(slot);
+    return false;
+  }
+  const uint32_t crcReleido = Dy50TemplateTransport::crc32(readback, bytesReleidos);
+  if (bytesReleidos != bytes || crcReleido != crcOrigen || memcmp(data, readback, bytes) != 0) {
+    error = "READBACK_MISMATCH";
+    finger.deleteModel(slot);
+    return false;
+  }
+  crcHex = String(crcReleido, HEX);
+  while (crcHex.length() < 8) crcHex = "0" + crcHex;
+  crcHex.toUpperCase();
+  Serial.printf("[BIOMETRIA] Slot %d verificado byte a byte. CRC32=%s\n", slot, crcHex.c_str());
   return true;
 }
 
@@ -234,11 +275,11 @@ void atenderComandosLoRa() {
     int slot = -1;
     for (int s = 1; s <= 200; ++s) if (dbLocal[s].registrado && String(dbLocal[s].ci) == String(ciSyncActual)) { slot = s; break; }
     if (slot < 0) for (int s = 1; s <= 200; ++s) if (!dbLocal[s].registrado) { slot = s; break; }
-    String error;
-    if (slot > 0 && guardarHuellaDY50(String(huellaBuffer), slot, error)) {
+    String crcVerificado, error;
+    if (slot > 0 && guardarHuellaDY50(String(huellaBuffer), slot, crcVerificado, error)) {
       String(ciSyncActual).toCharArray(dbLocal[slot].ci, sizeof(dbLocal[slot].ci));
       String(tipoSyncActual).toCharArray(dbLocal[slot].tipo, sizeof(dbLocal[slot].tipo)); dbLocal[slot].registrado = true; guardarSlotEnNVS(slot);
-      notificarResultadoSync(true, slot, "OK"); msgOled("SYNC OK", "Slot " + String(slot));
+      notificarResultadoSync(true, slot, "CRC32_" + crcVerificado); msgOled("SYNC OK", "Slot " + String(slot));
     } else { notificarResultadoSync(false, 0, slot < 0 ? "SIN_SLOTS" : error); msgOled("ERROR DY50", error); }
   }
   delay(1000); limpiarSyncRecibida(); estadoSync = SYNC_IDLE; msgOled(String(CODIGO_AULA), "Listo");
@@ -250,9 +291,18 @@ void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String 
 }
 
 void verificarLecturaHuella() {
-  if (finger.getImage() != FINGERPRINT_OK || finger.image2Tz() != FINGERPRINT_OK) return;
-  if (finger.fingerFastSearch() != FINGERPRINT_OK) { msgOled("ERROR", "No reconocido"); delay(1000); msgOled(String(CODIGO_AULA), "Listo"); return; }
+  const uint8_t imagen = finger.getImage();
+  if (imagen == FINGERPRINT_NOFINGER) return;
+  if (imagen != FINGERPRINT_OK) { Serial.printf("[BIOMETRIA] getImage fallo: 0x%02X\n", imagen); return; }
+  const uint8_t conversion = finger.image2Tz();
+  if (conversion != FINGERPRINT_OK) { Serial.printf("[BIOMETRIA] image2Tz fallo: 0x%02X\n", conversion); return; }
+  const uint8_t busqueda = finger.fingerFastSearch();
+  if (busqueda != FINGERPRINT_OK) {
+    Serial.printf("[BIOMETRIA] fingerFastSearch fallo: 0x%02X\n", busqueda);
+    msgOled("ERROR", "No reconocido"); delay(1000); msgOled(String(CODIGO_AULA), "Listo"); return;
+  }
   const int slot = finger.fingerID;
+  Serial.printf("[BIOMETRIA] Reconocida: slot=%d confianza=%u\n", slot, finger.confidence);
   if (slot < 1 || slot > 200 || !dbLocal[slot].registrado) { msgOled("SIN DATOS", "Slot " + String(slot)); delay(1000); return; }
   String rol = String(dbLocal[slot].tipo); rol.toLowerCase();
   if (estadoActual == ESPERANDO_PROFE) {
