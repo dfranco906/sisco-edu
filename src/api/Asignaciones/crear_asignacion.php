@@ -21,18 +21,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validación: Los IDs de profesor y materia son obligatorios
     if (!empty($asignacion->id_profesor) && !empty($asignacion->id_materia)) {
         
-        if ($asignacion->crear()) {
-            http_response_code(201);
-            echo json_encode([
-                "status" => "success",
-                "message" => "Asignación docente creada correctamente."
-            ]);
-        } else {
-            http_response_code(503);
-            echo json_encode([
-                "status" => "error",
-                "message" => "No se pudo realizar la asignación en la base de datos."
-            ]);
+        try {
+            if ($asignacion->crear()) {
+                http_response_code(201);
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "Asignación docente creada correctamente."
+                ]);
+            } else {
+                http_response_code(503);
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "No se pudo realizar la asignación en la base de datos."
+                ]);
+            }
+        } catch (Throwable $e) {
+            if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'UNIQUE')) {
+                http_response_code(409);
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Esta asignación ya existe para el profesor, materia y año lectivo seleccionados."
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Error interno al crear la asignación."
+                ]);
+            }
         }
     } else {
         http_response_code(400);

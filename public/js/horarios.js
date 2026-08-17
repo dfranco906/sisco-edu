@@ -46,9 +46,9 @@
     }
 
     function opcionGrado(grado, deshabilitarSinAula = false) {
-        const roomId = grado.room_id || "Sin aula";
-        const disabled = deshabilitarSinAula && !grado.room_id ? " disabled" : "";
-        return `<option value="${escapar(grado.id_grado)}"${disabled}>${escapar(grado.nombre)} - ${escapar(roomId)}</option>`;
+        const aulaId = grado.id_aula || "Sin aula";
+        const disabled = deshabilitarSinAula && !grado.id_aula ? " disabled" : "";
+        return `<option value="${escapar(grado.id_grado)}"${disabled}>${escapar(grado.nombre)} - ${escapar(aulaId)}</option>`;
     }
 
     function etiquetaAsignacion(asignacion) {
@@ -57,7 +57,7 @@
     }
 
     function cargarOpciones() {
-        const gradosConAula = grados.filter((grado) => String(grado.room_id ?? "").trim() !== "");
+        const gradosConAula = grados.filter((grado) => String(grado.id_aula ?? "").trim() !== "");
         const opcionesFormulario = grados.map((grado) => opcionGrado(grado, true)).join("");
         const opcionesSemanal = gradosConAula.map((grado) => opcionGrado(grado)).join("");
         const opcionesAsignacion = asignaciones.map((asignacion) =>
@@ -82,11 +82,11 @@
             if (horario.id_grado) {
                 const grado = gradoPorId(horario.id_grado);
                 const etiqueta = grado
-                    ? `${grado.nombre} - ${grado.room_id || "Sin aula"}`
-                    : `${horario.grado} - ${horario.aula || "Sin aula"}`;
+                    ? `${grado.nombre} - ${grado.id_aula || "Sin aula"}`
+                    : `${horario.grado} - ${horario.id_aula || "Sin aula"}`;
                 opcionesLista.set(`id:${horario.id_grado}`, etiqueta);
             } else if (horario.grado) {
-                opcionesLista.set(`grado:${horario.grado}`, `${horario.grado} - ${horario.aula || "Aula antigua"}`);
+                opcionesLista.set(`id:${horario.id_grado}`, `${horario.grado} - ${horario.id_aula || "Aula antigua"}`);
             }
         });
         filtroGrado.innerHTML = `<option value="">Todos los grados</option>${[...opcionesLista.entries()]
@@ -113,12 +113,12 @@
 
     function sincronizarAula(select, inputAula, botonGuardar) {
         const grado = gradoPorId(select.value);
-        const roomId = grado?.room_id?.trim() || "";
-        inputAula.value = roomId;
+        const aulaId = grado?.id_aula?.trim() || "";
+        inputAula.value = aulaId;
         inputAula.placeholder = grado ? "Grado sin aula asignada" : "Seleccione un grado";
-        botonGuardar.disabled = !roomId;
-        botonGuardar.classList.toggle("opacity-50", !roomId);
-        botonGuardar.classList.toggle("cursor-not-allowed", !roomId);
+        botonGuardar.disabled = !aulaId;
+        botonGuardar.classList.toggle("opacity-50", !aulaId);
+        botonGuardar.classList.toggle("cursor-not-allowed", !aulaId);
     }
 
     function tarjetaHorario(horario, compacta = false) {
@@ -127,7 +127,7 @@
                 <div class="schedule-entry-time">${escapar(horaCorta(horario.hora_inicio))} - ${escapar(horaCorta(horario.hora_fin))}</div>
                 <div class="schedule-entry-subject">${escapar(horario.materia || "Sin materia")}</div>
                 <div class="schedule-entry-meta">${escapar(horario.profesor || "Sin profesor")}</div>
-                <div class="schedule-entry-room">${escapar(horario.aula || "Sin aula")}</div>
+                <div class="schedule-entry-room">${escapar(horario.id_aula || "Sin aula")}</div>
                 <button type="button" class="btn btn-edit schedule-entry-edit" data-editar-horario="${escapar(horario.id_horario)}">Editar</button>
             </article>
         `;
@@ -151,7 +151,7 @@
             .filter((horario) => String(horario.id_grado) === String(idGrado))
             .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
 
-        estado.innerHTML = `<strong>${escapar(grado.nombre)}</strong> · Aula <strong>${escapar(grado.room_id || "sin asignar")}</strong>`;
+        estado.innerHTML = `<strong>${escapar(grado.nombre)}</strong> · Aula <strong>${escapar(grado.id_aula || "sin asignar")}</strong>`;
 
         desktop.innerHTML = diasSemana.map((dia) => {
             const items = horariosGrado.filter((horario) => horario.dia_semana === dia);
@@ -182,11 +182,10 @@
         const dia = $("#filtro-horario-dia").value;
 
         return horarios.filter((horario) => {
-            const coincideTexto = !texto || [horario.materia, horario.profesor, horario.aula, horario.grado]
+            const coincideTexto = !texto || [horario.materia, horario.profesor, horario.id_aula, horario.grado]
                 .some((valor) => String(valor ?? "").toLowerCase().includes(texto));
             const coincideGrado = !filtroGrado
-                || (filtroGrado.startsWith("id:") && String(horario.id_grado) === filtroGrado.slice(3))
-                || (filtroGrado.startsWith("grado:") && String(horario.grado) === filtroGrado.slice(6));
+                || (filtroGrado.startsWith("id:") && String(horario.id_grado) === filtroGrado.slice(3));
             const coincideDia = !dia || horario.dia_semana === dia;
             return coincideTexto && coincideGrado && coincideDia;
         });
@@ -209,7 +208,7 @@
                 <td data-label="Hora fin">${escapar(horaCorta(horario.hora_fin))}</td>
                 <td data-label="Materia">${escapar(horario.materia)}</td>
                 <td data-label="Profesor">${escapar(horario.profesor)}</td>
-                <td data-label="Aula"><span class="room-badge">${escapar(horario.aula || "—")}</span></td>
+                <td data-label="Aula"><span class="room-badge">${escapar(horario.id_aula || "—")}</span></td>
                 <td data-label="Acciones">
                     <div class="table-actions">
                         <button type="button" data-editar-horario="${escapar(horario.id_horario)}"
@@ -258,7 +257,7 @@
             : "Este horario es antiguo y no coincide con un grado activo. Seleccioná un grado antes de guardar.";
         mensaje.className = horario.id_grado ? "mb-4" : "text-amber-700 font-semibold mb-4";
 
-        sincronizarAula($("#editar-id-grado"), $("#editar-room-id"), $("#actualizar-horario"));
+        sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), $("#actualizar-horario"));
         abrirModal("modal-editar-horario");
     }
 
@@ -291,16 +290,18 @@
 
             if (modalId === "modal-crear-horario") {
                 formulario.reset();
-                sincronizarAula($("#crear-id-grado"), $("#crear-room-id"), $("#guardar-horario"));
+                sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), boton);
+            } else {
+                sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), boton);
             }
         } catch (error) {
             console.error(error);
             mostrarMensaje(mensajeBox, error.message || "Error al procesar la solicitud.");
         } finally {
             if (modalId === "modal-crear-horario") {
-                sincronizarAula($("#crear-id-grado"), $("#crear-room-id"), boton);
+                sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), boton);
             } else {
-                sincronizarAula($("#editar-id-grado"), $("#editar-room-id"), boton);
+                sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), boton);
             }
         }
     }
@@ -327,10 +328,10 @@
     function activarEventos() {
         $("#btn-crear-horario").addEventListener("click", () => abrirModal("modal-crear-horario"));
         $("#crear-id-grado").addEventListener("change", () =>
-            sincronizarAula($("#crear-id-grado"), $("#crear-room-id"), $("#guardar-horario"))
+            sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), $("#guardar-horario"))
         );
         $("#editar-id-grado").addEventListener("change", () =>
-            sincronizarAula($("#editar-id-grado"), $("#editar-room-id"), $("#actualizar-horario"))
+            sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), $("#actualizar-horario"))
         );
         $("#selector-grado-semanal").addEventListener("change", renderHorarioSemanal);
 
@@ -390,7 +391,7 @@
             asignaciones = datosDe(jsonAsignaciones);
 
             cargarOpciones();
-            sincronizarAula($("#crear-id-grado"), $("#crear-room-id"), $("#guardar-horario"));
+            sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), $("#guardar-horario"));
             renderHorarioSemanal();
             renderTabla();
         } catch (error) {

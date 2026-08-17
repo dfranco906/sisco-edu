@@ -2,10 +2,18 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/biometria.php';
+
+if ((getallheaders()['X-GATEWAY-KEY'] ?? '') !== GATEWAY_API_KEY) {
+    http_response_code(404);
+    echo json_encode(["status" => "not_found"]);
+    exit;
+}
 
 $db = (new Database())->getConnection();
 
-$huella_id = $_GET['huella_id'] ?? null;
+$huella_id = filter_input(INPUT_GET, 'huella_id', FILTER_VALIDATE_INT);
 
 if (!$huella_id) {
     echo json_encode([
@@ -31,8 +39,10 @@ $stmt = $db->prepare("
         p.apellido AS profesor_apellido,
         p.cedula_identidad AS profesor_cedula
     FROM huellas_templates h
-    LEFT JOIN estudiantes e ON h.id_estudiante = e.id_estudiante
-    LEFT JOIN profesores p ON h.id_profesor = p.id_profesor
+    LEFT JOIN estudiantes e ON e.activo = 1
+        AND (e.id_estudiante = h.id_estudiante OR (h.id_estudiante IS NULL AND e.user_id_global = h.user_id_global))
+    LEFT JOIN profesores p ON p.activo = 1
+        AND (p.id_profesor = h.id_profesor OR (h.id_profesor IS NULL AND p.user_id_global = h.user_id_global))
     WHERE h.id_huella = :huella_id
       AND h.activo = 1
     LIMIT 1
@@ -48,6 +58,16 @@ if (!$data) {
     ]);
     exit;
 }
+
+$template = trim((string)$data["fingerprint_data"]);
+if (strtoupper((string)$data["formato"]) !== 'HEX' || !es_template_huella_hex_valido($template)) {
+    http_response_code(422);
+    echo json_encode(["status" => "error", "message" => "Template incompatible: se requieren 1536 bytes HEX"]);
+    exit;
+}
+$data["fingerprint_data"] = $template;
+$data["formato"] = "HEX";
+$data["bytes"] = HUELLA_TEMPLATE_BYTES;
 
 $tipo = $data["id_estudiante"] ? "estudiante" : "profesor";
 

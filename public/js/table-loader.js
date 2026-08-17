@@ -132,14 +132,14 @@ async function cargarTabla(api, columnas, filtros = {}) {
         class="btn btn-danger btn-sm">
             Eliminar
         </button>` : ""}
-        ${item.id_estudiante ? `
-        <button onclick="descargarYGuardarTemplate(${item.id_estudiante}, 'estudiante')"
+        ${item.user_id_global && !item.id_profesor ? `
+        <button onclick="descargarYGuardarTemplate('${item.user_id_global}', 'estudiante')"
         class="btn btn-fingerprint btn-huella">
             Huella
         </button>` : ""}
 
-        ${item.id_profesor ? `
-        <button onclick="descargarYGuardarTemplate(${item.id_profesor}, 'profesor')"
+        ${item.user_id_global && item.id_profesor ? `
+        <button onclick="descargarYGuardarTemplate('${item.user_id_global}', 'profesor')"
         class="btn btn-fingerprint btn-huella">
           Huella
         </button>` : ""}

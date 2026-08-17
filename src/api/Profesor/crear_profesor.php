@@ -18,31 +18,26 @@ $profesor = new Profesor($db);
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // Capturamos los datos enviados
     $profesor->nombre = $_POST['nombre'] ?? null;
     $profesor->apellido = $_POST['apellido'] ?? null;
     $profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
-    $profesor->huella_id = $_POST['huella_id'] ?? null;
+    $profesor->user_id_global = $_POST['user_id_global'] ?? ('PROF_' . uniqid() . '_' . random_int(100, 999));
 
-    // Validación básica de campos obligatorios
-    if (!empty($profesor->nombre) && !empty($profesor->apellido) && !empty($profesor->cedula_identidad)) {
-        
-        if ($profesor->crear()) {
-            // Respuesta de éxito (En el backend solemos devolver códigos de estado)
-            http_response_code(201);
-            echo json_encode(["message" => "Profesor creado con éxito."]);
-        } else {
-            http_response_code(503);
-            echo json_encode(["message" => "Error interno al guardar en la base de datos."]);
-        }
+    if (!$profesor->nombre || !$profesor->apellido || !$profesor->cedula_identidad) {
+        http_response_code(422);
+        echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+        exit;
+    }
+
+    if ($profesor->crear()) {
+        http_response_code(201);
+        echo json_encode(["status" => "success", "message" => "Profesor creado con éxito."]);
     } else {
-        // Datos incompletos
-        http_response_code(400);
-        echo json_encode(["message" => "Faltan datos obligatorios para el registro."]);
+        http_response_code(503);
+        echo json_encode(["status" => "error", "message" => "Error interno al guardar en la base de datos."]);
     }
 } else {
-    // Si intentan entrar por GET u otro método no permitido
     http_response_code(405);
-    echo json_encode(["message" => "Método no permitido."]);
+    echo json_encode(["status" => "error", "message" => "Método no permitido."]);
 }
 ?>

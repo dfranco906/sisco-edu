@@ -2,14 +2,13 @@
 $titulo = "Estudiantes";
 $api = "src/api/Estudiante/leer_estudiantes.php";
 
-$columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado", "room_id", "huella_id"];
+$columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado"];
 
 $filtros = [
     "buscar" => ["nombre", "apellido", "cedula_identidad"],
     "placeholder" => "Buscar estudiante...",
     "selects" => [
-        ["campo" => "grado", "label" => "Grado"],
-        ["campo" => "room_id", "label" => "Aula"]
+        ["campo" => "grado", "label" => "Grado"]
     ]
 ];
 

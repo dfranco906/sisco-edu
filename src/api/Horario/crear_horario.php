@@ -56,24 +56,18 @@ try {
     }
 
     $grado = $horario->obtenerGradoActivo($id_grado);
-    if (!$grado) {
-        http_response_code(422);
-        echo json_encode(["status" => "error", "message" => "El grado seleccionado no es válido."]);
-        exit;
-    }
-
-    if (!$grado['room_id'] || !(int) $grado['aula_valida']) {
+    if (!$grado || !$grado['id_aula']) {
         http_response_code(422);
         echo json_encode(["status" => "error", "message" => "El grado seleccionado no tiene aula asignada."]);
         exit;
     }
 
     $horario->id_asignacion = $id_asignacion;
-    $horario->grado = $grado['nombre'];
+    $horario->id_grado = $id_grado;
     $horario->dia_semana = $dia_semana;
     $horario->hora_inicio = $hora_inicio;
     $horario->hora_fin = $hora_fin;
-    $horario->aula = $grado['room_id'];
+    $horario->id_aula = $grado['id_aula'];
 
     $resultado = $horario->crear();
     $id_horario = $resultado ? (int) $db->lastInsertId() : null;
@@ -82,7 +76,7 @@ try {
         "status" => $resultado ? "success" : "error",
         "message" => $resultado ? "Horario creado correctamente" : "Error al crear horario",
         "id_horario" => $id_horario,
-        "room_id" => $resultado ? $grado['room_id'] : null
+        "id_aula" => $resultado ? $grado['id_aula'] : null
     ]);
 } catch (Throwable $e) {
     http_response_code(500);

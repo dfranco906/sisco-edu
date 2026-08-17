@@ -13,13 +13,20 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $db = (new Database())->getConnection();
 $profesor = new Profesor($db);
 
-$profesor->id_profesor = $_POST['id_profesor'] ?? null;
-$profesor->nombre = $_POST['nombre'] ?? null;
-$profesor->apellido = $_POST['apellido'] ?? null;
-$profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
-$profesor->huella_id = $_POST['huella_id'] ?? null;
+    $profesor->id_profesor = $_POST['id_profesor'] ?? null;
+    $profesor->nombre = $_POST['nombre'] ?? null;
+    $profesor->apellido = $_POST['apellido'] ?? null;
+    $profesor->cedula_identidad = $_POST['cedula_identidad'] ?? null;
 
-if (!$profesor->id_profesor || !$profesor->nombre || !$profesor->apellido || !$profesor->cedula_identidad) {
+    if ($_POST['user_id_global'] ?? null) {
+        $profesor->user_id_global = $_POST['user_id_global'];
+    } else {
+        $stmtActual = $db->prepare("SELECT user_id_global FROM profesores WHERE id_profesor = :id");
+        $stmtActual->execute([":id" => $profesor->id_profesor]);
+        $profesor->user_id_global = $stmtActual->fetchColumn() ?: ('PROF_' . uniqid() . '_' . random_int(100, 999));
+    }
+
+    if (!$profesor->id_profesor || !$profesor->nombre || !$profesor->apellido || !$profesor->cedula_identidad) {
     echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
     exit;
 }

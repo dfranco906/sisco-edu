@@ -2,14 +2,13 @@
 $titulo = "Grados";
 $api = "src/api/Grado/leer_grados.php";
 
-$columnas = ["id_grado", "nombre", "aula", "room_id", "activo"];
+$columnas = ["id_grado", "nombre", "aula", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "aula", "room_id"],
+    "buscar" => ["nombre", "aula"],
     "placeholder" => "Buscar grado...",
     "selects" => [
-        ["campo" => "aula", "label" => "Aula"],
-        ["campo" => "room_id", "label" => "Room ID"]
+        ["campo" => "aula", "label" => "Aula"]
     ]
 ];
 

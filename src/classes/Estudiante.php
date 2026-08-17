@@ -3,32 +3,20 @@ class Estudiante {
     private $conn;
 
     public $id_estudiante, $nombre, $apellido, $cedula_identidad;
-    public $id_grado, $room_id, $huella_id;
+    public $id_grado;
+    public $user_id_global;
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    private function obtenerRoomIdGrado($id_grado) {
-        $stmt = $this->conn->prepare("SELECT room_id FROM grados WHERE id_grado=:id AND activo=1");
-        $stmt->execute([":id" => $id_grado]);
-        $grado = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $grado ? $grado["room_id"] : null;
-    }
-
     public function crear() {
-        $room_id = $this->obtenerRoomIdGrado($this->id_grado);
-
-        if (!$room_id) return false;
-
         $query = "INSERT INTO estudiantes
                   SET nombre=:nombre,
                       apellido=:apellido,
                       cedula_identidad=:cedula,
                       id_grado=:id_grado,
-                      room_id=:room_id,
-                      huella_id=:huella";
+                      user_id_global=:user_id_global";
 
         $stmt = $this->conn->prepare($query);
 
@@ -37,8 +25,7 @@ class Estudiante {
             ":apellido" => $this->apellido,
             ":cedula" => $this->cedula_identidad,
             ":id_grado" => $this->id_grado,
-            ":room_id" => $room_id,
-            ":huella" => !empty($this->huella_id) ? $this->huella_id : null
+            ":user_id_global" => $this->user_id_global
         ]);
     }
 
@@ -48,9 +35,8 @@ class Estudiante {
                     e.nombre,
                     e.apellido,
                     e.cedula_identidad,
+                    e.user_id_global,
                     g.nombre AS grado,
-                    e.room_id,
-                    e.huella_id,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
@@ -69,9 +55,8 @@ class Estudiante {
                     e.nombre,
                     e.apellido,
                     e.cedula_identidad,
+                    e.user_id_global,
                     g.nombre AS grado,
-                    e.room_id,
-                    e.huella_id,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
@@ -100,19 +85,14 @@ class Estudiante {
             ":id" => $this->id_estudiante
         ];
 
-        if (!empty($this->id_grado)) {
-            $room_id = $this->obtenerRoomIdGrado($this->id_grado);
-            if (!$room_id) return false;
-
-            $campos[] = "id_grado=:id_grado";
-            $campos[] = "room_id=:room_id";
-            $params[":id_grado"] = $this->id_grado;
-            $params[":room_id"] = $room_id;
+        if (!empty($this->user_id_global)) {
+            $campos[] = "user_id_global=:user_id_global";
+            $params[":user_id_global"] = $this->user_id_global;
         }
 
-        if ($this->huella_id !== null && $this->huella_id !== "") {
-            $campos[] = "huella_id=:huella";
-            $params[":huella"] = $this->huella_id;
+        if (!empty($this->id_grado)) {
+            $campos[] = "id_grado=:id_grado";
+            $params[":id_grado"] = $this->id_grado;
         }
 
         $query = "UPDATE estudiantes
@@ -148,14 +128,12 @@ class Estudiante {
     public function contarDependencias() {
         $query = "SELECT
                     (SELECT COUNT(*) FROM asistencias_estudiantes WHERE id_estudiante=:id1) +
-                    (SELECT COUNT(*) FROM huellas_templates WHERE id_estudiante=:id2) +
-                    (SELECT COUNT(*) FROM solicitudes_huella WHERE id_estudiante=:id3)";
+                    (SELECT COUNT(*) FROM solicitudes_huella WHERE id_estudiante=:id2)";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
             ":id1" => $this->id_estudiante,
-            ":id2" => $this->id_estudiante,
-            ":id3" => $this->id_estudiante
+            ":id2" => $this->id_estudiante
         ]);
 
         return (int) $stmt->fetchColumn();

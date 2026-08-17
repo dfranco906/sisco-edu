@@ -1,7 +1,7 @@
 <?php
 $titulo = "Profesores";
 $api = "src/api/Profesor/leer_profesores.php";
-$columnas = ["id_profesor", "nombre", "apellido", "cedula_identidad", "huella_id"];
+$columnas = ["id_profesor", "nombre", "apellido", "cedula_identidad"];
 
 $filtros = [
     "buscar" => ["nombre", "apellido", "cedula_identidad"],

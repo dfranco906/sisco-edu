@@ -6,9 +6,9 @@ $db = (new Database())->getConnection();
 $huella = new HuellaTemplate($db);
 
 $huella->user_id_global = "USER_001";
-$huella->id_estudiante = 2;
-$huella->fingerprint_data = "A1B2C3D4E5F6_TEST_HEX";
+$huella->fingerprint_data = str_repeat("a1", HUELLA_TEMPLATE_BYTES);
 $huella->formato = "HEX";
+$huella->slot_index = 1;
 
 echo $huella->crear() ? "✅ Huella creada" : "❌ Error";
 ?>
