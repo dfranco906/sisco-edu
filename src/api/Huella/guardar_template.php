@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../config/biometria.php';
 $db = (new Database())->getConnection();
 $tipo = strtolower(trim($_POST['tipo_persona'] ?? $_POST['tipo_usuario'] ?? 'estudiante'));
 $template = trim($_POST['template'] ?? '');
+$crcRecibido = strtolower(trim($_POST['crc32'] ?? ''));
 $idRecibido = filter_input(INPUT_POST, 'id_persona', FILTER_VALIDATE_INT) ?: filter_input(INPUT_POST, 'id_estudiante', FILTER_VALIDATE_INT);
 $userIdRecibido = trim($_POST['user_id_global'] ?? '');
 $bytesRecibidos = filter_input(INPUT_POST, 'bytes', FILTER_VALIDATE_INT);
@@ -13,6 +14,13 @@ if (!in_array($tipo, ['estudiante','profesor'], true)
     || !es_template_huella_hex_valido($template)
     || ($bytesRecibidos !== null && $bytesRecibidos !== false && $bytesRecibidos !== HUELLA_TEMPLATE_BYTES)) {
     http_response_code(422); echo json_encode(['status'=>'error','message'=>'Datos o template HEX de 1536 bytes invalido']); exit;
+}
+$templateBinario = hex2bin($template);
+$crcCalculado = $templateBinario === false ? '' : strtolower(hash('crc32b', $templateBinario));
+if (preg_match('/\A[0-9a-f]{8}\z/D', $crcRecibido) !== 1
+    || $crcCalculado === ''
+    || !hash_equals($crcCalculado, $crcRecibido)) {
+    http_response_code(422); echo json_encode(['status'=>'error','message'=>'CRC32 del template no coincide con el informado por el registrador']); exit;
 }
 function avisarGatewaySync(): bool {
     if (!function_exists('curl_init')) return false;
@@ -44,5 +52,5 @@ try {
     $idHuella=(int)$db->lastInsertId();
     $db->prepare("INSERT INTO sync_biometrica (id_huella,id_aula,estado,intentos) VALUES (:huella,:aula,'PENDIENTE',0)")->execute([':huella'=>$idHuella,':aula'=>$idAula]);
     $idSync=(int)$db->lastInsertId(); $db->commit();
-    echo json_encode(['status'=>'success','message'=>'Huella pendiente de sincronizacion','id_huella'=>$idHuella,'id_sync'=>$idSync,'id_aula'=>$idAula,'gateway_avisado'=>avisarGatewaySync()]);
+    echo json_encode(['status'=>'success','message'=>'Huella pendiente de sincronizacion','id_huella'=>$idHuella,'id_sync'=>$idSync,'id_aula'=>$idAula,'crc32'=>$crcCalculado,'gateway_avisado'=>avisarGatewaySync()]);
 } catch(Throwable $e) { if($db->inTransaction()) $db->rollBack(); http_response_code(500); echo json_encode(['status'=>'error','message'=>'Error al guardar template']); }

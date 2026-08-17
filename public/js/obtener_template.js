@@ -36,9 +36,11 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
 
         const templateValido = data.bytes === 1536
             && typeof data.template === "string"
-            && /^[0-9a-fA-F]{3072}$/.test(data.template);
+            && /^[0-9a-fA-F]{3072}$/.test(data.template)
+            && typeof data.crc32 === "string"
+            && /^[0-9a-fA-F]{8}$/.test(data.crc32);
         if (!templateValido) {
-            mostrarEstadoHuella("El ESP32 devolvio un template incompatible; se esperaban 1536 bytes HEX.", false, true);
+            mostrarEstadoHuella("El ESP32 devolvio un template o CRC32 incompatible.", false, true);
             bloquearBotonesHuella(false);
             return;
         }
@@ -50,6 +52,7 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
         formData.append("tipo_usuario", tipoUsuario);
         formData.append("template", data.template);
         formData.append("bytes", data.bytes);
+        formData.append("crc32", data.crc32.toLowerCase());
 
         const { respuesta: resBackend, data: resultado } = await solicitarJson(window.BASE_URL + "src/api/Huella/guardar_template.php", {
             method: "POST",
