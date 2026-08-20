@@ -20,6 +20,24 @@ try {
         exit;
     }
 
+    if (!$asignacion->cargarPorId()) {
+        http_response_code(404);
+        echo json_encode(["status" => "error", "message" => "La asignación no existe"]);
+        exit;
+    }
+
+    if (!$asignacion->id_grado || !$asignacion->relacionesActivas()) {
+        http_response_code(422);
+        echo json_encode(["status" => "error", "message" => "La asignación no puede restaurarse porque tiene profesor, materia, grado o aula inactivos/incompletos."]);
+        exit;
+    }
+
+    if ($asignacion->existeDuplicada($asignacion->id_asignacion)) {
+        http_response_code(409);
+        echo json_encode(["status" => "error", "message" => "Ya existe una asignación activa equivalente."]);
+        exit;
+    }
+
     $resultado = $asignacion->restaurar();
 
     echo json_encode([

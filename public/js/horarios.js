@@ -75,7 +75,7 @@
         });
 
         [$("#crear-id-materia"), $("#editar-id-materia")].forEach((select) => {
-            select.innerHTML = '<option value="">Seleccione primero un profesor</option>';
+            select.innerHTML = '<option value="">Seleccione grado y profesor</option>';
             select.disabled = true;
         });
 
@@ -139,21 +139,25 @@
         actualizarBotonGuardar(botonGuardar, inputAula, inputAsignacion);
     }
 
-    function sincronizarAsignacion(selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idPreferido = "") {
+    function sincronizarAsignacion(selectGrado, selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idPreferido = "") {
         const candidatas = asignaciones.filter((asignacion) =>
-            String(asignacion.id_profesor) === String(selectProfesor.value)
+            String(asignacion.id_grado) === String(selectGrado.value)
+            && String(asignacion.id_profesor) === String(selectProfesor.value)
             && String(asignacion.id_materia) === String(selectMateria.value)
-        );
+        ).sort((a, b) => Number(b.anio_lectivo || 0) - Number(a.anio_lectivo || 0));
         const asignacion = candidatas.find((item) => String(item.id_asignacion) === String(idPreferido))
             || candidatas[0];
         inputAsignacion.value = asignacion?.id_asignacion || "";
         actualizarBotonGuardar(botonGuardar, inputAula, inputAsignacion);
     }
 
-    function cargarMateriasAsignadas(selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idMateria = "", idAsignacion = "") {
+    function cargarMateriasAsignadas(selectGrado, selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idMateria = "", idAsignacion = "") {
         const materias = new Map();
         asignaciones
-            .filter((asignacion) => String(asignacion.id_profesor) === String(selectProfesor.value))
+            .filter((asignacion) =>
+                String(asignacion.id_grado) === String(selectGrado.value)
+                && String(asignacion.id_profesor) === String(selectProfesor.value)
+            )
             .forEach((asignacion) => {
                 if (asignacion.id_materia && asignacion.materia) {
                     materias.set(String(asignacion.id_materia), asignacion.materia);
@@ -165,10 +169,13 @@
             .map(([id, nombre]) => `<option value="${escapar(id)}">${escapar(nombre)}</option>`)
             .join("");
 
-        selectMateria.innerHTML = `<option value="">Seleccione una materia</option>${opciones}`;
+        const indicacion = !selectGrado.value
+            ? "Seleccione primero un grado"
+            : (!selectProfesor.value ? "Seleccione un profesor" : "Seleccione una materia");
+        selectMateria.innerHTML = `<option value="">${indicacion}</option>${opciones}`;
         selectMateria.disabled = materias.size === 0;
         selectMateria.value = idMateria ? String(idMateria) : "";
-        sincronizarAsignacion(selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idAsignacion);
+        sincronizarAsignacion(selectGrado, selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idAsignacion);
     }
 
     function tarjetaHorario(horario, compacta = false) {
@@ -296,8 +303,10 @@
         if (!horario) return;
 
         $("#editar-id-horario").value = horario.id_horario;
+        $("#editar-id-grado").value = horario.id_grado || "";
         $("#editar-id-profesor").value = horario.id_profesor || "";
         cargarMateriasAsignadas(
+            $("#editar-id-grado"),
             $("#editar-id-profesor"),
             $("#editar-id-materia"),
             $("#editar-id-asignacion"),
@@ -306,7 +315,6 @@
             horario.id_materia || "",
             horario.id_asignacion || ""
         );
-        $("#editar-id-grado").value = horario.id_grado || "";
         $("#editar-dia-semana").value = horario.dia_semana || "Lunes";
         $("#editar-hora-inicio").value = horaCorta(horario.hora_inicio);
         $("#editar-hora-fin").value = horaCorta(horario.hora_fin);
@@ -355,7 +363,7 @@
 
             if (modalId === "modal-crear-horario") {
                 formulario.reset();
-                $("#crear-id-materia").innerHTML = '<option value="">Seleccione primero un profesor</option>';
+                $("#crear-id-materia").innerHTML = '<option value="">Seleccione grado y profesor</option>';
                 $("#crear-id-materia").disabled = true;
                 $("#crear-id-asignacion").value = "";
                 sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), boton, $("#crear-id-asignacion"));
@@ -395,23 +403,25 @@
 
     function activarEventos() {
         $("#btn-crear-horario").addEventListener("click", () => abrirModal("modal-crear-horario"));
-        $("#crear-id-grado").addEventListener("change", () =>
-            sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), $("#guardar-horario"), $("#crear-id-asignacion"))
-        );
-        $("#editar-id-grado").addEventListener("change", () =>
-            sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), $("#actualizar-horario"), $("#editar-id-asignacion"))
-        );
+        $("#crear-id-grado").addEventListener("change", () => {
+            sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), $("#guardar-horario"), $("#crear-id-asignacion"));
+            cargarMateriasAsignadas($("#crear-id-grado"), $("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"));
+        });
+        $("#editar-id-grado").addEventListener("change", () => {
+            sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), $("#actualizar-horario"), $("#editar-id-asignacion"));
+            cargarMateriasAsignadas($("#editar-id-grado"), $("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"));
+        });
         $("#crear-id-profesor").addEventListener("change", () =>
-            cargarMateriasAsignadas($("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"))
+            cargarMateriasAsignadas($("#crear-id-grado"), $("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"))
         );
         $("#editar-id-profesor").addEventListener("change", () =>
-            cargarMateriasAsignadas($("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"))
+            cargarMateriasAsignadas($("#editar-id-grado"), $("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"))
         );
         $("#crear-id-materia").addEventListener("change", () =>
-            sincronizarAsignacion($("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"))
+            sincronizarAsignacion($("#crear-id-grado"), $("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"))
         );
         $("#editar-id-materia").addEventListener("change", () =>
-            sincronizarAsignacion($("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"))
+            sincronizarAsignacion($("#editar-id-grado"), $("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"))
         );
         $("#selector-grado-semanal").addEventListener("change", renderHorarioSemanal);
 

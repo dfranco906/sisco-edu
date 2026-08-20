@@ -12,6 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $idProfesor = filter_var($_POST['id_profesor'] ?? null, FILTER_VALIDATE_INT);
 $idMateria = filter_var($_POST['id_materia'] ?? null, FILTER_VALIDATE_INT);
+$idGrado = filter_var($_POST['id_grado'] ?? null, FILTER_VALIDATE_INT);
+$cargaHoraria = filter_var($_POST['carga_horaria'] ?? null, FILTER_VALIDATE_INT);
 $anio = $_POST['anio_lectivo']
     ?? $_POST['anio']
     ?? $_POST["a\u{00F1}o_lectivo"]
@@ -19,12 +21,12 @@ $anio = $_POST['anio_lectivo']
     ?? null;
 $anio = filter_var($anio, FILTER_VALIDATE_INT);
 
-if (!$idProfesor || !$idMateria || !$anio || $anio < 2000 || $anio > 2100) {
+if (!$idProfesor || !$idMateria || !$idGrado || !$cargaHoraria || $cargaHoraria < 1 || $cargaHoraria > 100 || !$anio || $anio < 2000 || $anio > 2100) {
     http_response_code(422);
     echo json_encode([
         "success" => false,
         "status" => "error",
-        "message" => "Profesor, materia y año lectivo válido son obligatorios."
+        "message" => "Profesor, materia, grado, carga horaria y año lectivo válidos son obligatorios."
     ]);
     exit;
 }
@@ -34,6 +36,8 @@ try {
     $asignacion = new Asignacion($db);
     $asignacion->id_profesor = $idProfesor;
     $asignacion->id_materia = $idMateria;
+    $asignacion->id_grado = $idGrado;
+    $asignacion->carga_horaria = $cargaHoraria;
     $asignacion->anio_lectivo = $anio;
 
     if (!$asignacion->relacionesActivas()) {
@@ -41,7 +45,7 @@ try {
         echo json_encode([
             "success" => false,
             "status" => "error",
-            "message" => "El profesor o la materia seleccionada no están activos."
+            "message" => "El profesor, la materia, el grado o el aula asociada no están activos."
         ]);
         exit;
     }
@@ -51,7 +55,7 @@ try {
         echo json_encode([
             "success" => false,
             "status" => "error",
-            "message" => "Ya existe una asignación activa para este profesor, materia y año lectivo."
+            "message" => "Ya existe una asignación activa para este profesor, materia, grado y año lectivo."
         ]);
         exit;
     }

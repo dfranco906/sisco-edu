@@ -6,6 +6,7 @@ $etiquetasColumnasDefault = [
     'anio_lectivo' => 'Año lectivo',
     'cedula_identidad' => 'Cédula',
     'codigo_aula' => 'Código aula',
+    'carga_horaria' => 'Carga horaria',
     'dia_semana' => 'Día',
     'hora_inicio' => 'Hora inicio',
     'hora_fin' => 'Hora fin'

@@ -49,9 +49,9 @@ try {
     $db = (new Database())->getConnection();
     $horario = new Horario($db);
 
-    if (!$horario->asignacionActivaExiste($id_asignacion)) {
+    if (!$horario->asignacionActivaExiste($id_asignacion, $id_grado)) {
         http_response_code(422);
-        echo json_encode(["status" => "error", "message" => "La asignación seleccionada no es válida."]);
+        echo json_encode(["status" => "error", "message" => "La asignación seleccionada no corresponde al grado indicado."]);
         exit;
     }
 

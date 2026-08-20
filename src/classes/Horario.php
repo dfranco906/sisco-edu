@@ -32,17 +32,23 @@ class Horario
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function asignacionActivaExiste($id_asignacion)
+    public function asignacionActivaExiste($id_asignacion, $id_grado)
     {
         $stmt = $this->conn->prepare("
             SELECT COUNT(*)
             FROM asignacion_docente ad
             INNER JOIN profesores p ON p.id_profesor = ad.id_profesor AND p.activo = 1
             INNER JOIN materias m ON m.id_materia = ad.id_materia AND m.activo = 1
+            INNER JOIN grados g ON g.id_grado = ad.id_grado AND g.activo = 1
+            INNER JOIN aulas a ON a.id_aula = g.id_aula AND a.activo = 1
             WHERE ad.id_asignacion = :id_asignacion
+              AND ad.id_grado = :id_grado
               AND ad.activo = 1
         ");
-        $stmt->execute([":id_asignacion" => $id_asignacion]);
+        $stmt->execute([
+            ":id_asignacion" => $id_asignacion,
+            ":id_grado" => $id_grado
+        ]);
 
         return (int) $stmt->fetchColumn() > 0;
     }

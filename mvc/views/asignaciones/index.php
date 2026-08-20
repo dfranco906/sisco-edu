@@ -6,16 +6,21 @@ $columnas = [
     "id_asignacion",
     "profesor",
     "materia",
+    "grado",
+    "aula",
+    "carga_horaria",
     "anio_lectivo",
     "activo"
 ];
 
 $filtros = [
-    "buscar" => ["profesor", "materia"],
-    "placeholder" => "Buscar profesor o materia...",
+    "buscar" => ["profesor", "materia", "grado", "aula"],
+    "placeholder" => "Buscar profesor, materia, grado o aula...",
     "selects" => [
         ["campo" => "profesor", "label" => "Profesor"],
         ["campo" => "materia", "label" => "Materia"],
+        ["campo" => "grado", "label" => "Grado"],
+        ["campo" => "aula", "label" => "Aula"],
         ["campo" => "anio_lectivo", "label" => "Año lectivo"]
     ]
 ];
@@ -38,6 +43,21 @@ $formCrear = [
             "api" => "src/api/Materia/leer_materias.php",
             "value" => "id_materia",
             "labelField" => "nombre"
+        ],
+        [
+            "name" => "id_grado",
+            "label" => "Grado y aula",
+            "type" => "select",
+            "api" => "src/api/Grado/leer_grados.php?opciones=1",
+            "value" => "id_grado",
+            "labelField" => "descripcion"
+        ],
+        [
+            "name" => "carga_horaria",
+            "label" => "Carga horaria",
+            "type" => "number",
+            "min" => 1,
+            "max" => 100
         ],
         [
             "name" => "anio_lectivo",
@@ -71,6 +91,22 @@ $camposEditar = [
         "value" => "id_materia",
         "labelField" => "nombre",
         "currentLabelField" => "materia"
+    ],
+    [
+        "name" => "id_grado",
+        "label" => "Grado y aula",
+        "type" => "select",
+        "api" => "src/api/Grado/leer_grados.php?opciones=1",
+        "value" => "id_grado",
+        "labelField" => "descripcion",
+        "currentLabelFields" => ["grado", "aula"]
+    ],
+    [
+        "name" => "carga_horaria",
+        "label" => "Carga horaria",
+        "type" => "number",
+        "min" => 1,
+        "max" => 100
     ],
     [
         "name" => "anio_lectivo",

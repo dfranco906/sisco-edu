@@ -135,14 +135,17 @@ async function ejecutar() {
     });
 
     const asignacion = await exigir('Asignacion', 'crear', 'src/api/Asignaciones/crear_asignacion.php', {
-        id_profesor: ids.profesor, id_materia: ids.materia, anio_lectivo: 2026, activo: 1
+        id_profesor: ids.profesor, id_materia: ids.materia, id_grado: ids.grado,
+        carga_horaria: 4, anio_lectivo: 2026, activo: 1
     });
     ids.asignacion = asignacion.data.id_asignacion;
     await exigir('Asignacion', 'editar', 'src/api/Asignaciones/actualizar_asignacion.php', {
-        id_asignacion: ids.asignacion, id_profesor: ids.profesor, id_materia: ids.materia, anio_lectivo: 2027, activo: 1
+        id_asignacion: ids.asignacion, id_profesor: ids.profesor, id_materia: ids.materia,
+        id_grado: ids.grado, carga_horaria: 5, anio_lectivo: 2027, activo: 1
     });
     await exigir('Asignacion', 'duplicado claro', 'src/api/Asignaciones/crear_asignacion.php', {
-        id_profesor: ids.profesor, id_materia: ids.materia, anio_lectivo: 2027, activo: 1
+        id_profesor: ids.profesor, id_materia: ids.materia, id_grado: ids.grado,
+        carga_horaria: 5, anio_lectivo: 2027, activo: 1
     }, 409);
 
     const horario = await exigir('Horario', 'crear', 'src/api/Horario/crear_horario.php', {

@@ -162,7 +162,7 @@ async function ejecutar() {
             ['Aulas', 'mvc/views/aulas/index.php', 0],
             ['Grados', 'mvc/views/grados/index.php', 1],
             ['Usuarios', 'mvc/views/usuarios/index.php', 1],
-            ['Asignaciones', 'mvc/views/asignaciones/index.php', 2]
+            ['Asignaciones', 'mvc/views/asignaciones/index.php', 3]
         ];
 
         for (const [nombre, ruta, selectsMinimos] of paginasCrud) {

@@ -2,14 +2,16 @@
 $titulo = "Asignaciones desactivadas";
 $api = "src/api/Asignaciones/leer_asignaciones_desactivadas.php";
 
-$columnas = ["id_asignacion", "profesor", "materia", "anio_lectivo", "activo"];
+$columnas = ["id_asignacion", "profesor", "materia", "grado", "aula", "carga_horaria", "anio_lectivo", "activo"];
 
 $filtros = [
-    "buscar" => ["profesor", "materia"],
-    "placeholder" => "Buscar profesor o materia...",
+    "buscar" => ["profesor", "materia", "grado", "aula"],
+    "placeholder" => "Buscar profesor, materia, grado o aula...",
     "selects" => [
         ["campo" => "profesor", "label" => "Profesor"],
         ["campo" => "materia", "label" => "Materia"],
+        ["campo" => "grado", "label" => "Grado"],
+        ["campo" => "aula", "label" => "Aula"],
         ["campo" => "anio_lectivo", "label" => "Año lectivo"]
     ]
 ];
