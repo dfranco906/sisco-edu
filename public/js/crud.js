@@ -104,6 +104,68 @@ function activarBusquedaSelect(select) {
 
     if (buscador.dataset.searchBound === "1") return;
     buscador.dataset.searchBound = "1";
+    buscador.setAttribute("aria-autocomplete", "list");
+    buscador.setAttribute("aria-expanded", "false");
+
+    const sugerencias = document.createElement("div");
+    sugerencias.className = "app-select-suggestions";
+    sugerencias.setAttribute("role", "listbox");
+    sugerencias.hidden = true;
+    buscador.insertAdjacentElement("afterend", sugerencias);
+
+    const opcionDesdeDatos = (opcion) => {
+        const nueva = new Option(opcion.text, opcion.value);
+        nueva.disabled = opcion.disabled;
+        return nueva;
+    };
+
+    const cerrarSugerencias = () => {
+        sugerencias.hidden = true;
+        buscador.setAttribute("aria-expanded", "false");
+    };
+
+    const renderizarSugerencias = () => {
+        const texto = normalizarBusquedaCrud(buscador.value);
+        const coincidencias = (select._opcionesBusqueda || [])
+            .filter((opcion) =>
+                opcion.value !== ""
+                && !opcion.disabled
+                && normalizarBusquedaCrud(opcion.text).includes(texto)
+            )
+            .slice(0, 10);
+
+        sugerencias.replaceChildren();
+
+        if (coincidencias.length === 0) {
+            const vacio = document.createElement("p");
+            vacio.className = "app-select-suggestions-empty";
+            vacio.textContent = "No hay coincidencias";
+            sugerencias.appendChild(vacio);
+        } else {
+            coincidencias.forEach((opcion) => {
+                const boton = document.createElement("button");
+                boton.type = "button";
+                boton.className = "app-select-suggestion";
+                boton.textContent = opcion.text;
+                boton.dataset.value = opcion.value;
+                boton.setAttribute("role", "option");
+                boton.addEventListener("mousedown", (evento) => evento.preventDefault());
+                boton.addEventListener("click", () => {
+                    const opcionesCompletas = select._opcionesBusqueda || [];
+                    select.replaceChildren(...opcionesCompletas.map(opcionDesdeDatos));
+                    select.value = opcion.value;
+                    buscador.value = "";
+                    cerrarSugerencias();
+                    select.dispatchEvent(new Event("change", { bubbles: true }));
+                    select.focus();
+                });
+                sugerencias.appendChild(boton);
+            });
+        }
+
+        sugerencias.hidden = false;
+        buscador.setAttribute("aria-expanded", "true");
+    };
 
     buscador.addEventListener("input", () => {
         const texto = normalizarBusquedaCrud(buscador.value);
@@ -116,13 +178,23 @@ function activarBusquedaSelect(select) {
         );
 
         select.replaceChildren(...filtradas.map((opcion) => {
-            const nueva = new Option(opcion.text, opcion.value);
-            nueva.disabled = opcion.disabled;
-            return nueva;
+            return opcionDesdeDatos(opcion);
         }));
 
         if ([...select.options].some((opcion) => opcion.value === valorActual)) {
             select.value = valorActual;
+        }
+
+        renderizarSugerencias();
+    });
+
+    buscador.addEventListener("focus", renderizarSugerencias);
+    buscador.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape") cerrarSugerencias();
+    });
+    document.addEventListener("click", (evento) => {
+        if (evento.target !== buscador && !sugerencias.contains(evento.target)) {
+            cerrarSugerencias();
         }
     });
 }

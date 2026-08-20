@@ -228,6 +228,15 @@ async function cargarTabla(api, columnas, filtros = {}) {
             }
 
             const opciones = opcionesFiltro(datosPrincipal, filtro);
+            const valoresConRegistros = new Set(
+                datos
+                    .map((item) => item[filtro.campo])
+                    .filter((valor) => valor !== null && valor !== undefined && String(valor).trim() !== "")
+                    .map(String)
+            );
+            const indicePorDefecto = filtro.porDefecto === "primero"
+                ? opciones.findIndex(([valor]) => valoresConRegistros.has(String(valor)))
+                : -1;
             let selectPrincipal = `
                 <div class="app-filter-primary">
                     <label for="filtro-principal" class="app-filter-primary-label">
@@ -239,7 +248,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
             `;
 
             opciones.forEach(([valor, etiqueta], indice) => {
-                const seleccionado = filtro.porDefecto === "primero" && indice === 0 ? " selected" : "";
+                const seleccionado = indice === indicePorDefecto ? " selected" : "";
                 selectPrincipal += `<option value="${escaparHtml(valor)}"${seleccionado}>${escaparHtml(etiqueta)}</option>`;
             });
 

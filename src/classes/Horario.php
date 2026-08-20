@@ -12,48 +12,35 @@ class Horario
     public $hora_inicio;
     public $hora_fin;
     public $id_aula;
+    public $permite_superposicion = 0;
 
     public function __construct($db)
     {
         $this->conn = $db;
     }
 
-    public function obtenerGradoActivo($id_grado)
+    public function obtenerAsignacionActiva($id_asignacion)
     {
         $stmt = $this->conn->prepare("
-            SELECT g.id_aula
-            FROM grados g
-            WHERE g.id_grado = :id_grado
-              AND g.activo = 1
-            LIMIT 1
-        ");
-        $stmt->execute([":id_grado" => $id_grado]);
-
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    public function asignacionActivaExiste($id_asignacion, $id_grado)
-    {
-        $stmt = $this->conn->prepare("
-            SELECT COUNT(*)
+            SELECT
+                ad.id_asignacion,
+                ad.id_grado,
+                g.id_aula
             FROM asignacion_docente ad
             INNER JOIN profesores p ON p.id_profesor = ad.id_profesor AND p.activo = 1
             INNER JOIN materias m ON m.id_materia = ad.id_materia AND m.activo = 1
             INNER JOIN grados g ON g.id_grado = ad.id_grado AND g.activo = 1
             INNER JOIN aulas a ON a.id_aula = g.id_aula AND a.activo = 1
             WHERE ad.id_asignacion = :id_asignacion
-              AND ad.id_grado = :id_grado
               AND ad.activo = 1
+            LIMIT 1
         ");
-        $stmt->execute([
-            ":id_asignacion" => $id_asignacion,
-            ":id_grado" => $id_grado
-        ]);
+        $stmt->execute([":id_asignacion" => $id_asignacion]);
 
-        return (int) $stmt->fetchColumn() > 0;
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function obtenerConflicto($excluirId = null)
+    public function obtenerConflicto($excluirId = null, $permitirClaseConjunta = false)
     {
         $query = "SELECT
                     h.id_horario,
@@ -61,7 +48,14 @@ class Horario
                         WHEN h.id_grado = :id_grado_tipo THEN 'grado'
                         WHEN h.id_aula = :id_aula_tipo THEN 'aula'
                         ELSE 'profesor'
-                    END AS tipo
+                    END AS tipo,
+                    CASE
+                        WHEN h.id_grado IS NOT NULL
+                         AND h.id_grado <> :id_grado_excepcion_info
+                         AND h.id_aula = :id_aula_excepcion_info
+                         AND ad_existente.id_profesor = ad_nueva.id_profesor
+                        THEN 1 ELSE 0
+                    END AS excepcion_disponible
                   FROM horarios h
                   INNER JOIN asignacion_docente ad_existente
                     ON ad_existente.id_asignacion = h.id_asignacion
@@ -75,17 +69,29 @@ class Horario
                         h.id_grado = :id_grado_conflicto
                         OR h.id_aula = :id_aula_conflicto
                         OR ad_existente.id_profesor = ad_nueva.id_profesor
+                    )
+                    AND NOT (
+                        :permitir_superposicion = 1
+                        AND h.id_grado IS NOT NULL
+                        AND h.id_grado <> :id_grado_excepcion
+                        AND h.id_aula = :id_aula_excepcion
+                        AND ad_existente.id_profesor = ad_nueva.id_profesor
                     )";
 
         $params = [
             ":id_grado_tipo" => $this->id_grado,
             ":id_aula_tipo" => $this->id_aula,
+            ":id_grado_excepcion_info" => $this->id_grado,
+            ":id_aula_excepcion_info" => $this->id_aula,
             ":id_asignacion_nueva" => $this->id_asignacion,
             ":dia_semana" => $this->dia_semana,
             ":hora_fin" => $this->hora_fin,
             ":hora_inicio" => $this->hora_inicio,
             ":id_grado_conflicto" => $this->id_grado,
-            ":id_aula_conflicto" => $this->id_aula
+            ":id_aula_conflicto" => $this->id_aula,
+            ":permitir_superposicion" => $permitirClaseConjunta ? 1 : 0,
+            ":id_grado_excepcion" => $this->id_grado,
+            ":id_aula_excepcion" => $this->id_aula
         ];
 
         if ($excluirId !== null) {
@@ -103,9 +109,9 @@ class Horario
     {
         $stmt = $this->conn->prepare("
             INSERT INTO horarios
-                (id_asignacion, id_grado, dia_semana, hora_inicio, hora_fin, id_aula)
+                (id_asignacion, id_grado, dia_semana, hora_inicio, hora_fin, id_aula, permite_superposicion)
             VALUES
-                (:id_asignacion, :id_grado, :dia_semana, :hora_inicio, :hora_fin, :id_aula)
+                (:id_asignacion, :id_grado, :dia_semana, :hora_inicio, :hora_fin, :id_aula, :permite_superposicion)
         ");
 
         return $stmt->execute([
@@ -114,7 +120,8 @@ class Horario
             ":dia_semana" => $this->dia_semana,
             ":hora_inicio" => $this->hora_inicio,
             ":hora_fin" => $this->hora_fin,
-            ":id_aula" => $this->id_aula
+            ":id_aula" => $this->id_aula,
+            ":permite_superposicion" => $this->permite_superposicion ? 1 : 0
         ]);
     }
 
@@ -129,6 +136,7 @@ class Horario
                 h.hora_inicio,
                 h.hora_fin,
                 h.id_aula,
+                h.permite_superposicion,
                 h.activo,
                 ad.id_profesor,
                 ad.id_materia,
@@ -173,7 +181,8 @@ class Horario
                 dia_semana = :dia_semana,
                 hora_inicio = :hora_inicio,
                 hora_fin = :hora_fin,
-                id_aula = :id_aula
+                id_aula = :id_aula,
+                permite_superposicion = :permite_superposicion
             WHERE id_horario = :id_horario
         ");
 
@@ -184,7 +193,41 @@ class Horario
             ":hora_inicio" => $this->hora_inicio,
             ":hora_fin" => $this->hora_fin,
             ":id_aula" => $this->id_aula,
+            ":permite_superposicion" => $this->permite_superposicion ? 1 : 0,
             ":id_horario" => $this->id_horario
+        ]);
+    }
+
+    public function marcarClasesConjuntasRelacionadas()
+    {
+        if (!$this->permite_superposicion || !$this->id_horario) return true;
+
+        $stmt = $this->conn->prepare("
+            UPDATE horarios h
+            INNER JOIN asignacion_docente ad_existente
+                ON ad_existente.id_asignacion = h.id_asignacion
+            INNER JOIN asignacion_docente ad_actual
+                ON ad_actual.id_asignacion = :id_asignacion_actual
+            SET h.permite_superposicion = 1
+            WHERE h.id_horario <> :id_horario
+              AND h.activo = 1
+              AND h.dia_semana = :dia_semana
+              AND h.hora_inicio < :hora_fin
+              AND h.hora_fin > :hora_inicio
+              AND h.id_grado IS NOT NULL
+              AND h.id_grado <> :id_grado
+              AND h.id_aula = :id_aula
+              AND ad_existente.id_profesor = ad_actual.id_profesor
+        ");
+
+        return $stmt->execute([
+            ":id_asignacion_actual" => $this->id_asignacion,
+            ":id_horario" => $this->id_horario,
+            ":dia_semana" => $this->dia_semana,
+            ":hora_fin" => $this->hora_fin,
+            ":hora_inicio" => $this->hora_inicio,
+            ":id_grado" => $this->id_grado,
+            ":id_aula" => $this->id_aula
         ]);
     }
 

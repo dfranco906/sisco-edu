@@ -12,14 +12,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $id_horario = $_POST['id_horario'] ?? null;
 $id_asignacion = $_POST['id_asignacion'] ?? null;
-$id_grado = $_POST['id_grado'] ?? null;
 $dia_semana = trim((string) ($_POST['dia_semana'] ?? ''));
 $hora_inicio = trim((string) ($_POST['hora_inicio'] ?? ''));
 $hora_fin = trim((string) ($_POST['hora_fin'] ?? ''));
+$permite_superposicion = filter_var(
+    $_POST['permite_superposicion'] ?? false,
+    FILTER_VALIDATE_BOOLEAN
+);
 
-if (!$id_horario || !$id_asignacion || !$id_grado || $dia_semana === '' || $hora_inicio === '' || $hora_fin === '') {
+if (!$id_horario || !$id_asignacion || $dia_semana === '' || $hora_inicio === '' || $hora_fin === '') {
     http_response_code(422);
-    echo json_encode(["status" => "error", "message" => "Horario, asignación, grado, día y horas son obligatorios."]);
+    echo json_encode(["status" => "error", "message" => "Horario, asignación, día y horas son obligatorios."]);
     exit;
 }
 
@@ -50,18 +53,14 @@ try {
     $db = (new Database())->getConnection();
     $horario = new Horario($db);
 
-    if (!$horario->asignacionActivaExiste($id_asignacion, $id_grado)) {
+    $asignacion = $horario->obtenerAsignacionActiva($id_asignacion);
+    if (!$asignacion) {
         http_response_code(422);
-        echo json_encode(["status" => "error", "message" => "La asignación seleccionada no corresponde al grado indicado."]);
+        echo json_encode(["status" => "error", "message" => "La asignación seleccionada ya no está activa o disponible."]);
         exit;
     }
 
-    $grado = $horario->obtenerGradoActivo($id_grado);
-    if (!$grado || !$grado['id_aula']) {
-        http_response_code(422);
-        echo json_encode(["status" => "error", "message" => "El grado seleccionado no tiene aula asignada."]);
-        exit;
-    }
+    $id_grado = $asignacion['id_grado'];
 
     $horario->id_horario = $id_horario;
     $horario->id_asignacion = $id_asignacion;
@@ -69,9 +68,10 @@ try {
     $horario->dia_semana = $dia_semana;
     $horario->hora_inicio = $hora_inicio;
     $horario->hora_fin = $hora_fin;
-    $horario->id_aula = $grado['id_aula'];
+    $horario->id_aula = $asignacion['id_aula'];
+    $horario->permite_superposicion = $permite_superposicion ? 1 : 0;
 
-    $conflicto = $horario->obtenerConflicto($id_horario);
+    $conflicto = $horario->obtenerConflicto($id_horario, $permite_superposicion);
     if ($conflicto) {
         $etiquetas = [
             'grado' => 'el grado',
@@ -79,25 +79,42 @@ try {
             'profesor' => 'el profesor'
         ];
         http_response_code(409);
+        $mensaje = "Existe un horario superpuesto para " . ($etiquetas[$conflicto['tipo']] ?? 'la selección') . ".";
+        if (!empty($conflicto['excepcion_disponible'])) {
+            $mensaje .= " Si ambos grados tendrán clase conjunta con el mismo profesor en esta aula, marcá la excepción correspondiente.";
+        }
         echo json_encode([
             "success" => false,
             "status" => "error",
-            "message" => "Existe un horario superpuesto para " . ($etiquetas[$conflicto['tipo']] ?? 'la selección') . "."
+            "message" => $mensaje
         ]);
         exit;
     }
 
+    $db->beginTransaction();
     $resultado = $horario->actualizar();
+    if (!$resultado) throw new RuntimeException('La actualización del horario no se completó.');
+    if (!$horario->marcarClasesConjuntasRelacionadas()) {
+        throw new RuntimeException('No se pudieron vincular las clases conjuntas.');
+    }
+    $db->commit();
 
     echo json_encode([
-        "success" => (bool) $resultado,
-        "status" => $resultado ? "success" : "error",
-        "message" => $resultado ? "Horario actualizado correctamente" : "Error al actualizar horario",
-        "data" => $resultado ? ["id_horario" => (int) $id_horario, "id_aula" => (int) $grado['id_aula']] : null,
-        "id_horario" => $resultado ? (int) $id_horario : null,
-        "id_aula" => $resultado ? (int) $grado['id_aula'] : null
+        "success" => true,
+        "status" => "success",
+        "message" => $permite_superposicion ? "Horario conjunto actualizado correctamente" : "Horario actualizado correctamente",
+        "data" => [
+            "id_horario" => (int) $id_horario,
+            "id_grado" => (int) $id_grado,
+            "id_aula" => (int) $asignacion['id_aula'],
+            "permite_superposicion" => $permite_superposicion ? 1 : 0
+        ],
+        "id_horario" => (int) $id_horario,
+        "id_grado" => (int) $id_grado,
+        "id_aula" => (int) $asignacion['id_aula']
     ]);
 } catch (Throwable $e) {
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
     error_log('actualizar_horario: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode(["success" => false, "status" => "error", "message" => "No se pudo actualizar el horario."]);

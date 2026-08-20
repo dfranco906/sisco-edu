@@ -213,18 +213,26 @@ async function ejecutar() {
                         buscadorMateria.dispatchEvent(new Event('input', { bubbles: true }));
                     }
                     const opcionesDespues = selectMateria?.options.length || 0;
+                    const panelSugerencias = buscadorMateria?.nextElementSibling;
                     return {
                         selectorGrado: Boolean(grado && grado.options.length > 1 && grado.value),
                         resumen: document.querySelector('#resumen-filtro-principal')?.textContent || '',
                         buscadores: ${crear.buscadores},
                         ordenados,
-                        busquedaFiltra: opcionesAntes <= 2 || opcionesDespues < opcionesAntes
+                        busquedaFiltra: opcionesAntes <= 2 || opcionesDespues < opcionesAntes,
+                        sugerenciasInmediatas: Boolean(
+                            panelSugerencias
+                            && panelSugerencias.classList.contains('app-select-suggestions')
+                            && !panelSugerencias.hidden
+                            && panelSugerencias.querySelector('[role="option"]')
+                        )
                     };
                 })()`);
                 registrar(
                     nombre,
                     'organización y búsqueda',
-                    organizacion.selectorGrado && organizacion.resumen && organizacion.buscadores === 3 && organizacion.ordenados && organizacion.busquedaFiltra,
+                    organizacion.selectorGrado && organizacion.resumen && organizacion.buscadores === 3
+                        && organizacion.ordenados && organizacion.busquedaFiltra && organizacion.sugerenciasInmediatas,
                     JSON.stringify(organizacion)
                 );
             }
@@ -279,17 +287,28 @@ async function ejecutar() {
         const horarioCrear = await evaluar(`(() => {
             document.querySelector('#btn-crear-horario')?.click();
             const modal = document.querySelector('#modal-crear-horario');
-            const profesor = document.querySelector('#crear-id-profesor');
-            const grado = document.querySelector('#crear-id-grado');
+            const asignacion = document.querySelector('#crear-id-asignacion');
+            const buscador = document.querySelector('#crear-buscar-asignacion');
+            if (asignacion?.options.length > 1 && buscador) {
+                buscador.value = asignacion.options[1].text.split(' · ')[0];
+                buscador.dispatchEvent(new Event('input', { bubbles: true }));
+                asignacion.value = asignacion.options[1].value;
+                asignacion.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            const panel = document.querySelector('#crear-asignacion-sugerencias');
             return {
                 abierto: Boolean(modal && !modal.classList.contains('hidden')),
                 selects: modal?.querySelectorAll('select').length || 0,
-                profesores: profesor?.options.length || 0,
-                grados: grado?.options.length || 0,
-                aulaSoloLectura: document.querySelector('#crear-id-aula')?.readOnly === true
+                asignaciones: asignacion?.options.length || 0,
+                sugerenciasInmediatas: Boolean(panel && !panel.hidden && panel.querySelector('[role=option]')),
+                profesorCompleto: Boolean(document.querySelector('#crear-profesor')?.value),
+                materiaCompleta: Boolean(document.querySelector('#crear-materia')?.value),
+                gradoCompleto: Boolean(document.querySelector('#crear-grado')?.value),
+                aulaSoloLectura: document.querySelector('#crear-id-aula')?.readOnly === true,
+                excepcionDisponible: document.querySelector('#crear-permite-superposicion')?.type === 'checkbox'
             };
         })()`);
-        registrar('Horarios', 'Crear con relaciones', horarioCrear.abierto && horarioCrear.selects >= 4 && horarioCrear.profesores > 1 && horarioCrear.grados > 1 && horarioCrear.aulaSoloLectura, JSON.stringify(horarioCrear));
+        registrar('Horarios', 'Crear desde asignacion valida', horarioCrear.abierto && horarioCrear.selects >= 2 && horarioCrear.asignaciones > 1 && horarioCrear.sugerenciasInmediatas && horarioCrear.profesorCompleto && horarioCrear.materiaCompleta && horarioCrear.gradoCompleto && horarioCrear.aulaSoloLectura && horarioCrear.excepcionDisponible, JSON.stringify(horarioCrear));
         await evaluar(`document.querySelector('[data-close-modal="modal-crear-horario"]')?.click()`);
         const horarioEditarExiste = await evaluar(`Boolean(document.querySelector('[data-editar-horario]'))`);
         registrar('Horarios', 'boton Editar', horarioEditarExiste, horarioEditarExiste ? 'disponible' : 'ausente');
@@ -298,13 +317,14 @@ async function ejecutar() {
             await demora(250);
             const horarioEditar = await evaluar(`({
                 abierto: !document.querySelector('#modal-editar-horario').classList.contains('hidden'),
-                profesor: document.querySelector('#editar-id-profesor').value,
-                materia: document.querySelector('#editar-id-materia').value,
-                grado: document.querySelector('#editar-id-grado').value,
                 asignacion: document.querySelector('#editar-id-asignacion').value,
-                aulaSoloLectura: document.querySelector('#editar-id-aula').readOnly
+                profesor: document.querySelector('#editar-profesor').value,
+                materia: document.querySelector('#editar-materia').value,
+                grado: document.querySelector('#editar-grado').value,
+                aulaSoloLectura: document.querySelector('#editar-id-aula').readOnly,
+                excepcionDisponible: document.querySelector('#editar-permite-superposicion')?.type === 'checkbox'
             })`);
-            registrar('Horarios', 'Editar precargado', horarioEditar.abierto && horarioEditar.profesor && horarioEditar.materia && horarioEditar.grado && horarioEditar.asignacion && horarioEditar.aulaSoloLectura, JSON.stringify(horarioEditar));
+            registrar('Horarios', 'Editar precargado', horarioEditar.abierto && horarioEditar.profesor && horarioEditar.materia && horarioEditar.grado && horarioEditar.asignacion && horarioEditar.aulaSoloLectura && horarioEditar.excepcionDisponible, JSON.stringify(horarioEditar));
             await evaluar(`document.querySelector('[data-close-modal="modal-editar-horario"]')?.click()`);
         }
 

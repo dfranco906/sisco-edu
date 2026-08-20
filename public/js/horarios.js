@@ -51,36 +51,47 @@
         return `<option value="${escapar(grado.id_grado)}"${disabled}>${escapar(grado.nombre)} - ${escapar(aulaTexto)}</option>`;
     }
 
+    function normalizarBusqueda(valor) {
+        return String(valor ?? "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLocaleLowerCase("es")
+            .trim();
+    }
+
+    function etiquetaAsignacion(asignacion) {
+        return [
+            asignacion.grado || "Sin grado",
+            asignacion.materia || "Sin materia",
+            asignacion.profesor || "Sin profesor",
+            asignacion.anio_lectivo || "Sin año"
+        ].join(" · ");
+    }
+
+    function compararAsignaciones(a, b) {
+        const textoA = [a.grado, a.materia, a.profesor].join(" ");
+        const textoB = [b.grado, b.materia, b.profesor].join(" ");
+        const comparacion = textoA.localeCompare(textoB, "es", { sensitivity: "base", numeric: true });
+        return comparacion || Number(b.anio_lectivo || 0) - Number(a.anio_lectivo || 0);
+    }
+
     function cargarOpciones() {
         const gradosConAula = grados.filter((grado) => String(grado.id_aula ?? "").trim() !== "");
-        const opcionesFormulario = grados.map((grado) => opcionGrado(grado, true)).join("");
         const opcionesSemanal = gradosConAula.map((grado) => opcionGrado(grado)).join("");
-        const profesores = new Map();
-        asignaciones.forEach((asignacion) => {
-            if (asignacion.id_profesor && asignacion.profesor) {
-                profesores.set(String(asignacion.id_profesor), asignacion.profesor);
-            }
-        });
-        const opcionesProfesor = [...profesores.entries()]
-            .sort((a, b) => a[1].localeCompare(b[1], "es", { sensitivity: "base" }))
-            .map(([id, nombre]) => `<option value="${escapar(id)}">${escapar(nombre)}</option>`)
+        asignaciones.sort(compararAsignaciones);
+        const opcionesAsignacion = asignaciones
+            .map((asignacion) => `<option value="${escapar(asignacion.id_asignacion)}">${escapar(etiquetaAsignacion(asignacion))}</option>`)
             .join("");
 
-        [$("#crear-id-grado"), $("#editar-id-grado")].forEach((select) => {
-            select.innerHTML = `<option value="">Seleccione un grado</option>${opcionesFormulario}`;
+        ["crear", "editar"].forEach((prefijo) => {
+            const select = $(`#${prefijo}-id-asignacion`);
+            const buscador = $(`#${prefijo}-buscar-asignacion`);
+            select.innerHTML = asignaciones.length
+                ? `<option value="">Seleccione una asignación</option>${opcionesAsignacion}`
+                : '<option value="">No hay asignaciones activas disponibles</option>';
+            select.disabled = asignaciones.length === 0;
+            buscador.disabled = asignaciones.length === 0;
         });
-
-        [$("#crear-id-profesor"), $("#editar-id-profesor")].forEach((select) => {
-            select.innerHTML = `<option value="">Seleccione un profesor</option>${opcionesProfesor}`;
-        });
-
-        [$("#crear-id-materia"), $("#editar-id-materia")].forEach((select) => {
-            select.innerHTML = '<option value="">Seleccione grado y profesor</option>';
-            select.disabled = true;
-        });
-
-        $("#crear-id-asignacion").value = "";
-        $("#editar-id-asignacion").value = "";
 
         const selectorSemanal = $("#selector-grado-semanal");
         const filtroGrado = $("#filtro-horario-grado");
@@ -121,61 +132,101 @@
         return grados.find((grado) => String(grado.id_grado) === String(idGrado));
     }
 
-    function actualizarBotonGuardar(botonGuardar, inputAula, inputAsignacion) {
-        const valido = Boolean(inputAula.dataset.idAula && inputAsignacion.value);
+    function asignacionPorId(idAsignacion) {
+        return asignaciones.find((asignacion) =>
+            String(asignacion.id_asignacion) === String(idAsignacion)
+        );
+    }
+
+    function actualizarBotonGuardar(prefijo) {
+        const asignacion = asignacionPorId($(`#${prefijo}-id-asignacion`).value);
+        const botonGuardar = $(prefijo === "crear" ? "#guardar-horario" : "#actualizar-horario");
+        const valido = Boolean(asignacion?.id_aula);
         botonGuardar.disabled = !valido;
         botonGuardar.classList.toggle("opacity-50", !valido);
         botonGuardar.classList.toggle("cursor-not-allowed", !valido);
     }
 
-    function sincronizarAula(select, inputAula, botonGuardar, inputAsignacion) {
-        const grado = gradoPorId(select.value);
-        const aulaId = String(grado?.id_aula ?? "").trim();
-        inputAula.dataset.idAula = aulaId;
-        inputAula.value = grado
-            ? [grado.aula, grado.codigo_aula].filter(Boolean).join(" - ")
+    function actualizarDetallesAsignacion(prefijo) {
+        const asignacion = asignacionPorId($(`#${prefijo}-id-asignacion`).value);
+        const valores = {
+            profesor: asignacion?.profesor || "",
+            materia: asignacion?.materia || "",
+            grado: asignacion?.grado || ""
+        };
+
+        Object.entries(valores).forEach(([campo, valor]) => {
+            const input = $(`#${prefijo}-${campo}`);
+            input.value = valor;
+            input.placeholder = asignacion ? "No disponible" : "Seleccione una asignación";
+        });
+
+        const inputAula = $(`#${prefijo}-id-aula`);
+        inputAula.value = asignacion
+            ? [asignacion.aula, asignacion.codigo_aula].filter(Boolean).join(" - ")
             : "";
-        inputAula.placeholder = grado ? "Grado sin aula asignada" : "Seleccione un grado";
-        actualizarBotonGuardar(botonGuardar, inputAula, inputAsignacion);
+        inputAula.placeholder = asignacion ? "Aula no disponible" : "Seleccione una asignación";
+        actualizarBotonGuardar(prefijo);
     }
 
-    function sincronizarAsignacion(selectGrado, selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idPreferido = "") {
-        const candidatas = asignaciones.filter((asignacion) =>
-            String(asignacion.id_grado) === String(selectGrado.value)
-            && String(asignacion.id_profesor) === String(selectProfesor.value)
-            && String(asignacion.id_materia) === String(selectMateria.value)
-        ).sort((a, b) => Number(b.anio_lectivo || 0) - Number(a.anio_lectivo || 0));
-        const asignacion = candidatas.find((item) => String(item.id_asignacion) === String(idPreferido))
-            || candidatas[0];
-        inputAsignacion.value = asignacion?.id_asignacion || "";
-        actualizarBotonGuardar(botonGuardar, inputAula, inputAsignacion);
-    }
+    function activarBuscadorAsignacion(prefijo) {
+        const buscador = $(`#${prefijo}-buscar-asignacion`);
+        const select = $(`#${prefijo}-id-asignacion`);
+        const sugerencias = $(`#${prefijo}-asignacion-sugerencias`);
 
-    function cargarMateriasAsignadas(selectGrado, selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idMateria = "", idAsignacion = "") {
-        const materias = new Map();
-        asignaciones
-            .filter((asignacion) =>
-                String(asignacion.id_grado) === String(selectGrado.value)
-                && String(asignacion.id_profesor) === String(selectProfesor.value)
-            )
-            .forEach((asignacion) => {
-                if (asignacion.id_materia && asignacion.materia) {
-                    materias.set(String(asignacion.id_materia), asignacion.materia);
-                }
-            });
+        buscador.setAttribute("aria-autocomplete", "list");
+        buscador.setAttribute("aria-controls", sugerencias.id);
+        buscador.setAttribute("aria-expanded", "false");
 
-        const opciones = [...materias.entries()]
-            .sort((a, b) => a[1].localeCompare(b[1], "es", { sensitivity: "base" }))
-            .map(([id, nombre]) => `<option value="${escapar(id)}">${escapar(nombre)}</option>`)
-            .join("");
+        const ocultar = () => {
+            sugerencias.hidden = true;
+            buscador.setAttribute("aria-expanded", "false");
+        };
 
-        const indicacion = !selectGrado.value
-            ? "Seleccione primero un grado"
-            : (!selectProfesor.value ? "Seleccione un profesor" : "Seleccione una materia");
-        selectMateria.innerHTML = `<option value="">${indicacion}</option>${opciones}`;
-        selectMateria.disabled = materias.size === 0;
-        selectMateria.value = idMateria ? String(idMateria) : "";
-        sincronizarAsignacion(selectGrado, selectProfesor, selectMateria, inputAsignacion, botonGuardar, inputAula, idAsignacion);
+        const mostrar = () => {
+            const consulta = normalizarBusqueda(buscador.value);
+            const coincidencias = asignaciones
+                .filter((asignacion) =>
+                    !consulta || normalizarBusqueda(etiquetaAsignacion(asignacion)).includes(consulta)
+                )
+                .slice(0, 12);
+
+            sugerencias.replaceChildren();
+            if (!coincidencias.length) {
+                const vacio = document.createElement("p");
+                vacio.className = "app-select-suggestions-empty";
+                vacio.textContent = "No hay asignaciones que coincidan";
+                sugerencias.appendChild(vacio);
+            } else {
+                coincidencias.forEach((asignacion) => {
+                    const boton = document.createElement("button");
+                    boton.type = "button";
+                    boton.className = "app-select-suggestion";
+                    boton.setAttribute("role", "option");
+                    boton.textContent = etiquetaAsignacion(asignacion);
+                    boton.addEventListener("click", () => {
+                        select.value = String(asignacion.id_asignacion);
+                        buscador.value = "";
+                        ocultar();
+                        select.dispatchEvent(new Event("change", { bubbles: true }));
+                    });
+                    sugerencias.appendChild(boton);
+                });
+            }
+
+            sugerencias.hidden = false;
+            buscador.setAttribute("aria-expanded", "true");
+        };
+
+        buscador.addEventListener("focus", mostrar);
+        buscador.addEventListener("input", mostrar);
+        buscador.addEventListener("keydown", (evento) => {
+            if (evento.key === "Escape") ocultar();
+        });
+        select.addEventListener("change", () => actualizarDetallesAsignacion(prefijo));
+        document.addEventListener("click", (evento) => {
+            if (evento.target !== buscador && !sugerencias.contains(evento.target)) ocultar();
+        });
     }
 
     function tarjetaHorario(horario, compacta = false) {
@@ -185,6 +236,7 @@
                 <div class="schedule-entry-subject">${escapar(horario.materia || "Sin materia")}</div>
                 <div class="schedule-entry-meta">${escapar(horario.profesor || "Sin profesor")}</div>
                 <div class="schedule-entry-room">${escapar(horario.aula || "Sin aula")}</div>
+                ${Number(horario.permite_superposicion) === 1 ? '<span class="joint-class-badge">Clase conjunta</span>' : ""}
                 <button type="button" class="btn btn-edit schedule-entry-edit" data-editar-horario="${escapar(horario.id_horario)}">Editar</button>
             </article>
         `;
@@ -266,7 +318,10 @@
                 <td data-label="Hora fin">${escapar(horaCorta(horario.hora_fin))}</td>
                 <td data-label="Materia">${escapar(horario.materia)}</td>
                 <td data-label="Profesor">${escapar(horario.profesor)}</td>
-                <td data-label="Aula"><span class="room-badge">${escapar(horario.aula || "—")}</span></td>
+                <td data-label="Aula">
+                    <span class="room-badge">${escapar(horario.aula || "—")}</span>
+                    ${Number(horario.permite_superposicion) === 1 ? '<span class="joint-class-badge">Clase conjunta</span>' : ""}
+                </td>
                 <td data-label="Acciones">
                     <div class="table-actions">
                         <button type="button" data-editar-horario="${escapar(horario.id_horario)}"
@@ -303,34 +358,19 @@
         if (!horario) return;
 
         $("#editar-id-horario").value = horario.id_horario;
-        $("#editar-id-grado").value = horario.id_grado || "";
-        $("#editar-id-profesor").value = horario.id_profesor || "";
-        cargarMateriasAsignadas(
-            $("#editar-id-grado"),
-            $("#editar-id-profesor"),
-            $("#editar-id-materia"),
-            $("#editar-id-asignacion"),
-            $("#actualizar-horario"),
-            $("#editar-id-aula"),
-            horario.id_materia || "",
-            horario.id_asignacion || ""
-        );
+        $("#editar-id-asignacion").value = horario.id_asignacion || "";
+        $("#editar-buscar-asignacion").value = "";
+        actualizarDetallesAsignacion("editar");
         $("#editar-dia-semana").value = horario.dia_semana || "Lunes";
         $("#editar-hora-inicio").value = horaCorta(horario.hora_inicio);
         $("#editar-hora-fin").value = horaCorta(horario.hora_fin);
+        $("#editar-permite-superposicion").checked = Number(horario.permite_superposicion) === 1;
 
         const mensaje = $("#mensaje-editar-horario");
         mensaje.textContent = horario.id_grado
             ? ""
-            : "Este horario es antiguo y no coincide con un grado activo. Seleccioná un grado antes de guardar.";
+            : "Este horario es antiguo y no coincide con una asignación activa. Seleccioná una asignación antes de guardar.";
         mensaje.className = horario.id_grado ? "mb-4" : "text-amber-700 font-semibold mb-4";
-
-        sincronizarAula(
-            $("#editar-id-grado"),
-            $("#editar-id-aula"),
-            $("#actualizar-horario"),
-            $("#editar-id-asignacion")
-        );
         abrirModal("modal-editar-horario");
     }
 
@@ -363,22 +403,14 @@
 
             if (modalId === "modal-crear-horario") {
                 formulario.reset();
-                $("#crear-id-materia").innerHTML = '<option value="">Seleccione grado y profesor</option>';
-                $("#crear-id-materia").disabled = true;
-                $("#crear-id-asignacion").value = "";
-                sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), boton, $("#crear-id-asignacion"));
-            } else {
-                sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), boton, $("#editar-id-asignacion"));
+                $("#crear-buscar-asignacion").value = "";
             }
+            actualizarDetallesAsignacion(modalId === "modal-crear-horario" ? "crear" : "editar");
         } catch (error) {
             console.error(error);
             mostrarMensaje(mensajeBox, error.message || "Error al procesar la solicitud.");
         } finally {
-            if (modalId === "modal-crear-horario") {
-                sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), boton, $("#crear-id-asignacion"));
-            } else {
-                sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), boton, $("#editar-id-asignacion"));
-            }
+            actualizarDetallesAsignacion(modalId === "modal-crear-horario" ? "crear" : "editar");
         }
     }
 
@@ -403,26 +435,8 @@
 
     function activarEventos() {
         $("#btn-crear-horario").addEventListener("click", () => abrirModal("modal-crear-horario"));
-        $("#crear-id-grado").addEventListener("change", () => {
-            sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), $("#guardar-horario"), $("#crear-id-asignacion"));
-            cargarMateriasAsignadas($("#crear-id-grado"), $("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"));
-        });
-        $("#editar-id-grado").addEventListener("change", () => {
-            sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), $("#actualizar-horario"), $("#editar-id-asignacion"));
-            cargarMateriasAsignadas($("#editar-id-grado"), $("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"));
-        });
-        $("#crear-id-profesor").addEventListener("change", () =>
-            cargarMateriasAsignadas($("#crear-id-grado"), $("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"))
-        );
-        $("#editar-id-profesor").addEventListener("change", () =>
-            cargarMateriasAsignadas($("#editar-id-grado"), $("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"))
-        );
-        $("#crear-id-materia").addEventListener("change", () =>
-            sincronizarAsignacion($("#crear-id-grado"), $("#crear-id-profesor"), $("#crear-id-materia"), $("#crear-id-asignacion"), $("#guardar-horario"), $("#crear-id-aula"))
-        );
-        $("#editar-id-materia").addEventListener("change", () =>
-            sincronizarAsignacion($("#editar-id-grado"), $("#editar-id-profesor"), $("#editar-id-materia"), $("#editar-id-asignacion"), $("#actualizar-horario"), $("#editar-id-aula"))
-        );
+        activarBuscadorAsignacion("crear");
+        activarBuscadorAsignacion("editar");
         $("#selector-grado-semanal").addEventListener("change", renderHorarioSemanal);
 
         [$("#filtro-horario-buscar"), $("#filtro-horario-grado"), $("#filtro-horario-dia")]
@@ -481,7 +495,8 @@
             asignaciones = datosDe(jsonAsignaciones);
 
             cargarOpciones();
-            sincronizarAula($("#crear-id-grado"), $("#crear-id-aula"), $("#guardar-horario"), $("#crear-id-asignacion"));
+            actualizarDetallesAsignacion("crear");
+            actualizarDetallesAsignacion("editar");
             renderHorarioSemanal();
             renderTabla();
         } catch (error) {

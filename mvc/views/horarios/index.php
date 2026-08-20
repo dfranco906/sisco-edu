@@ -103,7 +103,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
         <div class="flex items-start justify-between gap-4 mb-5">
             <div>
                 <h3 id="titulo-crear-horario" class="text-xl font-bold">Crear horario</h3>
-                <p class="text-sm mt-1" style="color: var(--color-muted);">El aula se asigna automáticamente según el grado seleccionado.</p>
+                <p class="text-sm mt-1" style="color: var(--color-muted);">Seleccioná una asignación y sus datos se completarán automáticamente.</p>
             </div>
             <button type="button" class="app-modal-close" data-close-modal="modal-crear-horario" aria-label="Cerrar">×</button>
         </div>
@@ -112,34 +112,41 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
         <form id="form-crear-horario" data-api="<?= base_url('src/api/Horario/crear_horario.php') ?>">
             <div class="app-form-grid">
+                <label class="font-semibold sm:col-span-2">
+                    Asignación
+                    <input id="crear-buscar-asignacion" type="search" class="app-input app-select-search mt-2 w-full"
+                           placeholder="Buscar por grado, materia, profesor o año..." autocomplete="off">
+                    <div id="crear-asignacion-sugerencias" class="app-select-suggestions"
+                         role="listbox" aria-label="Asignaciones disponibles" hidden></div>
+                    <select name="id_asignacion" id="crear-id-asignacion" class="app-input w-full" required>
+                        <option value="">Cargando asignaciones...</option>
+                    </select>
+                    <span class="app-help">Elegí una combinación válida. El grado, la materia, el profesor y el año lectivo aparecen juntos.</span>
+                </label>
+
                 <label class="font-semibold">
                     Profesor
-                    <select name="id_profesor" id="crear-id-profesor" class="app-input mt-2 w-full" required>
-                        <option value="">Cargando profesores...</option>
-                    </select>
+                    <input id="crear-profesor" type="text" class="app-input app-input-readonly mt-2 w-full"
+                           placeholder="Seleccione una asignación" readonly aria-readonly="true">
                 </label>
 
                 <label class="font-semibold">
                     Materia
-                    <select name="id_materia" id="crear-id-materia" class="app-input mt-2 w-full" required disabled>
-                        <option value="">Seleccione primero un profesor</option>
-                    </select>
-                    <input type="hidden" name="id_asignacion" id="crear-id-asignacion">
-                    <span class="app-help">Solo se muestran materias asignadas al profesor.</span>
+                    <input id="crear-materia" type="text" class="app-input app-input-readonly mt-2 w-full"
+                           placeholder="Seleccione una asignación" readonly aria-readonly="true">
                 </label>
 
                 <label class="font-semibold">
                     Grado
-                    <select name="id_grado" id="crear-id-grado" class="app-input mt-2 w-full" required>
-                        <option value="">Cargando grados...</option>
-                    </select>
+                    <input id="crear-grado" type="text" class="app-input app-input-readonly mt-2 w-full"
+                           placeholder="Seleccione una asignación" readonly aria-readonly="true">
                 </label>
 
                 <label class="font-semibold">
                     Aula asignada
                     <input id="crear-id-aula" type="text" class="app-input app-input-readonly mt-2 w-full"
-                           placeholder="Seleccione un grado" readonly aria-readonly="true">
-                    <span class="app-help">Se obtiene desde el grado y no puede modificarse manualmente.</span>
+                           placeholder="Seleccione una asignación" readonly aria-readonly="true">
+                    <span class="app-help">Se obtiene desde la asignación y no puede modificarse manualmente.</span>
                 </label>
 
                 <label class="font-semibold">
@@ -164,6 +171,15 @@ require_once __DIR__ . '/../../../src/config/app.php';
                     Hora fin
                     <input name="hora_fin" type="time" class="app-input mt-2 w-full" required>
                 </label>
+
+                <label class="schedule-exception-option sm:col-span-2">
+                    <input name="permite_superposicion" id="crear-permite-superposicion"
+                           type="checkbox" value="1">
+                    <span>
+                        <strong>Clase conjunta (excepción controlada)</strong>
+                        <small>Permite la misma hora únicamente para el mismo profesor, en la misma aula y con grados diferentes.</small>
+                    </span>
+                </label>
             </div>
 
             <div class="app-modal-actions mt-6">
@@ -181,7 +197,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
         <div class="flex items-start justify-between gap-4 mb-5">
             <div>
                 <h3 id="titulo-editar-horario" class="text-xl font-bold">Editar horario</h3>
-                <p class="text-sm mt-1" style="color: var(--color-muted);">Al cambiar el grado también se actualiza su aula.</p>
+                <p class="text-sm mt-1" style="color: var(--color-muted);">Al cambiar la asignación también se actualizan el grado y el aula.</p>
             </div>
             <button type="button" class="app-modal-close" data-close-modal="modal-editar-horario" aria-label="Cerrar">×</button>
         </div>
@@ -191,27 +207,35 @@ require_once __DIR__ . '/../../../src/config/app.php';
         <form id="form-editar-horario" data-api="<?= base_url('src/api/Horario/actualizar_horario.php') ?>">
             <input type="hidden" name="id_horario" id="editar-id-horario">
             <div class="app-form-grid">
+                <label class="font-semibold sm:col-span-2">
+                    Asignación
+                    <input id="editar-buscar-asignacion" type="search" class="app-input app-select-search mt-2 w-full"
+                           placeholder="Buscar por grado, materia, profesor o año..." autocomplete="off">
+                    <div id="editar-asignacion-sugerencias" class="app-select-suggestions"
+                         role="listbox" aria-label="Asignaciones disponibles" hidden></div>
+                    <select name="id_asignacion" id="editar-id-asignacion" class="app-input w-full" required></select>
+                    <span class="app-help">Solo aparecen asignaciones activas y válidas.</span>
+                </label>
+
                 <label class="font-semibold">
                     Profesor
-                    <select name="id_profesor" id="editar-id-profesor" class="app-input mt-2 w-full" required></select>
+                    <input id="editar-profesor" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
                 </label>
 
                 <label class="font-semibold">
                     Materia
-                    <select name="id_materia" id="editar-id-materia" class="app-input mt-2 w-full" required></select>
-                    <input type="hidden" name="id_asignacion" id="editar-id-asignacion">
-                    <span class="app-help">Solo se muestran materias asignadas al profesor.</span>
+                    <input id="editar-materia" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
                 </label>
 
                 <label class="font-semibold">
                     Grado
-                    <select name="id_grado" id="editar-id-grado" class="app-input mt-2 w-full" required></select>
+                    <input id="editar-grado" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
                 </label>
 
                 <label class="font-semibold">
                     Aula asignada
                     <input id="editar-id-aula" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
-                    <span class="app-help">El aula se asigna automáticamente según el grado seleccionado.</span>
+                    <span class="app-help">El aula se asigna automáticamente según la asignación seleccionada.</span>
                 </label>
 
                 <label class="font-semibold">
@@ -234,6 +258,15 @@ require_once __DIR__ . '/../../../src/config/app.php';
                 <label class="font-semibold">
                     Hora fin
                     <input name="hora_fin" id="editar-hora-fin" type="time" class="app-input mt-2 w-full" required>
+                </label>
+
+                <label class="schedule-exception-option sm:col-span-2">
+                    <input name="permite_superposicion" id="editar-permite-superposicion"
+                           type="checkbox" value="1">
+                    <span>
+                        <strong>Clase conjunta (excepción controlada)</strong>
+                        <small>Permite la misma hora únicamente para el mismo profesor, en la misma aula y con grados diferentes.</small>
+                    </span>
                 </label>
             </div>
 
