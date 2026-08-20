@@ -50,6 +50,17 @@ function opcionesFiltro(datos, filtro) {
     });
 }
 
+function resolverUrlTabla(url) {
+    if (!url) return "";
+
+    try {
+        const base = `${window.location.origin}${window.BASE_URL || "/"}`;
+        return new URL(url, base).toString();
+    } catch (error) {
+        return url;
+    }
+}
+
 function contenidoCelda(columna, valor) {
     const texto = String(valor ?? "");
 
@@ -78,6 +89,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
     const filtrosBox = document.getElementById("filtros-tabla");
 
     let datosOriginales = [];
+    let aplicarFiltrosActual = null;
 
     tbody.innerHTML = `<tr><td colspan="${columnas.length + 1}" class="p-4 text-center">Cargando datos...</td></tr>`;
 
@@ -102,8 +114,9 @@ async function cargarTabla(api, columnas, filtros = {}) {
             throw new Error("La respuesta del servidor no contiene una lista de registros.");
         }
 
-        crearFiltros(datosOriginales, filtros);
-        render(datosOriginales);
+        await crearFiltros(datosOriginales, filtros);
+        if (aplicarFiltrosActual) aplicarFiltrosActual();
+        else render(datosOriginales);
 
     } catch (error) {
         console.error(error);
@@ -192,10 +205,51 @@ async function cargarTabla(api, columnas, filtros = {}) {
         });
     }
 
-    function crearFiltros(datos, filtros) {
+    async function crearFiltros(datos, filtros) {
         if (!filtrosBox) return;
 
         filtrosBox.innerHTML = "";
+
+        if (filtros.principal) {
+            const filtro = filtros.principal;
+            let datosPrincipal = datos;
+
+            if (filtro.api) {
+                try {
+                    const respuesta = await fetch(resolverUrlTabla(filtro.api));
+                    const json = await respuesta.json();
+                    if (respuesta.ok && json?.status !== "error" && json?.success !== false) {
+                        const datosApi = json.data ?? json;
+                        if (Array.isArray(datosApi)) datosPrincipal = datosApi;
+                    }
+                } catch (error) {
+                    console.error("No se pudieron cargar los grados del filtro principal.", error);
+                }
+            }
+
+            const opciones = opcionesFiltro(datosPrincipal, filtro);
+            let selectPrincipal = `
+                <div class="app-filter-primary">
+                    <label for="filtro-principal" class="app-filter-primary-label">
+                        ${escaparHtml(filtro.label || "Organizar por")}
+                    </label>
+                    <select id="filtro-principal" data-campo="${escaparHtml(filtro.campo)}"
+                            class="filtro-select app-input">
+                        <option value="">${escaparHtml(filtro.opcionTodos || "Todos los registros")}</option>
+            `;
+
+            opciones.forEach(([valor, etiqueta], indice) => {
+                const seleccionado = filtro.porDefecto === "primero" && indice === 0 ? " selected" : "";
+                selectPrincipal += `<option value="${escaparHtml(valor)}"${seleccionado}>${escaparHtml(etiqueta)}</option>`;
+            });
+
+            selectPrincipal += `
+                    </select>
+                    <span id="resumen-filtro-principal" class="app-filter-primary-summary" aria-live="polite"></span>
+                </div>
+            `;
+            filtrosBox.innerHTML += selectPrincipal;
+        }
 
         if (filtros.buscar) {
             filtrosBox.innerHTML += `
@@ -246,6 +300,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
         const buscador = document.getElementById("buscar-tabla");
         const selects = document.querySelectorAll(".filtro-select");
         const limpiar = document.getElementById("limpiar-filtros");
+        const resumenPrincipal = document.getElementById("resumen-filtro-principal");
 
         function aplicarFiltros() {
             let filtrados = [...datosOriginales];
@@ -270,7 +325,14 @@ async function cargarTabla(api, columnas, filtros = {}) {
             });
 
             render(filtrados);
+
+            if (resumenPrincipal) {
+                const cantidad = filtrados.length;
+                resumenPrincipal.textContent = `${cantidad} asignación${cantidad === 1 ? "" : "es"} visible${cantidad === 1 ? "" : "s"}`;
+            }
         }
+
+        aplicarFiltrosActual = aplicarFiltros;
 
         if (buscador) buscador.addEventListener("input", aplicarFiltros);
         selects.forEach(s => s.addEventListener("change", aplicarFiltros));
@@ -278,7 +340,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
         limpiar?.addEventListener("click", () => {
             if (buscador) buscador.value = "";
             selects.forEach(s => s.value = "");
-            render(datosOriginales);
+            aplicarFiltros();
         });
     }
 }

@@ -1,5 +1,6 @@
 <?php
 $titulo = "Asignaciones";
+$subtitulo = "Seleccioná un grado para ver sus asignaciones de forma organizada.";
 $api = "src/api/Asignaciones/leer_asignaciones.php";
 
 $columnas = [
@@ -14,13 +15,17 @@ $columnas = [
 ];
 
 $filtros = [
-    "buscar" => ["profesor", "materia", "grado", "aula"],
-    "placeholder" => "Buscar profesor, materia, grado o aula...",
+    "principal" => [
+        "campo" => "id_grado",
+        "label" => "Asignaciones del grado",
+        "labelFields" => ["nombre", "grado", "aula"],
+        "api" => "src/api/Grado/leer_grados.php?opciones=1",
+        "opcionTodos" => "Todos los grados",
+        "porDefecto" => "primero"
+    ],
+    "buscar" => ["profesor", "materia"],
+    "placeholder" => "Buscar profesor o materia en el grado...",
     "selects" => [
-        ["campo" => "profesor", "label" => "Profesor"],
-        ["campo" => "materia", "label" => "Materia"],
-        ["campo" => "grado", "label" => "Grado"],
-        ["campo" => "aula", "label" => "Aula"],
         ["campo" => "anio_lectivo", "label" => "Año lectivo"]
     ]
 ];
@@ -34,7 +39,9 @@ $formCrear = [
             "type" => "select",
             "api" => "src/api/Profesor/leer_profesores.php",
             "value" => "id_profesor",
-            "labelField" => "nombre_completo"
+            "labelField" => "nombre_completo",
+            "searchable" => true,
+            "searchPlaceholder" => "Buscar profesor..."
         ],
         [
             "name" => "id_materia",
@@ -42,7 +49,9 @@ $formCrear = [
             "type" => "select",
             "api" => "src/api/Materia/leer_materias.php",
             "value" => "id_materia",
-            "labelField" => "nombre"
+            "labelField" => "nombre",
+            "searchable" => true,
+            "searchPlaceholder" => "Buscar materia..."
         ],
         [
             "name" => "id_grado",
@@ -50,11 +59,13 @@ $formCrear = [
             "type" => "select",
             "api" => "src/api/Grado/leer_grados.php?opciones=1",
             "value" => "id_grado",
-            "labelField" => "descripcion"
+            "labelField" => "descripcion",
+            "searchable" => true,
+            "searchPlaceholder" => "Buscar grado o aula..."
         ],
         [
             "name" => "carga_horaria",
-            "label" => "Carga horaria",
+            "label" => "Carga horaria semanal",
             "type" => "number",
             "min" => 1,
             "max" => 100
@@ -81,7 +92,9 @@ $camposEditar = [
         "api" => "src/api/Profesor/leer_profesores.php",
         "value" => "id_profesor",
         "labelField" => "nombre_completo",
-        "currentLabelField" => "profesor"
+        "currentLabelField" => "profesor",
+        "searchable" => true,
+        "searchPlaceholder" => "Buscar profesor..."
     ],
     [
         "name" => "id_materia",
@@ -90,7 +103,9 @@ $camposEditar = [
         "api" => "src/api/Materia/leer_materias.php",
         "value" => "id_materia",
         "labelField" => "nombre",
-        "currentLabelField" => "materia"
+        "currentLabelField" => "materia",
+        "searchable" => true,
+        "searchPlaceholder" => "Buscar materia..."
     ],
     [
         "name" => "id_grado",
@@ -99,11 +114,13 @@ $camposEditar = [
         "api" => "src/api/Grado/leer_grados.php?opciones=1",
         "value" => "id_grado",
         "labelField" => "descripcion",
-        "currentLabelFields" => ["grado", "aula"]
+        "currentLabelFields" => ["grado", "aula"],
+        "searchable" => true,
+        "searchPlaceholder" => "Buscar grado o aula..."
     ],
     [
         "name" => "carga_horaria",
-        "label" => "Carga horaria",
+        "label" => "Carga horaria semanal",
         "type" => "number",
         "min" => 1,
         "max" => 100

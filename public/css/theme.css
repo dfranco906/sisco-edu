@@ -378,6 +378,44 @@ body {
     flex: 2 1 20rem;
 }
 
+.app-filter-primary {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    border: 1px solid #BFDBFE;
+    border-radius: 0.9rem;
+    background: linear-gradient(135deg, #EFF6FF 0%, #F8FAFC 100%);
+    padding: 0.9rem 1rem;
+}
+
+.app-filter-primary-label {
+    flex: 0 0 auto;
+    color: #1E3A8A;
+    font-weight: 800;
+}
+
+.app-filter-primary .app-input {
+    flex: 1 1 20rem;
+    width: auto;
+    max-width: 32rem;
+}
+
+.app-filter-primary-summary {
+    flex: 0 0 auto;
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.app-select-search {
+    min-height: 2.35rem;
+    margin-bottom: 0.45rem;
+    padding-block: 0.45rem;
+    font-size: 0.86rem;
+}
+
 .app-filters > button,
 .app-filters > a {
     flex: 0 0 auto;
@@ -630,6 +668,10 @@ body.sidebar-open {
         width: 100%;
     }
 
+    .app-filter-primary {
+        grid-column: 1 / -1;
+    }
+
     .app-table-wrap table {
         width: max-content;
         min-width: 100%;
@@ -699,6 +741,20 @@ body.sidebar-open {
     .app-form-grid,
     .app-filters {
         grid-template-columns: 1fr;
+    }
+
+    .app-filter-primary {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .app-filter-primary .app-input {
+        width: 100%;
+        max-width: none;
+    }
+
+    .app-filter-primary-summary {
+        align-self: flex-start;
     }
 
     .app-form-grid .sm\:col-span-2 {

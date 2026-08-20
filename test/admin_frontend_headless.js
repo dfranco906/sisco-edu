@@ -189,11 +189,45 @@ async function ejecutar() {
                     boton: ${botonCrearExiste},
                     abierto: Boolean(modal && !modal.classList.contains('hidden')),
                     selects: modal?.querySelectorAll('select').length || 0,
-                    opciones: [...(modal?.querySelectorAll('select') || [])].map((s) => s.options.length)
+                    opciones: [...(modal?.querySelectorAll('select') || [])].map((s) => s.options.length),
+                    buscadores: modal?.querySelectorAll('[data-select-search]').length || 0
                 };
             })()`);
             registrar(nombre, 'abrir Crear', crear.boton && crear.abierto, `${crear.selects} selects; opciones=${crear.opciones.join(',')}`);
             registrar(nombre, 'selects Crear', crear.selects >= selectsMinimos && crear.opciones.every((n) => n > 1), `${crear.selects}/${selectsMinimos} requeridos`);
+            if (nombre === 'Asignaciones') {
+                const organizacion = await evaluar(`(() => {
+                    const grado = document.querySelector('#filtro-principal');
+                    const selects = [...document.querySelectorAll('#modal-crear select[data-api]')];
+                    const ordenados = selects.every((select) => {
+                        const textos = [...select.options].slice(1).map((opcion) => opcion.text);
+                        return textos.every((texto, indice) =>
+                            indice === 0 || textos[indice - 1].localeCompare(texto, 'es', { numeric: true, sensitivity: 'base' }) <= 0
+                        );
+                    });
+                    const buscadorMateria = document.querySelector('[data-select-search="id_materia"]');
+                    const selectMateria = document.querySelector('select[name="id_materia"]');
+                    const opcionesAntes = selectMateria?.options.length || 0;
+                    if (buscadorMateria && selectMateria && opcionesAntes > 2) {
+                        buscadorMateria.value = selectMateria.options[1].text;
+                        buscadorMateria.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    const opcionesDespues = selectMateria?.options.length || 0;
+                    return {
+                        selectorGrado: Boolean(grado && grado.options.length > 1 && grado.value),
+                        resumen: document.querySelector('#resumen-filtro-principal')?.textContent || '',
+                        buscadores: ${crear.buscadores},
+                        ordenados,
+                        busquedaFiltra: opcionesAntes <= 2 || opcionesDespues < opcionesAntes
+                    };
+                })()`);
+                registrar(
+                    nombre,
+                    'organización y búsqueda',
+                    organizacion.selectorGrado && organizacion.resumen && organizacion.buscadores === 3 && organizacion.ordenados && organizacion.busquedaFiltra,
+                    JSON.stringify(organizacion)
+                );
+            }
             if (nombre === 'Materias') {
                 const camposRetirados = await evaluar(`!(
                     document.querySelector('[name="carga_horaria_semanal"]')

@@ -76,6 +76,57 @@ function etiquetaOpcion(item, select) {
     return item[select.dataset.label] ?? item[select.dataset.value] ?? "";
 }
 
+function normalizarBusquedaCrud(valor) {
+    return String(valor ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("es")
+        .trim();
+}
+
+function buscarInputDeSelect(select) {
+    const contenedor = select.closest("form") || document;
+    return [...contenedor.querySelectorAll("[data-select-search]")]
+        .find((input) => input.dataset.selectSearch === select.name);
+}
+
+function activarBusquedaSelect(select) {
+    if (select.dataset.searchable !== "1") return;
+
+    const buscador = buscarInputDeSelect(select);
+    if (!buscador) return;
+
+    select._opcionesBusqueda = [...select.options].map((opcion) => ({
+        value: opcion.value,
+        text: opcion.text,
+        disabled: opcion.disabled
+    }));
+
+    if (buscador.dataset.searchBound === "1") return;
+    buscador.dataset.searchBound = "1";
+
+    buscador.addEventListener("input", () => {
+        const texto = normalizarBusquedaCrud(buscador.value);
+        const valorActual = select.value;
+        const opciones = select._opcionesBusqueda || [];
+        const filtradas = opciones.filter((opcion) =>
+            opcion.value === ""
+            || opcion.value === valorActual
+            || normalizarBusquedaCrud(opcion.text).includes(texto)
+        );
+
+        select.replaceChildren(...filtradas.map((opcion) => {
+            const nueva = new Option(opcion.text, opcion.value);
+            nueva.disabled = opcion.disabled;
+            return nueva;
+        }));
+
+        if ([...select.options].some((opcion) => opcion.value === valorActual)) {
+            select.value = valorActual;
+        }
+    });
+}
+
 async function cargarOpcionesSelect(select, valorActual = "", etiquetaActual = "") {
     if (!select?.dataset.api) return;
 
@@ -91,11 +142,20 @@ async function cargarOpcionesSelect(select, valorActual = "", etiquetaActual = "
         const data = json.data ?? json;
         if (!Array.isArray(data)) throw new Error("La API de opciones no devolvió una lista.");
 
+        const opciones = data
+            .map((item) => ({
+                value: item[select.dataset.value],
+                label: etiquetaOpcion(item, select)
+            }))
+            .filter((opcion) => opcion.value !== null && opcion.value !== undefined)
+            .sort((a, b) => String(a.label).localeCompare(String(b.label), "es", {
+                numeric: true,
+                sensitivity: "base"
+            }));
+
         select.replaceChildren(new Option("Seleccione una opción", ""));
-        data.forEach((item) => {
-            const value = item[select.dataset.value];
-            if (value === null || value === undefined) return;
-            select.add(new Option(String(etiquetaOpcion(item, select)), String(value)));
+        opciones.forEach((opcion) => {
+            select.add(new Option(String(opcion.label), String(opcion.value)));
         });
 
         const valorNormalizado = valorActual === null || valorActual === undefined ? "" : String(valorActual);
@@ -105,6 +165,7 @@ async function cargarOpcionesSelect(select, valorActual = "", etiquetaActual = "
         }
         select.value = valorNormalizado;
         select.disabled = false;
+        activarBusquedaSelect(select);
     } catch (error) {
         console.error(error);
         select.replaceChildren(new Option(error.message || "Error al cargar opciones", ""));
@@ -149,12 +210,25 @@ async function construirCamposEditar(camposBox, item) {
             control = document.createElement("select");
             aplicarAtributosCampo(control, campo);
 
+            if (campo.searchable) {
+                const buscador = document.createElement("input");
+                buscador.type = "search";
+                buscador.dataset.selectSearch = campo.name;
+                buscador.className = "app-input app-select-search w-full";
+                buscador.placeholder = campo.searchPlaceholder || "Buscar opción...";
+                buscador.autocomplete = "off";
+                buscador.setAttribute("aria-label", `Buscar ${campo.label || campo.name}`);
+                camposBox.appendChild(buscador);
+                control.dataset.searchable = "1";
+            }
+
             if (Array.isArray(campo.options)) {
                 control.add(new Option("Seleccione una opción", ""));
                 campo.options.forEach((opcion) => {
                     control.add(new Option(String(opcion.label), String(opcion.value)));
                 });
                 control.value = item[campo.name] ?? "";
+                activarBusquedaSelect(control);
             } else {
                 control.dataset.api = campo.api;
                 control.dataset.value = campo.value;

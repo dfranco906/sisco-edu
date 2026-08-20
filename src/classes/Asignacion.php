@@ -114,7 +114,13 @@ class Asignacion
                   LEFT JOIN grados g ON ad.id_grado = g.id_grado
                   LEFT JOIN aulas a ON g.id_aula = a.id_aula
                   WHERE ad.activo = :activo
-                  ORDER BY ad.id_asignacion DESC";
+                  ORDER BY
+                    COALESCE(g.nombre, ''),
+                    COALESCE(m.nombre, ''),
+                    COALESCE(p.apellido, ''),
+                    COALESCE(p.nombre, ''),
+                    ad.anio_lectivo DESC,
+                    ad.id_asignacion DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([":activo" => $activo]);
@@ -153,7 +159,7 @@ class Asignacion
                   INNER JOIN grados g ON ad.id_grado = g.id_grado AND g.activo = 1
                   INNER JOIN aulas a ON g.id_aula = a.id_aula AND a.activo = 1
                   WHERE ad.activo = 1
-                  ORDER BY g.nombre, p.nombre, p.apellido, m.nombre, ad.id_asignacion";
+                  ORDER BY g.nombre, m.nombre, p.apellido, p.nombre, ad.anio_lectivo DESC, ad.id_asignacion";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;

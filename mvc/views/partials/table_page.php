@@ -6,7 +6,7 @@ $etiquetasColumnasDefault = [
     'anio_lectivo' => 'Año lectivo',
     'cedula_identidad' => 'Cédula',
     'codigo_aula' => 'Código aula',
-    'carga_horaria' => 'Carga horaria',
+    'carga_horaria' => 'Carga horaria semanal',
     'dia_semana' => 'Día',
     'hora_inicio' => 'Hora inicio',
     'hora_fin' => 'Hora fin'
@@ -29,8 +29,19 @@ $etiquetasColumnasDefault = [
 
 <?php if (($campo['type'] ?? '') === 'select'): ?>
 
+    <?php if (!empty($campo['searchable'])): ?>
+        <input
+            type="search"
+            data-select-search="<?= htmlspecialchars($campo['name'], ENT_QUOTES, 'UTF-8') ?>"
+            class="app-input app-select-search w-full"
+            placeholder="<?= htmlspecialchars($campo['searchPlaceholder'] ?? 'Buscar opción...', ENT_QUOTES, 'UTF-8') ?>"
+            autocomplete="off"
+            aria-label="Buscar <?= htmlspecialchars($campo['label'], ENT_QUOTES, 'UTF-8') ?>">
+    <?php endif; ?>
+
     <?php if (isset($campo['options'])): ?>
-        <select name="<?= $campo['name'] ?>" class="app-input w-full mb-4" required>
+        <select name="<?= $campo['name'] ?>" class="app-input w-full mb-4"
+                <?php if (!empty($campo['searchable'])): ?>data-searchable="1"<?php endif; ?> required>
             <option value="">Seleccione una opción</option>
             <?php foreach ($campo['options'] as $op): ?>
                 <option value="<?= $op['value'] ?>"><?= $op['label'] ?></option>
@@ -43,6 +54,7 @@ $etiquetasColumnasDefault = [
             data-value="<?= $campo['value'] ?>"
             data-label="<?= $campo['labelField'] ?>"
             <?php if (!empty($campo['labelFields'])): ?>data-label-fields="<?= implode(',', $campo['labelFields']) ?>"<?php endif; ?>
+            <?php if (!empty($campo['searchable'])): ?>data-searchable="1"<?php endif; ?>
             class="app-input w-full mb-4"
             required>
             <option value="">Cargando...</option>
@@ -86,7 +98,7 @@ $etiquetasColumnasDefault = [
             <div>
                 <h2 class="text-2xl font-bold"><?= $titulo ?></h2>
                 <p class="text-sm" style="color: var(--color-muted);">
-                    Listado general del módulo
+                    <?= htmlspecialchars($subtitulo ?? 'Listado general del módulo', ENT_QUOTES, 'UTF-8') ?>
                 </p>
             </div>
 
