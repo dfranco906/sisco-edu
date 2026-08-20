@@ -91,11 +91,11 @@ async function ejecutar() {
     }, 409);
 
     const materia = await exigir('Materia', 'crear', 'src/api/Materia/crear_materia.php', {
-        nombre: `${token} Materia`, descripcion: 'Registro temporal', carga_horaria_semanal: 2
+        nombre: `${token} Materia`
     });
     ids.materia = materia.data.id_materia;
     await exigir('Materia', 'editar', 'src/api/Materia/actualizar_materia.php', {
-        id_materia: ids.materia, nombre: `${token} Materia editada`, descripcion: 'Registro temporal editado', carga_horaria_semanal: 3
+        id_materia: ids.materia, nombre: `${token} Materia editada`
     });
 
     const aula = await exigir('Aula', 'crear', 'src/api/Aula/crear_aula.php', {

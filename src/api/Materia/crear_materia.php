@@ -11,12 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $nombre = trim((string) ($_POST['nombre'] ?? ''));
-$descripcion = trim((string) ($_POST['descripcion'] ?? ''));
-$carga = filter_var($_POST['carga_horaria_semanal'] ?? $_POST['carga_horaria'] ?? null, FILTER_VALIDATE_INT);
 
-if ($nombre === '' || !$carga || $carga < 1) {
+if ($nombre === '') {
     http_response_code(422);
-    echo json_encode(["success" => false, "status" => "error", "message" => "Nombre y carga horaria mayor a cero son obligatorios."]);
+    echo json_encode(["success" => false, "status" => "error", "message" => "El nombre de la materia es obligatorio."]);
     exit;
 }
 
@@ -24,8 +22,6 @@ try {
     $db = (new Database())->getConnection();
     $materia = new Materia($db);
     $materia->nombre = $nombre;
-    $materia->descripcion = $descripcion;
-    $materia->carga_horaria_semanal = $carga;
     $resultado = $materia->crear();
     if (!$resultado) throw new RuntimeException('La inserción no se completó.');
 

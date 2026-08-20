@@ -2,14 +2,11 @@
 $titulo = "Materias desactivadas";
 $api = "src/api/Materia/leer_materias_desactivadas.php";
 
-$columnas = ["id_materia", "nombre", "descripcion", "carga_horaria_semanal", "activo"];
+$columnas = ["id_materia", "nombre", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "descripcion"],
-    "placeholder" => "Buscar materia desactivada...",
-    "selects" => [
-        ["campo" => "carga_horaria_semanal", "label" => "Carga horaria"]
-    ]
+    "buscar" => ["nombre"],
+    "placeholder" => "Buscar materia desactivada..."
 ];
 
 $apiRestaurar = "src/api/Materia/restaurar_materia.php";

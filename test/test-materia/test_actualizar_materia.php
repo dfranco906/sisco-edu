@@ -9,9 +9,6 @@ $materia = new Materia($db);
 
 $materia->id_materia = 1;
 $materia->nombre = "Matemática Actualizada";
-$materia->descripcion = "Descripción actualizada";
-$materia->carga_horaria_semanal = 5;
-
 if($materia->actualizar()){
     echo "✅ Materia actualizada";
 }else{

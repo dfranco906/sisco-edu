@@ -12,12 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $idMateria = filter_var($_POST['id_materia'] ?? null, FILTER_VALIDATE_INT);
 $nombre = trim((string) ($_POST['nombre'] ?? ''));
-$descripcion = trim((string) ($_POST['descripcion'] ?? ''));
-$carga = filter_var($_POST['carga_horaria_semanal'] ?? null, FILTER_VALIDATE_INT);
 
-if (!$idMateria || $nombre === '' || !$carga || $carga < 1) {
+if (!$idMateria || $nombre === '') {
     http_response_code(422);
-    echo json_encode(["success" => false, "status" => "error", "message" => "Materia, nombre y carga horaria mayor a cero son obligatorios."]);
+    echo json_encode(["success" => false, "status" => "error", "message" => "La materia y su nombre son obligatorios."]);
     exit;
 }
 
@@ -26,8 +24,6 @@ try {
     $materia = new Materia($db);
     $materia->id_materia = $idMateria;
     $materia->nombre = $nombre;
-    $materia->descripcion = $descripcion;
-    $materia->carga_horaria_semanal = $carga;
     $resultado = $materia->actualizar();
 
     echo json_encode(["success" => (bool) $resultado, "status" => $resultado ? "success" : "error", "message" => $resultado ? "Materia actualizada correctamente." : "No se pudo actualizar la materia.", "data" => $resultado ? ["id_materia" => $idMateria] : null]);

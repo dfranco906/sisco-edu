@@ -7,8 +7,6 @@ class Materia {
 
     public $id_materia;
     public $nombre;
-    public $descripcion;
-    public $carga_horaria_semanal;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -16,17 +14,13 @@ class Materia {
 
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  SET nombre=:nombre, descripcion=:descripcion, carga_horaria_semanal=:carga";
+                  SET nombre=:nombre";
 
         $stmt = $this->conn->prepare($query);
 
         $this->nombre = htmlspecialchars(strip_tags($this->nombre));
-        $this->descripcion = htmlspecialchars(strip_tags($this->descripcion));
-        $this->carga_horaria_semanal = (int)$this->carga_horaria_semanal;
 
         $stmt->bindParam(":nombre", $this->nombre);
-        $stmt->bindParam(":descripcion", $this->descripcion);
-        $stmt->bindParam(":carga", $this->carga_horaria_semanal);
 
         return $stmt->execute();
     }
@@ -50,16 +44,12 @@ public function leerDesactivadas() {
 }
 public function actualizar() {
     $query = "UPDATE " . $this->table_name . "
-              SET nombre=:nombre,
-                  descripcion=:descripcion,
-                  carga_horaria_semanal=:carga
+              SET nombre=:nombre
               WHERE id_materia=:id";
 
     $stmt = $this->conn->prepare($query);
 
     $stmt->bindParam(":nombre", $this->nombre);
-    $stmt->bindParam(":descripcion", $this->descripcion);
-    $stmt->bindParam(":carga", $this->carga_horaria_semanal);
     $stmt->bindParam(":id", $this->id_materia);
 
     return $stmt->execute();

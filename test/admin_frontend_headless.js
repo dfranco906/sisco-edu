@@ -194,6 +194,13 @@ async function ejecutar() {
             })()`);
             registrar(nombre, 'abrir Crear', crear.boton && crear.abierto, `${crear.selects} selects; opciones=${crear.opciones.join(',')}`);
             registrar(nombre, 'selects Crear', crear.selects >= selectsMinimos && crear.opciones.every((n) => n > 1), `${crear.selects}/${selectsMinimos} requeridos`);
+            if (nombre === 'Materias') {
+                const camposRetirados = await evaluar(`!(
+                    document.querySelector('[name="carga_horaria_semanal"]')
+                    || document.querySelector('[name="descripcion"]')
+                )`);
+                registrar(nombre, 'solo nombre y estado', camposRetirados, camposRetirados ? 'campos retirados' : 'hay campos sobrantes');
+            }
             await evaluar(`document.querySelector('.js-cerrar-modal-crear')?.click()`);
 
             const hayEditar = await evaluar(`Boolean(document.querySelector('[data-accion-registro=editar]'))`);

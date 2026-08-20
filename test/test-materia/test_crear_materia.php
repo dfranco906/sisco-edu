@@ -8,9 +8,6 @@ $db = (new Database())->getConnection();
 $materia = new Materia($db);
 
 $materia->nombre = "Historia";
-$materia->descripcion = "Historia Universal";
-$materia->carga_horaria_semanal = 3;
-
 if($materia->crear()){
     echo "✅ Materia creada correctamente";
 }else{
