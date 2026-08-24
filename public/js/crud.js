@@ -1,4 +1,5 @@
 let itemEditando = null;
+let consecutivoBuscadoresCrud = 0;
 
 function operacionExitosa(data) {
     return data?.success === true || data?.status === "success";
@@ -102,7 +103,31 @@ function activarBusquedaSelect(select) {
         disabled: opcion.disabled
     }));
 
-    if (buscador.dataset.searchBound === "1") return;
+    if (select.dataset.searchSourceConfigured !== "1") {
+        select.dataset.searchSourceConfigured = "1";
+        select.dataset.searchRequired = select.required ? "1" : "0";
+        select.required = false;
+        select.tabIndex = -1;
+        select.setAttribute("aria-hidden", "true");
+        select.classList.add("app-select-source-hidden");
+        buscador.required = select.dataset.searchRequired === "1";
+        buscador.setAttribute("role", "combobox");
+        buscador.setAttribute("aria-haspopup", "listbox");
+    }
+
+    const sincronizarBuscador = () => {
+        const opcion = [...select.options].find((item) => item.value === select.value);
+        buscador.value = select.value && opcion ? opcion.text : "";
+        const valida = select.dataset.searchRequired !== "1" || Boolean(select.value);
+        buscador.setCustomValidity(valida ? "" : "Seleccioná una opción de la lista.");
+        buscador.setAttribute("aria-invalid", valida ? "false" : "true");
+    };
+    select._sincronizarBuscador = sincronizarBuscador;
+
+    if (buscador.dataset.searchBound === "1") {
+        sincronizarBuscador();
+        return;
+    }
     buscador.dataset.searchBound = "1";
     buscador.setAttribute("aria-autocomplete", "list");
     buscador.setAttribute("aria-expanded", "false");
@@ -110,8 +135,12 @@ function activarBusquedaSelect(select) {
     const sugerencias = document.createElement("div");
     sugerencias.className = "app-select-suggestions";
     sugerencias.setAttribute("role", "listbox");
+    sugerencias.id = `app-select-suggestions-${++consecutivoBuscadoresCrud}`;
     sugerencias.hidden = true;
     buscador.insertAdjacentElement("afterend", sugerencias);
+    buscador.setAttribute("aria-controls", sugerencias.id);
+
+    let indiceActivo = -1;
 
     const opcionDesdeDatos = (opcion) => {
         const nueva = new Option(opcion.text, opcion.value);
@@ -122,6 +151,24 @@ function activarBusquedaSelect(select) {
     const cerrarSugerencias = () => {
         sugerencias.hidden = true;
         buscador.setAttribute("aria-expanded", "false");
+        buscador.removeAttribute("aria-activedescendant");
+        indiceActivo = -1;
+    };
+
+    const activarSugerencia = (indice) => {
+        const botones = [...sugerencias.querySelectorAll(".app-select-suggestion")];
+        if (!botones.length) return;
+
+        indiceActivo = (indice + botones.length) % botones.length;
+        botones.forEach((boton, posicion) => {
+            const activa = posicion === indiceActivo;
+            boton.classList.toggle("is-active", activa);
+            boton.setAttribute("aria-selected", activa ? "true" : "false");
+        });
+
+        const botonActivo = botones[indiceActivo];
+        buscador.setAttribute("aria-activedescendant", botonActivo.id);
+        botonActivo.scrollIntoView({ block: "nearest" });
     };
 
     const renderizarSugerencias = () => {
@@ -135,6 +182,8 @@ function activarBusquedaSelect(select) {
             .slice(0, 10);
 
         sugerencias.replaceChildren();
+        buscador.removeAttribute("aria-activedescendant");
+        indiceActivo = -1;
 
         if (coincidencias.length === 0) {
             const vacio = document.createElement("p");
@@ -142,22 +191,27 @@ function activarBusquedaSelect(select) {
             vacio.textContent = "No hay coincidencias";
             sugerencias.appendChild(vacio);
         } else {
-            coincidencias.forEach((opcion) => {
+            coincidencias.forEach((opcion, indice) => {
                 const boton = document.createElement("button");
                 boton.type = "button";
                 boton.className = "app-select-suggestion";
+                boton.id = `${sugerencias.id}-opcion-${indice}`;
                 boton.textContent = opcion.text;
                 boton.dataset.value = opcion.value;
                 boton.setAttribute("role", "option");
+                boton.setAttribute("aria-selected", "false");
                 boton.addEventListener("mousedown", (evento) => evento.preventDefault());
+                boton.addEventListener("mouseenter", () => activarSugerencia(indice));
                 boton.addEventListener("click", () => {
                     const opcionesCompletas = select._opcionesBusqueda || [];
                     select.replaceChildren(...opcionesCompletas.map(opcionDesdeDatos));
                     select.value = opcion.value;
-                    buscador.value = "";
+                    buscador.value = opcion.text;
+                    buscador.setCustomValidity("");
+                    buscador.setAttribute("aria-invalid", "false");
                     cerrarSugerencias();
                     select.dispatchEvent(new Event("change", { bubbles: true }));
-                    select.focus();
+                    buscador.focus();
                 });
                 sugerencias.appendChild(boton);
             });
@@ -169,11 +223,14 @@ function activarBusquedaSelect(select) {
 
     buscador.addEventListener("input", () => {
         const texto = normalizarBusquedaCrud(buscador.value);
-        const valorActual = select.value;
+        select.value = "";
+        buscador.setCustomValidity(
+            select.dataset.searchRequired === "1" ? "Seleccioná una opción de la lista." : ""
+        );
+        buscador.setAttribute("aria-invalid", select.dataset.searchRequired === "1" ? "true" : "false");
         const opciones = select._opcionesBusqueda || [];
         const filtradas = opciones.filter((opcion) =>
             opcion.value === ""
-            || opcion.value === valorActual
             || normalizarBusquedaCrud(opcion.text).includes(texto)
         );
 
@@ -181,27 +238,61 @@ function activarBusquedaSelect(select) {
             return opcionDesdeDatos(opcion);
         }));
 
-        if ([...select.options].some((opcion) => opcion.value === valorActual)) {
-            select.value = valorActual;
-        }
-
         renderizarSugerencias();
+    });
+
+    select.addEventListener("change", sincronizarBuscador);
+    select.form?.addEventListener("reset", () => {
+        setTimeout(() => {
+            select.replaceChildren(...(select._opcionesBusqueda || []).map(opcionDesdeDatos));
+            sincronizarBuscador();
+            cerrarSugerencias();
+        }, 0);
     });
 
     buscador.addEventListener("focus", renderizarSugerencias);
     buscador.addEventListener("keydown", (evento) => {
-        if (evento.key === "Escape") cerrarSugerencias();
+        if (evento.key === "Escape") {
+            evento.stopPropagation();
+            cerrarSugerencias();
+            return;
+        }
+
+        if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
+            evento.preventDefault();
+            if (sugerencias.hidden) renderizarSugerencias();
+            const cantidad = sugerencias.querySelectorAll(".app-select-suggestion").length;
+            if (!cantidad) return;
+            const siguiente = indiceActivo < 0
+                ? (evento.key === "ArrowDown" ? 0 : cantidad - 1)
+                : indiceActivo + (evento.key === "ArrowDown" ? 1 : -1);
+            activarSugerencia(siguiente);
+            return;
+        }
+
+        if (evento.key === "Enter" && indiceActivo >= 0) {
+            evento.preventDefault();
+            sugerencias.querySelectorAll(".app-select-suggestion")[indiceActivo]?.click();
+        }
     });
     document.addEventListener("click", (evento) => {
         if (evento.target !== buscador && !sugerencias.contains(evento.target)) {
             cerrarSugerencias();
         }
     });
+
+    sincronizarBuscador();
 }
 
 async function cargarOpcionesSelect(select, valorActual = "", etiquetaActual = "") {
     if (!select?.dataset.api) return;
 
+    const buscador = select.dataset.searchable === "1" ? buscarInputDeSelect(select) : null;
+    if (buscador) {
+        buscador.dataset.placeholderOriginal ||= buscador.placeholder;
+        buscador.disabled = true;
+        buscador.placeholder = "Cargando opciones...";
+    }
     select.disabled = true;
     select.replaceChildren(new Option("Cargando opciones...", ""));
 
@@ -237,17 +328,142 @@ async function cargarOpcionesSelect(select, valorActual = "", etiquetaActual = "
         }
         select.value = valorNormalizado;
         select.disabled = false;
+        if (buscador) {
+            buscador.disabled = false;
+            buscador.placeholder = buscador.dataset.placeholderOriginal || "Buscar opción...";
+        }
         activarBusquedaSelect(select);
     } catch (error) {
         console.error(error);
         select.replaceChildren(new Option(error.message || "Error al cargar opciones", ""));
         select.disabled = true;
+        if (buscador) {
+            buscador.value = "";
+            buscador.disabled = true;
+            buscador.placeholder = error.message || "Error al cargar opciones";
+        }
     }
 }
 
 async function cargarSelects(contenedor = document) {
     const selects = [...contenedor.querySelectorAll("select[data-api]")];
     await Promise.all(selects.map((select) => cargarOpcionesSelect(select, select.value)));
+}
+
+function actualizarResumenCheckboxes(grupo) {
+    const cantidad = grupo.querySelectorAll('[data-checkbox-options] input[type="checkbox"]:checked').length;
+    const resumen = grupo.querySelector("[data-checkbox-count]");
+    if (resumen) resumen.textContent = `${cantidad} seleccionado${cantidad === 1 ? "" : "s"}`;
+}
+
+async function cargarGrupoCheckboxes(grupo, forzar = false) {
+    const contenedor = grupo.querySelector("[data-checkbox-options]");
+    const buscador = grupo.querySelector("[data-checkbox-search]");
+    const nombre = grupo.dataset.name;
+    if (!contenedor || !grupo.dataset.api || !nombre) return;
+    if (!forzar && grupo.dataset.loaded === "1") return;
+    if (grupo.dataset.loading === "1") return;
+
+    grupo.dataset.loading = "1";
+    contenedor.innerHTML = '<p class="app-checkbox-empty">Cargando grados y aulas...</p>';
+
+    try {
+        const json = await solicitarJsonCrud(grupo.dataset.api);
+        if (!json.httpOk || json.status === "error" || json.success === false) {
+            throw new Error(json.message || "No se pudieron cargar las opciones.");
+        }
+
+        const datos = json.data ?? json;
+        if (!Array.isArray(datos)) throw new Error("La API de opciones no devolvió una lista.");
+        const opciones = datos
+            .map((item) => ({
+                value: item[grupo.dataset.value],
+                label: item[grupo.dataset.label]
+                    || [item.nombre, item.aula].filter(Boolean).join(" - ")
+                    || item[grupo.dataset.value]
+            }))
+            .filter((opcion) => opcion.value !== null && opcion.value !== undefined)
+            .sort((a, b) => String(a.label).localeCompare(String(b.label), "es", {
+                numeric: true,
+                sensitivity: "base"
+            }));
+
+        contenedor.replaceChildren();
+        opciones.forEach((opcion) => {
+            const etiqueta = document.createElement("label");
+            etiqueta.className = "app-checkbox-option";
+            etiqueta.dataset.searchText = normalizarBusquedaCrud(opcion.label);
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = nombre;
+            checkbox.value = String(opcion.value);
+            checkbox.addEventListener("change", () => actualizarResumenCheckboxes(grupo));
+
+            const texto = document.createElement("span");
+            texto.textContent = String(opcion.label);
+            etiqueta.append(checkbox, texto);
+            contenedor.appendChild(etiqueta);
+        });
+
+        if (!opciones.length) {
+            const vacio = document.createElement("p");
+            vacio.className = "app-checkbox-empty";
+            vacio.textContent = "No hay opciones disponibles.";
+            contenedor.appendChild(vacio);
+        }
+
+        buscador?.addEventListener("input", () => {
+            const consulta = normalizarBusquedaCrud(buscador.value);
+            contenedor.querySelectorAll(".app-checkbox-option").forEach((etiqueta) => {
+                etiqueta.hidden = !etiqueta.dataset.searchText.includes(consulta);
+            });
+        });
+        grupo.querySelector("[data-checkbox-select-visible]")?.addEventListener("click", () => {
+            contenedor.querySelectorAll(".app-checkbox-option:not([hidden]) input").forEach((checkbox) => {
+                checkbox.checked = true;
+            });
+            actualizarResumenCheckboxes(grupo);
+        });
+        grupo.querySelector("[data-checkbox-clear]")?.addEventListener("click", () => {
+            contenedor.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+            actualizarResumenCheckboxes(grupo);
+        });
+        actualizarResumenCheckboxes(grupo);
+        grupo.dataset.loaded = "1";
+    } catch (error) {
+        console.error(error);
+        grupo.dataset.loaded = "0";
+        contenedor.replaceChildren();
+        const errorBox = document.createElement("p");
+        errorBox.className = "app-checkbox-empty text-red-600";
+        errorBox.textContent = error.message || "Error al cargar grados y aulas.";
+        const reintentar = document.createElement("button");
+        reintentar.type = "button";
+        reintentar.className = "btn btn-muted mt-2";
+        reintentar.textContent = "Reintentar carga";
+        reintentar.addEventListener("click", () => cargarGrupoCheckboxes(grupo, true));
+        contenedor.append(errorBox, reintentar);
+    } finally {
+        grupo.dataset.loading = "0";
+    }
+}
+
+async function cargarGruposCheckboxes(contenedor = document) {
+    const grupos = [...contenedor.querySelectorAll("[data-checkbox-group]")];
+    await Promise.all(grupos.map(cargarGrupoCheckboxes));
+}
+
+function validarGruposCheckboxes(formulario, mensaje) {
+    const grupoIncompleto = [...formulario.querySelectorAll('[data-checkbox-group][data-required="1"]')]
+        .find((grupo) => !grupo.querySelector('[data-checkbox-options] input[type="checkbox"]:checked'));
+    if (!grupoIncompleto) return true;
+
+    mostrarMensajeCrud(mensaje, "Seleccioná al menos un grado para crear la asignación.");
+    grupoIncompleto.querySelector("[data-checkbox-search]")?.focus();
+    return false;
 }
 
 function normalizarCampoEditar(campo) {
@@ -341,6 +557,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const cerrarEditar = document.getElementById("cerrar-modal-editar");
     const formEditar = document.getElementById("form-editar");
     const mensajeEditar = document.getElementById("mensaje-editar");
+    let cargaInicialSelects = Promise.resolve();
+
+    const aplicarContextoAlFormularioCrear = () => {
+        const campo = String(window.CAMPO_CONTEXTO_CREAR || "").trim();
+        if (!campo || !formCrear) return;
+
+        const filtroPrincipal = document.getElementById("filtro-principal");
+        const control = formCrear.elements.namedItem(campo);
+        const valor = filtroPrincipal?.dataset.campo === campo ? filtroPrincipal.value : "";
+        if (!control || !valor) return;
+
+        if (control instanceof HTMLSelectElement
+            && ![...control.options].some((opcion) => opcion.value === String(valor))) return;
+
+        control.value = String(valor);
+        control.dispatchEvent(new Event("change", { bubbles: true }));
+    };
 
     const abrirModal = (modal) => {
         modal?.classList.remove("hidden");
@@ -352,7 +585,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!document.querySelector(".app-modal:not(.hidden)")) document.body.classList.remove("modal-open");
     };
 
-    if (btnCrear && modalCrear) btnCrear.onclick = () => abrirModal(modalCrear);
+    if (btnCrear && modalCrear) btnCrear.onclick = async () => {
+        abrirModal(modalCrear);
+        cargarGruposCheckboxes(modalCrear);
+        await cargaInicialSelects;
+        aplicarContextoAlFormularioCrear();
+    };
     if (cerrarCrear && modalCrear) cerrarCrear.onclick = () => cerrarModal(modalCrear);
     document.querySelectorAll(".js-cerrar-modal-crear").forEach((boton) => {
         boton.addEventListener("click", () => cerrarModal(modalCrear));
@@ -374,12 +612,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    cargarSelects();
+    cargaInicialSelects = cargarSelects();
+    cargarGruposCheckboxes();
 
     if (formCrear) {
         formCrear.onsubmit = async (evento) => {
             evento.preventDefault();
+            if (!validarGruposCheckboxes(formCrear, mensajeCrear)) return;
             const boton = formCrear.querySelector('button[type="submit"]');
+            const campoContexto = String(window.CAMPO_CONTEXTO_CREAR || "").trim();
+            const valorContexto = campoContexto
+                ? new FormData(formCrear).get(campoContexto)
+                : null;
             boton.disabled = true;
             mostrarMensajeCrud(mensajeCrear, "Guardando...", "info");
 
@@ -396,7 +640,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 mostrarMensajeCrud(mensajeCrear, data.message || "Registro creado correctamente.", "success");
                 formCrear.reset();
-                setTimeout(() => window.location.reload(), 650);
+                setTimeout(() => {
+                    if (!campoContexto || valorContexto === null || String(valorContexto).trim() === "") {
+                        window.location.reload();
+                        return;
+                    }
+
+                    const url = new URL(window.location.href);
+                    url.searchParams.set(`filtro_${campoContexto}`, String(valorContexto));
+                    window.location.assign(url);
+                }, 650);
             } catch (error) {
                 console.error(error);
                 mostrarMensajeCrud(mensajeCrear, error.message || "Error al procesar la solicitud.");

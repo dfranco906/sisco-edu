@@ -234,9 +234,16 @@ async function cargarTabla(api, columnas, filtros = {}) {
                     .filter((valor) => valor !== null && valor !== undefined && String(valor).trim() !== "")
                     .map(String)
             );
-            const indicePorDefecto = filtro.porDefecto === "primero"
-                ? opciones.findIndex(([valor]) => valoresConRegistros.has(String(valor)))
-                : -1;
+            const valorPersistido = new URLSearchParams(window.location.search)
+                .get(`filtro_${filtro.campo}`);
+            const indicePersistido = valorPersistido === null
+                ? -1
+                : opciones.findIndex(([valor]) => String(valor) === String(valorPersistido));
+            const indicePorDefecto = indicePersistido >= 0
+                ? indicePersistido
+                : filtro.porDefecto === "primero"
+                    ? opciones.findIndex(([valor]) => valoresConRegistros.has(String(valor)))
+                    : -1;
             let selectPrincipal = `
                 <div class="app-filter-primary">
                     <label for="filtro-principal" class="app-filter-primary-label">
@@ -344,11 +351,26 @@ async function cargarTabla(api, columnas, filtros = {}) {
         aplicarFiltrosActual = aplicarFiltros;
 
         if (buscador) buscador.addEventListener("input", aplicarFiltros);
-        selects.forEach(s => s.addEventListener("change", aplicarFiltros));
+        selects.forEach(s => s.addEventListener("change", () => {
+            aplicarFiltros();
+
+            if (s.id === "filtro-principal" && s.dataset.campo) {
+                const url = new URL(window.location.href);
+                const parametro = `filtro_${s.dataset.campo}`;
+                if (s.value) url.searchParams.set(parametro, s.value);
+                else url.searchParams.delete(parametro);
+                window.history.replaceState(null, "", url);
+            }
+        }));
 
         limpiar?.addEventListener("click", () => {
             if (buscador) buscador.value = "";
             selects.forEach(s => s.value = "");
+            if (filtros.principal?.campo) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete(`filtro_${filtros.principal.campo}`);
+                window.history.replaceState(null, "", url);
+            }
             aplicarFiltros();
         });
     }

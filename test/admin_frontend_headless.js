@@ -165,7 +165,7 @@ async function ejecutar() {
             ['Asignaciones', 'mvc/views/asignaciones/index.php', 3]
         ];
 
-        for (const [nombre, ruta, selectsMinimos] of paginasCrud) {
+        for (const [nombre, ruta, selectsMinimos, selectsEditarMinimos = selectsMinimos] of paginasCrud) {
             await navegar(ruta);
             const tablaLista = await esperarTabla();
             registrar(nombre, 'listar', tablaLista, tablaLista ? 'tabla respondio' : 'tabla quedo cargando');
@@ -178,7 +178,10 @@ async function ejecutar() {
             await evaluar(`(async () => {
                 for (let i = 0; i < 50; i += 1) {
                     const selects = [...document.querySelectorAll('#modal-crear select[data-api]')];
-                    if (selects.every((select) => select.options.length > 1 && !/Cargando/i.test(select.textContent))) return true;
+                    const grupos = [...document.querySelectorAll('#modal-crear [data-checkbox-group]')];
+                    const selectsListos = selects.every((select) => select.options.length > 1 && !/Cargando/i.test(select.textContent));
+                    const gruposListos = grupos.every((grupo) => grupo.querySelectorAll('[data-checkbox-options] input[type=checkbox]').length > 0);
+                    if (selectsListos && gruposListos) return true;
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 }
                 return false;
@@ -196,10 +199,10 @@ async function ejecutar() {
             registrar(nombre, 'abrir Crear', crear.boton && crear.abierto, `${crear.selects} selects; opciones=${crear.opciones.join(',')}`);
             registrar(nombre, 'selects Crear', crear.selects >= selectsMinimos && crear.opciones.every((n) => n > 1), `${crear.selects}/${selectsMinimos} requeridos`);
             if (nombre === 'Asignaciones') {
-                const organizacion = await evaluar(`(() => {
+                const organizacion = await evaluar(`(async () => {
                     const grado = document.querySelector('#filtro-principal');
                     const selects = [...document.querySelectorAll('#modal-crear select[data-api]')];
-                    const ordenados = selects.every((select) => {
+                    const selectsOrdenados = selects.every((select) => {
                         const textos = [...select.options].slice(1).map((opcion) => opcion.text);
                         return textos.every((texto, indice) =>
                             indice === 0 || textos[indice - 1].localeCompare(texto, 'es', { numeric: true, sensitivity: 'base' }) <= 0
@@ -214,25 +217,107 @@ async function ejecutar() {
                     }
                     const opcionesDespues = selectMateria?.options.length || 0;
                     const panelSugerencias = buscadorMateria?.nextElementSibling;
+                    const sugerenciasInmediatas = Boolean(
+                        panelSugerencias
+                        && panelSugerencias.classList.contains('app-select-suggestions')
+                        && !panelSugerencias.hidden
+                        && panelSugerencias.querySelector('[role="option"]')
+                    );
+                    let seleccionMateriaConTeclado = false;
+                    let seleccionMateriaVisible = false;
+                    if (sugerenciasInmediatas) {
+                        buscadorMateria.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'ArrowDown', bubbles: true, cancelable: true
+                        }));
+                        const sugerenciaActiva = panelSugerencias.querySelector('.app-select-suggestion.is-active');
+                        buscadorMateria.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'Enter', bubbles: true, cancelable: true
+                        }));
+                        seleccionMateriaConTeclado = Boolean(
+                            sugerenciaActiva && selectMateria.value && panelSugerencias.hidden
+                        );
+                        seleccionMateriaVisible = buscadorMateria.value === selectMateria.selectedOptions[0]?.text;
+                    }
+                    const selectsRedundantesOcultos = [...document.querySelectorAll('#modal-crear select[data-searchable="1"]')]
+                        .every((select) => select.classList.contains('app-select-source-hidden'));
+                    const selectGradoCrear = document.querySelector('#modal-crear select[name="id_grado"]');
+                    const contextoInicialCoincide = Boolean(
+                        grado?.value && selectGradoCrear?.value === grado.value
+                    );
+                    const opcionContexto = [...(grado?.options || [])].filter((opcion) => opcion.value).at(-1);
+                    let contextoActualizadoCoincide = false;
+                    let contextoPersistidoEnUrl = false;
+                    if (opcionContexto) {
+                        grado.value = opcionContexto.value;
+                        grado.dispatchEvent(new Event('change', { bubbles: true }));
+                        document.querySelector('#btn-crear')?.click();
+                        await new Promise((resolve) => setTimeout(resolve, 0));
+                        contextoActualizadoCoincide = selectGradoCrear?.value === opcionContexto.value;
+                        contextoPersistidoEnUrl = new URL(window.location.href).searchParams.get('filtro_id_grado')
+                            === opcionContexto.value;
+                    }
+                    const opcionesGrado = [...(selectGradoCrear?.options || [])].slice(1);
+                    const gradosOrdenados = opcionesGrado.every((opcion, indice) =>
+                        indice === 0 || opcionesGrado[indice - 1].text.localeCompare(
+                            opcion.text,
+                            'es',
+                            { numeric: true, sensitivity: 'base' }
+                        ) <= 0
+                    );
+                    if (selectGradoCrear && opcionesGrado.length) {
+                        selectGradoCrear.value = opcionesGrado[0].value;
+                        selectGradoCrear.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    const unaSolaSeleccion = selectGradoCrear?.selectedOptions.length === 1
+                        && Boolean(selectGradoCrear.value);
+                    const buscadorGrados = document.querySelector('[data-select-search="id_grado"]');
+                    if (buscadorGrados && opcionesGrado.length > 2) {
+                        buscadorGrados.value = opcionesGrado[0].text;
+                        buscadorGrados.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    const opcionesGradoFiltradas = selectGradoCrear?.options.length || 0;
                     return {
                         selectorGrado: Boolean(grado && grado.options.length > 1 && grado.value),
+                        contextoInicialCoincide,
+                        contextoActualizadoCoincide,
+                        contextoPersistidoEnUrl,
                         resumen: document.querySelector('#resumen-filtro-principal')?.textContent || '',
-                        buscadores: ${crear.buscadores},
-                        ordenados,
+                        buscadoresSelect: ${crear.buscadores},
+                        selectsOrdenados,
                         busquedaFiltra: opcionesAntes <= 2 || opcionesDespues < opcionesAntes,
-                        sugerenciasInmediatas: Boolean(
-                            panelSugerencias
-                            && panelSugerencias.classList.contains('app-select-suggestions')
-                            && !panelSugerencias.hidden
-                            && panelSugerencias.querySelector('[role="option"]')
-                        )
+                        sugerenciasInmediatas,
+                        seleccionMateriaConTeclado,
+                        seleccionMateriaVisible,
+                        selectsRedundantesOcultos,
+                        gradosDisponibles: opcionesGrado.length,
+                        gradosConAula: opcionesGrado.length > 0
+                            && opcionesGrado.every((opcion) => opcion.text.includes(' - ')),
+                        gradosOrdenados,
+                        unaSolaSeleccion,
+                        busquedaGradoFiltra: opcionesGrado.length <= 2
+                            || opcionesGradoFiltradas < opcionesGrado.length + 1
                     };
-                })()`);
+                })()`, true);
                 registrar(
                     nombre,
-                    'organización y búsqueda',
-                    organizacion.selectorGrado && organizacion.resumen && organizacion.buscadores === 3
-                        && organizacion.ordenados && organizacion.busquedaFiltra && organizacion.sugerenciasInmediatas,
+                    'organización y selección única de grado',
+                    organizacion.selectorGrado
+                        && organizacion.contextoInicialCoincide
+                        && organizacion.contextoActualizadoCoincide
+                        && organizacion.contextoPersistidoEnUrl
+                        && organizacion.resumen
+                        && organizacion.buscadoresSelect === 3
+                        && organizacion.selectsOrdenados
+                        && organizacion.busquedaFiltra
+                        && organizacion.sugerenciasInmediatas
+                        && organizacion.seleccionMateriaConTeclado
+                        && organizacion.seleccionMateriaVisible
+                        && organizacion.selectsRedundantesOcultos
+                        && organizacion.gradosDisponibles > 1
+                        && organizacion.gradosConAula
+                        && organizacion.gradosOrdenados
+                        && organizacion.unaSolaSeleccion
+                        && organizacion.busquedaGradoFiltra,
                     JSON.stringify(organizacion)
                 );
             }
@@ -244,6 +329,19 @@ async function ejecutar() {
                 registrar(nombre, 'solo nombre y estado', camposRetirados, camposRetirados ? 'campos retirados' : 'hay campos sobrantes');
             }
             await evaluar(`document.querySelector('.js-cerrar-modal-crear')?.click()`);
+
+            if (nombre === 'Asignaciones') {
+                const gradoPersistido = await evaluar(`new URL(window.location.href).searchParams.get('filtro_id_grado')`);
+                await navegar(`${ruta}?filtro_id_grado=${encodeURIComponent(gradoPersistido)}`);
+                await esperarTabla();
+                const filtroRestaurado = await evaluar(`document.querySelector('#filtro-principal')?.value`);
+                registrar(
+                    nombre,
+                    'mantener curso después de recargar',
+                    Boolean(gradoPersistido) && String(filtroRestaurado) === String(gradoPersistido),
+                    `esperado ${gradoPersistido}, recibido ${filtroRestaurado}`
+                );
+            }
 
             const hayEditar = await evaluar(`Boolean(document.querySelector('[data-accion-registro=editar]'))`);
             registrar(nombre, 'boton Editar', hayEditar, hayEditar ? 'disponible' : 'sin registro editable');
@@ -265,7 +363,7 @@ async function ejecutar() {
                 registrar(
                     nombre,
                     'selects Editar',
-                    editar.selects >= selectsMinimos && editar.opciones.every((n) => n > 1) && relacionesPrecargadas,
+                    editar.selects >= selectsEditarMinimos && editar.opciones.every((n) => n > 1) && relacionesPrecargadas,
                     `opciones=${editar.opciones.join(',')}; valores=${editar.valores.join(',')}`
                 );
                 await evaluar(`document.querySelector('#cancelar-editar')?.click()`);
@@ -289,26 +387,161 @@ async function ejecutar() {
             const modal = document.querySelector('#modal-crear-horario');
             const asignacion = document.querySelector('#crear-id-asignacion');
             const buscador = document.querySelector('#crear-buscar-asignacion');
+            const panel = document.querySelector('#crear-asignacion-sugerencias');
+            let sugerenciasInmediatas = false;
+            let seleccionAsignacionConTeclado = false;
             if (asignacion?.options.length > 1 && buscador) {
                 buscador.value = asignacion.options[1].text.split(' · ')[0];
                 buscador.dispatchEvent(new Event('input', { bubbles: true }));
+                sugerenciasInmediatas = Boolean(panel && !panel.hidden && panel.querySelector('[role=option]'));
+                buscador.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'ArrowDown', bubbles: true, cancelable: true
+                }));
+                const sugerenciaActiva = panel?.querySelector('.app-select-suggestion.is-active');
+                buscador.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'Enter', bubbles: true, cancelable: true
+                }));
+                seleccionAsignacionConTeclado = Boolean(
+                    sugerenciaActiva && asignacion.value && panel.hidden
+                );
                 asignacion.value = asignacion.options[1].value;
                 asignacion.dispatchEvent(new Event('change', { bubbles: true }));
             }
-            const panel = document.querySelector('#crear-asignacion-sugerencias');
+            const conjunta = document.querySelector('#crear-permite-superposicion');
+            const cursoConjunto = document.querySelector('#crear-id-asignacion-conjunta');
+            let autovinculo = false;
+            for (const opcion of [...(asignacion?.options || [])].slice(1)) {
+                asignacion.value = opcion.value;
+                asignacion.dispatchEvent(new Event('change', { bubbles: true }));
+                conjunta.checked = true;
+                conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+                if (cursoConjunto.value) {
+                    autovinculo = true;
+                    break;
+                }
+            }
+            const normalizar = (valor) => String(valor || '')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            const opcionCultoSegundoBcb = [...(asignacion?.options || [])].find((opcion) => {
+                const texto = normalizar(opcion.text);
+                return texto.startsWith('2') && texto.includes('BCB') && texto.includes('CULTO');
+            });
+            let nivelMedioCompleto = false;
+            let bloquesNivelMedioSinCambios = false;
+            if (opcionCultoSegundoBcb) {
+                asignacion.value = opcionCultoSegundoBcb.value;
+                asignacion.dispatchEvent(new Event('change', { bubbles: true }));
+                conjunta.checked = true;
+                conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+                nivelMedioCompleto = [...cursoConjunto.options].some((opcion) => {
+                    const texto = normalizar(opcion.text);
+                    return opcion.value && texto.startsWith('2') && texto.includes('BTI') && texto.includes('CULTO');
+                });
+                const bloques = [...document.querySelector('#crear-bloque-horario').options]
+                    .map((opcion) => opcion.value);
+                bloquesNivelMedioSinCambios = bloques.includes('09:40|10:20')
+                    && !bloques.includes('10:10|10:50');
+            }
+            const opcionCultoTercerCiclo = [...(asignacion?.options || [])].find((opcion) =>
+                opcion.text.trim().startsWith('7') && opcion.text.toUpperCase().includes('CULTO')
+            );
+            let tercerCicloCompleto = false;
+            let bloquesTercerCicloCorrectos = false;
+            if (opcionCultoTercerCiclo) {
+                asignacion.value = opcionCultoTercerCiclo.value;
+                asignacion.dispatchEvent(new Event('change', { bubbles: true }));
+                conjunta.checked = true;
+                conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+                const opcionSeleccionada = cursoConjunto.selectedOptions[0]?.text || '';
+                tercerCicloCompleto = cursoConjunto.value.split(',').filter(Boolean).length === 2
+                    && opcionSeleccionada.includes('Todos los cursos compatibles')
+                    && opcionSeleccionada.includes('8°')
+                    && opcionSeleccionada.includes('9°');
+                const bloques = [...document.querySelector('#crear-bloque-horario').options]
+                    .map((opcion) => opcion.value);
+                bloquesTercerCicloCorrectos = bloques.includes('10:10|10:50')
+                    && !bloques.includes('09:40|10:20');
+            }
+            const selectorSemanal = document.querySelector('#selector-grado-semanal');
+            const opcionSeptimo = [...(selectorSemanal?.options || [])].find((opcion) =>
+                opcion.text.trim().startsWith('7')
+            );
+            let recreoTercerCicloVisible = false;
+            if (opcionSeptimo) {
+                selectorSemanal.value = opcionSeptimo.value;
+                selectorSemanal.dispatchEvent(new Event('change', { bubbles: true }));
+                recreoTercerCicloVisible = [...document.querySelectorAll('.schedule-grid-time.is-break')]
+                    .some((item) => item.textContent.includes('09:40') && item.textContent.includes('10:10'));
+            }
             return {
                 abierto: Boolean(modal && !modal.classList.contains('hidden')),
                 selects: modal?.querySelectorAll('select').length || 0,
                 asignaciones: asignacion?.options.length || 0,
-                sugerenciasInmediatas: Boolean(panel && !panel.hidden && panel.querySelector('[role=option]')),
+                sugerenciasInmediatas,
+                seleccionAsignacionConTeclado,
+                seleccionVisibleEnBuscador: Boolean(
+                    asignacion.value
+                    && buscador.value === asignacion.selectedOptions[0]?.text
+                ),
+                selectorRedundanteOculto: asignacion.classList.contains('app-select-source-hidden'),
                 profesorCompleto: Boolean(document.querySelector('#crear-profesor')?.value),
                 materiaCompleta: Boolean(document.querySelector('#crear-materia')?.value),
                 gradoCompleto: Boolean(document.querySelector('#crear-grado')?.value),
                 aulaSoloLectura: document.querySelector('#crear-id-aula')?.readOnly === true,
-                excepcionDisponible: document.querySelector('#crear-permite-superposicion')?.type === 'checkbox'
+                excepcionDisponible: conjunta?.type === 'checkbox',
+                horasCompartidas: document.querySelectorAll('.schedule-grid-time').length >= 10,
+                horasExtraDisponible: document.querySelector('#crear-horario-extra')?.type === 'checkbox',
+                etiquetaTurnoTarde: [...document.querySelectorAll('strong')]
+                    .some((item) => item.textContent.includes('turno tarde') || item.textContent.includes('Turno tarde')),
+                listaPlegada: document.querySelector('.schedule-admin-details')?.open === false,
+                autovinculo,
+                nivelMedioCompleto,
+                bloquesNivelMedioSinCambios,
+                tercerCicloCompleto,
+                bloquesTercerCicloCorrectos,
+                recreoTercerCicloVisible,
+                sincronizacionExplicada: document.querySelector('#crear-clase-conjunta-ayuda')?.textContent
+                    .includes('automáticamente'),
+                edicionDirecta: !document.querySelector('[data-gestionar-horarios]')
+                    && [...document.querySelectorAll('.schedule-entry')].every((tarjeta) =>
+                        Boolean(tarjeta.querySelector('[data-editar-horario]'))
+                    ),
+                tarjetasConTexto: [...document.querySelectorAll('.schedule-entry')].every((tarjeta) =>
+                    Boolean(tarjeta.querySelector('.schedule-entry-subject')?.textContent.trim())
+                    && Boolean(tarjeta.querySelector('.schedule-entry-meta')?.textContent.trim())
+                )
             };
         })()`);
-        registrar('Horarios', 'Crear desde asignacion valida', horarioCrear.abierto && horarioCrear.selects >= 2 && horarioCrear.asignaciones > 1 && horarioCrear.sugerenciasInmediatas && horarioCrear.profesorCompleto && horarioCrear.materiaCompleta && horarioCrear.gradoCompleto && horarioCrear.aulaSoloLectura && horarioCrear.excepcionDisponible, JSON.stringify(horarioCrear));
+        registrar(
+            'Horarios',
+            'Grilla compacta, turno tarde y clase conjunta',
+            horarioCrear.abierto
+                && horarioCrear.selects >= 4
+                && horarioCrear.asignaciones > 1
+                && horarioCrear.sugerenciasInmediatas
+                && horarioCrear.seleccionAsignacionConTeclado
+                && horarioCrear.seleccionVisibleEnBuscador
+                && horarioCrear.selectorRedundanteOculto
+                && horarioCrear.profesorCompleto
+                && horarioCrear.materiaCompleta
+                && horarioCrear.gradoCompleto
+                && horarioCrear.aulaSoloLectura
+                && horarioCrear.excepcionDisponible
+                && horarioCrear.horasCompartidas
+                && horarioCrear.horasExtraDisponible
+                && horarioCrear.etiquetaTurnoTarde
+                && horarioCrear.listaPlegada
+                && horarioCrear.autovinculo
+                && horarioCrear.nivelMedioCompleto
+                && horarioCrear.bloquesNivelMedioSinCambios
+                && horarioCrear.tercerCicloCompleto
+                && horarioCrear.bloquesTercerCicloCorrectos
+                && horarioCrear.recreoTercerCicloVisible
+                && horarioCrear.sincronizacionExplicada
+                && horarioCrear.edicionDirecta
+                && horarioCrear.tarjetasConTexto,
+            JSON.stringify(horarioCrear)
+        );
         await evaluar(`document.querySelector('[data-close-modal="modal-crear-horario"]')?.click()`);
         const horarioEditarExiste = await evaluar(`Boolean(document.querySelector('[data-editar-horario]'))`);
         registrar('Horarios', 'boton Editar', horarioEditarExiste, horarioEditarExiste ? 'disponible' : 'ausente');

@@ -3,9 +3,40 @@
 
     const config = window.HORARIOS_CONFIG || {};
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+    const bloquesRegularesNivelMedio = [
+        { inicio: "07:00", fin: "07:40" },
+        { inicio: "07:40", fin: "08:20" },
+        { inicio: "08:20", fin: "09:00" },
+        { inicio: "09:00", fin: "09:40" },
+        { inicio: "09:40", fin: "10:20" },
+        { inicio: "10:20", fin: "10:50", receso: true },
+        { inicio: "10:50", fin: "11:30" },
+        { inicio: "11:30", fin: "12:10" },
+        { inicio: "12:10", fin: "12:50" },
+        { inicio: "12:50", fin: "13:30" }
+    ];
+    const bloquesRegularesTercerCiclo = [
+        { inicio: "07:00", fin: "07:40" },
+        { inicio: "07:40", fin: "08:20" },
+        { inicio: "08:20", fin: "09:00" },
+        { inicio: "09:00", fin: "09:40" },
+        { inicio: "09:40", fin: "10:10", receso: true },
+        { inicio: "10:10", fin: "10:50" },
+        { inicio: "10:50", fin: "11:30" },
+        { inicio: "11:30", fin: "12:10" },
+        { inicio: "12:10", fin: "12:50" },
+        { inicio: "12:50", fin: "13:30" }
+    ];
+    const bloquesExtra = [
+        { inicio: "13:30", fin: "14:10", extra: true },
+        { inicio: "14:10", fin: "14:50", extra: true },
+        { inicio: "14:50", fin: "15:30", extra: true },
+        { inicio: "15:30", fin: "16:00", extra: true }
+    ];
     let horarios = [];
     let grados = [];
     let asignaciones = [];
+    let ultimoGradoSemanal = "";
 
     const $ = (selector) => document.querySelector(selector);
 
@@ -20,6 +51,11 @@
 
     function horaCorta(valor) {
         return String(valor ?? "").slice(0, 5);
+    }
+
+    function horaEnMinutos(valor) {
+        const [hora, minuto] = horaCorta(valor).split(":").map(Number);
+        return Number.isFinite(hora) && Number.isFinite(minuto) ? hora * 60 + minuto : 0;
     }
 
     async function obtenerJson(url, opciones = {}) {
@@ -138,10 +174,196 @@
         );
     }
 
+    function completarTextoHorario(horario) {
+        const asignacion = asignacionPorId(horario.id_asignacion);
+        const texto = (valor, respaldo) => String(valor ?? "").trim() || respaldo;
+        return {
+            ...horario,
+            materia: texto(horario.materia || asignacion?.materia, "Materia no disponible"),
+            profesor: texto(horario.profesor || asignacion?.profesor, "Profesor no disponible"),
+            grado: texto(horario.grado || asignacion?.grado, "Grado no disponible")
+        };
+    }
+
+    function controlesHorario(prefijo) {
+        const formulario = $(`#form-${prefijo}-horario`);
+        return {
+            formulario,
+            dia: formulario.querySelector('[name="dia_semana"]'),
+            inicio: $(`#${prefijo}-hora-inicio`),
+            fin: $(`#${prefijo}-hora-fin`),
+            extra: $(`#${prefijo}-horario-extra`),
+            bloque: $(`#${prefijo}-bloque-horario`)
+        };
+    }
+
+    function actualizarOpcionesBloque(prefijo) {
+        const controles = controlesHorario(prefijo);
+        const asignacion = asignacionPorId($(`#${prefijo}-id-asignacion`).value);
+        const bloquesRegulares = bloquesRegularesParaGrado(asignacion?.grado);
+        const bloques = [
+            ...bloquesRegulares.filter((bloque) => !bloque.receso),
+            ...(controles.extra.checked ? bloquesExtra : [])
+        ];
+        const valorActual = `${horaCorta(controles.inicio.value)}|${horaCorta(controles.fin.value)}`;
+
+        controles.bloque.innerHTML = [
+            '<option value="">Elegí una hora cátedra</option>',
+            ...bloques.map((bloque) => {
+                const valor = `${bloque.inicio}|${bloque.fin}`;
+                const sufijo = bloque.extra ? " · Turno tarde" : "";
+                return `<option value="${valor}">${bloque.inicio} – ${bloque.fin}${sufijo}</option>`;
+            })
+        ].join("");
+        controles.bloque.value = [...controles.bloque.options].some((opcion) => opcion.value === valorActual)
+            ? valorActual
+            : "";
+    }
+
+    function aplicarBloqueSugerido(prefijo) {
+        const controles = controlesHorario(prefijo);
+        if (!controles.bloque.value) return;
+        const [inicio, fin] = controles.bloque.value.split("|");
+        controles.inicio.value = inicio;
+        controles.fin.value = fin;
+    }
+
+    function actualizarModoExtra(prefijo, completar = false) {
+        const controles = controlesHorario(prefijo);
+        if (completar && controles.extra.checked && horaEnMinutos(controles.inicio.value) < horaEnMinutos("13:30")) {
+            controles.inicio.value = bloquesExtra[0].inicio;
+            controles.fin.value = bloquesExtra[0].fin;
+        } else if (completar && !controles.extra.checked && horaEnMinutos(controles.inicio.value) >= horaEnMinutos("13:30")) {
+            controles.inicio.value = "";
+            controles.fin.value = "";
+        }
+        actualizarOpcionesBloque(prefijo);
+    }
+
+    function nivelDelGrado(nombre) {
+        return normalizarBusqueda(nombre).match(/[0-9]+/)?.[0] || "";
+    }
+
+    function bloquesRegularesParaGrado(nombre) {
+        return ["7", "8", "9"].includes(nivelDelGrado(nombre))
+            ? bloquesRegularesTercerCiclo
+            : bloquesRegularesNivelMedio;
+    }
+
+    function modalidadDelGrado(nombre) {
+        const texto = normalizarBusqueda(nombre);
+        if (texto.includes("bti")) return "BTI";
+        if (texto.includes("bcb")) return "BCB";
+        return "";
+    }
+
+    function cursosCorrespondientes(asignacionActual, asignacionCandidata) {
+        if (!asignacionActual || !asignacionCandidata) return false;
+        if (String(asignacionActual.id_grado) === String(asignacionCandidata.id_grado)) return false;
+
+        const nivelActual = nivelDelGrado(asignacionActual.grado);
+        const nivelCandidato = nivelDelGrado(asignacionCandidata.grado);
+        const tercerCiclo = ["7", "8", "9"];
+        const ambosDelTercerCiclo = tercerCiclo.includes(nivelActual) && tercerCiclo.includes(nivelCandidato);
+        if (!ambosDelTercerCiclo && nivelActual && nivelCandidato && nivelActual !== nivelCandidato) return false;
+
+        const modalidadActual = modalidadDelGrado(asignacionActual.grado);
+        const modalidadCandidata = modalidadDelGrado(asignacionCandidata.grado);
+        return !modalidadActual || !modalidadCandidata || modalidadActual !== modalidadCandidata;
+    }
+
+    function asignacionesCorrespondientes(prefijo) {
+        const asignacionActual = asignacionPorId($(`#${prefijo}-id-asignacion`).value);
+        if (!asignacionActual) return [];
+
+        return asignaciones.filter((asignacionCandidata) =>
+            cursosCorrespondientes(asignacionActual, asignacionCandidata)
+            && String(asignacionActual.id_profesor) === String(asignacionCandidata.id_profesor)
+            && String(asignacionActual.id_materia) === String(asignacionCandidata.id_materia)
+            && String(asignacionActual.anio_lectivo) === String(asignacionCandidata.anio_lectivo)
+        );
+    }
+
+    function actualizarAyudaClaseConjunta(prefijo) {
+        const idsAsignaciones = $(`#${prefijo}-id-asignacion-conjunta`).value.split(",").filter(Boolean);
+        const asignacionesSeleccionadas = idsAsignaciones.map(asignacionPorId).filter(Boolean);
+        const ayuda = $(`#${prefijo}-clase-conjunta-ayuda`);
+        const controles = controlesHorario(prefijo);
+        const horariosExistentes = asignacionesSeleccionadas.filter((asignacion) => horarios.find((item) =>
+            String(item.id_asignacion) === String(asignacion.id_asignacion)
+            && item.dia_semana === controles.dia.value
+            && horaCorta(item.hora_inicio) === horaCorta(controles.inicio.value)
+            && horaCorta(item.hora_fin) === horaCorta(controles.fin.value)
+        )).length;
+        const nombres = asignacionesSeleccionadas.map((item) => item.grado).join(", ");
+
+        ayuda.textContent = !asignacionesSeleccionadas.length
+            ? "Seleccioná los cursos que compartirán esta clase."
+            : horariosExistentes === asignacionesSeleccionadas.length
+                ? `Las tarjetas existentes de ${nombres} quedarán vinculadas y sincronizadas.`
+                : `La misma clase se creará o sincronizará automáticamente en ${nombres}.`;
+        actualizarBotonGuardar(prefijo);
+    }
+
+    function actualizarClaseConjunta(prefijo, horarioActual = null) {
+        const checkbox = $(`#${prefijo}-permite-superposicion`);
+        const panel = $(`#${prefijo}-clase-conjunta-panel`);
+        const select = $(`#${prefijo}-id-asignacion-conjunta`);
+        const ayuda = $(`#${prefijo}-clase-conjunta-ayuda`);
+        panel.hidden = !checkbox.checked;
+        select.required = checkbox.checked;
+
+        if (!checkbox.checked) {
+            select.innerHTML = '<option value="">Sin cursos correspondientes</option>';
+            ayuda.textContent = "";
+            actualizarBotonGuardar(prefijo);
+            return;
+        }
+
+        const candidatos = asignacionesCorrespondientes(prefijo);
+        if (!candidatos.length) {
+            select.innerHTML = '<option value="">No hay cursos compatibles asignados</option>';
+            ayuda.textContent = "El otro curso debe tener asignados esta misma materia, profesor y año lectivo.";
+            actualizarBotonGuardar(prefijo);
+            return;
+        }
+
+        const opcionTodos = candidatos.length > 1
+            ? `<option value="${candidatos.map((item) => escapar(item.id_asignacion)).join(",")}">Todos los cursos compatibles · ${candidatos.map((item) => escapar(item.grado)).join(", ")}</option>`
+            : "";
+        select.innerHTML = [
+            '<option value="">Seleccione los cursos correspondientes</option>',
+            opcionTodos,
+            ...candidatos.map((asignacion) =>
+                `<option value="${escapar(asignacion.id_asignacion)}">${escapar(asignacion.grado)} · ${escapar(asignacion.materia)} · ${escapar(asignacion.profesor)}</option>`
+            )
+        ].join("");
+
+        let idsAsignacionesGuardadas = [];
+        if (horarioActual?.id_grupo_clase_conjunta) {
+            idsAsignacionesGuardadas = horarios
+                .filter((item) =>
+                    String(item.id_grupo_clase_conjunta) === String(horarioActual.id_grupo_clase_conjunta)
+                    && String(item.id_horario) !== String(horarioActual.id_horario)
+                )
+                .map((item) => String(item.id_asignacion));
+        } else if (horarioActual?.id_horario_vinculado) {
+            const horarioGuardado = horarios.find((item) => String(item.id_horario) === String(horarioActual.id_horario_vinculado));
+            if (horarioGuardado) idsAsignacionesGuardadas = [String(horarioGuardado.id_asignacion)];
+        }
+        const valorGuardado = idsAsignacionesGuardadas.join(",");
+        select.value = Boolean(valorGuardado) && [...select.options].some((opcion) => opcion.value === valorGuardado)
+            ? valorGuardado
+            : (opcionTodos ? candidatos.map((item) => item.id_asignacion).join(",") : String(candidatos[0].id_asignacion));
+        actualizarAyudaClaseConjunta(prefijo);
+    }
+
     function actualizarBotonGuardar(prefijo) {
         const asignacion = asignacionPorId($(`#${prefijo}-id-asignacion`).value);
         const botonGuardar = $(prefijo === "crear" ? "#guardar-horario" : "#actualizar-horario");
-        const valido = Boolean(asignacion?.id_aula);
+        const conjunta = $(`#${prefijo}-permite-superposicion`).checked;
+        const vinculo = $(`#${prefijo}-id-asignacion-conjunta`).value;
+        const valido = Boolean(asignacion?.id_aula) && (!conjunta || Boolean(vinculo));
         botonGuardar.disabled = !valido;
         botonGuardar.classList.toggle("opacity-50", !valido);
         botonGuardar.classList.toggle("cursor-not-allowed", !valido);
@@ -166,6 +388,10 @@
             ? [asignacion.aula, asignacion.codigo_aula].filter(Boolean).join(" - ")
             : "";
         inputAula.placeholder = asignacion ? "Aula no disponible" : "Seleccione una asignación";
+        if ($(`#${prefijo}-permite-superposicion`).checked) {
+            actualizarClaseConjunta(prefijo);
+        }
+        actualizarOpcionesBloque(prefijo);
         actualizarBotonGuardar(prefijo);
     }
 
@@ -174,13 +400,52 @@
         const select = $(`#${prefijo}-id-asignacion`);
         const sugerencias = $(`#${prefijo}-asignacion-sugerencias`);
 
+        select.dataset.searchRequired = select.required ? "1" : "0";
+        select.required = false;
+        select.tabIndex = -1;
+        select.setAttribute("aria-hidden", "true");
+        select.classList.add("app-select-source-hidden");
+        buscador.required = select.dataset.searchRequired === "1";
+        buscador.setAttribute("role", "combobox");
+        buscador.setAttribute("aria-haspopup", "listbox");
         buscador.setAttribute("aria-autocomplete", "list");
         buscador.setAttribute("aria-controls", sugerencias.id);
         buscador.setAttribute("aria-expanded", "false");
+        let indiceActivo = -1;
+
+        const actualizarValidez = () => {
+            const valida = select.dataset.searchRequired !== "1" || Boolean(select.value);
+            buscador.setCustomValidity(valida ? "" : "Seleccioná una asignación de la lista.");
+            buscador.setAttribute("aria-invalid", valida ? "false" : "true");
+        };
+
+        const sincronizarBuscador = () => {
+            const asignacion = asignacionPorId(select.value);
+            buscador.value = asignacion ? etiquetaAsignacion(asignacion) : "";
+            actualizarValidez();
+        };
 
         const ocultar = () => {
             sugerencias.hidden = true;
             buscador.setAttribute("aria-expanded", "false");
+            buscador.removeAttribute("aria-activedescendant");
+            indiceActivo = -1;
+        };
+
+        const activarSugerencia = (indice) => {
+            const botones = [...sugerencias.querySelectorAll(".app-select-suggestion")];
+            if (!botones.length) return;
+
+            indiceActivo = (indice + botones.length) % botones.length;
+            botones.forEach((boton, posicion) => {
+                const activa = posicion === indiceActivo;
+                boton.classList.toggle("is-active", activa);
+                boton.setAttribute("aria-selected", activa ? "true" : "false");
+            });
+
+            const botonActivo = botones[indiceActivo];
+            buscador.setAttribute("aria-activedescendant", botonActivo.id);
+            botonActivo.scrollIntoView({ block: "nearest" });
         };
 
         const mostrar = () => {
@@ -192,23 +457,30 @@
                 .slice(0, 12);
 
             sugerencias.replaceChildren();
+            buscador.removeAttribute("aria-activedescendant");
+            indiceActivo = -1;
             if (!coincidencias.length) {
                 const vacio = document.createElement("p");
                 vacio.className = "app-select-suggestions-empty";
                 vacio.textContent = "No hay asignaciones que coincidan";
                 sugerencias.appendChild(vacio);
             } else {
-                coincidencias.forEach((asignacion) => {
+                coincidencias.forEach((asignacion, indice) => {
                     const boton = document.createElement("button");
                     boton.type = "button";
                     boton.className = "app-select-suggestion";
+                    boton.id = `${sugerencias.id}-opcion-${indice}`;
                     boton.setAttribute("role", "option");
+                    boton.setAttribute("aria-selected", "false");
                     boton.textContent = etiquetaAsignacion(asignacion);
+                    boton.addEventListener("mouseenter", () => activarSugerencia(indice));
                     boton.addEventListener("click", () => {
                         select.value = String(asignacion.id_asignacion);
-                        buscador.value = "";
+                        buscador.value = etiquetaAsignacion(asignacion);
+                        actualizarValidez();
                         ocultar();
                         select.dispatchEvent(new Event("change", { bubbles: true }));
+                        buscador.focus();
                     });
                     sugerencias.appendChild(boton);
                 });
@@ -219,27 +491,125 @@
         };
 
         buscador.addEventListener("focus", mostrar);
-        buscador.addEventListener("input", mostrar);
-        buscador.addEventListener("keydown", (evento) => {
-            if (evento.key === "Escape") ocultar();
+        buscador.addEventListener("input", () => {
+            select.value = "";
+            actualizarValidez();
+            actualizarDetallesAsignacion(prefijo);
+            mostrar();
         });
-        select.addEventListener("change", () => actualizarDetallesAsignacion(prefijo));
+        buscador.addEventListener("keydown", (evento) => {
+            if (evento.key === "Escape") {
+                evento.stopPropagation();
+                ocultar();
+                return;
+            }
+
+            if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
+                evento.preventDefault();
+                if (sugerencias.hidden) mostrar();
+                const cantidad = sugerencias.querySelectorAll(".app-select-suggestion").length;
+                if (!cantidad) return;
+                const siguiente = indiceActivo < 0
+                    ? (evento.key === "ArrowDown" ? 0 : cantidad - 1)
+                    : indiceActivo + (evento.key === "ArrowDown" ? 1 : -1);
+                activarSugerencia(siguiente);
+                return;
+            }
+
+            if (evento.key === "Enter" && indiceActivo >= 0) {
+                evento.preventDefault();
+                sugerencias.querySelectorAll(".app-select-suggestion")[indiceActivo]?.click();
+            }
+        });
+        select.addEventListener("change", () => {
+            sincronizarBuscador();
+            actualizarDetallesAsignacion(prefijo);
+        });
+        select.form?.addEventListener("reset", () => {
+            setTimeout(() => {
+                sincronizarBuscador();
+                ocultar();
+            }, 0);
+        });
         document.addEventListener("click", (evento) => {
             if (evento.target !== buscador && !sugerencias.contains(evento.target)) ocultar();
         });
+        sincronizarBuscador();
+    }
+
+    function agruparHorariosContiguos(items) {
+        return [...items]
+            .sort((a, b) =>
+                String(a.dia_semana).localeCompare(String(b.dia_semana), "es")
+                || String(a.hora_inicio).localeCompare(String(b.hora_inicio))
+            )
+            .reduce((grupos, horario) => {
+                const anterior = grupos.at(-1);
+                const mismaClase = anterior
+                    && anterior.dia_semana === horario.dia_semana
+                    && String(anterior.id_asignacion) === String(horario.id_asignacion)
+                    && horaCorta(anterior.hora_fin) === horaCorta(horario.hora_inicio)
+                    && horaCorta(horario.hora_inicio) !== "13:30"
+                    && Number(anterior.permite_superposicion) === Number(horario.permite_superposicion);
+
+                if (mismaClase) {
+                    anterior.hora_fin = horario.hora_fin;
+                    anterior._ids.push(horario.id_horario);
+                    return grupos;
+                }
+
+                grupos.push({ ...horario, _ids: [horario.id_horario] });
+                return grupos;
+            }, []);
+    }
+
+    function cantidadHorasCatedra(horario) {
+        const inicio = horaEnMinutos(horario.hora_inicio);
+        const fin = horaEnMinutos(horario.hora_fin);
+        const bloquesRegulares = bloquesRegularesParaGrado(horario.grado);
+        return [...bloquesRegulares, ...bloquesExtra]
+            .filter((bloque) =>
+                !bloque.receso
+                && inicio < horaEnMinutos(bloque.fin)
+                && fin > horaEnMinutos(bloque.inicio)
+            ).length;
     }
 
     function tarjetaHorario(horario, compacta = false) {
+        const horasCatedra = cantidadHorasCatedra(horario);
+        const materia = String(horario.materia || "Materia no disponible").trim();
+        const profesor = String(horario.profesor || "Profesor no disponible").trim();
+        const idHorarioEditable = horario._ids?.[0] || horario.id_horario;
+        const accion = `<button type="button" class="btn btn-edit schedule-entry-edit" data-editar-horario="${escapar(idHorarioEditable)}">Editar</button>`;
+
         return `
-            <article class="schedule-entry${compacta ? " is-compact" : ""}">
-                <div class="schedule-entry-time">${escapar(horaCorta(horario.hora_inicio))} - ${escapar(horaCorta(horario.hora_fin))}</div>
-                <div class="schedule-entry-subject">${escapar(horario.materia || "Sin materia")}</div>
-                <div class="schedule-entry-meta">${escapar(horario.profesor || "Sin profesor")}</div>
-                <div class="schedule-entry-room">${escapar(horario.aula || "Sin aula")}</div>
-                ${Number(horario.permite_superposicion) === 1 ? '<span class="joint-class-badge">Clase conjunta</span>' : ""}
-                <button type="button" class="btn btn-edit schedule-entry-edit" data-editar-horario="${escapar(horario.id_horario)}">Editar</button>
+            <article class="schedule-entry${compacta ? " is-compact" : ""}"
+                     aria-label="${escapar(`${materia}, ${profesor}`)}">
+                <div class="schedule-entry-subject" title="${escapar(materia)}">${escapar(materia)}</div>
+                <div class="schedule-entry-meta" title="${escapar(profesor)}">${escapar(profesor)}</div>
+                <div class="schedule-entry-footer">
+                    ${horasCatedra > 1 ? `<span class="schedule-hours-badge">${horasCatedra} HC</span>` : ""}
+                    ${Number(horario.permite_superposicion) === 1 ? '<span class="joint-class-badge">Conjunta</span>' : ""}
+                    ${accion}
+                </div>
             </article>
         `;
+    }
+
+    function posicionEnBloques(horario, bloques) {
+        const inicio = horaEnMinutos(horario.hora_inicio);
+        const fin = horaEnMinutos(horario.hora_fin);
+        const indices = bloques
+            .map((bloque, indice) => ({ bloque, indice }))
+            .filter(({ bloque }) =>
+                inicio < horaEnMinutos(bloque.fin)
+                && fin > horaEnMinutos(bloque.inicio)
+            )
+            .map(({ indice }) => indice);
+
+        return indices.length
+            ? { inicio: indices[0], cantidad: indices.at(-1) - indices[0] + 1 }
+            : null;
     }
 
     function renderHorarioSemanal() {
@@ -248,6 +618,7 @@
         const estado = $("#estado-horario-semanal");
         const desktop = $("#horario-semanal-desktop");
         const mobile = $("#horario-semanal-mobile");
+        const controlExtra = $("#mostrar-horas-extra");
 
         if (!grado) {
             estado.textContent = "Seleccioná un grado para ver su horario.";
@@ -256,30 +627,94 @@
             return;
         }
 
-        const horariosGrado = horarios
-            .filter((horario) => String(horario.id_grado) === String(idGrado))
-            .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)));
+        const horariosGrado = agruparHorariosContiguos(
+            horarios.filter((horario) => String(horario.id_grado) === String(idGrado))
+        );
+        const tieneHorasExtra = horariosGrado.some((horario) =>
+            horaEnMinutos(horario.hora_fin) > horaEnMinutos("13:30")
+        );
+        if (ultimoGradoSemanal !== String(idGrado)) {
+            controlExtra.checked = tieneHorasExtra;
+            ultimoGradoSemanal = String(idGrado);
+        }
 
-        estado.innerHTML = `<strong>${escapar(grado.nombre)}</strong> · Aula <strong>${escapar(grado.aula || grado.codigo_aula || "sin asignar")}</strong>`;
+        const mostrarExtra = controlExtra.checked;
+        const bloquesRegulares = bloquesRegularesParaGrado(grado.nombre);
+        const bloques = [...bloquesRegulares, ...(mostrarExtra ? bloquesExtra : [])];
+        const dias = horariosGrado.some((horario) => horario.dia_semana === "Sábado")
+            ? [...diasSemana, "Sábado"]
+            : diasSemana;
+        const extrasOcultos = horariosGrado.filter((horario) =>
+            horaEnMinutos(horario.hora_fin) > horaEnMinutos("13:30")
+        ).length;
+        const avisoExtra = !mostrarExtra && extrasOcultos
+            ? `<span class="schedule-hidden-extra">${extrasOcultos} bloque${extrasOcultos === 1 ? "" : "s"} del turno tarde oculto${extrasOcultos === 1 ? "" : "s"}</span>`
+            : "";
 
-        desktop.innerHTML = diasSemana.map((dia) => {
-            const items = horariosGrado.filter((horario) => horario.dia_semana === dia);
+        estado.innerHTML = `
+            <span class="schedule-course-summary">
+                <strong>${escapar(grado.nombre)}</strong>
+                <span>Aula ${escapar(grado.aula || grado.codigo_aula || "sin asignar")}</span>
+                ${avisoExtra}
+            </span>
+        `;
+
+        const cabeceras = dias.map((dia, indice) =>
+            `<div class="schedule-grid-day" style="grid-column: ${indice + 2}; grid-row: 1">${escapar(dia)}</div>`
+        ).join("");
+        const fondo = bloques.map((bloque, fila) => {
+            const claseFila = bloque.receso ? " is-break" : (bloque.extra ? " is-extra" : "");
+            const hora = `
+                <div class="schedule-grid-time${claseFila}" style="grid-column: 1; grid-row: ${fila + 2}">
+                    <strong>${bloque.inicio}</strong>
+                    <span>${bloque.fin}</span>
+                    ${bloque.receso ? "<small>Receso</small>" : ""}
+                </div>
+            `;
+            const celdas = dias.map((dia, indice) =>
+                `<div class="schedule-grid-cell${claseFila}" aria-hidden="true" style="grid-column: ${indice + 2}; grid-row: ${fila + 2}"></div>`
+            ).join("");
+            return hora + celdas;
+        }).join("");
+        const clases = horariosGrado.map((horario) => {
+            const columna = dias.indexOf(horario.dia_semana);
+            const posicion = posicionEnBloques(horario, bloques);
+            if (columna < 0 || !posicion) return "";
             return `
-                <section class="schedule-day-column">
-                    <h4>${escapar(dia)}</h4>
-                    <div class="schedule-day-entries">
-                        ${items.length ? items.map((item) => tarjetaHorario(item)).join("") : '<p class="schedule-empty">Sin clases</p>'}
-                    </div>
-                </section>
+                <div class="schedule-grid-item" style="grid-column: ${columna + 2}; grid-row: ${posicion.inicio + 2} / span ${posicion.cantidad}">
+                    ${tarjetaHorario(horario)}
+                </div>
             `;
         }).join("");
 
-        mobile.innerHTML = diasSemana.map((dia) => {
-            const items = horariosGrado.filter((horario) => horario.dia_semana === dia);
+        desktop.innerHTML = `
+            <div class="schedule-week-grid" style="--schedule-columns: ${dias.length}; --schedule-rows: ${bloques.length}">
+                <div class="schedule-grid-corner">Hora</div>
+                ${cabeceras}
+                ${fondo}
+                ${clases}
+            </div>
+        `;
+
+        mobile.innerHTML = dias.map((dia) => {
+            const items = horariosGrado.filter((horario) =>
+                horario.dia_semana === dia
+                && (mostrarExtra || horaEnMinutos(horario.hora_inicio) < horaEnMinutos("13:30"))
+            );
             return `
                 <section class="schedule-mobile-day">
                     <h4>${escapar(dia)}</h4>
-                    ${items.length ? items.map((item) => tarjetaHorario(item, true)).join("") : '<p class="schedule-empty">Sin clases</p>'}
+                    <div class="schedule-mobile-entries">
+                        ${items.length ? items.map((item) => `
+                            <div class="schedule-mobile-slot">
+                                <div class="schedule-mobile-time">
+                                    <strong>${escapar(horaCorta(item.hora_inicio))}</strong>
+                                    <span>${escapar(horaCorta(item.hora_fin))}</span>
+                                </div>
+                                ${tarjetaHorario(item, true)}
+                            </div>
+                        `).join("") : '<p class="schedule-empty">Sin clases</p>'}
+                    </div>
                 </section>
             `;
         }).join("");
@@ -359,12 +794,14 @@
 
         $("#editar-id-horario").value = horario.id_horario;
         $("#editar-id-asignacion").value = horario.id_asignacion || "";
-        $("#editar-buscar-asignacion").value = "";
-        actualizarDetallesAsignacion("editar");
+        $("#editar-id-asignacion").dispatchEvent(new Event("change", { bubbles: true }));
         $("#editar-dia-semana").value = horario.dia_semana || "Lunes";
         $("#editar-hora-inicio").value = horaCorta(horario.hora_inicio);
         $("#editar-hora-fin").value = horaCorta(horario.hora_fin);
+        $("#editar-horario-extra").checked = horaEnMinutos(horario.hora_fin) > horaEnMinutos("13:30");
+        actualizarModoExtra("editar");
         $("#editar-permite-superposicion").checked = Number(horario.permite_superposicion) === 1;
+        actualizarClaseConjunta("editar", horario);
 
         const mensaje = $("#mensaje-editar-horario");
         mensaje.textContent = horario.id_grado
@@ -375,7 +812,7 @@
     }
 
     async function recargarHorarios() {
-        horarios = datosDe(await obtenerJson(config.apiHorarios));
+        horarios = datosDe(await obtenerJson(config.apiHorarios)).map(completarTextoHorario);
         renderHorarioSemanal();
         renderTabla();
     }
@@ -404,6 +841,8 @@
             if (modalId === "modal-crear-horario") {
                 formulario.reset();
                 $("#crear-buscar-asignacion").value = "";
+                actualizarModoExtra("crear");
+                actualizarClaseConjunta("crear");
             }
             actualizarDetallesAsignacion(modalId === "modal-crear-horario" ? "crear" : "editar");
         } catch (error) {
@@ -434,10 +873,41 @@
     }
 
     function activarEventos() {
-        $("#btn-crear-horario").addEventListener("click", () => abrirModal("modal-crear-horario"));
+        $("#btn-crear-horario").addEventListener("click", () => {
+            const formulario = $("#form-crear-horario");
+            formulario.reset();
+            $("#mensaje-crear-horario").textContent = "";
+            actualizarDetallesAsignacion("crear");
+            actualizarModoExtra("crear");
+            actualizarClaseConjunta("crear");
+            abrirModal("modal-crear-horario");
+        });
         activarBuscadorAsignacion("crear");
         activarBuscadorAsignacion("editar");
         $("#selector-grado-semanal").addEventListener("change", renderHorarioSemanal);
+        $("#mostrar-horas-extra").addEventListener("change", renderHorarioSemanal);
+
+        ["crear", "editar"].forEach((prefijo) => {
+            const controles = controlesHorario(prefijo);
+            controles.extra.addEventListener("change", () => actualizarModoExtra(prefijo, true));
+            controles.bloque.addEventListener("change", () => aplicarBloqueSugerido(prefijo));
+            [controles.inicio, controles.fin].forEach((input) =>
+                input.addEventListener("change", () => {
+                    controles.extra.checked = horaEnMinutos(controles.fin.value) > horaEnMinutos("13:30");
+                    actualizarOpcionesBloque(prefijo);
+                    if ($(`#${prefijo}-permite-superposicion`).checked) actualizarAyudaClaseConjunta(prefijo);
+                })
+            );
+            controles.dia.addEventListener("change", () => {
+                if ($(`#${prefijo}-permite-superposicion`).checked) actualizarAyudaClaseConjunta(prefijo);
+            });
+            $(`#${prefijo}-permite-superposicion`).addEventListener("change", () =>
+                actualizarClaseConjunta(prefijo)
+            );
+            $(`#${prefijo}-id-asignacion-conjunta`).addEventListener("change", () =>
+                actualizarAyudaClaseConjunta(prefijo)
+            );
+        });
 
         [$("#filtro-horario-buscar"), $("#filtro-horario-grado"), $("#filtro-horario-dia")]
             .forEach((control) => control.addEventListener(control.tagName === "INPUT" ? "input" : "change", renderTabla));
@@ -490,11 +960,15 @@
                 obtenerJson(config.apiAsignaciones)
             ]);
 
-            horarios = datosDe(jsonHorarios);
             grados = datosDe(jsonGrados);
             asignaciones = datosDe(jsonAsignaciones);
+            horarios = datosDe(jsonHorarios).map(completarTextoHorario);
 
             cargarOpciones();
+            actualizarModoExtra("crear");
+            actualizarModoExtra("editar");
+            actualizarClaseConjunta("crear");
+            actualizarClaseConjunta("editar");
             actualizarDetallesAsignacion("crear");
             actualizarDetallesAsignacion("editar");
             renderHorarioSemanal();

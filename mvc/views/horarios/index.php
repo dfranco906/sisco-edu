@@ -8,8 +8,8 @@ require_once __DIR__ . '/../../../src/config/app.php';
     <header class="app-page-header p-5 sm:p-6 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-                <h2 class="text-2xl sm:text-3xl font-bold">Horarios por Grado</h2>
-                <p class="mt-1">Organizá los horarios semanales según grado y aula asignada.</p>
+                <h2 class="text-2xl sm:text-3xl font-bold">Horarios por grado</h2>
+                <p class="mt-1">Organizá la semana por horas cátedra y agregá extensiones cuando el curso las necesite.</p>
             </div>
 
             <div class="app-toolbar-actions flex flex-wrap gap-3">
@@ -26,35 +26,49 @@ require_once __DIR__ . '/../../../src/config/app.php';
     </header>
 
     <section class="app-panel p-4 sm:p-6 mb-6" aria-labelledby="titulo-vista-semanal">
-        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-4">
             <div>
                 <h3 id="titulo-vista-semanal" class="text-xl font-bold">Horario semanal</h3>
                 <p class="text-sm mt-1" style="color: var(--color-muted);">
-                    Seleccioná un grado para consultar su semana y el aula asociada.
+                    Las horas se muestran una sola vez; cada bloque contiene únicamente la clase.
                 </p>
             </div>
 
-            <label class="block w-full lg:max-w-sm font-semibold">
-                Grado
-                <select id="selector-grado-semanal" class="app-input mt-2 w-full">
-                    <option value="">Cargando grados...</option>
-                </select>
-            </label>
+            <div class="schedule-view-controls">
+                <label class="block w-full font-semibold">
+                    Grado
+                    <select id="selector-grado-semanal" class="app-input mt-2 w-full">
+                        <option value="">Cargando grados...</option>
+                    </select>
+                </label>
+                <label class="schedule-extended-toggle">
+                    <input id="mostrar-horas-extra" type="checkbox">
+                    <span>
+                        <strong>Mostrar turno tarde</strong>
+                        <small>13:30 a 16:00</small>
+                    </span>
+                </label>
+            </div>
         </div>
 
         <div id="estado-horario-semanal" class="text-sm mb-4" aria-live="polite"></div>
-        <div id="horario-semanal-desktop" class="schedule-week-grid" aria-label="Grilla semanal"></div>
+        <div id="horario-semanal-desktop" class="schedule-week-table-wrap" aria-label="Grilla semanal"></div>
         <div id="horario-semanal-mobile" class="schedule-mobile-days" aria-label="Horario agrupado por día"></div>
     </section>
 
-    <section class="app-panel p-4 sm:p-6" aria-labelledby="titulo-lista-horarios">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-5">
+    <details class="app-panel schedule-admin-details" aria-labelledby="titulo-lista-horarios">
+        <summary class="schedule-admin-summary">
             <div>
                 <h3 id="titulo-lista-horarios" class="text-xl font-bold">Lista completa</h3>
                 <p class="text-sm mt-1" style="color: var(--color-muted);">
-                    Vista administrativa para buscar, editar o desactivar horarios.
+                    Abrí esta vista únicamente para buscar, editar o desactivar horarios.
                 </p>
             </div>
+            <span class="schedule-admin-summary-action" aria-hidden="true">Abrir lista</span>
+        </summary>
+
+        <div class="schedule-admin-content">
+        <div class="flex justify-end mb-5">
             <a href="<?= base_url('mvc/views/horarios/desactivados.php') ?>"
                class="btn btn-dark">
                 Ver desactivados
@@ -95,7 +109,8 @@ require_once __DIR__ . '/../../../src/config/app.php';
                 </tbody>
             </table>
         </div>
-    </section>
+        </div>
+    </details>
 </main>
 
 <div id="modal-crear-horario" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
@@ -118,7 +133,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
                            placeholder="Buscar por grado, materia, profesor o año..." autocomplete="off">
                     <div id="crear-asignacion-sugerencias" class="app-select-suggestions"
                          role="listbox" aria-label="Asignaciones disponibles" hidden></div>
-                    <select name="id_asignacion" id="crear-id-asignacion" class="app-input w-full" required>
+                    <select name="id_asignacion" id="crear-id-asignacion" class="app-input app-select-source-hidden w-full" required>
                         <option value="">Cargando asignaciones...</option>
                     </select>
                     <span class="app-help">Elegí una combinación válida. El grado, la materia, el profesor y el año lectivo aparecen juntos.</span>
@@ -162,14 +177,28 @@ require_once __DIR__ . '/../../../src/config/app.php';
                     </select>
                 </label>
 
+                <label class="schedule-extra-option sm:col-span-2">
+                    <input id="crear-horario-extra" type="checkbox">
+                    <span>
+                        <strong>Agregar turno tarde</strong>
+                        <small>Habilita las horas posteriores a las 13:30 para los cursos que continúan por la tarde.</small>
+                    </span>
+                </label>
+
+                <label class="font-semibold sm:col-span-2">
+                    Hora cátedra sugerida
+                    <select id="crear-bloque-horario" class="app-input mt-2 w-full"></select>
+                    <span class="app-help">Completa una hora cátedra. Podés ajustar el final si la clase ocupa bloques consecutivos.</span>
+                </label>
+
                 <label class="font-semibold">
                     Hora inicio
-                    <input name="hora_inicio" type="time" class="app-input mt-2 w-full" required>
+                    <input name="hora_inicio" id="crear-hora-inicio" type="time" class="app-input mt-2 w-full" required>
                 </label>
 
                 <label class="font-semibold">
                     Hora fin
-                    <input name="hora_fin" type="time" class="app-input mt-2 w-full" required>
+                    <input name="hora_fin" id="crear-hora-fin" type="time" class="app-input mt-2 w-full" required>
                 </label>
 
                 <label class="schedule-exception-option sm:col-span-2">
@@ -177,9 +206,17 @@ require_once __DIR__ . '/../../../src/config/app.php';
                            type="checkbox" value="1">
                     <span>
                         <strong>Clase conjunta (excepción controlada)</strong>
-                        <small>Permite la misma hora únicamente para el mismo profesor, en la misma aula y con grados diferentes.</small>
+                        <small>Vincula esta clase con el curso paralelo y toma automáticamente su día y horario.</small>
                     </span>
                 </label>
+
+                <div id="crear-clase-conjunta-panel" class="schedule-joint-link sm:col-span-2" hidden>
+                    <label class="font-semibold">
+                        Cursos correspondientes
+                        <select name="id_asignaciones_conjuntas" id="crear-id-asignacion-conjunta" class="app-input mt-2 w-full"></select>
+                    </label>
+                    <p id="crear-clase-conjunta-ayuda" class="app-help" aria-live="polite"></p>
+                </div>
             </div>
 
             <div class="app-modal-actions mt-6">
@@ -213,7 +250,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
                            placeholder="Buscar por grado, materia, profesor o año..." autocomplete="off">
                     <div id="editar-asignacion-sugerencias" class="app-select-suggestions"
                          role="listbox" aria-label="Asignaciones disponibles" hidden></div>
-                    <select name="id_asignacion" id="editar-id-asignacion" class="app-input w-full" required></select>
+                    <select name="id_asignacion" id="editar-id-asignacion" class="app-input app-select-source-hidden w-full" required></select>
                     <span class="app-help">Solo aparecen asignaciones activas y válidas.</span>
                 </label>
 
@@ -250,6 +287,20 @@ require_once __DIR__ . '/../../../src/config/app.php';
                     </select>
                 </label>
 
+                <label class="schedule-extra-option sm:col-span-2">
+                    <input id="editar-horario-extra" type="checkbox">
+                    <span>
+                        <strong>Turno tarde</strong>
+                        <small>Usá esta opción cuando la jornada continúe después de las 13:30.</small>
+                    </span>
+                </label>
+
+                <label class="font-semibold sm:col-span-2">
+                    Hora cátedra sugerida
+                    <select id="editar-bloque-horario" class="app-input mt-2 w-full"></select>
+                    <span class="app-help">Elegir un bloque actualiza las horas; los intervalos existentes siguen siendo editables.</span>
+                </label>
+
                 <label class="font-semibold">
                     Hora inicio
                     <input name="hora_inicio" id="editar-hora-inicio" type="time" class="app-input mt-2 w-full" required>
@@ -265,9 +316,17 @@ require_once __DIR__ . '/../../../src/config/app.php';
                            type="checkbox" value="1">
                     <span>
                         <strong>Clase conjunta (excepción controlada)</strong>
-                        <small>Permite la misma hora únicamente para el mismo profesor, en la misma aula y con grados diferentes.</small>
+                        <small>Vincula esta clase con el curso paralelo y mantiene la misma franja en ambos.</small>
                     </span>
                 </label>
+
+                <div id="editar-clase-conjunta-panel" class="schedule-joint-link sm:col-span-2" hidden>
+                    <label class="font-semibold">
+                        Cursos correspondientes
+                        <select name="id_asignaciones_conjuntas" id="editar-id-asignacion-conjunta" class="app-input mt-2 w-full"></select>
+                    </label>
+                    <p id="editar-clase-conjunta-ayuda" class="app-help" aria-live="polite"></p>
+                </div>
             </div>
 
             <div class="app-modal-actions mt-6">
@@ -288,6 +347,6 @@ window.HORARIOS_CONFIG = <?= json_encode([
     'apiDesactivar' => base_url('src/api/Horario/desactivar_horario.php')
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 </script>
-<script src="<?= base_url('public/js/horarios.js') ?>"></script>
+<script src="<?= base_url('public/js/horarios.js') ?>?v=<?= urlencode((string) @filemtime(__DIR__ . '/../../../public/js/horarios.js')) ?>"></script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

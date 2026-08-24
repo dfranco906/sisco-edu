@@ -13,6 +13,8 @@ class Horario
     public $hora_fin;
     public $id_aula;
     public $permite_superposicion = 0;
+    public $id_horario_vinculado;
+    public $id_grupo_clase_conjunta;
 
     public function __construct($db)
     {
@@ -25,6 +27,10 @@ class Horario
             SELECT
                 ad.id_asignacion,
                 ad.id_grado,
+                ad.id_profesor,
+                ad.id_materia,
+                ad.anio_lectivo,
+                g.nombre AS grado,
                 g.id_aula
             FROM asignacion_docente ad
             INNER JOIN profesores p ON p.id_profesor = ad.id_profesor AND p.activo = 1
@@ -40,8 +46,193 @@ class Horario
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function obtenerConflicto($excluirId = null, $permitirClaseConjunta = false)
+    public function interfiereRecesoTercerCiclo(array $asignacion, $horaInicio, $horaFin)
     {
+        $nombreGrado = (string) ($asignacion['grado'] ?? '');
+        if (!preg_match('/(^|\D)(7|8|9)(\D|$)/u', $nombreGrado)) return false;
+
+        $inicio = strtotime((string) $horaInicio);
+        $fin = strtotime((string) $horaFin);
+        $inicioReceso = strtotime('09:40');
+        $finReceso = strtotime('10:10');
+
+        return $inicio < $finReceso && $fin > $inicioReceso;
+    }
+
+    public function obtenerHorarioConjuntoActivo($id_horario)
+    {
+        $stmt = $this->conn->prepare("
+            SELECT
+                h.id_horario,
+                h.id_asignacion,
+                h.id_grado,
+                h.dia_semana,
+                h.hora_inicio,
+                h.hora_fin,
+                h.id_aula,
+                h.id_horario_vinculado,
+                h.id_grupo_clase_conjunta,
+                ad.id_profesor,
+                ad.id_materia,
+                ad.anio_lectivo
+            FROM horarios h
+            INNER JOIN asignacion_docente ad
+                ON ad.id_asignacion = h.id_asignacion
+               AND ad.activo = 1
+            WHERE h.id_horario = :id_horario
+              AND h.activo = 1
+            LIMIT 1
+        ");
+        $stmt->execute([":id_horario" => $id_horario]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function obtenerHorarioExactoAsignacion($idAsignacion, $diaSemana, $horaInicio, $horaFin, $excluirId = null)
+    {
+        $query = "
+            SELECT h.id_horario, h.id_asignacion, h.id_grado, h.id_aula,
+                   h.dia_semana, h.hora_inicio, h.hora_fin,
+                   h.permite_superposicion, h.id_horario_vinculado
+                   , h.id_grupo_clase_conjunta
+            FROM horarios h
+            WHERE h.id_asignacion = :id_asignacion
+              AND h.dia_semana = :dia_semana
+              AND h.hora_inicio = :hora_inicio
+              AND h.hora_fin = :hora_fin
+              AND h.activo = 1
+        ";
+        $params = [
+            ':id_asignacion' => $idAsignacion,
+            ':dia_semana' => $diaSemana,
+            ':hora_inicio' => $horaInicio,
+            ':hora_fin' => $horaFin
+        ];
+        if ($excluirId) {
+            $query .= " AND h.id_horario <> :excluir_id";
+            $params[':excluir_id'] = $excluirId;
+        }
+        $query .= " LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function vincularHorarios($idHorarioA, $idHorarioB)
+    {
+        return $this->vincularGrupoHorarios([$idHorarioA, $idHorarioB]);
+    }
+
+    public function vincularGrupoHorarios(array $idsHorarios)
+    {
+        $idsHorarios = array_values(array_unique(array_filter(array_map('intval', $idsHorarios))));
+        if (count($idsHorarios) < 2) return false;
+        sort($idsHorarios, SORT_NUMERIC);
+        $idGrupo = $idsHorarios[0];
+
+        $marcadoresIds = implode(',', array_fill(0, count($idsHorarios), '?'));
+        $buscarGrupos = $this->conn->prepare("
+            SELECT DISTINCT id_grupo_clase_conjunta
+            FROM horarios
+            WHERE id_horario IN ({$marcadoresIds})
+              AND id_grupo_clase_conjunta IS NOT NULL
+        ");
+        $buscarGrupos->execute($idsHorarios);
+        $gruposAnteriores = array_map('intval', $buscarGrupos->fetchAll(PDO::FETCH_COLUMN));
+        $gruposAnteriores[] = $idGrupo;
+        if ($this->id_grupo_clase_conjunta) $gruposAnteriores[] = (int) $this->id_grupo_clase_conjunta;
+        $gruposAnteriores = array_values(array_unique($gruposAnteriores));
+
+        $marcadoresGrupos = implode(',', array_fill(0, count($gruposAnteriores), '?'));
+        $limpiar = $this->conn->prepare("
+            UPDATE horarios
+            SET permite_superposicion = 0,
+                id_horario_vinculado = NULL,
+                id_grupo_clase_conjunta = NULL
+            WHERE id_grupo_clase_conjunta IN ({$marcadoresGrupos})
+              AND id_horario NOT IN ({$marcadoresIds})
+        ");
+        $limpiar->execute(array_merge($gruposAnteriores, $idsHorarios));
+
+        $stmt = $this->conn->prepare("
+            UPDATE horarios
+            SET permite_superposicion = 1,
+                id_horario_vinculado = :id_vinculado,
+                id_grupo_clase_conjunta = :id_grupo
+            WHERE id_horario = :id_horario
+              AND activo = 1
+        ");
+        foreach ($idsHorarios as $indice => $idHorario) {
+            $idVinculado = $indice === 0 ? $idsHorarios[1] : $idsHorarios[0];
+            if (!$stmt->execute([
+                ':id_vinculado' => $idVinculado,
+                ':id_grupo' => $idGrupo,
+                ':id_horario' => $idHorario
+            ])) return false;
+        }
+        return true;
+    }
+
+    public function obtenerHorariosGrupo($idHorario)
+    {
+        $actual = $this->obtenerHorarioConjuntoActivo($idHorario);
+        if (!$actual) return [];
+        $idGrupo = $actual['id_grupo_clase_conjunta'] ?? null;
+        if (!$idGrupo) return [$actual];
+
+        $stmt = $this->conn->prepare("
+            SELECT h.id_horario, h.id_asignacion, h.id_grado, h.id_aula,
+                   h.dia_semana, h.hora_inicio, h.hora_fin,
+                   h.permite_superposicion, h.id_horario_vinculado,
+                   h.id_grupo_clase_conjunta
+            FROM horarios h
+            WHERE h.id_grupo_clase_conjunta = :id_grupo
+              AND h.activo = 1
+            ORDER BY h.id_horario
+        ");
+        $stmt->execute([':id_grupo' => $idGrupo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function desvincularHorario($idHorario)
+    {
+        $actual = $this->obtenerHorarioConjuntoActivo($idHorario);
+        $idVinculado = $actual['id_horario_vinculado'] ?? null;
+        $idGrupo = $actual['id_grupo_clase_conjunta'] ?? null;
+
+        $stmt = $this->conn->prepare("
+            UPDATE horarios
+            SET permite_superposicion = 0,
+                id_horario_vinculado = NULL,
+                id_grupo_clase_conjunta = NULL
+            WHERE id_horario IN (:id_horario, :id_vinculado)
+               OR id_horario_vinculado = :id_horario_relacionado
+               OR (:id_grupo_presente = 1 AND id_grupo_clase_conjunta = :id_grupo)
+        ");
+        return $stmt->execute([
+            ':id_horario' => $idHorario,
+            ':id_vinculado' => $idVinculado ?: $idHorario,
+            ':id_horario_relacionado' => $idHorario,
+            ':id_grupo_presente' => $idGrupo ? 1 : 0,
+            ':id_grupo' => $idGrupo ?: 0
+        ]);
+    }
+
+    public function obtenerConflicto($excluirId = null, $permitirClaseConjunta = false, $idHorarioVinculado = null)
+    {
+        $idsVinculados = is_array($idHorarioVinculado) ? $idHorarioVinculado : [$idHorarioVinculado];
+        $idsVinculados = array_values(array_unique(array_filter(array_map('intval', $idsVinculados))));
+        $paramsVinculados = [];
+        $marcadoresVinculados = [];
+        foreach ($idsVinculados as $indice => $idVinculado) {
+            $marcador = ":id_horario_vinculado_{$indice}";
+            $marcadoresVinculados[] = $marcador;
+            $paramsVinculados[$marcador] = $idVinculado;
+        }
+        $condicionVinculada = $marcadoresVinculados
+            ? "h.id_horario IN (" . implode(',', $marcadoresVinculados) . ")"
+            : "h.id_aula = :id_aula_excepcion";
+
         $query = "SELECT
                     h.id_horario,
                     CASE
@@ -52,7 +243,6 @@ class Horario
                     CASE
                         WHEN h.id_grado IS NOT NULL
                          AND h.id_grado <> :id_grado_excepcion_info
-                         AND h.id_aula = :id_aula_excepcion_info
                          AND ad_existente.id_profesor = ad_nueva.id_profesor
                         THEN 1 ELSE 0
                     END AS excepcion_disponible
@@ -74,15 +264,14 @@ class Horario
                         :permitir_superposicion = 1
                         AND h.id_grado IS NOT NULL
                         AND h.id_grado <> :id_grado_excepcion
-                        AND h.id_aula = :id_aula_excepcion
                         AND ad_existente.id_profesor = ad_nueva.id_profesor
+                        AND (" . $condicionVinculada . ")
                     )";
 
         $params = [
             ":id_grado_tipo" => $this->id_grado,
             ":id_aula_tipo" => $this->id_aula,
             ":id_grado_excepcion_info" => $this->id_grado,
-            ":id_aula_excepcion_info" => $this->id_aula,
             ":id_asignacion_nueva" => $this->id_asignacion,
             ":dia_semana" => $this->dia_semana,
             ":hora_fin" => $this->hora_fin,
@@ -90,9 +279,10 @@ class Horario
             ":id_grado_conflicto" => $this->id_grado,
             ":id_aula_conflicto" => $this->id_aula,
             ":permitir_superposicion" => $permitirClaseConjunta ? 1 : 0,
-            ":id_grado_excepcion" => $this->id_grado,
-            ":id_aula_excepcion" => $this->id_aula
+            ":id_grado_excepcion" => $this->id_grado
         ];
+        if (!$idsVinculados) $params[":id_aula_excepcion"] = $this->id_aula;
+        $params += $paramsVinculados;
 
         if ($excluirId !== null) {
             $query .= " AND h.id_horario <> :excluir_id";
@@ -137,6 +327,8 @@ class Horario
                 h.hora_fin,
                 h.id_aula,
                 h.permite_superposicion,
+                h.id_horario_vinculado,
+                h.id_grupo_clase_conjunta,
                 h.activo,
                 ad.id_profesor,
                 ad.id_materia,
@@ -198,7 +390,7 @@ class Horario
         ]);
     }
 
-    public function marcarClasesConjuntasRelacionadas()
+    public function marcarClasesConjuntasRelacionadas($idHorarioVinculado = null)
     {
         if (!$this->permite_superposicion || !$this->id_horario) return true;
 
@@ -216,8 +408,17 @@ class Horario
               AND h.hora_fin > :hora_inicio
               AND h.id_grado IS NOT NULL
               AND h.id_grado <> :id_grado
-              AND h.id_aula = :id_aula
               AND ad_existente.id_profesor = ad_actual.id_profesor
+              AND (
+                  (
+                      :id_vinculado_presente = 1
+                      AND h.id_horario = :id_horario_vinculado
+                  )
+                  OR (
+                      :id_vinculado_ausente = 1
+                      AND h.id_aula = :id_aula
+                  )
+              )
         ");
 
         return $stmt->execute([
@@ -227,12 +428,16 @@ class Horario
             ":hora_fin" => $this->hora_fin,
             ":hora_inicio" => $this->hora_inicio,
             ":id_grado" => $this->id_grado,
+            ":id_vinculado_presente" => $idHorarioVinculado ? 1 : 0,
+            ":id_horario_vinculado" => $idHorarioVinculado ?: 0,
+            ":id_vinculado_ausente" => $idHorarioVinculado ? 0 : 1,
             ":id_aula" => $this->id_aula
         ]);
     }
 
     public function desactivar()
     {
+        $this->desvincularHorario($this->id_horario);
         $stmt = $this->conn->prepare("
             UPDATE " . $this->table_name . "
             SET activo = 0
@@ -255,6 +460,7 @@ class Horario
 
     public function eliminar()
     {
+        $this->desvincularHorario($this->id_horario);
         $stmt = $this->conn->prepare("
             DELETE FROM " . $this->table_name . "
             WHERE id_horario = :id

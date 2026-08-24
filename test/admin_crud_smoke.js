@@ -57,11 +57,15 @@ async function cicloEstado(modulo, carpeta, nombreId, id) {
 async function limpiar() {
     const objetivos = [
         ['Horario', 'Horario', 'id_horario', ids.horarioConjunto],
+        ['Horario', 'Horario', 'id_horario', ids.horarioConjuntoVinculado],
+        ['Horario', 'Horario', 'id_horario', ids.horarioConjuntoVinculadoDos],
         ['Horario', 'Horario', 'id_horario', ids.horario],
         ['Asignacion', 'Asignaciones', 'id_asignacion', ids.asignacionConjunta],
+        ['Asignacion', 'Asignaciones', 'id_asignacion', ids.asignacionConjuntaDos],
         ['Asignacion', 'Asignaciones', 'id_asignacion', ids.asignacion],
         ['Estudiante', 'Estudiante', 'id_estudiante', ids.estudiante],
         ['Grado', 'Grado', 'id_grado', ids.gradoConjunto],
+        ['Grado', 'Grado', 'id_grado', ids.gradoConjuntoDos],
         ['Grado', 'Grado', 'id_grado', ids.grado],
         ['Aula', 'Aula', 'id_aula', ids.aula],
         ['Profesor', 'Profesor', 'id_profesor', ids.profesor],
@@ -114,12 +118,16 @@ async function ejecutar() {
     });
     ids.grado = grado.data.id_grado;
     await exigir('Grado', 'editar', 'src/api/Grado/actualizar_grado.php', {
-        id_grado: ids.grado, nombre: `${token} Grado editado`, id_aula: ids.aula
+        id_grado: ids.grado, nombre: `7° ${token}`, id_aula: ids.aula
     });
     const gradoConjunto = await exigir('Grado', 'crear para clase conjunta', 'src/api/Grado/crear_grado.php', {
-        nombre: `${token} Grado conjunto`, id_aula: ids.aula
+        nombre: `8° ${token}`, id_aula: ids.aula
     });
     ids.gradoConjunto = gradoConjunto.data.id_grado;
+    const gradoConjuntoDos = await exigir('Grado', 'crear tercer curso conjunto', 'src/api/Grado/crear_grado.php', {
+        nombre: `9° ${token}`, id_aula: ids.aula
+    });
+    ids.gradoConjuntoDos = gradoConjuntoDos.data.id_grado;
 
     const estudiante = await exigir('Estudiante', 'crear', 'src/api/Estudiante/crear_estudiante.php', {
         nombre: 'Auditoria', apellido: 'Estudiante', cedula_identidad: `${token}E`, id_grado: ids.grado
@@ -159,6 +167,16 @@ async function ejecutar() {
         carga_horaria: 5, anio_lectivo: 2027, activo: 1
     });
     ids.asignacionConjunta = asignacionConjunta.data.id_asignacion;
+    const asignacionConjuntaDos = await exigir('Asignacion', 'crear para tercer curso conjunto', 'src/api/Asignaciones/crear_asignacion.php', {
+        id_profesor: ids.profesor, id_materia: ids.materia, id_grado: ids.gradoConjuntoDos,
+        carga_horaria: 5, anio_lectivo: 2027, activo: 1
+    });
+    ids.asignacionConjuntaDos = asignacionConjuntaDos.data.id_asignacion;
+
+    await exigir('Horario', 'bloquear recreo de tercer ciclo', 'src/api/Horario/crear_horario.php', {
+        id_asignacion: ids.asignacion,
+        dia_semana: 'Sábado', hora_inicio: '09:50', hora_fin: '10:00'
+    }, 422);
 
     const horario = await exigir('Horario', 'crear desde asignacion', 'src/api/Horario/crear_horario.php', {
         id_asignacion: ids.asignacion,
@@ -180,6 +198,7 @@ async function ejecutar() {
     }, 409);
     await exigir('Horario', 'excepcion no omite choque del mismo grado', 'src/api/Horario/crear_horario.php', {
         id_asignacion: ids.asignacion,
+        id_asignacion_conjunta: ids.asignacionConjunta,
         dia_semana: 'Sábado', hora_inicio: '22:20', hora_fin: '22:30',
         permite_superposicion: 1
     }, 409);
@@ -187,26 +206,51 @@ async function ejecutar() {
         id_asignacion: ids.asignacionConjunta,
         dia_semana: 'Sábado', hora_inicio: '22:20', hora_fin: '22:30'
     }, 409);
-    const horarioConjunto = await exigir('Horario', 'clase conjunta con excepcion', 'src/api/Horario/crear_horario.php', {
+    const horarioConjunto = await exigir('Horario', 'clase conjunta de tres cursos', 'src/api/Horario/crear_horario.php', {
         id_asignacion: ids.asignacionConjunta,
-        dia_semana: 'Sábado', hora_inicio: '22:20', hora_fin: '22:30',
+        id_asignaciones_conjuntas: `${ids.asignacion},${ids.asignacionConjuntaDos}`,
+        dia_semana: 'Sábado', hora_inicio: '23:00', hora_fin: '23:40',
         permite_superposicion: 1
     });
     ids.horarioConjunto = horarioConjunto.data.id_horario;
+    [ids.horarioConjuntoVinculado, ids.horarioConjuntoVinculadoDos] = horarioConjunto.data.ids_horarios_vinculados;
+
+    await exigir('Horario', 'sincronizar edicion conjunta', 'src/api/Horario/actualizar_horario.php', {
+        id_horario: ids.horarioConjunto,
+        id_asignacion: ids.asignacionConjunta,
+        id_asignaciones_conjuntas: `${ids.asignacion},${ids.asignacionConjuntaDos}`,
+        dia_semana: 'Sábado', hora_inicio: '23:10', hora_fin: '23:50',
+        permite_superposicion: 1
+    });
 
     const horariosConjuntos = await solicitar('src/api/Horario/leer_horarios.php');
     const vinculados = horariosConjuntos.json.data.filter((item) =>
-        [String(ids.horario), String(ids.horarioConjunto)].includes(String(item.id_horario))
+        [String(ids.horarioConjunto), String(ids.horarioConjuntoVinculado), String(ids.horarioConjuntoVinculadoDos)]
+            .includes(String(item.id_horario))
     );
-    const excepcionPersistida = vinculados.length === 2
-        && vinculados.every((item) => Number(item.permite_superposicion) === 1);
-    registrar('Horario', 'excepcion persistida en ambas clases', excepcionPersistida, `${vinculados.length} horarios vinculados`);
+    const idsGrupo = vinculados.map((item) => String(item.id_horario));
+    const idGrupoConjunto = vinculados[0]?.id_grupo_clase_conjunta;
+    const excepcionPersistida = vinculados.length === 3
+        && vinculados.every((item) => Number(item.permite_superposicion) === 1)
+        && vinculados.every((item) => item.hora_inicio === '23:10:00' && item.hora_fin === '23:50:00')
+        && Boolean(idGrupoConjunto)
+        && vinculados.every((item) => String(item.id_grupo_clase_conjunta) === String(idGrupoConjunto))
+        && vinculados.every((item) => idsGrupo.includes(String(item.id_horario_vinculado)));
+    registrar('Horario', 'creacion y sincronizacion de 7°, 8° y 9°', excepcionPersistida, `${vinculados.length} horarios vinculados`);
     if (!excepcionPersistida) throw new Error('Horario/excepcion persistida fallo');
 
     await exigir('Horario', 'eliminar clase conjunta', 'src/api/Horario/eliminar_horario.php', {
         id_horario: ids.horarioConjunto
     });
     delete ids.horarioConjunto;
+    await exigir('Horario', 'eliminar contraparte conjunta', 'src/api/Horario/eliminar_horario.php', {
+        id_horario: ids.horarioConjuntoVinculado
+    });
+    delete ids.horarioConjuntoVinculado;
+    await exigir('Horario', 'eliminar tercer curso conjunto', 'src/api/Horario/eliminar_horario.php', {
+        id_horario: ids.horarioConjuntoVinculadoDos
+    });
+    delete ids.horarioConjuntoVinculadoDos;
 
     await cicloEstado('Horario', 'Horario', 'id_horario', ids.horario);
     await exigir('Horario', 'eliminar', 'src/api/Horario/eliminar_horario.php', { id_horario: ids.horario });
@@ -219,9 +263,14 @@ async function ejecutar() {
         id_asignacion: ids.asignacionConjunta
     });
     delete ids.asignacionConjunta;
+    await exigir('Asignacion', 'eliminar asignacion del tercer curso', 'src/api/Asignaciones/eliminar_asignacion.php', {
+        id_asignacion: ids.asignacionConjuntaDos
+    });
+    delete ids.asignacionConjuntaDos;
 
     for (const [modulo, carpeta, nombreId, clave] of [
         ['Estudiante', 'Estudiante', 'id_estudiante', 'estudiante'],
+        ['Grado', 'Grado', 'id_grado', 'gradoConjuntoDos'],
         ['Grado', 'Grado', 'id_grado', 'gradoConjunto'],
         ['Grado', 'Grado', 'id_grado', 'grado'],
         ['Aula', 'Aula', 'id_aula', 'aula'],

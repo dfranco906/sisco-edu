@@ -18,7 +18,7 @@ if (!isset($_SESSION['id_usuario'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="<?= base_url('public/css/theme.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('public/css/theme.css') ?>?v=<?= urlencode((string) @filemtime(__DIR__ . '/../../../public/css/theme.css')) ?>">
 </head>
 <body class="min-h-screen" style="background: var(--color-bg);">
 

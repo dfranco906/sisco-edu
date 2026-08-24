@@ -18,6 +18,21 @@ $permite_superposicion = filter_var(
     $_POST['permite_superposicion'] ?? false,
     FILTER_VALIDATE_BOOLEAN
 );
+$id_horario_vinculado = filter_var(
+    $_POST['id_horario_vinculado'] ?? null,
+    FILTER_VALIDATE_INT,
+    ["options" => ["min_range" => 1]]
+) ?: null;
+$id_asignacion_conjunta = filter_var(
+    $_POST['id_asignacion_conjunta'] ?? null,
+    FILTER_VALIDATE_INT,
+    ["options" => ["min_range" => 1]]
+) ?: null;
+$idsAsignacionesConjuntasEntrada = $_POST['id_asignaciones_conjuntas'] ?? $id_asignacion_conjunta;
+$idsAsignacionesConjuntas = is_array($idsAsignacionesConjuntasEntrada)
+    ? $idsAsignacionesConjuntasEntrada
+    : preg_split('/\s*,\s*/', (string) $idsAsignacionesConjuntasEntrada, -1, PREG_SPLIT_NO_EMPTY);
+$idsAsignacionesConjuntas = array_values(array_unique(array_filter(array_map('intval', $idsAsignacionesConjuntas))));
 
 if (!$id_asignacion || $dia_semana === '' || $hora_inicio === '' || $hora_fin === '') {
     http_response_code(422);
@@ -60,6 +75,74 @@ try {
     }
 
     $id_grado = $asignacion['id_grado'];
+    $asignacionesConjuntas = [];
+    $horariosVinculados = [];
+    if ($permite_superposicion && $id_horario_vinculado) {
+        $vinculadoAnterior = $horario->obtenerHorarioConjuntoActivo($id_horario_vinculado);
+        if ($vinculadoAnterior) {
+            $idsAsignacionesConjuntas[] = (int) $vinculadoAnterior['id_asignacion'];
+            $dia_semana = $vinculadoAnterior['dia_semana'];
+            $hora_inicio = $vinculadoAnterior['hora_inicio'];
+            $hora_fin = $vinculadoAnterior['hora_fin'];
+        }
+    }
+
+    if ($horario->interfiereRecesoTercerCiclo($asignacion, $hora_inicio, $hora_fin)) {
+        http_response_code(422);
+        echo json_encode([
+            "status" => "error",
+            "message" => "En Tercer Ciclo el recreo es de 09:40 a 10:10. Elegí un bloque antes o después del recreo."
+        ]);
+        exit;
+    }
+
+    $idsAsignacionesConjuntas = array_values(array_unique(array_filter(
+        $idsAsignacionesConjuntas,
+        fn($id) => (string) $id !== (string) $id_asignacion
+    )));
+    foreach ($idsAsignacionesConjuntas as $idAsignacionConjunta) {
+        $asignacionConjunta = $horario->obtenerAsignacionActiva($idAsignacionConjunta);
+        $vinculoValido = $asignacionConjunta
+            && (string) $asignacionConjunta['id_grado'] !== (string) $id_grado
+            && (string) $asignacionConjunta['id_profesor'] === (string) $asignacion['id_profesor']
+            && (string) $asignacionConjunta['id_materia'] === (string) $asignacion['id_materia']
+            && (string) $asignacionConjunta['anio_lectivo'] === (string) $asignacion['anio_lectivo'];
+
+        if (!$vinculoValido) {
+            http_response_code(422);
+            echo json_encode([
+                "status" => "error",
+                "message" => "El curso elegido no corresponde a la misma materia, profesor y año."
+            ]);
+            exit;
+        }
+        if ($horario->interfiereRecesoTercerCiclo($asignacionConjunta, $hora_inicio, $hora_fin)) {
+            http_response_code(422);
+            echo json_encode([
+                "status" => "error",
+                "message" => "En Tercer Ciclo el recreo es de 09:40 a 10:10. Elegí un bloque antes o después del recreo."
+            ]);
+            exit;
+        }
+        $asignacionesConjuntas[$idAsignacionConjunta] = $asignacionConjunta;
+        $existente = $horario->obtenerHorarioExactoAsignacion(
+            $idAsignacionConjunta,
+            $dia_semana,
+            $hora_inicio,
+            $hora_fin
+        );
+        if ($existente) {
+            $horariosVinculados[$idAsignacionConjunta] = $existente;
+        }
+    }
+    if ($permite_superposicion && !$asignacionesConjuntas) {
+        http_response_code(422);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Seleccioná el curso correspondiente para crear la clase conjunta."
+        ]);
+        exit;
+    }
 
     $horario->id_asignacion = $id_asignacion;
     $horario->id_grado = $id_grado;
@@ -69,7 +152,11 @@ try {
     $horario->id_aula = $asignacion['id_aula'];
     $horario->permite_superposicion = $permite_superposicion ? 1 : 0;
 
-    $conflicto = $horario->obtenerConflicto(null, $permite_superposicion);
+    $idsHorariosExistentes = array_values(array_map(
+        fn($item) => (int) $item['id_horario'],
+        $horariosVinculados
+    ));
+    $conflicto = $horario->obtenerConflicto(null, $permite_superposicion, $idsHorariosExistentes);
     if ($conflicto) {
         $etiquetas = [
             'grado' => 'el grado',
@@ -79,7 +166,7 @@ try {
         http_response_code(409);
         $mensaje = "Existe un horario superpuesto para " . ($etiquetas[$conflicto['tipo']] ?? 'la selección') . ".";
         if (!empty($conflicto['excepcion_disponible'])) {
-            $mensaje .= " Si ambos grados tendrán clase conjunta con el mismo profesor en esta aula, marcá la excepción correspondiente.";
+            $mensaje .= " Si los cursos tendrán clase conjunta con el mismo profesor en esta franja, vinculá el horario del curso correspondiente.";
         }
         echo json_encode([
             "success" => false,
@@ -95,25 +182,58 @@ try {
 
     $id_horario = (int) $db->lastInsertId();
     $horario->id_horario = $id_horario;
-    if (!$horario->marcarClasesConjuntasRelacionadas()) {
-        throw new RuntimeException('No se pudieron vincular las clases conjuntas.');
+
+    $idsHorariosGrupo = [$id_horario];
+    if ($permite_superposicion) {
+        foreach ($asignacionesConjuntas as $idAsignacionConjunta => $asignacionConjunta) {
+            if (isset($horariosVinculados[$idAsignacionConjunta])) {
+                $idsHorariosGrupo[] = (int) $horariosVinculados[$idAsignacionConjunta]['id_horario'];
+                continue;
+            }
+            $horarioConjunto = new Horario($db);
+            $horarioConjunto->id_asignacion = $idAsignacionConjunta;
+            $horarioConjunto->id_grado = $asignacionConjunta['id_grado'];
+            $horarioConjunto->dia_semana = $dia_semana;
+            $horarioConjunto->hora_inicio = $hora_inicio;
+            $horarioConjunto->hora_fin = $hora_fin;
+            $horarioConjunto->id_aula = $asignacionConjunta['id_aula'];
+            $horarioConjunto->permite_superposicion = 1;
+
+            if ($horarioConjunto->obtenerConflicto(null, true, $idsHorariosGrupo)) {
+                throw new DomainException('El curso correspondiente ya tiene otro horario en esa franja.');
+            }
+            if (!$horarioConjunto->crear()) {
+                throw new RuntimeException('No se pudo crear el horario del curso correspondiente.');
+            }
+            $idsHorariosGrupo[] = (int) $db->lastInsertId();
+        }
+
+        if (!$horario->vincularGrupoHorarios($idsHorariosGrupo)) {
+            throw new RuntimeException('No se pudieron vincular las clases conjuntas.');
+        }
     }
     $db->commit();
 
     echo json_encode([
         "success" => true,
         "status" => "success",
-        "message" => $permite_superposicion ? "Horario conjunto creado correctamente" : "Horario creado correctamente",
+        "message" => $permite_superposicion ? "Clase conjunta creada y sincronizada en todos los cursos" : "Horario creado correctamente",
         "data" => [
             "id_horario" => $id_horario,
             "id_grado" => (int) $id_grado,
             "id_aula" => (int) $asignacion['id_aula'],
+            "id_horario_vinculado" => $idsHorariosGrupo[1] ?? null,
+            "ids_horarios_vinculados" => array_slice($idsHorariosGrupo, 1),
             "permite_superposicion" => $permite_superposicion ? 1 : 0
         ],
         "id_horario" => $id_horario,
         "id_grado" => (int) $id_grado,
         "id_aula" => (int) $asignacion['id_aula']
     ]);
+} catch (DomainException $e) {
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
+    http_response_code(409);
+    echo json_encode(["success" => false, "status" => "error", "message" => $e->getMessage()]);
 } catch (Throwable $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
     error_log('crear_horario: ' . $e->getMessage());

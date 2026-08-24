@@ -1,6 +1,6 @@
 <?php
 $titulo = "Asignaciones";
-$subtitulo = "Seleccioná un grado para ver sus asignaciones de forma organizada.";
+$subtitulo = "Un profesor puede dictar la misma materia en varios grados; cada grado conserva su propia carga, aula y horarios.";
 $api = "src/api/Asignaciones/leer_asignaciones.php";
 
 $columnas = [
@@ -84,6 +84,7 @@ $apiActualizar = "src/api/Asignaciones/actualizar_asignacion.php";
 $apiDesactivar = "src/api/Asignaciones/desactivar_asignacion.php";
 $urlDesactivados = "mvc/views/asignaciones/desactivadas.php";
 $idCampo = "id_asignacion";
+$campoContextoCrear = "id_grado";
 $camposEditar = [
     [
         "name" => "id_profesor",
