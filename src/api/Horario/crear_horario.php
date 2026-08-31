@@ -158,20 +158,16 @@ try {
     ));
     $conflicto = $horario->obtenerConflicto(null, $permite_superposicion, $idsHorariosExistentes);
     if ($conflicto) {
-        $etiquetas = [
-            'grado' => 'el grado',
-            'aula' => 'el aula',
-            'profesor' => 'el profesor'
-        ];
         http_response_code(409);
-        $mensaje = "Existe un horario superpuesto para " . ($etiquetas[$conflicto['tipo']] ?? 'la selección') . ".";
+        $mensaje = $horario->describirConflicto($conflicto);
         if (!empty($conflicto['excepcion_disponible'])) {
             $mensaje .= " Si los cursos tendrán clase conjunta con el mismo profesor en esta franja, vinculá el horario del curso correspondiente.";
         }
         echo json_encode([
             "success" => false,
             "status" => "error",
-            "message" => $mensaje
+            "message" => $mensaje,
+            "data" => ["conflicto" => $conflicto]
         ]);
         exit;
     }
@@ -199,7 +195,15 @@ try {
             $horarioConjunto->id_aula = $asignacionConjunta['id_aula'];
             $horarioConjunto->permite_superposicion = 1;
 
-            if ($horarioConjunto->obtenerConflicto(null, true, $idsHorariosGrupo)) {
+            // Al ampliar una clase conjunta existente, todos sus horarios exactos
+            // ya fueron validados arriba, aunque todavía no se hayan recorrido.
+            // Excluirlos desde el inicio evita que el profesor compartido produzca
+            // un falso conflicto según el orden de los cursos seleccionados.
+            $idsHorariosPermitidos = array_values(array_unique(array_merge(
+                $idsHorariosGrupo,
+                $idsHorariosExistentes
+            )));
+            if ($horarioConjunto->obtenerConflicto(null, true, $idsHorariosPermitidos)) {
                 throw new DomainException('El curso correspondiente ya tiene otro horario en esa franja.');
             }
             if (!$horarioConjunto->crear()) {

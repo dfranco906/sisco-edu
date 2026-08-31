@@ -1,0 +1,12 @@
+<?php require_once __DIR__ . '/../layouts/header.php'; ?>
+<?php require_once __DIR__ . '/../layouts/sidebar.php'; ?>
+<?php require_once __DIR__ . '/../../../src/config/app.php'; ?>
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-10" data-informe-diario>
+ <header class="app-page-header p-5 sm:p-6 mb-6 no-print"><div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"><div><h2 class="text-2xl sm:text-3xl font-bold">Informe diario por materia y grado</h2><p class="mt-1">La asistencia y el contenido se obtienen desde las marcas, el horario y el plan publicado.</p></div><a class="btn btn-primary" href="<?= base_url('mvc/views/dashboard.php') ?>">Volver</a></div></header>
+ <section class="app-panel p-5 sm:p-6 mb-6 no-print"><form id="form-buscar-informe" class="report-filter-grid"><label class="font-semibold">Fecha<input id="informe-fecha" type="date" class="app-input mt-2 w-full" required value="<?= date('Y-m-d') ?>"></label><label class="font-semibold">Materia / Profesor / Grado-Curso<select id="informe-asignacion" class="app-input mt-2 w-full" required><option value="">Cargando asignaciones...</option></select></label><button class="btn btn-success" type="submit">Crear o recuperar clase</button></form><p id="mensaje-informe" class="mt-3" aria-live="polite"></p></section>
+ <section id="lista-clases-panel" class="app-panel p-5 sm:p-6 mb-6 no-print"><h3 class="text-xl font-bold mb-3">Clases de la fecha</h3><div id="lista-clases" class="report-class-list"></div></section>
+ <section id="documento-informe" class="report-document" hidden><div class="report-actions no-print"><button id="btn-imprimir-informe" class="btn btn-primary" type="button">Imprimir / Guardar PDF</button></div><div id="informe-contenido"></div></section>
+</main>
+<script>window.INFORME_CONFIG=<?= json_encode(['apiAsignaciones'=>base_url('src/api/Planificacion/asignaciones.php'),'apiClase'=>base_url('src/api/Informes/clase_diaria.php'),'apiInforme'=>base_url('src/api/Informes/informe_diario.php'),'apiRegistro'=>base_url('src/api/Informes/registro_anecdotico.php'),'apiTemas'=>base_url('src/api/Informes/temas_publicados.php'),'baseUrl'=>base_url('')],JSON_UNESCAPED_SLASHES) ?>;</script>
+<script src="<?= base_url('public/js/informe-diario.js') ?>?v=<?= urlencode((string)@filemtime(__DIR__.'/../../../public/js/informe-diario.js')) ?>"></script>
+<?php require_once __DIR__ . '/../layouts/footer.php'; ?>

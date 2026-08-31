@@ -7,10 +7,15 @@ $navItems = [
     ['Profesores', 'mvc/views/profesores/index.php'],
     ['Estudiantes', 'mvc/views/estudiantes/index.php'],
     ['Horarios', 'mvc/views/horarios/index.php'],
+    ['Planificaci&oacute;n', 'mvc/views/planificacion/index.php'],
+    ['Informes diarios', 'mvc/views/informes/diario.php'],
     ['Asist. Estudiantes', 'mvc/views/asistencias_estudiantes/index.php'],
     ['Asist. Profesores', 'mvc/views/asistencias_profesores/index.php'],
     ['Administraci&oacute;n', 'mvc/views/administracion/index.php'],
 ];
+if (in_array($_SESSION['rol'] ?? '', ['SuperAdmin', 'Administracion'], true)) {
+    $navItems[] = ['Config. informes', 'mvc/views/configuracion/informes.php'];
+}
 
 $adminPaths = [
     'mvc/views/administracion/',
@@ -19,6 +24,7 @@ $adminPaths = [
     'mvc/views/grados/',
     'mvc/views/materias/',
     'mvc/views/asignaciones/',
+    'mvc/views/configuracion/',
 ];
 ?>
 

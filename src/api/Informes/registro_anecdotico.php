@@ -1,0 +1,6 @@
+<?php
+require_once __DIR__ . '/../../config/api_auth.php';require_once __DIR__ . '/../../classes/ClaseDiaria.php';
+requerirMetodo(['POST']);$usuario=usuarioActual(['SuperAdmin','Administracion','Coordinador','Profesor']);
+try{$db=(new Database())->getConnection();$d=entradaJson();$clase=enteroPositivo($d['id_clase']??null,'Clase');$q=$db->prepare('SELECT id_asignacion FROM clases_diarias WHERE id_clase=:id');$q->execute([':id'=>$clase]);$as=(int)$q->fetchColumn();if(!$as)throw new PedagogiaException('Clase no encontrada.',404);asegurarAccesoAsignacion($db,$usuario,$as,true);$s=new ClaseDiaria($db);$s->guardarRegistro($clase,enteroPositivo($d['id_estudiante']??null,'Estudiante'),empty($d['id_asistencia_estudiante'])?null:enteroPositivo($d['id_asistencia_estudiante'],'Asistencia'),(string)($d['observacion']??''),$usuario['id_usuario']);responderJson(['success'=>true,'status'=>'success','message'=>'Observacion guardada.']);}
+catch(PedagogiaException $e){responderJson(['success'=>false,'status'=>'error','message'=>$e->getMessage()],$e->http);}catch(Throwable $e){error_log('registro_anecdotico: '.$e->getMessage());responderJson(['success'=>false,'status'=>'error','message'=>'No se pudo guardar la observacion.'],500);}
+?>

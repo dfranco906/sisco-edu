@@ -31,7 +31,8 @@ class Horario
                 ad.id_materia,
                 ad.anio_lectivo,
                 g.nombre AS grado,
-                g.id_aula
+                g.id_aula,
+                m.nombre AS materia
             FROM asignacion_docente ad
             INNER JOIN profesores p ON p.id_profesor = ad.id_profesor AND p.activo = 1
             INNER JOIN materias m ON m.id_materia = ad.id_materia AND m.activo = 1
@@ -48,6 +49,9 @@ class Horario
 
     public function interfiereRecesoTercerCiclo(array $asignacion, $horaInicio, $horaFin)
     {
+        $nombreMateria = strtoupper(trim((string) ($asignacion['materia'] ?? '')));
+        if (in_array($nombreMateria, ['RECESO', 'RECREO'], true)) return false;
+
         $nombreGrado = (string) ($asignacion['grado'] ?? '');
         if (!preg_match('/(^|\D)(7|8|9)(\D|$)/u', $nombreGrado)) return false;
 
@@ -235,6 +239,13 @@ class Horario
 
         $query = "SELECT
                     h.id_horario,
+                    h.dia_semana,
+                    h.hora_inicio,
+                    h.hora_fin,
+                    COALESCE(NULLIF(m_existente.nombre, ''), 'Materia sin nombre') AS materia,
+                    COALESCE(NULLIF(g_existente.nombre, ''), 'Grado sin nombre') AS grado,
+                    COALESCE(NULLIF(a_existente.nombre, ''), 'Aula sin nombre') AS aula,
+                    TRIM(CONCAT(COALESCE(p_existente.nombre, ''), ' ', COALESCE(p_existente.apellido, ''))) AS profesor,
                     CASE
                         WHEN h.id_grado = :id_grado_tipo THEN 'grado'
                         WHEN h.id_aula = :id_aula_tipo THEN 'aula'
@@ -244,6 +255,7 @@ class Horario
                         WHEN h.id_grado IS NOT NULL
                          AND h.id_grado <> :id_grado_excepcion_info
                          AND ad_existente.id_profesor = ad_nueva.id_profesor
+                         AND ad_existente.id_materia = ad_nueva.id_materia
                         THEN 1 ELSE 0
                     END AS excepcion_disponible
                   FROM horarios h
@@ -251,6 +263,14 @@ class Horario
                     ON ad_existente.id_asignacion = h.id_asignacion
                   INNER JOIN asignacion_docente ad_nueva
                     ON ad_nueva.id_asignacion = :id_asignacion_nueva
+                  LEFT JOIN materias m_existente
+                    ON m_existente.id_materia = ad_existente.id_materia
+                  LEFT JOIN grados g_existente
+                    ON g_existente.id_grado = h.id_grado
+                  LEFT JOIN aulas a_existente
+                    ON a_existente.id_aula = h.id_aula
+                  LEFT JOIN profesores p_existente
+                    ON p_existente.id_profesor = ad_existente.id_profesor
                   WHERE h.activo = 1
                     AND h.dia_semana = :dia_semana
                     AND h.hora_inicio < :hora_fin
@@ -289,10 +309,42 @@ class Horario
             $params[":excluir_id"] = $excluirId;
         }
 
-        $query .= " ORDER BY h.hora_inicio LIMIT 1";
+        $query .= " ORDER BY
+                    CASE
+                        WHEN h.id_grado = :id_grado_orden THEN 0
+                        WHEN h.id_aula = :id_aula_orden THEN 1
+                        ELSE 2
+                    END,
+                    h.hora_inicio
+                    LIMIT 1";
+        $params[":id_grado_orden"] = $this->id_grado;
+        $params[":id_aula_orden"] = $this->id_aula;
         $stmt = $this->conn->prepare($query);
         $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function describirConflicto(array $conflicto)
+    {
+        $dia = $conflicto['dia_semana'] ?? $this->dia_semana;
+        $horaInicio = substr((string) ($conflicto['hora_inicio'] ?? $this->hora_inicio), 0, 5);
+        $horaFin = substr((string) ($conflicto['hora_fin'] ?? $this->hora_fin), 0, 5);
+        $materia = $conflicto['materia'] ?? 'otra materia';
+        $grado = $conflicto['grado'] ?? 'otro grado';
+        $aula = $conflicto['aula'] ?? 'otra aula';
+        $profesor = trim((string) ($conflicto['profesor'] ?? ''));
+
+        switch ($conflicto['tipo'] ?? '') {
+            case 'grado':
+                return "El grado {$grado} ya tiene {$materia} el {$dia} de {$horaInicio} a {$horaFin}.";
+            case 'aula':
+                return "El aula {$aula} ya está ocupada por {$materia} ({$grado}) el {$dia} de {$horaInicio} a {$horaFin}.";
+            case 'profesor':
+                $sujeto = $profesor !== '' ? "El profesor {$profesor}" : 'El profesor seleccionado';
+                return "{$sujeto} ya dicta {$materia} en {$grado} el {$dia} de {$horaInicio} a {$horaFin}.";
+            default:
+                return "Existe un horario superpuesto el {$dia} de {$horaInicio} a {$horaFin}.";
+        }
     }
 
     public function crear()

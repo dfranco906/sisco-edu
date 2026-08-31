@@ -20,6 +20,9 @@ yarn-error.log*
 # Archivos de build o mapas de CSS si se generan
 public/css/*.map
 
+# Archivos cargados por usuarios en tiempo de ejecucion
+public/uploads/
+
 # --- Hardware (Arduino IDE / ESP32) ---
 # Archivos temporales de compilación
 hardware/**/build/

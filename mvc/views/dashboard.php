@@ -25,6 +25,8 @@
             ["Profesores", "Gestionar profesores", "profesores/index.php"],
             ["Estudiantes", "Gestionar estudiantes", "estudiantes/index.php"],
             ["Horarios", "Gestionar horarios", "horarios/index.php"],
+            ["Planificaci&oacute;n pedag&oacute;gica", "Crear y publicar planes anuales", "planificacion/index.php"],
+            ["Informes diarios", "Contenido, asistencia y registro anecd&oacute;tico", "informes/diario.php"],
             ["Asist. Estudiantes", "Ver asistencias de estudiantes", "asistencias_estudiantes/index.php"],
             ["Asist. Profesores", "Ver asistencias de profesores", "asistencias_profesores/index.php"],
             ["Administraci&oacute;n", "Gestionar usuarios, aulas, grados, materias y asignaciones.", "administracion/index.php", true],

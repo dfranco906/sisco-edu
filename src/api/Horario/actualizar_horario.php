@@ -174,13 +174,17 @@ try {
     ));
     $conflicto = $horario->obtenerConflicto($id_horario, $permite_superposicion, $idsHorariosExistentes);
     if ($conflicto) {
-        $etiquetas = ['grado' => 'el grado', 'aula' => 'el aula', 'profesor' => 'el profesor'];
         http_response_code(409);
-        $mensaje = "Existe un horario superpuesto para " . ($etiquetas[$conflicto['tipo']] ?? 'la selección') . ".";
+        $mensaje = $horario->describirConflicto($conflicto);
         if (!empty($conflicto['excepcion_disponible'])) {
             $mensaje .= " Si los cursos tendrán clase conjunta, seleccioná el curso correspondiente.";
         }
-        echo json_encode(["success" => false, "status" => "error", "message" => $mensaje]);
+        echo json_encode([
+            "success" => false,
+            "status" => "error",
+            "message" => $mensaje,
+            "data" => ["conflicto" => $conflicto]
+        ]);
         exit;
     }
 

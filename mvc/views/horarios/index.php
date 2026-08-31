@@ -206,15 +206,21 @@ require_once __DIR__ . '/../../../src/config/app.php';
                            type="checkbox" value="1">
                     <span>
                         <strong>Clase conjunta (excepción controlada)</strong>
-                        <small>Vincula esta clase con el curso paralelo y toma automáticamente su día y horario.</small>
+                        <small>Marcala una sola vez y elegí todos los cursos compatibles: el sistema crea o vincula el mismo horario en cada curso.</small>
                     </span>
                 </label>
 
                 <div id="crear-clase-conjunta-panel" class="schedule-joint-link sm:col-span-2" hidden>
-                    <label class="font-semibold">
-                        Cursos correspondientes
-                        <select name="id_asignaciones_conjuntas" id="crear-id-asignacion-conjunta" class="app-input mt-2 w-full"></select>
-                    </label>
+                    <span class="font-semibold">Cursos que compartirán la clase</span>
+                    <input name="id_asignaciones_conjuntas" id="crear-id-asignacion-conjunta" type="hidden">
+                    <input id="crear-buscar-clase-conjunta" type="search" class="app-input mt-2 w-full"
+                           placeholder="Buscar por grado, materia o profesor" autocomplete="off">
+                    <div class="schedule-joint-actions">
+                        <button id="crear-seleccionar-clase-conjunta" type="button" class="btn btn-muted">Seleccionar todos</button>
+                        <button id="crear-limpiar-clase-conjunta" type="button" class="btn btn-muted">Limpiar</button>
+                    </div>
+                    <div id="crear-opciones-clase-conjunta" class="schedule-joint-options" role="group"
+                         aria-label="Cursos que compartirán la clase"></div>
                     <p id="crear-clase-conjunta-ayuda" class="app-help" aria-live="polite"></p>
                 </div>
             </div>
@@ -316,15 +322,21 @@ require_once __DIR__ . '/../../../src/config/app.php';
                            type="checkbox" value="1">
                     <span>
                         <strong>Clase conjunta (excepción controlada)</strong>
-                        <small>Vincula esta clase con el curso paralelo y mantiene la misma franja en ambos.</small>
+                        <small>Elegí todos los cursos que comparten la clase para mantener la misma franja y relación entre ellos.</small>
                     </span>
                 </label>
 
                 <div id="editar-clase-conjunta-panel" class="schedule-joint-link sm:col-span-2" hidden>
-                    <label class="font-semibold">
-                        Cursos correspondientes
-                        <select name="id_asignaciones_conjuntas" id="editar-id-asignacion-conjunta" class="app-input mt-2 w-full"></select>
-                    </label>
+                    <span class="font-semibold">Cursos que compartirán la clase</span>
+                    <input name="id_asignaciones_conjuntas" id="editar-id-asignacion-conjunta" type="hidden">
+                    <input id="editar-buscar-clase-conjunta" type="search" class="app-input mt-2 w-full"
+                           placeholder="Buscar por grado, materia o profesor" autocomplete="off">
+                    <div class="schedule-joint-actions">
+                        <button id="editar-seleccionar-clase-conjunta" type="button" class="btn btn-muted">Seleccionar todos</button>
+                        <button id="editar-limpiar-clase-conjunta" type="button" class="btn btn-muted">Limpiar</button>
+                    </div>
+                    <div id="editar-opciones-clase-conjunta" class="schedule-joint-options" role="group"
+                         aria-label="Cursos que compartirán la clase"></div>
                     <p id="editar-clase-conjunta-ayuda" class="app-help" aria-live="polite"></p>
                 </div>
             </div>

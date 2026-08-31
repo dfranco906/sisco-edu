@@ -92,6 +92,7 @@
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .toLocaleLowerCase("es")
+            .replace(/[^\p{L}\p{N}]+/gu, " ")
             .trim();
     }
 
@@ -250,38 +251,66 @@
             : bloquesRegularesNivelMedio;
     }
 
-    function modalidadDelGrado(nombre) {
-        const texto = normalizarBusqueda(nombre);
-        if (texto.includes("bti")) return "BTI";
-        if (texto.includes("bcb")) return "BCB";
-        return "";
-    }
-
-    function cursosCorrespondientes(asignacionActual, asignacionCandidata) {
-        if (!asignacionActual || !asignacionCandidata) return false;
-        if (String(asignacionActual.id_grado) === String(asignacionCandidata.id_grado)) return false;
-
-        const nivelActual = nivelDelGrado(asignacionActual.grado);
-        const nivelCandidato = nivelDelGrado(asignacionCandidata.grado);
-        const tercerCiclo = ["7", "8", "9"];
-        const ambosDelTercerCiclo = tercerCiclo.includes(nivelActual) && tercerCiclo.includes(nivelCandidato);
-        if (!ambosDelTercerCiclo && nivelActual && nivelCandidato && nivelActual !== nivelCandidato) return false;
-
-        const modalidadActual = modalidadDelGrado(asignacionActual.grado);
-        const modalidadCandidata = modalidadDelGrado(asignacionCandidata.grado);
-        return !modalidadActual || !modalidadCandidata || modalidadActual !== modalidadCandidata;
-    }
-
     function asignacionesCorrespondientes(prefijo) {
         const asignacionActual = asignacionPorId($(`#${prefijo}-id-asignacion`).value);
         if (!asignacionActual) return [];
 
         return asignaciones.filter((asignacionCandidata) =>
-            cursosCorrespondientes(asignacionActual, asignacionCandidata)
+            String(asignacionActual.id_grado) !== String(asignacionCandidata.id_grado)
             && String(asignacionActual.id_profesor) === String(asignacionCandidata.id_profesor)
             && String(asignacionActual.id_materia) === String(asignacionCandidata.id_materia)
             && String(asignacionActual.anio_lectivo) === String(asignacionCandidata.anio_lectivo)
+        ).sort((a, b) => String(a.grado || "").localeCompare(
+            String(b.grado || ""),
+            "es",
+            { numeric: true, sensitivity: "base" }
+        ));
+    }
+
+    function idsClaseConjunta(prefijo) {
+        return $(`#${prefijo}-id-asignacion-conjunta`).value
+            .split(",")
+            .map((id) => id.trim())
+            .filter(Boolean);
+    }
+
+    function guardarIdsClaseConjunta(prefijo, ids) {
+        $(`#${prefijo}-id-asignacion-conjunta`).value = [...new Set(ids.map(String))].join(",");
+    }
+
+    function renderizarOpcionesClaseConjunta(prefijo) {
+        const contenedor = $(`#${prefijo}-opciones-clase-conjunta`);
+        const termino = normalizarBusqueda($(`#${prefijo}-buscar-clase-conjunta`).value);
+        const seleccionadas = new Set(idsClaseConjunta(prefijo));
+        const candidatos = asignacionesCorrespondientes(prefijo);
+        const visibles = candidatos.filter((item) =>
+            !termino || normalizarBusqueda(
+                [item.grado, item.materia, item.profesor, item.anio_lectivo].filter(Boolean).join(" ")
+            ).includes(termino)
         );
+
+        if (!candidatos.length) {
+            contenedor.innerHTML = '<p class="app-help">No hay otros grados con la misma materia, profesor y año lectivo.</p>';
+            return;
+        }
+        if (!visibles.length) {
+            contenedor.innerHTML = '<p class="app-help">No hay cursos que coincidan con la búsqueda.</p>';
+            return;
+        }
+
+        contenedor.innerHTML = visibles.map((item) => {
+            const id = String(item.id_asignacion);
+            return `
+                <label class="schedule-joint-option">
+                    <input type="checkbox" value="${escapar(id)}" data-clase-conjunta-opcion
+                           ${seleccionadas.has(id) ? "checked" : ""}>
+                    <span>
+                        <strong>${escapar(item.grado || "Grado no disponible")}</strong>
+                        <small>${escapar(item.materia)} · ${escapar(item.profesor)} · ${escapar(item.anio_lectivo)}</small>
+                    </span>
+                </label>
+            `;
+        }).join("");
     }
 
     function actualizarAyudaClaseConjunta(prefijo) {
@@ -308,13 +337,15 @@
     function actualizarClaseConjunta(prefijo, horarioActual = null) {
         const checkbox = $(`#${prefijo}-permite-superposicion`);
         const panel = $(`#${prefijo}-clase-conjunta-panel`);
-        const select = $(`#${prefijo}-id-asignacion-conjunta`);
+        const buscador = $(`#${prefijo}-buscar-clase-conjunta`);
+        const opciones = $(`#${prefijo}-opciones-clase-conjunta`);
         const ayuda = $(`#${prefijo}-clase-conjunta-ayuda`);
         panel.hidden = !checkbox.checked;
-        select.required = checkbox.checked;
 
         if (!checkbox.checked) {
-            select.innerHTML = '<option value="">Sin cursos correspondientes</option>';
+            guardarIdsClaseConjunta(prefijo, []);
+            buscador.value = "";
+            opciones.innerHTML = "";
             ayuda.textContent = "";
             actualizarBotonGuardar(prefijo);
             return;
@@ -322,22 +353,12 @@
 
         const candidatos = asignacionesCorrespondientes(prefijo);
         if (!candidatos.length) {
-            select.innerHTML = '<option value="">No hay cursos compatibles asignados</option>';
-            ayuda.textContent = "El otro curso debe tener asignados esta misma materia, profesor y año lectivo.";
+            guardarIdsClaseConjunta(prefijo, []);
+            renderizarOpcionesClaseConjunta(prefijo);
+            ayuda.textContent = "Los demás cursos deben tener asignados esta misma materia, profesor y año lectivo.";
             actualizarBotonGuardar(prefijo);
             return;
         }
-
-        const opcionTodos = candidatos.length > 1
-            ? `<option value="${candidatos.map((item) => escapar(item.id_asignacion)).join(",")}">Todos los cursos compatibles · ${candidatos.map((item) => escapar(item.grado)).join(", ")}</option>`
-            : "";
-        select.innerHTML = [
-            '<option value="">Seleccione los cursos correspondientes</option>',
-            opcionTodos,
-            ...candidatos.map((asignacion) =>
-                `<option value="${escapar(asignacion.id_asignacion)}">${escapar(asignacion.grado)} · ${escapar(asignacion.materia)} · ${escapar(asignacion.profesor)}</option>`
-            )
-        ].join("");
 
         let idsAsignacionesGuardadas = [];
         if (horarioActual?.id_grupo_clase_conjunta) {
@@ -350,11 +371,13 @@
         } else if (horarioActual?.id_horario_vinculado) {
             const horarioGuardado = horarios.find((item) => String(item.id_horario) === String(horarioActual.id_horario_vinculado));
             if (horarioGuardado) idsAsignacionesGuardadas = [String(horarioGuardado.id_asignacion)];
+        } else {
+            const idsCandidatos = new Set(candidatos.map((item) => String(item.id_asignacion)));
+            idsAsignacionesGuardadas = idsClaseConjunta(prefijo).filter((id) => idsCandidatos.has(id));
         }
-        const valorGuardado = idsAsignacionesGuardadas.join(",");
-        select.value = Boolean(valorGuardado) && [...select.options].some((opcion) => opcion.value === valorGuardado)
-            ? valorGuardado
-            : (opcionTodos ? candidatos.map((item) => item.id_asignacion).join(",") : String(candidatos[0].id_asignacion));
+
+        guardarIdsClaseConjunta(prefijo, idsAsignacionesGuardadas);
+        renderizarOpcionesClaseConjunta(prefijo);
         actualizarAyudaClaseConjunta(prefijo);
     }
 
@@ -904,9 +927,31 @@
             $(`#${prefijo}-permite-superposicion`).addEventListener("change", () =>
                 actualizarClaseConjunta(prefijo)
             );
-            $(`#${prefijo}-id-asignacion-conjunta`).addEventListener("change", () =>
-                actualizarAyudaClaseConjunta(prefijo)
+            $(`#${prefijo}-buscar-clase-conjunta`).addEventListener("input", () =>
+                renderizarOpcionesClaseConjunta(prefijo)
             );
+            $(`#${prefijo}-opciones-clase-conjunta`).addEventListener("change", (evento) => {
+                const opcion = evento.target.closest("[data-clase-conjunta-opcion]");
+                if (!opcion) return;
+                const seleccionadas = new Set(idsClaseConjunta(prefijo));
+                if (opcion.checked) seleccionadas.add(String(opcion.value));
+                else seleccionadas.delete(String(opcion.value));
+                guardarIdsClaseConjunta(prefijo, [...seleccionadas]);
+                actualizarAyudaClaseConjunta(prefijo);
+            });
+            $(`#${prefijo}-seleccionar-clase-conjunta`).addEventListener("click", () => {
+                guardarIdsClaseConjunta(
+                    prefijo,
+                    asignacionesCorrespondientes(prefijo).map((item) => item.id_asignacion)
+                );
+                renderizarOpcionesClaseConjunta(prefijo);
+                actualizarAyudaClaseConjunta(prefijo);
+            });
+            $(`#${prefijo}-limpiar-clase-conjunta`).addEventListener("click", () => {
+                guardarIdsClaseConjunta(prefijo, []);
+                renderizarOpcionesClaseConjunta(prefijo);
+                actualizarAyudaClaseConjunta(prefijo);
+            });
         });
 
         [$("#filtro-horario-buscar"), $("#filtro-horario-grado"), $("#filtro-horario-dia")]

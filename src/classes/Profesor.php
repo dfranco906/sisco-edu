@@ -8,6 +8,7 @@ class Profesor {
     public $cedula_identidad;
     public $user_id_global;
     public $id_profesor;
+    public $id_usuario;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -15,7 +16,8 @@ class Profesor {
 
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  SET nombre=:nombre, 
+                  SET id_usuario=:id_usuario,
+                      nombre=:nombre,
                       apellido=:apellido, 
                       cedula_identidad=:cedula, 
                       user_id_global=:user_id_global";
@@ -27,6 +29,7 @@ class Profesor {
         $this->cedula_identidad = htmlspecialchars(strip_tags($this->cedula_identidad));
         $this->user_id_global = !empty($this->user_id_global) ? $this->user_id_global : NULL;
 
+        $stmt->bindValue(":id_usuario", $this->id_usuario ?: null, $this->id_usuario ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":apellido", $this->apellido);
         $stmt->bindParam(":cedula", $this->cedula_identidad);
@@ -41,6 +44,8 @@ class Profesor {
     public function leer() {
         $query = "SELECT 
                     p.id_profesor,
+                    COALESCE(p.id_usuario, 0) AS id_usuario,
+                    COALESCE(u.usuario, 'Sin vincular') AS cuenta,
                     p.nombre,
                     p.apellido,
                     p.cedula_identidad,
@@ -57,6 +62,7 @@ class Profesor {
                     p.activo,
                     CONCAT(p.nombre, ' ', p.apellido) AS nombre_completo
                   FROM profesores p
+                  LEFT JOIN usuarios u ON u.id_usuario = p.id_usuario
                   WHERE p.activo = 1
                   ORDER BY p.nombre ASC";
 
@@ -68,6 +74,8 @@ class Profesor {
     public function leerDesactivados() {
         $query = "SELECT 
                     p.id_profesor,
+                    COALESCE(p.id_usuario, 0) AS id_usuario,
+                    COALESCE(u.usuario, 'Sin vincular') AS cuenta,
                     p.nombre,
                     p.apellido,
                     p.cedula_identidad,
@@ -84,6 +92,7 @@ class Profesor {
                     p.activo,
                     CONCAT(p.nombre, ' ', p.apellido) AS nombre_completo
                   FROM profesores p
+                  LEFT JOIN usuarios u ON u.id_usuario = p.id_usuario
                   WHERE p.activo = 0
                   ORDER BY p.nombre ASC";
 
@@ -94,7 +103,8 @@ class Profesor {
 
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . "
-                  SET nombre = :nombre,
+                  SET id_usuario = :id_usuario,
+                      nombre = :nombre,
                       apellido = :apellido,
                       cedula_identidad = :cedula,
                       user_id_global = :user_id_global
@@ -108,6 +118,7 @@ class Profesor {
         $this->user_id_global = !empty($this->user_id_global) ? $this->user_id_global : NULL;
         $this->id_profesor = htmlspecialchars(strip_tags($this->id_profesor));
 
+        $stmt->bindValue(":id_usuario", $this->id_usuario ?: null, $this->id_usuario ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":apellido", $this->apellido);
         $stmt->bindParam(":cedula", $this->cedula_identidad);

@@ -14,6 +14,7 @@ $idProfesor = filter_var($_POST['id_profesor'] ?? null, FILTER_VALIDATE_INT);
 $nombre = trim((string) ($_POST['nombre'] ?? ''));
 $apellido = trim((string) ($_POST['apellido'] ?? ''));
 $cedula = trim((string) ($_POST['cedula_identidad'] ?? ''));
+$idUsuario = filter_var($_POST['id_usuario'] ?? 0, FILTER_VALIDATE_INT) ?: null;
 
 if (!$idProfesor || $nombre === '' || $apellido === '' || $cedula === '') {
     http_response_code(422);
@@ -33,7 +34,14 @@ try {
         exit;
     }
 
+    if ($idUsuario) {
+        $cuenta = $db->prepare("SELECT COUNT(*) FROM usuarios u LEFT JOIN profesores p ON p.id_usuario=u.id_usuario AND p.id_profesor<>:profesor WHERE u.id_usuario=:id AND u.rol='Profesor' AND u.activo=1 AND p.id_profesor IS NULL");
+        $cuenta->execute([':id'=>$idUsuario,':profesor'=>$idProfesor]);
+        if (!(int)$cuenta->fetchColumn()) { http_response_code(409); echo json_encode(['success'=>false,'status'=>'error','message'=>'La cuenta no es de profesor o ya esta vinculada.']); exit; }
+    }
+
     $profesor = new Profesor($db);
+    $profesor->id_usuario = $idUsuario;
     $profesor->id_profesor = $idProfesor;
     $profesor->nombre = $nombre;
     $profesor->apellido = $apellido;

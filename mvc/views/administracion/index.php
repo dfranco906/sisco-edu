@@ -16,6 +16,7 @@
             ["Grados", "Gesti&oacute;n de grados y aula asignada.", "grados/index.php"],
             ["Materias", "Gesti&oacute;n de materias acad&eacute;micas.", "materias/index.php"],
             ["Asignaciones", "Relacionar profesores, materias, grados y horarios.", "asignaciones/index.php"],
+            ["Configuraci&oacute;n de informes", "Membrete institucional para impresi&oacute;n.", "configuracion/informes.php"],
         ];
 
         foreach ($modulos as $m):

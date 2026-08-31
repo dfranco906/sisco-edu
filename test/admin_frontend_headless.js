@@ -156,7 +156,7 @@ async function ejecutar() {
         registrar('Login', 'autenticar', /dashboard\.php/.test(login.url), login.url);
 
         const paginasCrud = [
-            ['Profesores', 'mvc/views/profesores/index.php', 0],
+            ['Profesores', 'mvc/views/profesores/index.php', 1],
             ['Estudiantes', 'mvc/views/estudiantes/index.php', 1],
             ['Materias', 'mvc/views/materias/index.php', 0],
             ['Aulas', 'mvc/views/aulas/index.php', 0],
@@ -415,6 +415,7 @@ async function ejecutar() {
                 asignacion.dispatchEvent(new Event('change', { bubbles: true }));
                 conjunta.checked = true;
                 conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+                document.querySelector('#crear-seleccionar-clase-conjunta')?.click();
                 if (cursoConjunto.value) {
                     autovinculo = true;
                     break;
@@ -433,9 +434,10 @@ async function ejecutar() {
                 asignacion.dispatchEvent(new Event('change', { bubbles: true }));
                 conjunta.checked = true;
                 conjunta.dispatchEvent(new Event('change', { bubbles: true }));
-                nivelMedioCompleto = [...cursoConjunto.options].some((opcion) => {
-                    const texto = normalizar(opcion.text);
-                    return opcion.value && texto.startsWith('2') && texto.includes('BTI') && texto.includes('CULTO');
+                nivelMedioCompleto = [...document.querySelectorAll('#crear-opciones-clase-conjunta [data-clase-conjunta-opcion]')]
+                    .some((opcion) => {
+                    const texto = normalizar(opcion.closest('label')?.textContent);
+                    return opcion.value && texto.includes('2') && texto.includes('BTI') && texto.includes('CULTO');
                 });
                 const bloques = [...document.querySelector('#crear-bloque-horario').options]
                     .map((opcion) => opcion.value);
@@ -452,15 +454,40 @@ async function ejecutar() {
                 asignacion.dispatchEvent(new Event('change', { bubbles: true }));
                 conjunta.checked = true;
                 conjunta.dispatchEvent(new Event('change', { bubbles: true }));
-                const opcionSeleccionada = cursoConjunto.selectedOptions[0]?.text || '';
+                document.querySelector('#crear-seleccionar-clase-conjunta')?.click();
+                const opcionesConjuntas = document.querySelector('#crear-opciones-clase-conjunta')?.textContent || '';
                 tercerCicloCompleto = cursoConjunto.value.split(',').filter(Boolean).length === 2
-                    && opcionSeleccionada.includes('Todos los cursos compatibles')
-                    && opcionSeleccionada.includes('8°')
-                    && opcionSeleccionada.includes('9°');
+                    && opcionesConjuntas.includes('8°')
+                    && opcionesConjuntas.includes('9°');
                 const bloques = [...document.querySelector('#crear-bloque-horario').options]
                     .map((opcion) => opcion.value);
                 bloquesTercerCicloCorrectos = bloques.includes('10:10|10:50')
                     && !bloques.includes('09:40|10:20');
+            }
+            const opcionRoboticaSegundoBcb = [...(asignacion?.options || [])].find((opcion) => {
+                const texto = normalizar(opcion.text);
+                return texto.startsWith('2') && texto.includes('BCB') && texto.includes('ROBOTICA');
+            });
+            let roboticaSegundoYTercero = false;
+            let buscadorClaseConjunta = false;
+            if (opcionRoboticaSegundoBcb) {
+                asignacion.value = opcionRoboticaSegundoBcb.value;
+                asignacion.dispatchEvent(new Event('change', { bubbles: true }));
+                conjunta.checked = true;
+                conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+                roboticaSegundoYTercero = [...document.querySelectorAll('#crear-opciones-clase-conjunta label')]
+                    .some((item) => {
+                        const texto = normalizar(item.textContent);
+                        return texto.includes('3') && texto.includes('BCB') && texto.includes('ROBOTICA');
+                    });
+                const buscadorConjunto = document.querySelector('#crear-buscar-clase-conjunta');
+                if (buscadorConjunto) {
+                    buscadorConjunto.value = '3 BCB';
+                    buscadorConjunto.dispatchEvent(new Event('input', { bubbles: true }));
+                    const visibles = [...document.querySelectorAll('#crear-opciones-clase-conjunta label')];
+                    buscadorClaseConjunta = visibles.length > 0
+                        && visibles.every((item) => normalizar(item.textContent).includes('3'));
+                }
             }
             const selectorSemanal = document.querySelector('#selector-grado-semanal');
             const opcionSeptimo = [...(selectorSemanal?.options || [])].find((opcion) =>
@@ -499,9 +526,11 @@ async function ejecutar() {
                 bloquesNivelMedioSinCambios,
                 tercerCicloCompleto,
                 bloquesTercerCicloCorrectos,
+                roboticaSegundoYTercero,
+                buscadorClaseConjunta,
                 recreoTercerCicloVisible,
                 sincronizacionExplicada: document.querySelector('#crear-clase-conjunta-ayuda')?.textContent
-                    .includes('automáticamente'),
+                    .match(/automáticamente|Seleccioná/),
                 edicionDirecta: !document.querySelector('[data-gestionar-horarios]')
                     && [...document.querySelectorAll('.schedule-entry')].every((tarjeta) =>
                         Boolean(tarjeta.querySelector('[data-editar-horario]'))
@@ -516,7 +545,7 @@ async function ejecutar() {
             'Horarios',
             'Grilla compacta, turno tarde y clase conjunta',
             horarioCrear.abierto
-                && horarioCrear.selects >= 4
+                && horarioCrear.selects >= 3
                 && horarioCrear.asignaciones > 1
                 && horarioCrear.sugerenciasInmediatas
                 && horarioCrear.seleccionAsignacionConTeclado
@@ -536,6 +565,8 @@ async function ejecutar() {
                 && horarioCrear.bloquesNivelMedioSinCambios
                 && horarioCrear.tercerCicloCompleto
                 && horarioCrear.bloquesTercerCicloCorrectos
+                && horarioCrear.roboticaSegundoYTercero
+                && horarioCrear.buscadorClaseConjunta
                 && horarioCrear.recreoTercerCicloVisible
                 && horarioCrear.sincronizacionExplicada
                 && horarioCrear.edicionDirecta
@@ -560,6 +591,64 @@ async function ejecutar() {
             registrar('Horarios', 'Editar precargado', horarioEditar.abierto && horarioEditar.profesor && horarioEditar.materia && horarioEditar.grado && horarioEditar.asignacion && horarioEditar.aulaSoloLectura && horarioEditar.excepcionDisponible, JSON.stringify(horarioEditar));
             await evaluar(`document.querySelector('[data-close-modal="modal-editar-horario"]')?.click()`);
         }
+
+        await navegar('mvc/views/planificacion/index.php');
+        const planificacion = await evaluar(`(async () => {
+            for (let i = 0; i < 60; i += 1) {
+                const select = document.querySelector('#plan-asignacion');
+                const lista = document.querySelector('#planes-lista');
+                if (select?.options.length > 1 && lista && !/Cargando/i.test(lista.textContent)) {
+                    return { asignaciones: select.options.length, lista: lista.textContent.trim().length, crear: Boolean(document.querySelector('#form-crear-plan')) };
+                }
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            return { asignaciones: 0, lista: 0, crear: false };
+        })()`, true);
+        registrar('Planificacion', 'lista y creacion', planificacion.asignaciones > 1 && planificacion.lista > 0 && planificacion.crear, JSON.stringify(planificacion));
+
+        await navegar('mvc/views/informes/diario.php');
+        const informes = await evaluar(`(async () => {
+            for (let i = 0; i < 60; i += 1) {
+                const select = document.querySelector('#informe-asignacion');
+                const lista = document.querySelector('#lista-clases');
+                if (select?.options.length > 1 && lista && !/Cargando/i.test(lista.textContent)) {
+                    return { asignaciones: select.options.length, filtro: Boolean(document.querySelector('#informe-fecha')), lista: lista.textContent.trim().length };
+                }
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            return { asignaciones: 0, filtro: false, lista: 0 };
+        })()`, true);
+        registrar('Informe diario', 'filtros y clases', informes.asignaciones > 1 && informes.filtro && informes.lista > 0, JSON.stringify(informes));
+
+        await navegar('mvc/views/configuracion/informes.php');
+        const configInformes = await evaluar(`(async () => {
+            for (let i = 0; i < 40; i += 1) {
+                const vista = document.querySelector('#membrete-actual');
+                if (vista && !/Cargando/i.test(vista.textContent)) return { vista: true, formulario: Boolean(document.querySelector('#form-membrete')) };
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            return { vista: false, formulario: false };
+        })()`, true);
+        registrar('Configuracion informes', 'membrete', configInformes.vista && configInformes.formulario, JSON.stringify(configInformes));
+
+        const resetMembrete = await evaluar(`(async () => {
+            const formulario = document.querySelector('#form-membrete');
+            const mensaje = document.querySelector('#mensaje-config-informes');
+            if (!formulario || !mensaje) return { ok: false, mensaje: 'Formulario no disponible' };
+            const fetchOriginal = window.fetch;
+            window.fetch = async () => ({
+                ok: true,
+                json: async () => ({ success: true, message: 'Membrete actualizado.', data: null })
+            });
+            formulario.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            window.fetch = fetchOriginal;
+            return {
+                ok: mensaje.classList.contains('app-message-success') && !/Cannot read properties/i.test(mensaje.textContent),
+                mensaje: mensaje.textContent
+            };
+        })()`, true);
+        registrar('Configuracion informes', 'reset despues de subir', resetMembrete.ok, JSON.stringify(resetMembrete));
 
         for (const [nombre, ruta, selector] of [
             ['Asistencia estudiantes', 'mvc/views/asistencias_estudiantes/index.php', '#tabla-body'],
@@ -595,7 +684,10 @@ async function ejecutar() {
     } finally {
         chrome.kill();
         await demora(200);
-        fs.rmSync(profilePath, { recursive: true, force: true });
+        for (let intento = 0; intento < 5; intento += 1) {
+            try { fs.rmSync(profilePath, { recursive: true, force: true }); break; }
+            catch (error) { if (intento === 4) console.warn(`No se pudo limpiar el perfil temporal: ${error.message}`); else await demora(200); }
+        }
     }
 }
 
