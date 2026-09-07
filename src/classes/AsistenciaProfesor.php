@@ -33,6 +33,31 @@ class AsistenciaProfesor {
         return $stmt->execute();
     }
 
+    /**
+     * Registra una unica marca para el profesor dentro de la franja de la
+     * clase. La tabla historica no tiene id_clase, por lo que la franja es la
+     * asociacion disponible y tambien la clave de idempotencia.
+     *
+     * @return array{id_asistencia_profesor:int,creada:bool}
+     */
+    public function registrarOReutilizar(int $idProfesor, int $idHuella, string $fecha, string $hora, string $horaInicio, string $horaFin): array {
+        $inicioTolerancia = (new DateTimeImmutable($fecha . ' ' . $horaInicio))->modify('-10 minutes')->format('H:i:s');
+        $buscar = $this->conn->prepare("SELECT id_asistencia_profesor
+            FROM {$this->table_name}
+            WHERE id_profesor=:profesor AND activo=1 AND fecha=:fecha
+              AND hora>=:inicio AND hora<:fin
+            ORDER BY hora,id_asistencia_profesor LIMIT 1 FOR UPDATE");
+        $buscar->execute([':profesor'=>$idProfesor, ':fecha'=>$fecha, ':inicio'=>$inicioTolerancia, ':fin'=>$horaFin]);
+        $existente = $buscar->fetchColumn();
+        if ($existente !== false) return ['id_asistencia_profesor'=>(int)$existente, 'creada'=>false];
+
+        $insertar = $this->conn->prepare("INSERT INTO {$this->table_name}
+            (id_profesor,huella_id,fecha,hora,estado)
+            VALUES (:profesor,:huella,:fecha,:hora,'PRESENTE')");
+        $insertar->execute([':profesor'=>$idProfesor, ':huella'=>$idHuella, ':fecha'=>$fecha, ':hora'=>$hora]);
+        return ['id_asistencia_profesor'=>(int)$this->conn->lastInsertId(), 'creada'=>true];
+    }
+
     public function leer() {
         $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido) AS profesor, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
                   FROM {$this->table_name} ap

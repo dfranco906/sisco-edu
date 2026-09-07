@@ -6,7 +6,7 @@ require_once __DIR__ . '/../src/classes/ClaseDiaria.php';
 $db=(new Database())->getConnection();
 $token='PLAN_TEST_'.date('YmdHis').'_'.random_int(100,999);
 $ciBase=substr(hash('sha256',$token),0,12);
-$ids=['eventos'=>[],'estudiantes'=>[],'unidades'=>[],'capacidades'=>[],'temas'=>[]];
+$ids=['eventos'=>[],'asistencias_estudiantes'=>[],'estudiantes'=>[],'unidades'=>[],'capacidades'=>[],'temas'=>[]];
 $resultados=[];
 function comprobar(bool $condicion,string $nombre): void { global $resultados; $resultados[]=[$condicion,$nombre]; echo ($condicion?'OK':'FALLA')." | $nombre\n"; if(!$condicion)throw new RuntimeException("Fallo: $nombre"); }
 function insertar(PDO $db,string $sql,array $params): int {$s=$db->prepare($sql);$s->execute($params);return(int)$db->lastInsertId();}
@@ -48,7 +48,10 @@ try {
     $propias=$servicioProfesor->asignacionesDisponibles();
     comprobar(count($propias)===1&&(int)$propias[0]['id_asignacion']===$ids['asignacion'],'profesor solo lista su asignacion vinculada');
 
-    for($i=0;$i<3;$i++)$ids['eventos'][]=insertar($db,"INSERT INTO eventos_asistencia (user_id_global,id_aula,estado,timestamp_evento,origen_node_id,sincronizado,activo) VALUES (:u,:a,'PRESENTE','2026-08-31 07:10:00','TEST',1,1)",[':u'=>$token.'_EST_'.($i+1),':a'=>$ids['aula']]);
+    for($i=0;$i<3;$i++){
+        $ids['eventos'][]=insertar($db,"INSERT INTO eventos_asistencia (user_id_global,id_aula,estado,timestamp_evento,origen_node_id,sincronizado,activo) VALUES (:u,:a,'PRESENTE','2026-08-31 07:10:00','TEST',1,1)",[':u'=>$token.'_EST_'.($i+1),':a'=>$ids['aula']]);
+        $ids['asistencias_estudiantes'][]=insertar($db,"INSERT INTO asistencias_estudiantes (id_estudiante,huella_id,fecha,hora,estado,activo) VALUES (:estudiante,1,'2026-08-31','07:10:00','PRESENTE',1)",[':estudiante'=>$ids['estudiantes'][$i]]);
+    }
     $clases=new ClaseDiaria($db);$ids['clase']=$clases->crearORecuperar($ids['asignacion'],$ids['horario'],'2026-08-31','07:00:00','07:40:00');
     $repetida=$clases->crearORecuperar($ids['asignacion'],$ids['horario'],'2026-08-31','07:00:00','07:40:00');
     comprobar($ids['clase']===$repetida,'marca repetida recupera la misma clase');
@@ -70,6 +73,7 @@ try {
         if(!empty($ids['clase_sin_contenido']))$db->prepare('DELETE FROM clases_diarias WHERE id_clase=?')->execute([$ids['clase_sin_contenido']]);
         if(!empty($ids['plan'])){$db->prepare('DELETE pi FROM plan_indicadores pi JOIN plan_temas t ON t.id_tema=pi.id_tema JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE t FROM plan_temas t JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE c FROM plan_capacidades c JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE FROM plan_unidades WHERE id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE FROM planes_anuales WHERE id_plan=?')->execute([$ids['plan']]);}
         foreach($ids['eventos'] as $id)$db->prepare('DELETE FROM eventos_asistencia WHERE id_evento=?')->execute([$id]);
+        foreach($ids['asistencias_estudiantes'] as $id)$db->prepare('DELETE FROM asistencias_estudiantes WHERE id_asistencia_estudiante=?')->execute([$id]);
         if(!empty($ids['horario']))$db->prepare('DELETE FROM horarios WHERE id_horario=?')->execute([$ids['horario']]);
         if(!empty($ids['asignacion']))$db->prepare('DELETE FROM asignacion_docente WHERE id_asignacion=?')->execute([$ids['asignacion']]);
         foreach($ids['estudiantes'] as $id)$db->prepare('DELETE FROM estudiantes WHERE id_estudiante=?')->execute([$id]);

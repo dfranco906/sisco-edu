@@ -33,6 +33,24 @@ class AsistenciaEstudiante {
         return $stmt->execute();
     }
 
+    /** @return array{id_asistencia_estudiante:int,creada:bool} */
+    public function registrarOReutilizar(int $idEstudiante, int $idHuella, string $fecha, string $hora, string $horaInicio, string $horaFin): array {
+        $buscar = $this->conn->prepare("SELECT id_asistencia_estudiante
+            FROM {$this->table_name}
+            WHERE id_estudiante=:estudiante AND activo=1 AND fecha=:fecha
+              AND hora>=:inicio AND hora<:fin
+            ORDER BY hora,id_asistencia_estudiante LIMIT 1 FOR UPDATE");
+        $buscar->execute([':estudiante'=>$idEstudiante, ':fecha'=>$fecha, ':inicio'=>$horaInicio, ':fin'=>$horaFin]);
+        $existente = $buscar->fetchColumn();
+        if ($existente !== false) return ['id_asistencia_estudiante'=>(int)$existente, 'creada'=>false];
+
+        $insertar = $this->conn->prepare("INSERT INTO {$this->table_name}
+            (id_estudiante,huella_id,fecha,hora,estado)
+            VALUES (:estudiante,:huella,:fecha,:hora,'PRESENTE')");
+        $insertar->execute([':estudiante'=>$idEstudiante, ':huella'=>$idHuella, ':fecha'=>$fecha, ':hora'=>$hora]);
+        return ['id_asistencia_estudiante'=>(int)$this->conn->lastInsertId(), 'creada'=>true];
+    }
+
     public function leer() {
         $query = "SELECT ae.*, e.nombre, e.apellido, g.nombre AS grado
                   FROM {$this->table_name} ae

@@ -10,6 +10,15 @@ class ClaseDiaria
     public function procesarMarcaProfesor(string $userIdGlobal,int $idAula,string $momento): ?int
     {
         $fecha=$this->momento($momento);
+        $horario=$this->buscarHorarioProfesor($userIdGlobal,$idAula,$fecha);
+        if(!$horario)return null;
+        return $this->crearORecuperar((int)$horario['id_asignacion'],(int)$horario['id_horario'],substr($fecha,0,10),$horario['hora_inicio'],$horario['hora_fin']);
+    }
+
+    /** @return array<string,mixed>|null */
+    public function buscarHorarioProfesor(string $userIdGlobal,int $idAula,string $momento): ?array
+    {
+        $fecha=$this->momento($momento);
         $stmt=$this->db->prepare("SELECT h.id_horario,h.id_asignacion,h.hora_inicio,h.hora_fin
             FROM profesores p
             JOIN asignacion_docente ad ON ad.id_profesor=p.id_profesor AND ad.activo=1
@@ -23,8 +32,32 @@ class ClaseDiaria
             ORDER BY (TIME(:momento)>=h.hora_inicio) DESC, ABS(TIME_TO_SEC(TIMEDIFF(TIME(:momento),h.hora_inicio))),h.id_horario LIMIT 1");
         $stmt->execute([':usuario'=>$userIdGlobal,':aula'=>$idAula,':momento'=>$fecha]);
         $horario=$stmt->fetch(PDO::FETCH_ASSOC);
-        if(!$horario)return null;
-        return $this->crearORecuperar((int)$horario['id_asignacion'],(int)$horario['id_horario'],substr($fecha,0,10),$horario['hora_inicio'],$horario['hora_fin']);
+        return $horario?:null;
+    }
+
+    /**
+     * Devuelve la clase abierta por su profesor para una marca estudiantil.
+     * No crea clases: un alumno nunca puede abrir una clase por si solo.
+     */
+    public function buscarClaseActivaParaAlumno(int $idAula, string $momento, int $ventanaMinutos): ?array
+    {
+        $fecha = $this->momento($momento);
+        if ($ventanaMinutos < 1 || $ventanaMinutos > 120) throw new PedagogiaException('Ventana de asistencia invalida.');
+        $sql = "SELECT cd.id_clase,cd.id_asignacion,cd.id_horario,cd.fecha,cd.hora_inicio,cd.hora_fin,
+                       ad.id_profesor,ad.id_grado,ap.hora AS hora_apertura
+                FROM clases_diarias cd
+                JOIN asignacion_docente ad ON ad.id_asignacion=cd.id_asignacion AND ad.activo=1
+                JOIN grados g ON g.id_grado=ad.id_grado AND g.id_aula=:aula AND g.activo=1
+                JOIN asistencias_profesores ap ON ap.id_profesor=ad.id_profesor AND ap.activo=1 AND ap.fecha=cd.fecha
+                WHERE cd.fecha=DATE(:momento)
+                  AND TIME(:momento)>=cd.hora_inicio AND TIME(:momento)<cd.hora_fin
+                  AND ap.hora>=SUBTIME(cd.hora_inicio,'00:10:00') AND ap.hora<cd.hora_fin
+                  AND TIME(:momento)<=ADDTIME(ap.hora,SEC_TO_TIME(:ventana * 60))
+                ORDER BY ap.hora DESC,cd.id_clase DESC LIMIT 1";
+        $stmt=$this->db->prepare($sql);
+        $stmt->execute([':aula'=>$idAula, ':momento'=>$fecha, ':ventana'=>$ventanaMinutos]);
+        $fila=$stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila ?: null;
     }
 
     public function crearManual(int $idAsignacion,string $fecha,?int $idHorario=null): int
@@ -95,10 +128,7 @@ class ClaseDiaria
             FROM clase_diaria_indicadores ci JOIN plan_indicadores i ON i.id_indicador=ci.id_indicador
             WHERE ci.id_clase=:id ORDER BY i.orden,i.id_indicador",[':id'=>$idClase]);
         $clase['estudiantes']=$this->filas("SELECT e.id_estudiante,e.nombre,e.apellido,
-            CASE WHEN EXISTS(SELECT 1 FROM eventos_asistencia ea WHERE ea.user_id_global=e.user_id_global AND ea.activo=1
-                AND DATE(ea.timestamp_evento)=cd.fecha AND TIME(ea.timestamp_evento)>=cd.hora_inicio AND TIME(ea.timestamp_evento)<cd.hora_fin
-                AND (ea.id_aula=g.id_aula OR ea.id_aula IS NULL))
-              OR EXISTS(SELECT 1 FROM asistencias_estudiantes ae WHERE ae.id_estudiante=e.id_estudiante AND ae.activo=1
+            CASE WHEN EXISTS(SELECT 1 FROM asistencias_estudiantes ae WHERE ae.id_estudiante=e.id_estudiante AND ae.activo=1
                 AND ae.fecha=cd.fecha AND ae.hora>=cd.hora_inicio AND ae.hora<cd.hora_fin AND ae.estado IN ('PRESENTE','TARDANZA'))
               THEN 'PRESENTE' ELSE 'AUSENTE' END estado,
             (SELECT ae.id_asistencia_estudiante FROM asistencias_estudiantes ae WHERE ae.id_estudiante=e.id_estudiante AND ae.activo=1

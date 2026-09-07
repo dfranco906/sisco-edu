@@ -302,8 +302,10 @@ void procesarAsistenciaEntrante(const String &payload) {
                 idAula, tipo.c_str(), estado.c_str());
   HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/registrar_asistencia.php")) return;
   http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const int codigo = http.POST("id_aula=" + String(idAula) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&estado=" + urlEncode(estado)); http.end();
+  const int codigo = http.POST("id_aula=" + String(idAula) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&estado=" + urlEncode(estado));
+  const String respuesta = http.getString(); http.end();
   Serial.printf("[ASISTENCIA] Registro enviado a la API (HTTP %d)\n", codigo);
+  if (respuesta.length()) Serial.printf("[API] %s\n", respuesta.c_str());
 }
 
 void atenderMensajesLoRa() {
