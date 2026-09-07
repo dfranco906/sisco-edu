@@ -7,8 +7,8 @@
 #include "dy50_template_transport.h"
 
 // Debe coincidir con aulas.id_aula; el codigo es solo para la pantalla.
-const int ID_AULA = 18;
-const char *CODIGO_AULA = "AULA_A";
+const int ID_AULA = 30 ;
+const char *CODIGO_AULA = "3_RO_BTI";
 const int MI_LORA_ID = 101;
 const int GATEWAY_LORA_ID = 100;
 const int LORA_NETWORK_ID = 18;
