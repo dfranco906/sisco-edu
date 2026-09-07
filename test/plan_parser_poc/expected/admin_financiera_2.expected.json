@@ -1,0 +1,51 @@
+{
+  "filename": "Plan Anual - segundo curso - BTI - Administracion financiera.pdf",
+  "sha256": "8ec14c4156401c3f9b58ca011d9720d31cce3ac0ad0f05c54c19fbdb3814b333",
+  "format": "ADMINISTRACION_FINANCIERA",
+  "pages": 1,
+  "metadata": {
+    "institucion": "COL. PRIV. PRESB. SAN PABLO",
+    "materia": "ADMINISTRACIÓN FINANCIERA",
+    "profesor": "LIC. DANILO FRANCO",
+    "curso": "2ºC-BTI",
+    "turno": "MAÑANA",
+    "anio": 2026
+  },
+  "counts": { "unidades": 6, "capacidades": 6, "temas": 6, "indicadores": 18 },
+  "structure_sha256": "b4de712d31daffcbc130f0524bcf6416cefda4404bf32114d30f2e4115e10a88",
+  "unit_codes": ["I", "II", "III", "IV", "V", "VI"],
+  "unit_names": [
+    "Fundamentos de las Finanzas y la Empresa",
+    "El Proceso de Registración Contable",
+    "Organización y Soporte Documental",
+    "Libros Contables y Registración Legal",
+    "Gestión Impositiva Aplicada",
+    "Cierre de Ciclo y Herramientas Tecnológicas"
+  ],
+  "unit_hours": [8, 8, 12, 20, 12, 20],
+  "unit_processes": ["Marzo", "Abril", "Abril - Mayo", "Junio - Agosto", "Septiembre", "Octubre - Noviembre"],
+  "topic_codes": [],
+  "indicator_counts_by_unit": [3, 3, 3, 3, 3, 3],
+  "procedures_by_unit": [
+    ["Observación", "Análisis de tareas"],
+    ["Prueba de desempeño"],
+    ["Observación"],
+    ["Ejercicios Prácticos"],
+    ["Resolución de problemas"],
+    ["Proyecto Integrador"]
+  ],
+  "instruments_by_unit": [
+    ["Lista de Cotejo", "RSA"],
+    ["Rúbrica"],
+    ["Lista de Cotejo", "Portafolio"],
+    ["Prueba Escrita", "RSA"],
+    ["Prueba Práctica"],
+    ["Rúbrica de Proyecto"]
+  ],
+  "samples": {
+    "topic_title": "Finanzas personales, sociales y en crisis. La empresa como unidad económica. Eficiencia y Eficacia.",
+    "indicator_text": "Define administración financiera."
+  },
+  "warning_types": [],
+  "confidence_global": 100
+}

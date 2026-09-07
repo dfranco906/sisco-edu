@@ -379,9 +379,97 @@ async function ejecutar() {
             registrar(nombre, 'texto UTF-8', !controles.mojibake, controles.mojibake ? 'texto corrupto visible' : 'correcto');
         }
 
+        await navegar('mvc/views/profesores/index.php');
+        await esperarTabla();
+        const distribucionHuella = await evaluar(`(async () => {
+            const registrar = [...document.querySelectorAll('[data-accion-registro="huella"][data-tipo-persona="profesor"]')];
+            const enviar = document.querySelector('[data-accion-registro="sincronizar-huella"]');
+            enviar?.click();
+            for (let i = 0; i < 50 && !document.querySelector('#modal-aulas-huella'); i += 1) {
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            const modal = document.querySelector('#modal-aulas-huella');
+            const resultado = {
+                registrar: registrar.length,
+                enviar: Boolean(enviar),
+                modal: Boolean(modal),
+                aulas: modal?.querySelectorAll('input[type="checkbox"]').length || 0
+            };
+            modal?.querySelector('[data-cancelar-aulas]')?.click();
+            return resultado;
+        })()`, true);
+        registrar('Profesores', 'distribucion de huella por aula', distribucionHuella.registrar > 0 && distribucionHuella.enviar && distribucionHuella.modal && distribucionHuella.aulas > 0, JSON.stringify(distribucionHuella));
+
         await navegar('mvc/views/horarios/index.php');
         const horariosListos = await esperarTabla('#tabla-horarios-body');
         registrar('Horarios', 'listar', horariosListos, horariosListos ? 'tabla respondio' : 'tabla quedo cargando');
+        const coincidenciasCompletas = await evaluar(`(() => {
+            document.querySelector('#btn-crear-horario')?.click();
+            const select = document.querySelector('#crear-id-asignacion');
+            const buscador = document.querySelector('#crear-buscar-asignacion');
+            const panel = document.querySelector('#crear-asignacion-sugerencias');
+            const normalizar = texto => texto.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+            buscador.value = '9';
+            buscador.dispatchEvent(new Event('input', { bubbles: true }));
+            const esperadas = [...select.options].filter(o => o.value && normalizar(o.textContent).includes('9'));
+            const visibles = [...panel.querySelectorAll('[role=option]')];
+            const matematica = visibles.find(o => normalizar(o.textContent).includes('matematica'));
+            const esperadaMatematica = esperadas.find(o => normalizar(o.textContent).includes('matematica'));
+            matematica?.click();
+            const seleccionCorrecta = !esperadaMatematica || select.value === esperadaMatematica.value;
+            buscador.value = '';
+            buscador.dispatchEvent(new Event('input', { bubbles: true }));
+            return { esperadas: esperadas.length, visibles: visibles.length, seleccionCorrecta,
+                todas: panel.querySelectorAll('[role=option]').length === [...select.options].filter(o => o.value).length };
+        })()`);
+        registrar('Horarios', 'todas las asignaciones y Matemática de noveno seleccionable',
+            coincidenciasCompletas.esperadas === coincidenciasCompletas.visibles
+                && coincidenciasCompletas.seleccionCorrecta && coincidenciasCompletas.todas,
+            JSON.stringify(coincidenciasCompletas));
+        const conjuntaMixta = await evaluar(`(async () => {
+            const respuesta = await fetch(window.HORARIOS_CONFIG.apiAsignaciones);
+            const json = await respuesta.json();
+            const lista = json.data || json;
+            let principal, otra;
+            for (const candidata of lista) {
+                const compatible = lista.find(x => String(x.id_profesor) === String(candidata.id_profesor)
+                    && String(x.anio_lectivo) === String(candidata.anio_lectivo)
+                    && String(x.id_grado) !== String(candidata.id_grado)
+                    && String(x.id_materia) !== String(candidata.id_materia));
+                if (compatible) { principal = candidata; otra = compatible; break; }
+            }
+            if (!principal) return { fixture: false };
+            const select = document.querySelector('#crear-id-asignacion');
+            const conjunta = document.querySelector('#crear-permite-superposicion');
+            const mixta = document.querySelector('#crear-materias-distintas');
+            select.value = principal.id_asignacion;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            conjunta.checked = true; conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+            const opciones = () => [...document.querySelectorAll('#crear-opciones-clase-conjunta [data-clase-conjunta-opcion]')];
+            const sinOptIn = !opciones().some(o => o.value === String(otra.id_asignacion));
+            mixta.checked = true; mixta.dispatchEvent(new Event('change', { bubbles: true }));
+            const encontrada = opciones().find(o => o.value === String(otra.id_asignacion));
+            encontrada?.click();
+            const campo = document.querySelector('#crear-id-asignacion-conjunta');
+            const seleccionada = campo.value.split(',').includes(String(otra.id_asignacion));
+            const textoAyuda = document.querySelector('#crear-clase-conjunta-ayuda').textContent;
+            const alternativas = opciones().filter(o => lista.some(x => String(x.id_asignacion) === o.value
+                && String(x.id_grado) === String(otra.id_grado) && o.value !== String(otra.id_asignacion)));
+            alternativas[0]?.click();
+            const grados = campo.value.split(',').filter(Boolean).map(id => lista.find(x => String(x.id_asignacion) === id)?.id_grado);
+            const gradoUnico = new Set(grados).size === grados.length;
+            mixta.checked = false; mixta.dispatchEvent(new Event('change', { bubbles: true }));
+            const soloMismaMateria = campo.value.split(',').filter(Boolean).every(id => {
+                const a = lista.find(x => String(x.id_asignacion) === id);
+                return String(a.id_materia) === String(principal.id_materia);
+            });
+            conjunta.checked = false; conjunta.dispatchEvent(new Event('change', { bubbles: true }));
+            return { fixture: true, sinOptIn, visible: Boolean(encontrada), seleccionada,
+                materiaEnResumen: textoAyuda.includes(otra.materia), gradoUnico, soloMismaMateria,
+                csrf: document.querySelector('#form-crear-horario [name=horarios_csrf]').value.length === 64 };
+        })()`, true);
+        registrar('Horarios', 'materias distintas explícitas y una asignación por grado',
+            Object.values(conjuntaMixta).every(Boolean), JSON.stringify(conjuntaMixta));
         const horarioCrear = await evaluar(`(() => {
             document.querySelector('#btn-crear-horario')?.click();
             const modal = document.querySelector('#modal-crear-horario');

@@ -1,0 +1,927 @@
+{
+    "schema_version": "1.0-poc",
+    "source": {
+        "filename": "Plan Anual - tercer curso - BTI - Administracion financiera.pdf",
+        "format": "ADMINISTRACION_FINANCIERA",
+        "sha256": "acd9386793187062107c6412de12986c897be0e49fc9c59bdd83fa5f57905143",
+        "pages": 1,
+        "text_layer": true,
+        "extractor": {
+            "name": "pdftotext",
+            "mode": "table",
+            "binary": "C:\\Program Files\\Git\\mingw64\\bin\\pdftotext.exe",
+            "elapsed_ms": 39.79,
+            "stderr": null
+        }
+    },
+    "metadata": {
+        "institucion": "COL. PRIV. PRESB. SAN PABLO",
+        "materia": "ADMINISTRACIÓN FINANCIERA",
+        "profesor": "LIC. DANILO FRANCO",
+        "curso": "3ºC-BTI",
+        "turno": "MAÑANA",
+        "anio": 2026,
+        "dias_clase": null,
+        "competencia_general": "- Aplica conceptos y procedimientos básicos en la elaboración de: presupuesto, valuación de inventarios e índices financieros en situaciones problemáticas con datos reales acordes a diferentes contextos.",
+        "competencia_especifica": "- Comprende las implicancias de la correcta planificación, organización y métodos aplicado en las empresas adecuadas al sistema jurídico nacional."
+    },
+    "unidades": [
+        {
+            "orden": 1,
+            "codigo": "I",
+            "nombre": "La Administración Financiera y la Información",
+            "descripcion": null,
+            "horas_catedra": 16,
+            "tiempo_texto": "16",
+            "proceso_texto": "Febrero - Marzo",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Describe la función de la Adm. Financiera dentro de la Empresa, sus aplicaciones y posibilidades de desarrollo.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "1.1",
+                            "titulo": "El rol del administrador financiero en la era digital.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Define la administración financiera y su importancia.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Análisis de tareas."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo",
+                                "RSA (Registro de Secuencia de Aprendizaje)."
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "1.2",
+                            "titulo": "Interacción entre finanzas e informática.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Identifica las funciones del área informática en el soporte financiero.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Análisis de tareas."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo",
+                                "RSA (Registro de Secuencia de Aprendizaje)."
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "1.3",
+                            "titulo": "Sistemas de información aplicados (ERP, CRM).",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Describe el flujo de información en una empresa.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Análisis de tareas."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo",
+                                "RSA (Registro de Secuencia de Aprendizaje)."
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 2,
+            "codigo": "II",
+            "nombre": "Planificación y Presupuesto",
+            "descripcion": null,
+            "horas_catedra": 32,
+            "tiempo_texto": "32",
+            "proceso_texto": "Marzo - Abril",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Elabora diferentes tipos de presupuesto que respondan a las necesidades de la organización.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "2.1",
+                            "titulo": "Naturaleza del proceso presupuestario.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Identifica los elementos del sistema presupuestario.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Pruebas de desempeño",
+                                "Observación."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Rúbrica de proyecto",
+                                "Prueba Práctica."
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "2.2",
+                            "titulo": "Presupuesto de Ventas, Producción y Gastos.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Elabora un presupuesto operativo con datos reales.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Pruebas de desempeño",
+                                "Observación."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Rúbrica de proyecto",
+                                "Prueba Práctica."
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "2.3",
+                            "titulo": "El Presupuesto de Caja (Cash Flow) en Excel.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Utiliza planillas electrónicas para proyecciones financieras.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Pruebas de desempeño",
+                                "Observación."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Rúbrica de proyecto",
+                                "Prueba Práctica."
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 3,
+            "codigo": "III",
+            "nombre": "Gestión de Activos y Valuación",
+            "descripcion": null,
+            "horas_catedra": 32,
+            "tiempo_texto": "32",
+            "proceso_texto": "Mayo - Junio",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Resuelve problemas con datos reales que involucren diferentes tipos de valuación (Inventarios y Caja).",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "3.1",
+                            "titulo": "Valuación de inventarios: FIFO, LIFO y PPP.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Calcula el costo de ventas por diferentes métodos.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Análisis de productos (Ejercicios prácticos)."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Escala de calificación",
+                                "Guía de ejercicios."
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "3.2",
+                            "titulo": "Arqueo de Caja y Conciliación Bancaria automática.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Realiza conciliaciones bancarias detectando discrepancias",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Análisis de productos (Ejercicios prácticos)."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Escala de calificación",
+                                "Guía de ejercicios."
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "3.3",
+                            "titulo": "Control de existencias mediante",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Ejecuta arqueos de caja con precisión.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Análisis de productos (Ejercicios prácticos)."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Escala de calificación",
+                                "Guía de ejercicios."
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 4,
+            "codigo": "IV",
+            "nombre": "Análisis Financiero y Auditoría",
+            "descripcion": null,
+            "horas_catedra": 32,
+            "tiempo_texto": "32",
+            "proceso_texto": "Julio - Agosto",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Relaciona los diferentes tipos de ratios financieros y de apalancamiento con el balance general y estado de resultados.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "4.1",
+                            "titulo": "Índices de Liquidez, Solvencia y Rentabilidad.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Calcula ratios financieros fundamentales.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Prueba escrita",
+                                "Análisis de casos."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Cuestionario",
+                                "Rúbrica de análisis de caso."
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "4.2",
+                            "titulo": "Introducción a la Auditoría Financiera e Informática.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Interpreta el significado de los ratios para la toma de decisiones.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Prueba escrita",
+                                "Análisis de casos."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Cuestionario",
+                                "Rúbrica de análisis de caso."
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "4.3",
+                            "titulo": "Análisis de sensibilidad en la toma",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Describe la importancia de la auditoría en la transparencia financiera.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Prueba escrita",
+                                "Análisis de casos."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Cuestionario",
+                                "Rúbrica de análisis de caso."
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 5,
+            "codigo": "V",
+            "nombre": "Gestión Operativa y Diagramación",
+            "descripcion": null,
+            "horas_catedra": 32,
+            "tiempo_texto": "32",
+            "proceso_texto": "Septiembre - Octubre",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Aplica los principios de diagramación en el proceso de planificación y ejecución de actividades.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "5.1",
+                            "titulo": "Herramientas de planificación: Cronogramas y Diagramas de Gantt.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Diseña diagramas de Gantt para proyectos informáticos.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Producción de informes",
+                                "Observación."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo para diagramas",
+                                "Portafolio."
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "5.2",
+                            "titulo": "Método del Camino Crítico (PERT).",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Identifica la ruta crítica en un proceso administrativo.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Producción de informes",
+                                "Observación."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo para diagramas",
+                                "Portafolio."
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "5.3",
+                            "titulo": "Gestión de personas y clima",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Reconoce factores motivacionales en la gestión de RRHH.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Producción de informes",
+                                "Observación."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo para diagramas",
+                                "Portafolio."
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 6,
+            "codigo": "VI",
+            "nombre": "Marco Legal y Fiscal Actualizado",
+            "descripcion": null,
+            "horas_catedra": 16,
+            "tiempo_texto": "16",
+            "proceso_texto": "Noviembre",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Conoce la aplicación de impuestos y normativas vigentes en el ámbito comercial.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "6.1",
+                            "titulo": "Adecuación Fiscal: Del IRACIS al IRE (General, Simple, Resimple).",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Distingue los regímenes del IRE aplicables a diferentes empresas.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Pruebas objetivas",
+                                "Análisis de documentos."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Examen final",
+                                "Guía de trabajo legal."
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "6.2",
+                            "titulo": "Documentaciones legales y libros obligatorios (Repaso 2do).",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Identifica las obligaciones del empleador ante IPS.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Pruebas objetivas",
+                                "Análisis de documentos."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Examen final",
+                                "Guía de trabajo legal."
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "6.3",
+                            "titulo": "Seguridad Social (IPS) y Código Laboral.",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Valora el cumplimiento legal para la sostenibilidad empresarial.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Pruebas objetivas",
+                                "Análisis de documentos."
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Examen final",
+                                "Guía de trabajo legal."
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "warnings": [],
+    "confidence": {
+        "scale": "rule_completeness_0_100",
+        "metadata": 100,
+        "estructura": 100,
+        "asociaciones": 100,
+        "global": 100,
+        "criteria": {
+            "metadata": {
+                "expected": [
+                    "institucion",
+                    "materia",
+                    "profesor",
+                    "curso",
+                    "turno",
+                    "anio",
+                    "competencia_general",
+                    "competencia_especifica"
+                ],
+                "found": [
+                    "institucion",
+                    "materia",
+                    "profesor",
+                    "curso",
+                    "turno",
+                    "anio",
+                    "competencia_general",
+                    "competencia_especifica"
+                ]
+            },
+            "estructura": [
+                {
+                    "criterion": "Existe al menos una unidad",
+                    "weight": 15,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todas las unidades tienen capacidad",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todas las capacidades tienen tema",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todos los temas tienen indicador",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Órdenes secuenciales no vacíos",
+                    "weight": 5,
+                    "passed": true
+                },
+                {
+                    "criterion": "Códigos jerárquicos coherentes o no aplicables",
+                    "weight": 10,
+                    "passed": true
+                },
+                {
+                    "criterion": "Horas presentes cuando el formato las exige",
+                    "weight": 10,
+                    "passed": true
+                }
+            ],
+            "asociaciones": [
+                {
+                    "criterion": "Sin temas huérfanos",
+                    "weight": 40,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin indicadores huérfanos",
+                    "weight": 40,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin columnas ambiguas",
+                    "weight": 10,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin reconstrucción conservadora de tabla",
+                    "weight": 10,
+                    "passed": true
+                }
+            ],
+            "formula_global": "30% metadata + 40% estructura + 30% asociaciones"
+        }
+    },
+    "debug": {
+        "columns": {
+            "unit": {
+                "x_char_start": 0,
+                "x_char_end": 33,
+                "x_relative_start": 0,
+                "x_relative_end": 0.132
+            },
+            "capacity": {
+                "x_char_start": 33,
+                "x_char_end": 59,
+                "x_relative_start": 0.132,
+                "x_relative_end": 0.236
+            },
+            "topic": {
+                "x_char_start": 59,
+                "x_char_end": 100,
+                "x_relative_start": 0.236,
+                "x_relative_end": 0.4
+            },
+            "indicator": {
+                "x_char_start": 100,
+                "x_char_end": 175,
+                "x_relative_start": 0.4,
+                "x_relative_end": 0.7
+            },
+            "procedure": {
+                "x_char_start": 175,
+                "x_char_end": 192,
+                "x_relative_start": 0.7,
+                "x_relative_end": 0.768
+            },
+            "instrument": {
+                "x_char_start": 192,
+                "x_char_end": 210,
+                "x_relative_start": 0.768,
+                "x_relative_end": 0.84
+            },
+            "time": {
+                "x_char_start": 210,
+                "x_char_end": 220,
+                "x_relative_start": 0.84,
+                "x_relative_end": 0.88
+            },
+            "process": {
+                "x_char_start": 220,
+                "x_char_end": 250,
+                "x_relative_start": 0.88,
+                "x_relative_end": 1
+            }
+        },
+        "unit_markers": [
+            {
+                "code": "I",
+                "page": 1,
+                "line": 19
+            },
+            {
+                "code": "II",
+                "page": 1,
+                "line": 35
+            },
+            {
+                "code": "III",
+                "page": 1,
+                "line": 47
+            },
+            {
+                "code": "IV",
+                "page": 1,
+                "line": 61
+            },
+            {
+                "code": "V",
+                "page": 1,
+                "line": 75
+            },
+            {
+                "code": "VI",
+                "page": 1,
+                "line": 89
+            }
+        ],
+        "association_rule": "Celdas verticales por punto medio entre unidades; tema/indicador por orden solo cuando las cantidades coinciden.",
+        "format_detection": {
+            "format": "ADMINISTRACION_FINANCIERA",
+            "threshold": 60,
+            "minimum_margin": 15,
+            "winning_score": 105,
+            "margin": 89,
+            "scores": {
+                "ADMINISTRACION_FINANCIERA": {
+                    "score": 105,
+                    "signals": [
+                        {
+                            "signal": "Título Administración Financiera",
+                            "weight": 25,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Unidad Temática y Capacidades",
+                            "weight": 20,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Procedimientos Evaluativos",
+                            "weight": 15,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Instrumentos Evaluativos",
+                            "weight": 15,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Tiempo HC/Horas Cátedra",
+                            "weight": 10,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Proceso/Meses",
+                            "weight": 10,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Competencia General",
+                            "weight": 5,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Competencia Específica",
+                            "weight": 5,
+                            "matched": true
+                        }
+                    ]
+                },
+                "EXCEL_AVANZADO": {
+                    "score": 16,
+                    "signals": [
+                        {
+                            "signal": "Título Microsoft Excel",
+                            "weight": 25,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Unidad, Capacidades y Temas",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Columna Check",
+                            "weight": 18,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Proceso para desarrollo",
+                            "weight": 22,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Procedimientos",
+                            "weight": 8,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Instrumentos",
+                            "weight": 8,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Códigos de tema",
+                            "weight": 10,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Códigos de indicador",
+                            "weight": 10,
+                            "matched": false
+                        }
+                    ]
+                },
+                "COMPETENCIA_CONTENIDO": {
+                    "score": 0,
+                    "signals": [
+                        {
+                            "signal": "Competencia y Capacidad",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Contenidos",
+                            "weight": 15,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Área Transversal",
+                            "weight": 15,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Metodología de Enseñanza",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Medios de Verificación",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Fecha",
+                            "weight": 5,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Días de clase",
+                            "weight": 5,
+                            "matched": false
+                        }
+                    ]
+                }
+            }
+        },
+        "counts": {
+            "unidades": 6,
+            "capacidades": 6,
+            "temas": 18,
+            "indicadores": 18
+        },
+        "pages": 1,
+        "warning_count": 0
+    }
+}

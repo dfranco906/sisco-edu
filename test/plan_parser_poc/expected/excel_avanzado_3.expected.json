@@ -1,0 +1,42 @@
+{
+  "filename": "Plan Anual - tercer curso - BCB - Excel Avanzado.pdf",
+  "sha256": "6f29916d0e36fcb9c25226185af0471d1ffd3d4e37c97f9c7b4b26f09a9d7573",
+  "format": "EXCEL_AVANZADO",
+  "pages": 2,
+  "metadata": {
+    "institucion": "COL. PRIV. PRESB. SAN PABLO",
+    "materia": "MICROSOFT EXCEL",
+    "profesor": "LIC. DANILO FRANCO",
+    "curso": "3ºC",
+    "turno": "MAÑANA",
+    "anio": 2026
+  },
+  "counts": { "unidades": 3, "capacidades": 3, "temas": 18, "indicadores": 53 },
+  "structure_sha256": "09338f86fd601bf3c6eb409173d5369858f4b3eed5f09d38564ad99961160aca",
+  "unit_codes": ["I", "II", "III"],
+  "unit_names": [
+    "Administrar hojas de trabajo y libros de trabajo",
+    "Administrar tablas y datos de tablas",
+    "Realizar operaciones mediante fórmulas y funciones"
+  ],
+  "unit_hours": [5, 6, 6],
+  "capacity_processes": [null, "FEBRERO A JULIO", "AGOSTO A NOVIEMBRE"],
+  "topic_codes": ["1.1", "1.2", "1.3", "1.4", "1.5", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "3.1", "3.2", "3.3", "3.4", "3.5", "3.6"],
+  "indicator_codes": [
+    "1.1.1", "1.1.2", "1.2.1", "1.2.2", "1.2.3", "1.3.1", "1.3.2", "1.3.3", "1.4.1", "1.4.2", "1.4.3", "1.4.4", "1.5.1", "1.5.2", "1.5.3",
+    "2.1.1", "2.1.2", "2.1.3", "2.2.1", "2.2.2", "2.2.3", "2.2.4", "2.2.5", "2.2.6", "2.3.1", "2.3.2", "2.4.1", "2.4.2", "2.5.1", "2.5.2", "2.5.3", "2.6.1", "2.6.2", "2.7.1", "2.7.2",
+    "3.1.1", "3.1.2", "3.2.1", "3.2.2", "3.2.3", "3.3.1", "3.3.2", "3.3.3", "3.4.1", "3.5.1", "3.5.2", "3.5.3", "3.5.4", "3.5.5", "3.5.6", "3.6.1", "3.6.2", "3.6.3"
+  ],
+  "indicator_counts_by_unit": [15, 20, 18],
+  "procedures_by_unit": [["Observación", "Prueba"], ["Observación", "Prueba"], ["Observación", "Prueba"]],
+  "instruments_by_unit": [["Portafolio Web", "Prueba virtual"], ["Portafolio Web", "Prueba virtual"], ["Portafolio Web", "Prueba virtual"]],
+  "samples": {
+    "topic_code": "1.1",
+    "topic_title": "Importar datos en libros de trabajo",
+    "indicator_code": "1.1.1",
+    "indicator_text": "Importa datos de archivos .csv"
+  },
+  "warning_types": ["MISSING_HOURS", "UNRECOGNIZED_TEXT"],
+  "warning_count": 3,
+  "confidence_global": 96
+}

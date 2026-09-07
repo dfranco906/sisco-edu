@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 require_once __DIR__ . '/../../../src/config/app.php';
+if (!isset($_SESSION['horarios_csrf'])) $_SESSION['horarios_csrf'] = bin2hex(random_bytes(32));
 ?>
 
 <main class="app-main flex-1 p-4 sm:p-6 lg:p-10">
@@ -126,6 +127,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
         <div id="mensaje-crear-horario" class="mb-4" aria-live="polite"></div>
 
         <form id="form-crear-horario" data-api="<?= base_url('src/api/Horario/crear_horario.php') ?>">
+            <input type="hidden" name="horarios_csrf" value="<?= htmlspecialchars($_SESSION['horarios_csrf'], ENT_QUOTES, 'UTF-8') ?>">
             <div class="app-form-grid">
                 <label class="font-semibold sm:col-span-2">
                     Asignación
@@ -211,6 +213,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
                 </label>
 
                 <div id="crear-clase-conjunta-panel" class="schedule-joint-link sm:col-span-2" hidden>
+                    <label class="schedule-joint-option"><input type="checkbox" name="permite_materias_distintas" id="crear-materias-distintas" value="1"><span><strong>Incluir materias distintas</strong><small>Mismo profesor y año. Elegí una sola materia por grado; cada curso conserva su materia y aula.</small></span></label>
                     <span class="font-semibold">Cursos que compartirán la clase</span>
                     <input name="id_asignaciones_conjuntas" id="crear-id-asignacion-conjunta" type="hidden">
                     <input id="crear-buscar-clase-conjunta" type="search" class="app-input mt-2 w-full"
@@ -248,6 +251,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
         <div id="mensaje-editar-horario" class="mb-4" aria-live="polite"></div>
 
         <form id="form-editar-horario" data-api="<?= base_url('src/api/Horario/actualizar_horario.php') ?>">
+            <input type="hidden" name="horarios_csrf" value="<?= htmlspecialchars($_SESSION['horarios_csrf'], ENT_QUOTES, 'UTF-8') ?>">
             <input type="hidden" name="id_horario" id="editar-id-horario">
             <div class="app-form-grid">
                 <label class="font-semibold sm:col-span-2">
@@ -327,6 +331,7 @@ require_once __DIR__ . '/../../../src/config/app.php';
                 </label>
 
                 <div id="editar-clase-conjunta-panel" class="schedule-joint-link sm:col-span-2" hidden>
+                    <label class="schedule-joint-option"><input type="checkbox" name="permite_materias_distintas" id="editar-materias-distintas" value="1"><span><strong>Incluir materias distintas</strong><small>Mismo profesor y año. Elegí una sola materia por grado; cada curso conserva su materia y aula.</small></span></label>
                     <span class="font-semibold">Cursos que compartirán la clase</span>
                     <input name="id_asignaciones_conjuntas" id="editar-id-asignacion-conjunta" type="hidden">
                     <input id="editar-buscar-clase-conjunta" type="search" class="app-input mt-2 w-full"

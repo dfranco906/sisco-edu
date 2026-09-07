@@ -1,0 +1,5 @@
+<?php
+$titulo='Nodos ESP32';$api='src/api/NodoEsp32/leer_nodos.php';$columnas=['id_nodo','node_id','aula','room_id','lora_id','tipo','estado','ultimo_heartbeat'];
+$campos=[['name'=>'node_id','label'=>'Node ID','type'=>'text','maxlength'=>100],['name'=>'room_id','label'=>'Aula','type'=>'select','api'=>'src/api/NodoEsp32/leer_aulas_nodo.php','value'=>'codigo','labelField'=>'nombre'],['name'=>'lora_id','label'=>'Dirección LoRa','type'=>'number','min'=>1,'max'=>65535],['name'=>'tipo','label'=>'Tipo','type'=>'select','options'=>[['value'=>'AULA','label'=>'Aula'],['value'=>'GATEWAY','label'=>'Gateway'],['value'=>'CAPTURA','label'=>'Captura']]],['name'=>'estado','label'=>'Estado','type'=>'select','options'=>[['value'=>'offline','label'=>'Offline'],['value'=>'online','label'=>'Online']]]];
+$formCrear=['api'=>'src/api/NodoEsp32/crear_nodo.php','campos'=>$campos];$apiActualizar='src/api/NodoEsp32/actualizar_nodo.php';$apiDesactivar='src/api/NodoEsp32/desactivar_nodo.php';$idCampo='id_nodo';$camposEditar=$campos;
+require_once __DIR__.'/../partials/table_page.php';

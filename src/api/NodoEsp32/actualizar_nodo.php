@@ -1,17 +1,4 @@
 <?php
-require_once '../../config/db.php';
-require_once '../../classes/NodoEsp32.php';
-
-$db = (new Database())->getConnection();
-$nodo = new NodoEsp32($db);
-
-$nodo->id_nodo = $_POST['id_nodo'] ?? null;
-$nodo->node_id = $_POST['node_id'] ?? null;
-$nodo->id_aula = $_POST['id_aula'] ?? null;
-$nodo->tipo = $_POST['tipo'] ?? null;
-$nodo->estado = $_POST['estado'] ?? null;
-
-echo $nodo->actualizar()
-    ? "✅ Nodo ESP32 actualizado correctamente"
-    : "❌ Error al actualizar nodo";
-?>
+require_once __DIR__ . '/../../config/api_auth.php'; require_once __DIR__ . '/../../classes/NodoEsp32.php';
+requerirMetodo(['POST']); usuarioActual(['SuperAdmin','Administracion','Coordinador']);
+try{$id=filter_var($_POST['id_nodo']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);$nodeId=trim((string)($_POST['node_id']??''));$roomId=trim((string)($_POST['room_id']??''));$tipo=strtoupper(trim((string)($_POST['tipo']??'AULA')));$estado=strtolower(trim((string)($_POST['estado']??'offline')));$loraId=filter_var($_POST['lora_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1,'max_range'=>65535]]);if(!$id||$nodeId===''||!in_array($tipo,['AULA','GATEWAY','CAPTURA'],true)||!in_array($estado,['online','offline'],true)||($tipo==='AULA'&&($roomId===''||!$loraId)))throw new InvalidArgumentException('Datos del nodo incompletos o inválidos.');$db=(new Database())->getConnection();if($roomId!==''){$q=$db->prepare("SELECT COUNT(*) FROM aulas WHERE codigo=:codigo AND activo=1");$q->execute([':codigo'=>$roomId]);if(!(int)$q->fetchColumn())throw new InvalidArgumentException('El aula seleccionada no está activa.');}if($loraId){$q=$db->prepare("SELECT COUNT(*) FROM nodos_esp32 WHERE lora_id=:lora AND id_nodo<>:id AND activo=1");$q->execute([':lora'=>$loraId,':id'=>$id]);if((int)$q->fetchColumn())throw new InvalidArgumentException('La dirección LoRa ya está asignada a otro nodo activo.');}$n=new NodoEsp32($db);$n->id_nodo=$id;$n->node_id=$nodeId;$n->room_id=$roomId?:null;$n->lora_id=$loraId?:null;$n->tipo=$tipo;$n->estado=$estado;if(!$n->actualizar())throw new RuntimeException('No se pudo actualizar el nodo.');responderJson(['success'=>true,'status'=>'success','message'=>'Nodo ESP32 actualizado correctamente.','data'=>['id_nodo'=>$id]]);}catch(InvalidArgumentException $e){responderJson(['success'=>false,'status'=>'error','message'=>$e->getMessage()],422);}catch(Throwable $e){error_log('actualizar_nodo: '.$e->getMessage());responderJson(['success'=>false,'status'=>'error','message'=>'No se pudo actualizar el nodo.'],500);}

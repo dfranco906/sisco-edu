@@ -1,0 +1,49 @@
+{
+  "filename": "Plan Anual - segundo curso - BCB - Excel Avanzado.pdf",
+  "sha256": "268cb10c7d3ae3ad421ed615b44dedc59fcbe8662f5c5aab75d993a8c0b3cdac",
+  "format": "COMPETENCIA_CONTENIDO",
+  "pages": 2,
+  "metadata": {
+    "institucion": "COLEGIO “PRESBITERIANO SAN PABLO”",
+    "materia": "Informática",
+    "profesor": "LIC. DANILO FRANCO",
+    "curso": "1° BCB",
+    "dias_clase": "VIERNES",
+    "anio": 2026
+  },
+  "counts": { "unidades": 2, "capacidades": 14, "temas": 14, "indicadores": 47 },
+  "structure_sha256": "140c234a0b77a864c7b09ef3a37c4fa06e44be7f64f5bb9a5e95e61ccb0f7f62",
+  "unit_codes": [null, null],
+  "unit_names": ["Manejo del sistema operativo avanzado", "Uso avanzado de Microsoft Office Word"],
+  "unit_processes": ["De marzo a junio", "De Julio a Noviembre"],
+  "capacity_names_by_unit": [
+    [
+      "Comprende la evolución histórica de la informática.",
+      "Identifica las partes de un sistema operativo",
+      "Utiliza diferentes herramientas de un sistema operativo",
+      "Reconoce el Microsoft Word como el procesador de texto más avanzado",
+      "Comprende el manejo de la ortografía en el procesador con las configuraciones de tipo de visualización",
+      "Utiliza las herramientas de la configuración general de las paginas",
+      "Utiliza los distintos objetos en Word"
+    ],
+    [
+      "Identifica la seguridad de los documentos con sus estilos, hipervínculos y marcadores",
+      "Comprende el uso de combinar correspondencia",
+      "Identifica la utilización adecuada de las etiquetas con el manejo de las formulas y ecuaciones",
+      "Reconoce la utilización del documento maestro con la ventaja de las tablas de ilustración",
+      "Identifica el manejo del Macros y sus formularios",
+      "Comprende el modo guardado del documento",
+      "Utiliza el teclado de forma correcta"
+    ]
+  ],
+  "indicator_counts_by_capacity": [[3, 3, 5, 5, 5, 3, 4], [5, 3, 2, 3, 3, 2, 1]],
+  "samples": {
+    "topic_title": "Historia, evolución y generaciones",
+    "indicator_text": "Identifica el concepto del ábaco",
+    "last_topic_title": "Dactilografía computarizada",
+    "last_indicator_text": "Conoce la manera correcta de utilizar el teclado"
+  },
+  "warning_types": ["SOURCE_METADATA_MISMATCH", "TABLE_STRUCTURE_WARNING"],
+  "warning_count": 2,
+  "confidence_global": 93
+}

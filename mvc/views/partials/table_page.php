@@ -204,7 +204,7 @@ $etiquetasColumnasDefault = [
 </script>
 <script src="<?= base_url('public/js/table-loader.js') ?>?v=<?= urlencode((string) @filemtime(__DIR__ . '/../../../public/js/table-loader.js')) ?>"></script>
 <script src="<?= base_url('public/js/crud.js') ?>?v=<?= urlencode((string) @filemtime(__DIR__ . '/../../../public/js/crud.js')) ?>"></script>
-<script src="<?= base_url('public/js/obtener_template.js') ?>"></script>
+<script src="<?= base_url('public/js/obtener_template.js') ?>?v=<?= urlencode((string) @filemtime(__DIR__ . '/../../../public/js/obtener_template.js')) ?>"></script>
 
 <script>
     cargarTabla(

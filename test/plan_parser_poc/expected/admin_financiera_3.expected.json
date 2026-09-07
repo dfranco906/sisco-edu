@@ -1,0 +1,52 @@
+{
+  "filename": "Plan Anual - tercer curso - BTI - Administracion financiera.pdf",
+  "sha256": "acd9386793187062107c6412de12986c897be0e49fc9c59bdd83fa5f57905143",
+  "format": "ADMINISTRACION_FINANCIERA",
+  "pages": 1,
+  "metadata": {
+    "institucion": "COL. PRIV. PRESB. SAN PABLO",
+    "materia": "ADMINISTRACIÓN FINANCIERA",
+    "profesor": "LIC. DANILO FRANCO",
+    "curso": "3ºC-BTI",
+    "turno": "MAÑANA",
+    "anio": 2026
+  },
+  "counts": { "unidades": 6, "capacidades": 6, "temas": 18, "indicadores": 18 },
+  "structure_sha256": "53533cc23fc1376f775efd497cca99dcbe2f9986c580c142ba4ce5b1f770f83c",
+  "unit_codes": ["I", "II", "III", "IV", "V", "VI"],
+  "unit_names": [
+    "La Administración Financiera y la Información",
+    "Planificación y Presupuesto",
+    "Gestión de Activos y Valuación",
+    "Análisis Financiero y Auditoría",
+    "Gestión Operativa y Diagramación",
+    "Marco Legal y Fiscal Actualizado"
+  ],
+  "unit_hours": [16, 32, 32, 32, 32, 16],
+  "unit_processes": ["Febrero - Marzo", "Marzo - Abril", "Mayo - Junio", "Julio - Agosto", "Septiembre - Octubre", "Noviembre"],
+  "topic_codes": ["1.1", "1.2", "1.3", "2.1", "2.2", "2.3", "3.1", "3.2", "3.3", "4.1", "4.2", "4.3", "5.1", "5.2", "5.3", "6.1", "6.2", "6.3"],
+  "indicator_counts_by_unit": [3, 3, 3, 3, 3, 3],
+  "procedures_by_unit": [
+    ["Observación", "Análisis de tareas."],
+    ["Pruebas de desempeño", "Observación."],
+    ["Análisis de productos (Ejercicios prácticos)."],
+    ["Prueba escrita", "Análisis de casos."],
+    ["Producción de informes", "Observación."],
+    ["Pruebas objetivas", "Análisis de documentos."]
+  ],
+  "instruments_by_unit": [
+    ["Lista de Cotejo", "RSA (Registro de Secuencia de Aprendizaje)."],
+    ["Rúbrica de proyecto", "Prueba Práctica."],
+    ["Escala de calificación", "Guía de ejercicios."],
+    ["Cuestionario", "Rúbrica de análisis de caso."],
+    ["Lista de Cotejo para diagramas", "Portafolio."],
+    ["Examen final", "Guía de trabajo legal."]
+  ],
+  "samples": {
+    "topic_code": "1.1",
+    "topic_title": "El rol del administrador financiero en la era digital.",
+    "indicator_text": "Define la administración financiera y su importancia."
+  },
+  "warning_types": [],
+  "confidence_global": 100
+}

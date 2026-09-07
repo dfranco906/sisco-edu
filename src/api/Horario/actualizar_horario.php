@@ -3,6 +3,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../classes/Horario.php';
+require_once __DIR__ . '/clase_conjunta_auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -31,6 +32,8 @@ $idsAsignacionesConjuntas = is_array($idsAsignacionesConjuntasEntrada)
     ? $idsAsignacionesConjuntasEntrada
     : preg_split('/\s*,\s*/', (string) $idsAsignacionesConjuntasEntrada, -1, PREG_SPLIT_NO_EMPTY);
 $idsAsignacionesConjuntas = array_values(array_unique(array_filter(array_map('intval', $idsAsignacionesConjuntas))));
+$materiasDistintas = filter_var($_POST['permite_materias_distintas'] ?? false, FILTER_VALIDATE_BOOLEAN);
+$usuarioConjunta = $materiasDistintas ? autorizarMateriasDistintas() : null;
 
 if (!$id_horario || !$id_asignacion || $dia_semana === '' || $hora_inicio === '' || $hora_fin === '') {
     http_response_code(422);
@@ -64,6 +67,10 @@ try {
     $horario = new Horario($db);
     $asignacion = $horario->obtenerAsignacionActiva($id_asignacion);
     $horarioActual = $horario->obtenerHorarioConjuntoActivo($id_horario);
+    if ($usuarioConjunta) {
+        asegurarAccesoAsignacion($db, $usuarioConjunta, (int)$id_asignacion, true);
+        if ($horarioActual) asegurarAccesoAsignacion($db, $usuarioConjunta, (int)$horarioActual['id_asignacion'], true);
+    }
 
     if (!$asignacion) {
         http_response_code(422);
@@ -80,6 +87,7 @@ try {
     $asignacionesConjuntas = [];
     $horariosVinculados = [];
     $miembrosGrupoActual = $horario->obtenerHorariosGrupo($id_horario);
+    if ($usuarioConjunta) foreach ($miembrosGrupoActual as $miembro) asegurarAccesoAsignacion($db, $usuarioConjunta, (int)$miembro['id_asignacion'], true);
 
     // Compatibilidad con clientes anteriores que enviaban un horario concreto.
     if ($permite_superposicion && $id_horario_vinculado) {
@@ -105,22 +113,28 @@ try {
         $idsAsignacionesConjuntas,
         fn($id) => (string) $id !== (string) $id_asignacion
     )));
+    $gradosConjuntos = [(int)$id_grado => true];
     foreach ($idsAsignacionesConjuntas as $idAsignacionConjunta) {
         $asignacionConjunta = $horario->obtenerAsignacionActiva($idAsignacionConjunta);
         $vinculoValido = $asignacionConjunta
             && (string) $asignacionConjunta['id_grado'] !== (string) $id_grado
             && (string) $asignacionConjunta['id_profesor'] === (string) $asignacion['id_profesor']
-            && (string) $asignacionConjunta['id_materia'] === (string) $asignacion['id_materia']
+            && ($materiasDistintas || (string) $asignacionConjunta['id_materia'] === (string) $asignacion['id_materia'])
             && (string) $asignacionConjunta['anio_lectivo'] === (string) $asignacion['anio_lectivo'];
 
         if (!$vinculoValido) {
             http_response_code(422);
             echo json_encode([
                 "status" => "error",
-                "message" => "El curso elegido no corresponde a la misma materia, profesor y año."
+                "message" => "Seleccione otro grado del mismo profesor y año. Para otra materia, active Incluir materias distintas."
             ]);
             exit;
         }
+        if (isset($gradosConjuntos[(int)$asignacionConjunta['id_grado']])) {
+            responderJson(['success'=>false,'status'=>'error','message'=>'Una clase conjunta sólo puede incluir una asignación por grado.'],422);
+        }
+        $gradosConjuntos[(int)$asignacionConjunta['id_grado']] = true;
+        if ($usuarioConjunta) asegurarAccesoAsignacion($db, $usuarioConjunta, (int)$idAsignacionConjunta, true);
 
         if ($horario->interfiereRecesoTercerCiclo($asignacionConjunta, $hora_inicio, $hora_fin)) {
             http_response_code(422);
@@ -160,6 +174,7 @@ try {
     }
 
     $horario->id_horario = $id_horario;
+    if ($permite_superposicion) $horario->validarGruposSeleccionados($horariosVinculados, array_merge([(int)$id_asignacion], array_keys($asignacionesConjuntas)), $horarioActual['id_grupo_clase_conjunta'] ?? null);
     $horario->id_asignacion = $id_asignacion;
     $horario->id_grado = $id_grado;
     $horario->dia_semana = $dia_semana;

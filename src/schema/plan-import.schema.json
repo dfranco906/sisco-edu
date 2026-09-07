@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sisco-edu.local/schema/plan-import-1.0.json",
+  "title": "SISCO-EDU Plan Import 1.0",
+  "type": "object",
+  "required": ["schema_version", "source", "metadata", "unidades", "warnings", "confidence"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "source": {
+      "type": "object",
+      "required": ["filename", "format", "sha256", "pages", "text_layer", "extractor"],
+      "properties": {
+        "filename": { "type": "string", "minLength": 1 },
+        "format": { "enum": ["ADMINISTRACION_FINANCIERA", "EXCEL_AVANZADO", "COMPETENCIA_CONTENIDO"] },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "pages": { "type": "integer", "minimum": 1 },
+        "text_layer": { "const": true },
+        "extractor": {
+          "type": "object",
+          "required": ["name", "mode", "version", "elapsed_ms"],
+          "properties": {
+            "name": { "const": "pdftotext" },
+            "mode": { "const": "table" },
+            "version": { "type": ["string", "null"] },
+            "elapsed_ms": { "type": ["number", "null"], "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["institucion", "materia", "profesor", "curso", "turno", "anio", "dias_clase", "competencia_general", "competencia_especifica"],
+      "properties": {
+        "institucion": { "type": ["string", "null"] },
+        "materia": { "type": ["string", "null"] },
+        "profesor": { "type": ["string", "null"] },
+        "curso": { "type": ["string", "null"] },
+        "turno": { "type": ["string", "null"] },
+        "anio": { "type": ["integer", "null"], "minimum": 2000, "maximum": 2100 },
+        "dias_clase": { "type": ["string", "null"] },
+        "competencia_general": { "type": ["string", "null"] },
+        "competencia_especifica": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "unidades": { "type": "array", "items": { "$ref": "#/$defs/unidad" } },
+    "warnings": { "type": "array", "items": { "$ref": "#/$defs/warning" } },
+    "confidence": {
+      "type": "object",
+      "required": ["scale", "metadata", "estructura", "asociaciones", "global", "criteria"],
+      "properties": {
+        "scale": { "const": "rule_completeness_0_100" },
+        "metadata": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "estructura": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "asociaciones": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "global": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "criteria": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "debug": { "type": "object" }
+  },
+  "$defs": {
+    "unidad": {
+      "type": "object",
+      "required": ["orden", "codigo", "nombre", "descripcion", "horas_catedra", "tiempo_texto", "proceso_texto", "area_transversal", "metodologia", "medios_verificacion", "capacidades"],
+      "properties": {
+        "orden": { "type": "integer", "minimum": 1 }, "codigo": { "type": ["string", "null"] },
+        "nombre": { "type": "string", "minLength": 1 }, "descripcion": { "type": ["string", "null"] },
+        "horas_catedra": { "type": ["number", "null"], "minimum": 0 }, "tiempo_texto": { "type": ["string", "null"] },
+        "proceso_texto": { "type": ["string", "null"] }, "area_transversal": { "type": ["string", "null"] },
+        "metodologia": { "type": ["string", "null"] }, "medios_verificacion": { "type": ["string", "null"] },
+        "capacidades": { "type": "array", "items": { "$ref": "#/$defs/capacidad" } }
+      }, "additionalProperties": false
+    },
+    "capacidad": {
+      "type": "object", "required": ["orden", "descripcion", "proceso_desarrollo", "temas"],
+      "properties": { "orden": { "type": "integer", "minimum": 1 }, "descripcion": { "type": "string", "minLength": 1 }, "proceso_desarrollo": { "type": ["string", "null"] }, "temas": { "type": "array", "items": { "$ref": "#/$defs/tema" } } },
+      "additionalProperties": false
+    },
+    "tema": {
+      "type": "object", "required": ["orden", "codigo", "titulo", "contenido", "horas_catedra", "tiempo_texto", "fecha_texto", "indicadores", "procedimientos_evaluativos", "instrumentos_evaluativos"],
+      "properties": {
+        "orden": { "type": "integer", "minimum": 1 }, "codigo": { "type": ["string", "null"] }, "titulo": { "type": "string", "minLength": 1 },
+        "contenido": { "type": ["string", "null"] }, "horas_catedra": { "type": ["number", "null"], "minimum": 0 }, "tiempo_texto": { "type": ["string", "null"] }, "fecha_texto": { "type": ["string", "null"] },
+        "indicadores": { "type": "array", "items": { "$ref": "#/$defs/indicador" } },
+        "procedimientos_evaluativos": { "type": "array", "items": { "type": "string" } },
+        "instrumentos_evaluativos": { "type": "array", "items": { "type": "string" } }
+      }, "additionalProperties": false
+    },
+    "indicador": {
+      "type": "object", "required": ["orden", "codigo", "descripcion", "check"],
+      "properties": { "orden": { "type": "integer", "minimum": 1 }, "codigo": { "type": ["string", "null"] }, "descripcion": { "type": "string", "minLength": 1 }, "check": { "type": ["boolean", "null"] } },
+      "additionalProperties": false
+    },
+    "warning": {
+      "type": "object", "required": ["type", "page", "line", "text", "message"],
+      "properties": { "type": { "type": "string", "minLength": 1 }, "page": { "type": ["integer", "null"], "minimum": 1 }, "line": { "type": ["integer", "null"], "minimum": 1 }, "text": { "type": ["string", "null"] }, "message": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

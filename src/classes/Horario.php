@@ -222,6 +222,20 @@ class Horario
         ]);
     }
 
+    public function validarGruposSeleccionados(array $horariosSeleccionados, array $idsAsignaciones, $grupoEditable = null): void
+    {
+        $idsAsignaciones = array_map('intval', $idsAsignaciones);
+        foreach ($horariosSeleccionados as $seleccionado) {
+            $grupo = $seleccionado['id_grupo_clase_conjunta'] ?? null;
+            if (!$grupo || ($grupoEditable && (int)$grupo === (int)$grupoEditable)) continue;
+            foreach ($this->obtenerHorariosGrupo($seleccionado['id_horario']) as $miembro) {
+                if (!in_array((int)$miembro['id_asignacion'], $idsAsignaciones, true)) {
+                    throw new DomainException('Una clase seleccionada ya pertenece a otro grupo conjunto. Incluya todos sus cursos o edite primero ese grupo.');
+                }
+            }
+        }
+    }
+
     public function obtenerConflicto($excluirId = null, $permitirClaseConjunta = false, $idHorarioVinculado = null)
     {
         $idsVinculados = is_array($idHorarioVinculado) ? $idHorarioVinculado : [$idHorarioVinculado];
@@ -235,7 +249,7 @@ class Horario
         }
         $condicionVinculada = $marcadoresVinculados
             ? "h.id_horario IN (" . implode(',', $marcadoresVinculados) . ")"
-            : "h.id_aula = :id_aula_excepcion";
+            : "1 = 0";
 
         $query = "SELECT
                     h.id_horario,
@@ -255,7 +269,7 @@ class Horario
                         WHEN h.id_grado IS NOT NULL
                          AND h.id_grado <> :id_grado_excepcion_info
                          AND ad_existente.id_profesor = ad_nueva.id_profesor
-                         AND ad_existente.id_materia = ad_nueva.id_materia
+                         AND ad_existente.anio_lectivo = ad_nueva.anio_lectivo
                         THEN 1 ELSE 0
                     END AS excepcion_disponible
                   FROM horarios h
@@ -285,6 +299,8 @@ class Horario
                         AND h.id_grado IS NOT NULL
                         AND h.id_grado <> :id_grado_excepcion
                         AND ad_existente.id_profesor = ad_nueva.id_profesor
+                        AND ad_existente.anio_lectivo = ad_nueva.anio_lectivo
+                        AND ad_existente.activo = 1
                         AND (" . $condicionVinculada . ")
                     )";
 
@@ -301,7 +317,6 @@ class Horario
             ":permitir_superposicion" => $permitirClaseConjunta ? 1 : 0,
             ":id_grado_excepcion" => $this->id_grado
         ];
-        if (!$idsVinculados) $params[":id_aula_excepcion"] = $this->id_aula;
         $params += $paramsVinculados;
 
         if ($excluirId !== null) {

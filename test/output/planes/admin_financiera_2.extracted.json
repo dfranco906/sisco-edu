@@ -1,0 +1,694 @@
+{
+    "schema_version": "1.0-poc",
+    "source": {
+        "filename": "Plan Anual - segundo curso - BTI - Administracion financiera.pdf",
+        "format": "ADMINISTRACION_FINANCIERA",
+        "sha256": "8ec14c4156401c3f9b58ca011d9720d31cce3ac0ad0f05c54c19fbdb3814b333",
+        "pages": 1,
+        "text_layer": true,
+        "extractor": {
+            "name": "pdftotext",
+            "mode": "table",
+            "binary": "C:\\Program Files\\Git\\mingw64\\bin\\pdftotext.exe",
+            "elapsed_ms": 33.59,
+            "stderr": null
+        }
+    },
+    "metadata": {
+        "institucion": "COL. PRIV. PRESB. SAN PABLO",
+        "materia": "ADMINISTRACIÓN FINANCIERA",
+        "profesor": "LIC. DANILO FRANCO",
+        "curso": "2ºC-BTI",
+        "turno": "MAÑANA",
+        "anio": 2026,
+        "dias_clase": null,
+        "competencia_general": "- Aplica procedimientos administrativos, basados en el derecho impositivo utilizando herramientas tecnológicas que permitan la obtención de informes contables, con miras a la toma de decisiones acertadas.",
+        "competencia_especifica": "- Establece relaciones contables entre los diferentes tipos de documentos y su implicancia en los movimientos y estados financieros de una empresa, mediante la elaboración del plan de cuentas y manejo de los libros. - Maneja los Libros Diario, Inventario, Mayor, Compras y Ventas, mediante el establecimiento de relaciones contables que generen diferentes tipos de documentos y su implicancia en los estados financieros de una empresa."
+    },
+    "unidades": [
+        {
+            "orden": 1,
+            "codigo": "I",
+            "nombre": "Fundamentos de las Finanzas y la Empresa",
+            "descripcion": null,
+            "horas_catedra": 8,
+            "tiempo_texto": "8 HC",
+            "proceso_texto": "Marzo",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Adquiere conocimientos sobre las funciones de las finanzas y reconoce la importancia de las empresas.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": null,
+                            "titulo": "Finanzas personales, sociales y en crisis. La empresa como unidad económica. Eficiencia y Eficacia.",
+                            "contenido": null,
+                            "horas_catedra": 8,
+                            "tiempo_texto": "8 HC",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Define administración financiera.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": null,
+                                    "descripcion": "Clasifica empresas según su actividad.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": null,
+                                    "descripcion": "Identifica la relación entre finanzas e informática.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Análisis de tareas"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo",
+                                "RSA"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 2,
+            "codigo": "II",
+            "nombre": "El Proceso de Registración Contable",
+            "descripcion": null,
+            "horas_catedra": 8,
+            "tiempo_texto": "8 HC",
+            "proceso_texto": "Abril",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Comprende la importancia de la registración contable y su implicancia en la Adm. Financiera.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": null,
+                            "titulo": "Concepto de Contabilidad. Partida Doble. Ciclo Contable. Importancia de la información para decidir.",
+                            "contenido": null,
+                            "horas_catedra": 8,
+                            "tiempo_texto": "8 HC",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Explica la importancia de la contabilidad.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": null,
+                                    "descripcion": "Aplica el principio de la partida doble.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": null,
+                                    "descripcion": "Describe las etapas del ciclo contable.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Prueba de desempeño"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Rúbrica"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 3,
+            "codigo": "III",
+            "nombre": "Organización y Soporte Documental",
+            "descripcion": null,
+            "horas_catedra": 12,
+            "tiempo_texto": "12 HC",
+            "proceso_texto": "Abril - Mayo",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Describe el papel del Plan de Cuentas, Manual de Cuentas y documentos comerciales.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": null,
+                            "titulo": "Documentos comerciales (Factura, Recibo, Pagaré). Plan y Manual de Cuentas. Estructura técnica.",
+                            "contenido": null,
+                            "horas_catedra": 12,
+                            "tiempo_texto": "12 HC",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Identifica documentos legales y comerciales.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": null,
+                                    "descripcion": "Elabora un Plan de Cuentas en planilla electrónica.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": null,
+                                    "descripcion": "Utiliza el manual de cuentas correctamente.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Lista de Cotejo",
+                                "Portafolio"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 4,
+            "codigo": "IV",
+            "nombre": "Libros Contables y Registración Legal",
+            "descripcion": null,
+            "horas_catedra": 20,
+            "tiempo_texto": "20 HC",
+            "proceso_texto": "Junio - Agosto",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Utiliza los libros contables exigidos por las leyes (Ley 1034/83) dentro de la Adm. Financiera.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": null,
+                            "titulo": "Libro Diario. Libro Inventario. Libro Mayor. Formalidades legales de los libros.",
+                            "contenido": null,
+                            "horas_catedra": 20,
+                            "tiempo_texto": "20 HC",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Registra operaciones en el Libro Diario.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": null,
+                                    "descripcion": "Realiza pases al Libro Mayor de forma precisa.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": null,
+                                    "descripcion": "Cumple con las formalidades de la Ley 1034/83.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Ejercicios Prácticos"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Prueba Escrita",
+                                "RSA"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 5,
+            "codigo": "V",
+            "nombre": "Gestión Impositiva Aplicada",
+            "descripcion": null,
+            "horas_catedra": 12,
+            "tiempo_texto": "12 HC",
+            "proceso_texto": "Septiembre",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Conoce la aplicación del Impuesto al Valor Agregado (IVA) exigido por las leyes vigentes.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": null,
+                            "titulo": "IVA (Ley 6380/19). Tasas (5% y 10%). Débito y Crédito Fiscal. Libro Compras y Ventas.",
+                            "contenido": null,
+                            "horas_catedra": 12,
+                            "tiempo_texto": "12 HC",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Diferencia IVA Débito de IVA Crédito.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": null,
+                                    "descripcion": "Liquida el IVA mensualmente.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": null,
+                                    "descripcion": "Utiliza planillas para el registro de compras y ventas.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Resolución de problemas"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Prueba Práctica"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 6,
+            "codigo": "VI",
+            "nombre": "Cierre de Ciclo y Herramientas Tecnológicas",
+            "descripcion": null,
+            "horas_catedra": 20,
+            "tiempo_texto": "20 HC",
+            "proceso_texto": "Octubre - Noviembre",
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Establece relaciones contables y maneja software para la obtención de informes financieros.",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": null,
+                            "titulo": "Balance de Comprobación de Sumas y Saldos. Introducción al Balance General. Microsoft Excel y Software Contable Open Source GNU Cash, HomeBank.",
+                            "contenido": null,
+                            "horas_catedra": 20,
+                            "tiempo_texto": "20 HC",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": null,
+                                    "descripcion": "Elabora balance de comprobación de sumas y saldos.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": null,
+                                    "descripcion": "Opera funciones contables en hojas de cálculo.",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": null,
+                                    "descripcion": "Obtiene informes básicos mediante software.",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Proyecto Integrador"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Rúbrica de Proyecto"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "warnings": [],
+    "confidence": {
+        "scale": "rule_completeness_0_100",
+        "metadata": 100,
+        "estructura": 100,
+        "asociaciones": 100,
+        "global": 100,
+        "criteria": {
+            "metadata": {
+                "expected": [
+                    "institucion",
+                    "materia",
+                    "profesor",
+                    "curso",
+                    "turno",
+                    "anio",
+                    "competencia_general",
+                    "competencia_especifica"
+                ],
+                "found": [
+                    "institucion",
+                    "materia",
+                    "profesor",
+                    "curso",
+                    "turno",
+                    "anio",
+                    "competencia_general",
+                    "competencia_especifica"
+                ]
+            },
+            "estructura": [
+                {
+                    "criterion": "Existe al menos una unidad",
+                    "weight": 15,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todas las unidades tienen capacidad",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todas las capacidades tienen tema",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todos los temas tienen indicador",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Órdenes secuenciales no vacíos",
+                    "weight": 5,
+                    "passed": true
+                },
+                {
+                    "criterion": "Códigos jerárquicos coherentes o no aplicables",
+                    "weight": 10,
+                    "passed": true
+                },
+                {
+                    "criterion": "Horas presentes cuando el formato las exige",
+                    "weight": 10,
+                    "passed": true
+                }
+            ],
+            "asociaciones": [
+                {
+                    "criterion": "Sin temas huérfanos",
+                    "weight": 40,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin indicadores huérfanos",
+                    "weight": 40,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin columnas ambiguas",
+                    "weight": 10,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin reconstrucción conservadora de tabla",
+                    "weight": 10,
+                    "passed": true
+                }
+            ],
+            "formula_global": "30% metadata + 40% estructura + 30% asociaciones"
+        }
+    },
+    "debug": {
+        "columns": {
+            "unit": {
+                "x_char_start": 0,
+                "x_char_end": 29,
+                "x_relative_start": 0,
+                "x_relative_end": 0.1289
+            },
+            "capacity": {
+                "x_char_start": 29,
+                "x_char_end": 59,
+                "x_relative_start": 0.1289,
+                "x_relative_end": 0.2622
+            },
+            "topic": {
+                "x_char_start": 59,
+                "x_char_end": 92,
+                "x_relative_start": 0.2622,
+                "x_relative_end": 0.4089
+            },
+            "indicator": {
+                "x_char_start": 92,
+                "x_char_end": 133,
+                "x_relative_start": 0.4089,
+                "x_relative_end": 0.5911
+            },
+            "procedure": {
+                "x_char_start": 133,
+                "x_char_end": 161,
+                "x_relative_start": 0.5911,
+                "x_relative_end": 0.7156
+            },
+            "instrument": {
+                "x_char_start": 161,
+                "x_char_end": 191,
+                "x_relative_start": 0.7156,
+                "x_relative_end": 0.8489
+            },
+            "time": {
+                "x_char_start": 191,
+                "x_char_end": 205,
+                "x_relative_start": 0.8489,
+                "x_relative_end": 0.9111
+            },
+            "process": {
+                "x_char_start": 205,
+                "x_char_end": 225,
+                "x_relative_start": 0.9111,
+                "x_relative_end": 1
+            }
+        },
+        "unit_markers": [
+            {
+                "code": "I",
+                "page": 1,
+                "line": 23
+            },
+            {
+                "code": "II",
+                "page": 1,
+                "line": 35
+            },
+            {
+                "code": "III",
+                "page": 1,
+                "line": 47
+            },
+            {
+                "code": "IV",
+                "page": 1,
+                "line": 59
+            },
+            {
+                "code": "V",
+                "page": 1,
+                "line": 73
+            },
+            {
+                "code": "VI",
+                "page": 1,
+                "line": 85
+            }
+        ],
+        "association_rule": "Celdas verticales por punto medio entre unidades; tema/indicador por orden solo cuando las cantidades coinciden.",
+        "format_detection": {
+            "format": "ADMINISTRACION_FINANCIERA",
+            "threshold": 60,
+            "minimum_margin": 15,
+            "winning_score": 105,
+            "margin": 89,
+            "scores": {
+                "ADMINISTRACION_FINANCIERA": {
+                    "score": 105,
+                    "signals": [
+                        {
+                            "signal": "Título Administración Financiera",
+                            "weight": 25,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Unidad Temática y Capacidades",
+                            "weight": 20,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Procedimientos Evaluativos",
+                            "weight": 15,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Instrumentos Evaluativos",
+                            "weight": 15,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Tiempo HC/Horas Cátedra",
+                            "weight": 10,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Proceso/Meses",
+                            "weight": 10,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Competencia General",
+                            "weight": 5,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Competencia Específica",
+                            "weight": 5,
+                            "matched": true
+                        }
+                    ]
+                },
+                "EXCEL_AVANZADO": {
+                    "score": 16,
+                    "signals": [
+                        {
+                            "signal": "Título Microsoft Excel",
+                            "weight": 25,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Unidad, Capacidades y Temas",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Columna Check",
+                            "weight": 18,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Proceso para desarrollo",
+                            "weight": 22,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Procedimientos",
+                            "weight": 8,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Instrumentos",
+                            "weight": 8,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Códigos de tema",
+                            "weight": 10,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Códigos de indicador",
+                            "weight": 10,
+                            "matched": false
+                        }
+                    ]
+                },
+                "COMPETENCIA_CONTENIDO": {
+                    "score": 0,
+                    "signals": [
+                        {
+                            "signal": "Competencia y Capacidad",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Contenidos",
+                            "weight": 15,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Área Transversal",
+                            "weight": 15,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Metodología de Enseñanza",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Medios de Verificación",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Fecha",
+                            "weight": 5,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Días de clase",
+                            "weight": 5,
+                            "matched": false
+                        }
+                    ]
+                }
+            }
+        },
+        "counts": {
+            "unidades": 6,
+            "capacidades": 6,
+            "temas": 6,
+            "indicadores": 18
+        },
+        "pages": 1,
+        "warning_count": 0
+    }
+}

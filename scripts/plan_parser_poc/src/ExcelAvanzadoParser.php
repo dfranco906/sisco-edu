@@ -1,0 +1,280 @@
+<?php
+declare(strict_types=1);
+
+namespace SiscoEdu\PlanParserPoc;
+
+final class ExcelAvanzadoParser extends AbstractTableParser
+{
+    public function format(): string
+    {
+        return 'EXCEL_AVANZADO';
+    }
+
+    public function parse(array $document): array
+    {
+        $plan = CanonicalPlan::create($document, $this->format());
+        $rows = $this->rows((string) $document['text']);
+        $plan['metadata'] = $this->metadata($rows, $this->format());
+        $headerIndex = $this->firstHeaderIndex($rows, ['Unidad', 'Capacidades', 'Temas', 'Indicadores', 'Check']);
+        if ($headerIndex === null) {
+            $plan['warnings'][] = Text::warning('TABLE_STRUCTURE_WARNING', 'No se encontró el encabezado principal de Excel Avanzado.');
+            return $plan;
+        }
+        $baseStarts = [
+            'unit' => 0,
+            'capacity' => $this->labelPositionNear($rows, $headerIndex, ['Capacidades']) ?? 18,
+            'topic' => $this->minimumRegexPosition($rows, '/Tema\s+\d+\.\d+/ui') ?? 34,
+            'indicator' => $this->minimumRegexPosition($rows, '/(?<!\d)\d+\.\d+\.\d+\b/u') ?? 75,
+            'check' => $this->labelPositionNear($rows, $headerIndex, ['Check']) ?? 163,
+            'development' => $this->labelPositionNear($rows, $headerIndex, ['el desarrollo', 'Proceso para']) ?? 180,
+            'procedure' => $this->labelPositionNear($rows, $headerIndex, ['Procedimientos']) ?? 201,
+            'instrument' => $this->labelPositionNear($rows, $headerIndex, ['Instrumentos']) ?? 217,
+            'time' => $this->labelPositionNear($rows, $headerIndex, ['Tiempo']) ?? 233,
+        ];
+        $headerSeq = (int) $rows[$headerIndex]['seq'];
+        $dataRows = array_values(array_filter($rows, function(array $row) use ($headerSeq): bool {
+            if ($row['seq'] <= $headerSeq || $this->isFooter($row) || trim((string) $row['text']) === '') return false;
+            $key = Text::key((string) $row['text']);
+            return !str_contains($key, 'PROCESO PARA')
+                && !str_contains($key, 'DE LAS CAPACIDADES')
+                && $key !== 'CAPACIDADES'
+                && !(str_contains($key, 'TEMATICA') && str_contains($key, 'EVALUATIVOS'))
+                && !str_contains($key, 'UNIDAD CAPACIDADES TEMAS');
+        }));
+        $pageStarts = $this->pageStarts($dataRows, (int) $document['pages'], $baseStarts);
+
+        $markers = [];
+        foreach ($dataRows as $row) {
+            $starts = $pageStarts[$row['page']];
+            $cell = $this->column($row, $starts['unit'], $starts['capacity']);
+            if (preg_match('/^UNIDAD\s+([IVXLCDM]+)\b(.*)$/ui', $cell, $match) !== 1) continue;
+            $markers[] = ['row' => $row, 'code' => strtoupper($match[1]), 'first_name' => Text::clean($match[2])];
+        }
+        if (!$markers) {
+            $plan['warnings'][] = Text::warning('TABLE_STRUCTURE_WARNING', 'No se detectaron marcadores UNIDAD en Excel Avanzado.');
+            return $plan;
+        }
+        $ranges = $this->markerRanges($markers);
+
+        $topicItems = $this->codedTopics($dataRows, $pageStarts);
+        $indicatorItems = $this->codedIndicators($dataRows, $pageStarts);
+        foreach ($indicatorItems as $indicator) {
+            $parentCode = implode('.', array_slice(explode('.', $indicator['code']), 0, 2));
+            $topicIndex = array_search($parentCode, array_column($topicItems, 'code'), true);
+            if ($topicIndex === false) {
+                $plan['warnings'][] = Text::warning('ORPHAN_INDICATOR', 'No existe el tema padre indicado por el código jerárquico.', $indicator['row'], $indicator['text']);
+                continue;
+            }
+            $topicItems[$topicIndex]['indicators'][] = $indicator;
+        }
+        $timeEvents = [];
+        foreach ($dataRows as $row) {
+            $starts = $pageStarts[$row['page']];
+            $cell = $this->column($row, $starts['time']);
+            $parsed = $this->hours($cell);
+            if ($parsed['number'] !== null) $timeEvents[] = ['row' => $row, 'hours' => $parsed['number'], 'text' => $parsed['text']];
+        }
+        foreach ($timeEvents as $event) {
+            $topicIndex = $this->precedingTopicIndex($topicItems, (int) $event['row']['seq']);
+            if ($topicIndex === null) {
+                $plan['warnings'][] = Text::warning('UNRECOGNIZED_TEXT', 'Tiempo anterior al primer tema; corresponde a una actividad introductoria no modelada.', $event['row'], $event['text']);
+                continue;
+            }
+            if ($topicItems[$topicIndex]['hours'] === null) {
+                $topicItems[$topicIndex]['hours'] = $event['hours'];
+                $topicItems[$topicIndex]['time_text'] = $event['text'];
+            }
+        }
+
+        foreach ($ranges as $unitIndex => $range) {
+            $unitRows = $this->rowsInRange($dataRows, $range['from'], $range['to']);
+            $unitParts = [];
+            $capacityParts = [];
+            $developmentParts = [];
+            $procedureParts = [];
+            $instrumentParts = [];
+            foreach ($unitRows as $row) {
+                $starts = $pageStarts[$row['page']];
+                $unitText = $this->column($row, $starts['unit'], $starts['capacity']);
+                $unitText = preg_replace('/^UNIDAD\s+[IVXLCDM]+\s*/ui', '', $unitText, 1) ?? $unitText;
+                $this->add($unitParts, $row, $unitText);
+                $this->add($capacityParts, $row, $this->column($row, $starts['capacity'], $starts['topic']));
+                $this->add($developmentParts, $row, $this->column($row, $starts['development'], $starts['procedure']));
+                $this->add($procedureParts, $row, $this->column($row, $starts['procedure'], $starts['instrument']));
+                $this->add($instrumentParts, $row, $this->column($row, $starts['instrument'], $starts['time']));
+            }
+            $unitNumber = Text::romanToInt((string) $range['code']);
+            $unit = CanonicalPlan::unit($unitIndex + 1, $range['code'], Text::join($unitParts) ?? ('UNIDAD '.$range['code']));
+            $capacity = CanonicalPlan::capacity(1, Text::join($capacityParts) ?? '');
+            $capacity['proceso_desarrollo'] = Text::join($developmentParts);
+            $procedures = $this->cellItems($procedureParts);
+            $instruments = $this->cellItems($instrumentParts);
+            $hoursTotal = 0.0;
+            foreach ($topicItems as $topicItem) {
+                $topicUnit = (int) explode('.', $topicItem['code'])[0];
+                if ($unitNumber !== $topicUnit) continue;
+                $topic = CanonicalPlan::topic(count($capacity['temas']) + 1, $topicItem['code'], $topicItem['text']);
+                $topic['horas_catedra'] = $topicItem['hours'];
+                $topic['tiempo_texto'] = $topicItem['time_text'];
+                $topic['procedimientos_evaluativos'] = $procedures;
+                $topic['instrumentos_evaluativos'] = $instruments;
+                foreach ($topicItem['indicators'] as $indicatorIndex => $indicator) {
+                    $topic['indicadores'][] = CanonicalPlan::indicator(
+                        $indicatorIndex + 1,
+                        $indicator['code'],
+                        $indicator['text'],
+                        $indicator['check']
+                    );
+                }
+                if ($topic['horas_catedra'] !== null) $hoursTotal += (float) $topic['horas_catedra'];
+                $capacity['temas'][] = $topic;
+            }
+            $unit['horas_catedra'] = $hoursTotal > 0 ? $hoursTotal : null;
+            $unit['capacidades'][] = $capacity;
+            $plan['unidades'][] = $unit;
+        }
+        if ($topicItems && preg_match('/ACTIVIDADES\s+DE\s+INICIO\s+DE\s+CLASES/ui', (string) $document['text'], $match) === 1) {
+            $plan['warnings'][] = Text::warning(
+                'UNRECOGNIZED_TEXT',
+                'La fila introductoria no numerada se preserva como warning y no se inventa como tema jerárquico.',
+                null,
+                Text::clean($match[0])
+            );
+        }
+        $plan['debug'] = [
+            'columns_by_page' => $this->debugColumnsByPage($pageStarts, $rows),
+            'unit_markers' => array_map(static fn(array $x): array => [
+                'code' => $x['code'], 'page' => $x['row']['page'], 'line' => $x['row']['line'],
+            ], $markers),
+            'association_rule' => 'Tema e indicador por prefijo jerárquico exacto N.N / N.N.N; celdas combinadas por rango vertical de unidad.',
+        ];
+        return $plan;
+    }
+
+    /** @param array<int,array<string,mixed>> $rows @param array<int,array<string,int>> $pageStarts @return array<int,array<string,mixed>> */
+    private function codedTopics(array $rows, array $pageStarts): array
+    {
+        $items = [];
+        foreach ($rows as $row) {
+            $starts = $pageStarts[$row['page']];
+            $cell = $this->column($row, $starts['topic'], $starts['indicator']);
+            if ($cell === '') continue;
+            if (preg_match('/^TEMA\s*(\d+\.\d+)\s*-?\s*(.*)$/ui', $cell, $match) === 1) {
+                $items[] = [
+                    'code' => $match[1], 'row' => $row, 'parts' => [Text::clean($match[2])],
+                    'indicators' => [], 'hours' => null, 'time_text' => null,
+                ];
+            } elseif ($items) {
+                $items[array_key_last($items)]['parts'][] = $cell;
+            }
+        }
+        foreach ($items as &$item) $item['text'] = Text::join($item['parts']) ?? '';
+        unset($item);
+        return $items;
+    }
+
+    /** @param array<int,array<string,mixed>> $rows @param array<int,array<string,int>> $pageStarts @return array<int,array<string,mixed>> */
+    private function codedIndicators(array $rows, array $pageStarts): array
+    {
+        $items = [];
+        foreach ($rows as $row) {
+            $starts = $pageStarts[$row['page']];
+            $cell = $this->column($row, $starts['indicator'], $starts['check']);
+            if ($cell === '') continue;
+            if (preg_match('/^(\d+\.\d+\.\d+)\s+(.*)$/u', $cell, $match) === 1) {
+                $items[] = ['code' => $match[1], 'row' => $row, 'parts' => [Text::clean($match[2])], 'check' => null];
+            } elseif ($items) {
+                $items[array_key_last($items)]['parts'][] = $cell;
+            }
+        }
+        foreach ($items as &$item) $item['text'] = Text::join($item['parts']) ?? '';
+        unset($item);
+        return $items;
+    }
+
+    /** @param array<int,array<string,mixed>> $topics */
+    private function precedingTopicIndex(array $topics, int $seq): ?int
+    {
+        $found = null;
+        foreach ($topics as $index => $topic) {
+            if ((int) $topic['row']['seq'] > $seq) break;
+            $found = $index;
+        }
+        return $found;
+    }
+
+    /** @param array<int,array<string,mixed>> $target */
+    private function add(array &$target, array $row, string $text): void
+    {
+        if ($text !== '') $target[] = ['row' => $row, 'text' => $text];
+    }
+
+    /** @param array<int,array<string,mixed>> $fragments @return array<int,string> */
+    private function cellItems(array $fragments): array
+    {
+        $items = [];
+        $keys = [];
+        foreach ($fragments as $fragment) {
+            $text = Text::clean((string) $fragment['text']);
+            $key = Text::key($text);
+            if ($text === '' || isset($keys[$key])) continue;
+            $keys[$key] = true;
+            $items[] = $text;
+        }
+        return $items;
+    }
+
+    /** @param array<int,array<string,mixed>> $rows @param array<string,int> $base @return array<int,array<string,int>> */
+    private function pageStarts(array $rows, int $pages, array $base): array
+    {
+        $result = [];
+        foreach (range(1, $pages) as $page) {
+            $pageRows = array_values(array_filter($rows, static fn(array $row): bool => $row['page'] === $page));
+            $starts = $base;
+            $starts['topic'] = $this->minimumRegexPosition($pageRows, '/Tema\s+\d+\.\d+/ui') ?? $base['topic'];
+            $starts['indicator'] = $this->minimumRegexPosition($pageRows, '/(?<!\d)\d+\.\d+\.\d+\b/u') ?? $base['indicator'];
+            $starts['capacity'] = $this->minimumLeadingBetween($pageRows, 8, $starts['topic'] - 4) ?? min($base['capacity'], $starts['topic'] - 10);
+            $starts['time'] = $this->minimumRegexPosition($pageRows, '/\b\d+(?:[.,]\d+)?\s*H\b/ui') ?? $base['time'];
+            $starts['development'] = $this->minimumRegexPosition($pageRows, '/\b(?:FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE)\b/ui') ?? min($base['development'], $starts['time'] - 40);
+            $starts['procedure'] = $this->minimumRegexPosition($pageRows, '/\b(?:OBSERVACI[ÓO]N|PRUEBA)(?!\s+VIRTUAL)/ui') ?? min($base['procedure'], $starts['time'] - 29);
+            $starts['instrument'] = $this->minimumRegexPosition($pageRows, '/\b(?:PORTAFOLIO|R[ÚU]BRICA|RSA|PRUEBA\s+VIRTUAL)/ui') ?? min($base['instrument'], $starts['time'] - 16);
+            $starts['check'] = min($base['check'], $starts['development']);
+            $result[$page] = $starts;
+        }
+        return $result;
+    }
+
+    /** @param array<int,array<string,mixed>> $rows */
+    private function minimumLeadingBetween(array $rows, int $minimum, int $maximum): ?int
+    {
+        $found = null;
+        foreach ($rows as $row) {
+            if (preg_match('/^(\s*)\S/u', (string) $row['text'], $match) !== 1) continue;
+            $position = mb_strlen($match[1], 'UTF-8');
+            if ($position < $minimum || $position > $maximum) continue;
+            $found = $found === null ? $position : min($found, $position);
+        }
+        return $found;
+    }
+
+    /** @param array<int,array<string,int>> $pageStarts @param array<int,array<string,mixed>> $rows */
+    private function debugColumnsByPage(array $pageStarts, array $rows): array
+    {
+        $debug = [];
+        foreach ($pageStarts as $page => $starts) {
+            $width = 1;
+            foreach ($rows as $row) if ($row['page'] === $page) $width = max($width, mb_strlen((string) $row['text'], 'UTF-8'));
+            $names = array_keys($starts);
+            foreach ($names as $index => $name) {
+                $nextName = $names[$index + 1] ?? null;
+                $end = $nextName === null ? $width : $starts[$nextName];
+                $debug[$page][$name] = [
+                    'x_char_start'=>$starts[$name], 'x_char_end'=>$end,
+                    'x_relative_start'=>round($starts[$name]/$width, 4),
+                    'x_relative_end'=>round($end/$width, 4),
+                ];
+            }
+        }
+        return $debug;
+    }
+}

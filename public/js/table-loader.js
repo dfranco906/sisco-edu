@@ -178,8 +178,10 @@ async function cargarTabla(api, columnas, filtros = {}) {
         ${item.user_id_global && Object.prototype.hasOwnProperty.call(item, "id_profesor") ? `
         <button type="button" data-accion-registro="huella" data-user-id-global="${escaparHtml(item.user_id_global)}" data-tipo-persona="profesor"
         class="btn btn-fingerprint btn-huella">
-          Huella
-        </button>` : ""}
+          Registrar huella
+        </button>
+        ${item.huella === "Registrada" ? `<button type="button" data-accion-registro="sincronizar-huella" data-user-id-global="${escaparHtml(item.user_id_global)}"
+        class="btn btn-primary btn-huella">Enviar a aula</button>` : ""}` : ""}
             </div></td>`;
 
             fila += `</tr>`;
@@ -200,6 +202,9 @@ async function cargarTabla(api, columnas, filtros = {}) {
                         boton.dataset.userIdGlobal,
                         boton.dataset.tipoPersona
                     );
+                }
+                if (accion === "sincronizar-huella") {
+                    window.sincronizarHuellaProfesor?.(boton.dataset.userIdGlobal);
                 }
             });
         });

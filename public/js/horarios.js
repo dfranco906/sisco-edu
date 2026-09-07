@@ -258,7 +258,8 @@
         return asignaciones.filter((asignacionCandidata) =>
             String(asignacionActual.id_grado) !== String(asignacionCandidata.id_grado)
             && String(asignacionActual.id_profesor) === String(asignacionCandidata.id_profesor)
-            && String(asignacionActual.id_materia) === String(asignacionCandidata.id_materia)
+            && ($(`#${prefijo}-materias-distintas`).checked
+                || String(asignacionActual.id_materia) === String(asignacionCandidata.id_materia))
             && String(asignacionActual.anio_lectivo) === String(asignacionCandidata.anio_lectivo)
         ).sort((a, b) => String(a.grado || "").localeCompare(
             String(b.grado || ""),
@@ -290,7 +291,7 @@
         );
 
         if (!candidatos.length) {
-            contenedor.innerHTML = '<p class="app-help">No hay otros grados con la misma materia, profesor y año lectivo.</p>';
+            contenedor.innerHTML = '<p class="app-help">No hay asignaciones compatibles. Para buscar otras materias del mismo profesor y año, activá Incluir materias distintas.</p>';
             return;
         }
         if (!visibles.length) {
@@ -324,7 +325,7 @@
             && horaCorta(item.hora_inicio) === horaCorta(controles.inicio.value)
             && horaCorta(item.hora_fin) === horaCorta(controles.fin.value)
         )).length;
-        const nombres = asignacionesSeleccionadas.map((item) => item.grado).join(", ");
+        const nombres = asignacionesSeleccionadas.map((item) => `${item.grado} (${item.materia})`).join(", ");
 
         ayuda.textContent = !asignacionesSeleccionadas.length
             ? "Seleccioná los cursos que compartirán esta clase."
@@ -343,6 +344,7 @@
         panel.hidden = !checkbox.checked;
 
         if (!checkbox.checked) {
+            $(`#${prefijo}-materias-distintas`).checked = false;
             guardarIdsClaseConjunta(prefijo, []);
             buscador.value = "";
             opciones.innerHTML = "";
@@ -351,11 +353,22 @@
             return;
         }
 
+        if (horarioActual) {
+            const principal = asignacionPorId(horarioActual.id_asignacion);
+            const miembros = horarios.filter((item) =>
+                (horarioActual.id_grupo_clase_conjunta && String(item.id_grupo_clase_conjunta) === String(horarioActual.id_grupo_clase_conjunta))
+                || String(item.id_horario) === String(horarioActual.id_horario_vinculado)
+            );
+            $(`#${prefijo}-materias-distintas`).checked = miembros.some((item) => {
+                const otra = asignacionPorId(item.id_asignacion);
+                return otra && principal && String(otra.id_materia) !== String(principal.id_materia);
+            });
+        }
         const candidatos = asignacionesCorrespondientes(prefijo);
         if (!candidatos.length) {
             guardarIdsClaseConjunta(prefijo, []);
             renderizarOpcionesClaseConjunta(prefijo);
-            ayuda.textContent = "Los demás cursos deben tener asignados esta misma materia, profesor y año lectivo.";
+            ayuda.textContent = "Seleccioná asignaciones de otros grados con el mismo profesor y año lectivo.";
             actualizarBotonGuardar(prefijo);
             return;
         }
@@ -473,11 +486,11 @@
 
         const mostrar = () => {
             const consulta = normalizarBusqueda(buscador.value);
-            const coincidencias = asignaciones
-                .filter((asignacion) =>
-                    !consulta || normalizarBusqueda(etiquetaAsignacion(asignacion)).includes(consulta)
-                )
-                .slice(0, 12);
+            // El panel ya tiene scroll: conservar todas las coincidencias evita
+            // ocultar materias de grados con más de doce asignaciones.
+            const coincidencias = asignaciones.filter((asignacion) =>
+                !consulta || normalizarBusqueda(etiquetaAsignacion(asignacion)).includes(consulta)
+            );
 
             sugerencias.replaceChildren();
             buscador.removeAttribute("aria-activedescendant");
@@ -930,22 +943,40 @@
             $(`#${prefijo}-buscar-clase-conjunta`).addEventListener("input", () =>
                 renderizarOpcionesClaseConjunta(prefijo)
             );
+            $(`#${prefijo}-materias-distintas`).addEventListener("change", () => actualizarClaseConjunta(prefijo));
             $(`#${prefijo}-opciones-clase-conjunta`).addEventListener("change", (evento) => {
                 const opcion = evento.target.closest("[data-clase-conjunta-opcion]");
                 if (!opcion) return;
                 const seleccionadas = new Set(idsClaseConjunta(prefijo));
-                if (opcion.checked) seleccionadas.add(String(opcion.value));
+                if (opcion.checked) {
+                    const nueva = asignacionPorId(opcion.value);
+                    for (const id of seleccionadas) {
+                        if (String(asignacionPorId(id)?.id_grado) === String(nueva?.id_grado)) seleccionadas.delete(id);
+                    }
+                    seleccionadas.add(String(opcion.value));
+                }
                 else seleccionadas.delete(String(opcion.value));
                 guardarIdsClaseConjunta(prefijo, [...seleccionadas]);
+                renderizarOpcionesClaseConjunta(prefijo);
                 actualizarAyudaClaseConjunta(prefijo);
             });
             $(`#${prefijo}-seleccionar-clase-conjunta`).addEventListener("click", () => {
-                guardarIdsClaseConjunta(
-                    prefijo,
-                    asignacionesCorrespondientes(prefijo).map((item) => item.id_asignacion)
-                );
+                const porGrado = new Map();
+                for (const item of asignacionesCorrespondientes(prefijo)) {
+                    const key = String(item.id_grado);
+                    if (!porGrado.has(key)) porGrado.set(key, []);
+                    porGrado.get(key).push(item);
+                }
+                const elegidas = new Set(idsClaseConjunta(prefijo));
+                for (const opciones of porGrado.values()) {
+                    if (opciones.length === 1) elegidas.add(String(opciones[0].id_asignacion));
+                }
+                guardarIdsClaseConjunta(prefijo, [...elegidas]);
                 renderizarOpcionesClaseConjunta(prefijo);
                 actualizarAyudaClaseConjunta(prefijo);
+                if ([...porGrado.values()].some((opciones) => opciones.length > 1 && !opciones.some((item) => elegidas.has(String(item.id_asignacion))))) {
+                    $(`#${prefijo}-clase-conjunta-ayuda`).textContent += ' Hay grados con varias materias: seleccioná explícitamente una en cada grado.';
+                }
             });
             $(`#${prefijo}-limpiar-clase-conjunta`).addEventListener("click", () => {
                 guardarIdsClaseConjunta(prefijo, []);

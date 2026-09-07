@@ -16,6 +16,7 @@
             ["Grados", "Gesti&oacute;n de grados y aula asignada.", "grados/index.php"],
             ["Materias", "Gesti&oacute;n de materias acad&eacute;micas.", "materias/index.php"],
             ["Asignaciones", "Relacionar profesores, materias, grados y horarios.", "asignaciones/index.php"],
+            ["Nodos ESP32", "Configurar aula, node ID y dirección LoRa.", "nodos/index.php"],
             ["Configuraci&oacute;n de informes", "Membrete institucional para impresi&oacute;n.", "configuracion/informes.php"],
         ];
 

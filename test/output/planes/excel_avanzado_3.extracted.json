@@ -1,0 +1,1148 @@
+{
+    "schema_version": "1.0-poc",
+    "source": {
+        "filename": "Plan Anual - tercer curso - BCB - Excel Avanzado.pdf",
+        "format": "EXCEL_AVANZADO",
+        "sha256": "6f29916d0e36fcb9c25226185af0471d1ffd3d4e37c97f9c7b4b26f09a9d7573",
+        "pages": 2,
+        "text_layer": true,
+        "extractor": {
+            "name": "pdftotext",
+            "mode": "table",
+            "binary": "C:\\Program Files\\Git\\mingw64\\bin\\pdftotext.exe",
+            "elapsed_ms": 48.34,
+            "stderr": null
+        }
+    },
+    "metadata": {
+        "institucion": "COL. PRIV. PRESB. SAN PABLO",
+        "materia": "MICROSOFT EXCEL",
+        "profesor": "LIC. DANILO FRANCO",
+        "curso": "3ºC",
+        "turno": "MAÑANA",
+        "anio": 2026,
+        "dias_clase": null,
+        "competencia_general": "Demostrar competencia en la creación, administración y distribución de hojas de cálculos profesionales para una variedad de propósitos y situaciones especializadas.",
+        "competencia_especifica": "Formula y resuelve situaciones problemáticas que involucren la utilización de conceptos, operaciones y funciones de Microsoft Excel aplicadas a situaciones de la vida real."
+    },
+    "unidades": [
+        {
+            "orden": 1,
+            "codigo": "I",
+            "nombre": "Administrar hojas de trabajo y libros de trabajo",
+            "descripcion": null,
+            "horas_catedra": 5,
+            "tiempo_texto": null,
+            "proceso_texto": null,
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Administra hojas y libros de trabajos de Microsoft Excel para el trabajo colaborativo",
+                    "proceso_desarrollo": null,
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "1.1",
+                            "titulo": "Importar datos en libros de trabajo",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "1.1.1",
+                                    "descripcion": "Importa datos de archivos .csv",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "1.1.2",
+                                    "descripcion": "Importa datos de archivos .txt",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "1.2",
+                            "titulo": "Navegar dentro de los libros de trabajo",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "1.2.1",
+                                    "descripcion": "Busca datos dentro de un libro de trabajo",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "1.2.2",
+                                    "descripcion": "Navega entre celdas, rangos y elementos del libro de trabajo",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "1.2.3",
+                                    "descripcion": "Inserta y elimina hipervínculos",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "1.3",
+                            "titulo": "Dar formato a hojas y libros de trabajo",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "1.3.1",
+                                    "descripcion": "Modifica la configuración de página",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "1.3.2",
+                                    "descripcion": "Personaliza encabezados y pies de página",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "1.3.3",
+                                    "descripcion": "Personaliza la barra de herramienntas de acceso rápido",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 4,
+                            "codigo": "1.4",
+                            "titulo": "Personalizar opciones y vistas",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "1.4.1",
+                                    "descripcion": "Congelar filas y columnas de la hoja de trabajo",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "1.4.2",
+                                    "descripcion": "Cambiar las vistas de ventanas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "1.4.3",
+                                    "descripcion": "Modificar las propiedades básicas del libro de trabajo",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 4,
+                                    "codigo": "1.4.4",
+                                    "descripcion": "Aplica la opcion \"mostrar fórmulas\"",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 5,
+                            "codigo": "1.5",
+                            "titulo": "Configurar contenido para la colaboración",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "1.5.1",
+                                    "descripcion": "Establece un área de impresión",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "1.5.2",
+                                    "descripcion": "Configura los ajustes de impresión",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "1.5.3",
+                                    "descripcion": "Guarda libros de trabajo en formatos de archivos alternativos",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 2,
+            "codigo": "II",
+            "nombre": "Administrar tablas y datos de tablas",
+            "descripcion": null,
+            "horas_catedra": 6,
+            "tiempo_texto": null,
+            "proceso_texto": null,
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Organiza datos utilizando herramientas proveídas en las hojas de trabajo de Microsoft Excel",
+                    "proceso_desarrollo": "FEBRERO A JULIO",
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "2.1",
+                            "titulo": "Manipular datos en hojas de trabajo",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.1.1",
+                                    "descripcion": "Pega datos con opciones especiales de pegado",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.1.2",
+                                    "descripcion": "Utiliza opciones de rellenos automáticos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "2.1.3",
+                                    "descripcion": "Inserta y elimina columnas y filas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "2.2",
+                            "titulo": "Dar formato de celdas y rangos",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.2.1",
+                                    "descripcion": "Fusiona y descompone celdas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.2.2",
+                                    "descripcion": "Modifica la alineación, orientación y sangría de la celda",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "2.2.3",
+                                    "descripcion": "Ajusta textos dentro de celdas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 4,
+                                    "codigo": "2.2.4",
+                                    "descripcion": "Aplica formatos numéricos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 5,
+                                    "codigo": "2.2.5",
+                                    "descripcion": "Aplica formatos desde el cuadro de diálogo",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 6,
+                                    "codigo": "2.2.6",
+                                    "descripcion": "Aplica estilos de celda",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "2.3",
+                            "titulo": "Definir y hacer referencia a rangos con nombres",
+                            "contenido": null,
+                            "horas_catedra": null,
+                            "tiempo_texto": null,
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.3.1",
+                                    "descripcion": "Define rangos con nombres",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.3.2",
+                                    "descripcion": "Nombra tablas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 4,
+                            "codigo": "2.4",
+                            "titulo": "Resumir los datos visualmente",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.4.1",
+                                    "descripcion": "Inserta minigráficos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.4.2",
+                                    "descripcion": "Aplica y elimina formatos condicionales",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 5,
+                            "codigo": "2.5",
+                            "titulo": "Crear y formatear tablas",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.5.1",
+                                    "descripcion": "Crea tablas apartir de rangos de celdas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.5.2",
+                                    "descripcion": "Aplica estilos de tablas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "2.5.3",
+                                    "descripcion": "Convierte tablas en rangos de celdas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 6,
+                            "codigo": "2.6",
+                            "titulo": "Modificar tablas",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.6.1",
+                                    "descripcion": "Agrega y quita filas y columnas de tablas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.6.2",
+                                    "descripcion": "Inserta y configura filas totales en tablas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 7,
+                            "codigo": "2.7",
+                            "titulo": "Filtrar y ordenar los datos de la tabla",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "2.7.1",
+                                    "descripcion": "Utiliza opciones de filtros en tablas y rangos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "2.7.2",
+                                    "descripcion": "Ordena datos por varias columnas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "orden": 3,
+            "codigo": "III",
+            "nombre": "Realizar operaciones mediante fórmulas y funciones",
+            "descripcion": null,
+            "horas_catedra": 6,
+            "tiempo_texto": null,
+            "proceso_texto": null,
+            "area_transversal": null,
+            "metodologia": null,
+            "medios_verificacion": null,
+            "capacidades": [
+                {
+                    "orden": 1,
+                    "descripcion": "Resuelve situaciones problemáticas del ámbito empresarial utilizando libros de trabajo de Microsoft Excel",
+                    "proceso_desarrollo": "AGOSTO A NOVIEMBRE",
+                    "temas": [
+                        {
+                            "orden": 1,
+                            "codigo": "3.1",
+                            "titulo": "Insertar referencias",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "3.1.1",
+                                    "descripcion": "Inserta referencias relativas, abosolutas y mixtas",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "3.1.2",
+                                    "descripcion": "Referencia rangos con nombre y tablas con nombre en fórmulas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 2,
+                            "codigo": "3.2",
+                            "titulo": "Calcular y transformar datos",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "3.2.1",
+                                    "descripcion": "Realiza cálculos utilizando las funciones PROMEDIO(), MAX(), MIN() y SUMA()",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "3.2.2",
+                                    "descripcion": "Cuenta celdas utilizando las funciones CONTAR(), CONTARA(), y CONTAR.BLANCO()",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "3.2.3",
+                                    "descripcion": "Realiza operaciones condicionales utilizando la función SI()",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 3,
+                            "codigo": "3.3",
+                            "titulo": "Dar formato y modificar texto",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "3.3.1",
+                                    "descripcion": "Da formato a textos utilizando las funciones DERECHA(), IZQUIERDA() y EXTRAE()",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "3.3.2",
+                                    "descripcion": "Da formato a textos utilizando las funciones MAYUSC(), MINUSC(), LARGO() y HALLAR()",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "3.3.3",
+                                    "descripcion": "Da formato a textos utilizando las funciones CONCATENAR() y UNIRCADENAS()",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 4,
+                            "codigo": "3.4",
+                            "titulo": "Crear tablas dinámicas",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "3.4.1",
+                                    "descripcion": "Crea gráficos y hojas de gráficos a partir de tablas dinámicas",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 5,
+                            "codigo": "3.5",
+                            "titulo": "Crear, modificar y dar formato a gráficos",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "3.5.1",
+                                    "descripcion": "Añade serie de datos a los gráficos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "3.5.2",
+                                    "descripcion": "Cambia entre filas y columnas en los datos de origen",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "3.5.3",
+                                    "descripcion": "Añade y modifica elementos del gráfico",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 4,
+                                    "codigo": "3.5.4",
+                                    "descripcion": "Aplica diseños de gráficos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 5,
+                                    "codigo": "3.5.5",
+                                    "descripcion": "Aplica estilos de gráficos",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 6,
+                                    "codigo": "3.5.6",
+                                    "descripcion": "Añade textos alternativos a los gráficos para la accesibilidad",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        },
+                        {
+                            "orden": 6,
+                            "codigo": "3.6",
+                            "titulo": "Crear y modificar macros simples",
+                            "contenido": null,
+                            "horas_catedra": 1,
+                            "tiempo_texto": "1H",
+                            "fecha_texto": null,
+                            "indicadores": [
+                                {
+                                    "orden": 1,
+                                    "codigo": "3.6.1",
+                                    "descripcion": "Graba macros simples",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 2,
+                                    "codigo": "3.6.2",
+                                    "descripcion": "Crea nombres a macros simples",
+                                    "check": null
+                                },
+                                {
+                                    "orden": 3,
+                                    "codigo": "3.6.3",
+                                    "descripcion": "Edita macros simples",
+                                    "check": null
+                                }
+                            ],
+                            "procedimientos_evaluativos": [
+                                "Observación",
+                                "Prueba"
+                            ],
+                            "instrumentos_evaluativos": [
+                                "Portafolio Web",
+                                "Prueba virtual"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "warnings": [
+        {
+            "type": "UNRECOGNIZED_TEXT",
+            "page": 1,
+            "line": 17,
+            "text": "1H",
+            "message": "Tiempo anterior al primer tema; corresponde a una actividad introductoria no modelada."
+        },
+        {
+            "type": "UNRECOGNIZED_TEXT",
+            "page": null,
+            "line": null,
+            "text": "Actividades de inicio de clases",
+            "message": "La fila introductoria no numerada se preserva como warning y no se inventa como tema jerárquico."
+        },
+        {
+            "type": "MISSING_HOURS",
+            "page": null,
+            "line": null,
+            "text": "2.3",
+            "message": "No se encontró tiempo/HC para el tema de Excel Avanzado."
+        }
+    ],
+    "confidence": {
+        "scale": "rule_completeness_0_100",
+        "metadata": 100,
+        "estructura": 90,
+        "asociaciones": 100,
+        "global": 96,
+        "criteria": {
+            "metadata": {
+                "expected": [
+                    "institucion",
+                    "materia",
+                    "profesor",
+                    "curso",
+                    "turno",
+                    "anio",
+                    "competencia_general",
+                    "competencia_especifica"
+                ],
+                "found": [
+                    "institucion",
+                    "materia",
+                    "profesor",
+                    "curso",
+                    "turno",
+                    "anio",
+                    "competencia_general",
+                    "competencia_especifica"
+                ]
+            },
+            "estructura": [
+                {
+                    "criterion": "Existe al menos una unidad",
+                    "weight": 15,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todas las unidades tienen capacidad",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todas las capacidades tienen tema",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Todos los temas tienen indicador",
+                    "weight": 20,
+                    "passed": true
+                },
+                {
+                    "criterion": "Órdenes secuenciales no vacíos",
+                    "weight": 5,
+                    "passed": true
+                },
+                {
+                    "criterion": "Códigos jerárquicos coherentes o no aplicables",
+                    "weight": 10,
+                    "passed": true
+                },
+                {
+                    "criterion": "Horas presentes cuando el formato las exige",
+                    "weight": 10,
+                    "passed": false
+                }
+            ],
+            "asociaciones": [
+                {
+                    "criterion": "Sin temas huérfanos",
+                    "weight": 40,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin indicadores huérfanos",
+                    "weight": 40,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin columnas ambiguas",
+                    "weight": 10,
+                    "passed": true
+                },
+                {
+                    "criterion": "Sin reconstrucción conservadora de tabla",
+                    "weight": 10,
+                    "passed": true
+                }
+            ],
+            "formula_global": "30% metadata + 40% estructura + 30% asociaciones"
+        }
+    },
+    "debug": {
+        "columns_by_page": {
+            "1": {
+                "unit": {
+                    "x_char_start": 0,
+                    "x_char_end": 18,
+                    "x_relative_start": 0,
+                    "x_relative_end": 0.0735
+                },
+                "capacity": {
+                    "x_char_start": 18,
+                    "x_char_end": 35,
+                    "x_relative_start": 0.0735,
+                    "x_relative_end": 0.1429
+                },
+                "topic": {
+                    "x_char_start": 35,
+                    "x_char_end": 75,
+                    "x_relative_start": 0.1429,
+                    "x_relative_end": 0.3061
+                },
+                "indicator": {
+                    "x_char_start": 75,
+                    "x_char_end": 163,
+                    "x_relative_start": 0.3061,
+                    "x_relative_end": 0.6653
+                },
+                "check": {
+                    "x_char_start": 163,
+                    "x_char_end": 183,
+                    "x_relative_start": 0.6653,
+                    "x_relative_end": 0.7469
+                },
+                "development": {
+                    "x_char_start": 183,
+                    "x_char_end": 201,
+                    "x_relative_start": 0.7469,
+                    "x_relative_end": 0.8204
+                },
+                "procedure": {
+                    "x_char_start": 201,
+                    "x_char_end": 217,
+                    "x_relative_start": 0.8204,
+                    "x_relative_end": 0.8857
+                },
+                "instrument": {
+                    "x_char_start": 217,
+                    "x_char_end": 233,
+                    "x_relative_start": 0.8857,
+                    "x_relative_end": 0.951
+                },
+                "time": {
+                    "x_char_start": 233,
+                    "x_char_end": 245,
+                    "x_relative_start": 0.951,
+                    "x_relative_end": 1
+                }
+            },
+            "2": {
+                "unit": {
+                    "x_char_start": 0,
+                    "x_char_end": 13,
+                    "x_relative_start": 0,
+                    "x_relative_end": 0.0625
+                },
+                "capacity": {
+                    "x_char_start": 13,
+                    "x_char_end": 32,
+                    "x_relative_start": 0.0625,
+                    "x_relative_end": 0.1538
+                },
+                "topic": {
+                    "x_char_start": 32,
+                    "x_char_end": 71,
+                    "x_relative_start": 0.1538,
+                    "x_relative_end": 0.3413
+                },
+                "indicator": {
+                    "x_char_start": 71,
+                    "x_char_end": 163,
+                    "x_relative_start": 0.3413,
+                    "x_relative_end": 0.7837
+                },
+                "check": {
+                    "x_char_start": 163,
+                    "x_char_end": 163,
+                    "x_relative_start": 0.7837,
+                    "x_relative_end": 0.7837
+                },
+                "development": {
+                    "x_char_start": 163,
+                    "x_char_end": 174,
+                    "x_relative_start": 0.7837,
+                    "x_relative_end": 0.8365
+                },
+                "procedure": {
+                    "x_char_start": 174,
+                    "x_char_end": 187,
+                    "x_relative_start": 0.8365,
+                    "x_relative_end": 0.899
+                },
+                "instrument": {
+                    "x_char_start": 187,
+                    "x_char_end": 203,
+                    "x_relative_start": 0.899,
+                    "x_relative_end": 0.976
+                },
+                "time": {
+                    "x_char_start": 203,
+                    "x_char_end": 208,
+                    "x_relative_start": 0.976,
+                    "x_relative_end": 1
+                }
+            }
+        },
+        "unit_markers": [
+            {
+                "code": "I",
+                "page": 1,
+                "line": 31
+            },
+            {
+                "code": "II",
+                "page": 1,
+                "line": 73
+            },
+            {
+                "code": "III",
+                "page": 2,
+                "line": 25
+            }
+        ],
+        "association_rule": "Tema e indicador por prefijo jerárquico exacto N.N / N.N.N; celdas combinadas por rango vertical de unidad.",
+        "format_detection": {
+            "format": "EXCEL_AVANZADO",
+            "threshold": 60,
+            "minimum_margin": 15,
+            "winning_score": 121,
+            "margin": 71,
+            "scores": {
+                "EXCEL_AVANZADO": {
+                    "score": 121,
+                    "signals": [
+                        {
+                            "signal": "Título Microsoft Excel",
+                            "weight": 25,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Unidad, Capacidades y Temas",
+                            "weight": 20,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Columna Check",
+                            "weight": 18,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Proceso para desarrollo",
+                            "weight": 22,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Procedimientos",
+                            "weight": 8,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Instrumentos",
+                            "weight": 8,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Códigos de tema",
+                            "weight": 10,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Códigos de indicador",
+                            "weight": 10,
+                            "matched": true
+                        }
+                    ]
+                },
+                "ADMINISTRACION_FINANCIERA": {
+                    "score": 50,
+                    "signals": [
+                        {
+                            "signal": "Título Administración Financiera",
+                            "weight": 25,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Unidad Temática y Capacidades",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Procedimientos Evaluativos",
+                            "weight": 15,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Instrumentos Evaluativos",
+                            "weight": 15,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Tiempo HC/Horas Cátedra",
+                            "weight": 10,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Proceso/Meses",
+                            "weight": 10,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Competencia General",
+                            "weight": 5,
+                            "matched": true
+                        },
+                        {
+                            "signal": "Competencia Específica",
+                            "weight": 5,
+                            "matched": true
+                        }
+                    ]
+                },
+                "COMPETENCIA_CONTENIDO": {
+                    "score": 0,
+                    "signals": [
+                        {
+                            "signal": "Competencia y Capacidad",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Contenidos",
+                            "weight": 15,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Área Transversal",
+                            "weight": 15,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Metodología de Enseñanza",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Medios de Verificación",
+                            "weight": 20,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Fecha",
+                            "weight": 5,
+                            "matched": false
+                        },
+                        {
+                            "signal": "Días de clase",
+                            "weight": 5,
+                            "matched": false
+                        }
+                    ]
+                }
+            }
+        },
+        "counts": {
+            "unidades": 3,
+            "capacidades": 3,
+            "temas": 18,
+            "indicadores": 53
+        },
+        "pages": 2,
+        "warning_count": 3
+    }
+}
