@@ -38,7 +38,8 @@ registro exclusivamente estos campos seguros:
 La causa exacta es `owner=0`. La cuenta SuperAdmin real tiene ID cero en la BD.
 `isset()` admitia esa identidad y la autorizacion administrativa permitia seguir
 hasta staging, cuyo contrato exige un propietario positivo.
-No se cambia esa cuenta ni sus referencias en datos reales.
+En la auditoria inicial no se cambio esa cuenta ni sus referencias en datos reales.
+La reparacion posteriormente autorizada se documenta al final de este informe.
 La comprobacion del hash SHA-256 del endpoint servido por Apache coincidio con
 el archivo de esta copia de la rama; no se estaba sirviendo otra copia.
 
@@ -118,9 +119,9 @@ Datos academicos insertados por esta auditoria: **0**.
 Upload y preview reales: **PASS**, detenidos antes de confirmar.
 Listo para comenzar una auditoria posterior de programacion: **SI**.
 Esto no valida ni modifica las reglas de programacion/publicacion.
-La cuenta SuperAdmin con ID cero sigue sin ser una identidad valida; se rechazo
-sin reparar ni renumerar datos reales. Cualquier reparacion de esa cuenta y sus
-referencias requiere un trabajo independiente autorizado.
+Al cierre inicial, la cuenta SuperAdmin con ID cero se rechazo sin renumerar
+datos reales. Su reparacion posterior requirio autorizacion explicita y se
+documenta a continuacion.
 
 ## Regresiones y archivos
 
@@ -158,3 +159,47 @@ Archivos de los cambios (sin archivos de tiempos generados por tests):
 
 Configuracion local instalada fuera del commit:
 `src/api/Planificacion/.htaccess` (ruta de Xpdf especifica de esta PC).
+
+## Reparacion autorizada del login SuperAdmin
+
+El login real de `admin1` verificaba correctamente su clave, pero redirigia con
+`error=sesion`: el usuario estaba activo, tenia rol SuperAdmin e ID cero.
+La validacion de identidad positiva rechazo correctamente esa cuenta.
+El usuario autorizo explicitamente migrar su identidad al ID libre **29**, con
+las referencias de autor asociadas. No se debilito la validacion del login.
+
+Se ejecuto `scripts/maintenance/repair_zero_admin_identity.php --dry-run` y
+despues `--apply` contra `sisco_db`. La herramienta es exclusivamente CLI,
+esta fijada a la cuenta y destino autorizados y no se ejecuta automaticamente.
+Dentro de una transaccion InnoDB actualizo la identidad mediante las claves
+foraneas `ON UPDATE CASCADE`:
+
+| Referencia | Filas actualizadas |
+| --- | --- |
+| `planes_anuales.created_by` | 2 |
+| `configuracion_informes.updated_by` | 14 |
+| `profesores.id_usuario` | 0 |
+| `registros_anecdoticos.created_by` | 0 |
+
+La comparacion por hash de todas las filas de todas las tablas, normalizando
+solamente estas columnas de identidad, coincidio antes/despues. El resultado
+fue `only_identity_references_changed=true`, `rows_inserted=0`. Se conservaron
+usuario, hash de la clave, rol, estado activo y contenido academico. Una nueva
+ejecucion informa `already_repaired` sin cambiar datos.
+
+Se hizo un login nuevo mediante el formulario en Edge/Playwright contra Apache:
+HTTP **302**, dashboard accesible, preflight HTTP **200**, `ready=true`,
+`runtime=apache2handler` y **6 PASS** (usuario, schema, asignaciones, limites,
+staging, pdftotext). El navegador bloqueo toda escritura excepto el login.
+Peticiones de confirmacion: **0**. No se repitio ni confirmo la importacion.
+La evidencia segura esta en
+[verificacion del login](audit-assets/apache-admin-login-evidence.json).
+Las sesiones antiguas con ID cero siguen siendo invalidas; hay que iniciar
+sesion nuevamente con la misma cuenta y clave.
+
+`ZeroUserIdentityRepairTest` verifica en BD temporal dry-run, rechazo de destino
+ocupado, rollback ante cambios adicionales, cascada, preservacion de contenido
+y credencial, identidad valida e idempotencia. Resultado: **PASS**.
+`SessionValidationTest` (**21 comprobaciones**) y `SessionLoginTest` tambien
+pasaron, junto con la sintaxis PHP y `git diff --check`. Estos tests son regresiones y la
+prueba del entorno real es el login y preflight de Apache descriptos arriba.

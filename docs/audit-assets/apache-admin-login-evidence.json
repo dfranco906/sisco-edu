@@ -1,0 +1,32 @@
+{
+  "account": "admin1",
+  "login_http_status": 302,
+  "dashboard_reached": true,
+  "preflight": {
+    "http_status": 200,
+    "ready": true,
+    "runtime": "apache2handler",
+    "checks": {
+      "usuario": {
+        "status": "PASS"
+      },
+      "schema": {
+        "status": "PASS"
+      },
+      "asignaciones": {
+        "status": "PASS"
+      },
+      "limites": {
+        "status": "PASS"
+      },
+      "staging": {
+        "status": "PASS"
+      },
+      "pdftotext": {
+        "status": "PASS"
+      }
+    }
+  },
+  "blocked_writes": 0,
+  "confirmation_requests": 0
+}
