@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/session_identity.php';
 
 function iniciarSesionSegura(): void
 {
@@ -24,10 +25,24 @@ function requerirMetodo(array $metodos): void
 function usuarioActual(array $roles = []): array
 {
     iniciarSesionSegura();
-    if (!isset($_SESSION['id_usuario']) || empty($_SESSION['rol'])) {
-        responderJson(['success' => false, 'status' => 'error', 'message' => 'Sesion no valida.'], 401);
+    $rawId = $_SESSION['id_usuario'] ?? null;
+    $positiveId = (is_int($rawId) || is_string($rawId))
+        ? filter_var($rawId, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]) : false;
+    $usuario = null;
+    if ($positiveId !== false && is_string($_SESSION['rol'] ?? null) && $_SESSION['rol'] !== '') {
+        try {
+            $db = (new Database())->getConnection();
+            if (!$db instanceof PDO) throw new RuntimeException('Identity database unavailable');
+            $usuario = validarIdentidadSesion($db, $_SESSION);
+        } catch (Throwable $error) {
+            error_log('session_identity: validation_failed');
+            responderJson(['success'=>false,'status'=>'error','message'=>'No se pudo validar la sesion.'],503);
+        }
     }
-    $usuario = ['id_usuario' => (int) $_SESSION['id_usuario'], 'rol' => (string) $_SESSION['rol']];
+    if ($usuario === null) {
+        unset($_SESSION['id_usuario'], $_SESSION['rol'], $_SESSION['usuario'], $_SESSION['plan_import_csrf']);
+        responderJson(['success'=>false,'status'=>'error','error_type'=>'INVALID_SESSION','message'=>'Sesion no valida. Inicie sesion con una cuenta activa.'],401);
+    }
     if ($roles && !in_array($usuario['rol'], $roles, true)) {
         responderJson(['success' => false, 'status' => 'error', 'message' => 'No tiene permisos para esta operacion.'], 403);
     }

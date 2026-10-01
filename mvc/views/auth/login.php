@@ -3,7 +3,9 @@ $error = $_GET['error'] ?? null;
 
 $mensaje = "";
 
-if ($error === "campos") {
+if ($error === "sesion") {
+    $mensaje = "La cuenta no permite iniciar una sesi&oacute;n v&aacute;lida. Contacte a la administraci&oacute;n.";
+} elseif ($error === "campos") {
     $mensaje = "Completá todos los campos.";
 } elseif ($error === "usuario") {
     $mensaje = "El usuario no existe.";

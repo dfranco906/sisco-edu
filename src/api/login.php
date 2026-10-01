@@ -41,6 +41,13 @@ if (!password_verify($password, $user['password'])) {
 
 session_regenerate_id(true);
 
+// A successful password check must not create a session with an invalid identity.
+if ((int)$user['id_usuario'] < 1) {
+    unset($_SESSION['id_usuario'], $_SESSION['usuario'], $_SESSION['rol']);
+    header("Location: ../../mvc/views/auth/login.php?error=sesion");
+    exit();
+}
+
 $_SESSION['id_usuario'] = $user['id_usuario'];
 $_SESSION['usuario'] = $user['usuario'];
 $_SESSION['rol'] = $user['rol'];
