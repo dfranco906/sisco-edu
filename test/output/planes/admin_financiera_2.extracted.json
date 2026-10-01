@@ -10,7 +10,7 @@
             "name": "pdftotext",
             "mode": "table",
             "binary": "C:\\Program Files\\Git\\mingw64\\bin\\pdftotext.exe",
-            "elapsed_ms": 33.59,
+            "elapsed_ms": 37.11,
             "stderr": null
         }
     },
