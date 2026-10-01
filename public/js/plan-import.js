@@ -12,6 +12,18 @@
   const message = document.getElementById('plan-import-message');
   const submit = document.getElementById('plan-import-submit');
   let assignmentsLoaded = false;
+  let environmentReady = false;
+  let uploadInProgress = false;
+
+  async function checkEnvironment() {
+    environmentReady = false;
+    submit.disabled = true;
+    const response = await fetch(config.apiPreflight, { credentials:'same-origin', cache:'no-store' });
+    const payload = await jsonResponse(response);
+    if (!payload.data || payload.data.ready !== true) throw new Error('El servidor no esta listo para analizar planes. Contacte a la administracion.');
+    environmentReady = true;
+    submit.disabled = false;
+  }
 
   function showMessage(text, isError) {
     message.textContent = text || '';
@@ -53,12 +65,15 @@
   function openModal() {
     modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-    showMessage('', false);
-    loadAssignments().then(function () { assignment.focus(); });
+    showMessage('Comprobando disponibilidad del importador...', false);
+    Promise.all([loadAssignments(), checkEnvironment()]).then(function () {
+      if (environmentReady && assignment.options.length > 1) showMessage('', false);
+      assignment.focus();
+    }).catch(function (error) { showMessage(error.message, true); });
   }
 
   function closeModal() {
-    if (submit.disabled) return;
+    if (uploadInProgress) return;
     modal.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
@@ -79,6 +94,7 @@
 
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
+    if (!environmentReady || uploadInProgress) return;
     showMessage('', false);
     if (!form.reportValidity()) return;
     const selectedFile = file.files && file.files[0];
@@ -92,6 +108,7 @@
     }
 
     submit.disabled = true;
+    uploadInProgress = true;
     submit.textContent = 'Analizando...';
     showMessage('Analizando el PDF. Esto puede tardar unos segundos.', false);
     try {
@@ -107,6 +124,7 @@
       window.location.assign(config.preview + '?token=' + encodeURIComponent(token));
     } catch (error) {
       showMessage(error.message, true);
+      uploadInProgress = false;
       submit.disabled = false;
       submit.textContent = 'Analizar plan';
     }

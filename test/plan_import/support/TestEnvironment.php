@@ -33,6 +33,10 @@ final class PlanImportTestEnvironment
         $this->db->exec('SET FOREIGN_KEY_CHECKS=1');
         $root = dirname(__DIR__,3);
         foreach (['src','mvc','public'] as $folder) $this->copyTree($root.'/'.$folder, $this->directory.'/'.$folder);
+        // The HTTP preflight executes its configured PDF under the serving SAPI.
+        mkdir($this->directory.'/test/fixtures/planes',0700,true);
+        $preflightFixture='Plan Anual - tercer curso - BTI - Administracion financiera.pdf';
+        copy($root.'/test/fixtures/planes/'.$preflightFixture,$this->directory.'/test/fixtures/planes/'.$preflightFixture);
         // Configuración exclusiva de la copia servida; no se modifica db.php real.
         $dbFile = $this->directory.'/src/config/db.php';
         $text = file_get_contents($dbFile);

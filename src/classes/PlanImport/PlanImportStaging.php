@@ -38,6 +38,25 @@ final class PlanImportStaging
         });
     }
 
+    /** Probe actual write/read/delete permissions without creating an import token. */
+    public function checkWritable(): void
+    {
+        $this->locked(function (): void {
+            $path = $this->root.'/.preflight-'.bin2hex(random_bytes(8)).'.tmp';
+            $handle = @fopen($path, 'x+b');
+            if (!$handle) $this->fail('El almacenamiento temporal no permite escritura.', 'STORAGE_ERROR', 503);
+            try {
+                $bytes = random_bytes(32);
+                if (fwrite($handle, $bytes)!==strlen($bytes) || !fflush($handle) || !rewind($handle) || fread($handle, 32)!==$bytes) {
+                    $this->fail('No se pudo verificar el almacenamiento temporal.', 'STORAGE_ERROR', 503);
+                }
+            } finally {
+                fclose($handle);
+                if (!@unlink($path)) $this->fail('No se pudo limpiar la prueba temporal.', 'STORAGE_ERROR', 503);
+            }
+        });
+    }
+
     public function read(string $token, int $owner): array
     {
         return $this->withToken($token, $owner, static fn(array &$state, string $pdf): array => $state);

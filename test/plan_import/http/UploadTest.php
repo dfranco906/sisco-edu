@@ -48,7 +48,8 @@ try {
     $folders=glob($env->directory.'-storage/*',GLOB_ONLYDIR);
     if(count($folders)!==2)throw new RuntimeException('Uploads inválidos dejaron temporales');
     session_id($env->session);session_start();$_SESSION['rol']='SinPermiso';session_write_close();
-    if($env->request('importar_plan_pdf.php','POST',$body)['status']!==403)throw new RuntimeException('Rol no rechazado');
+    $invalidRole=$env->request('importar_plan_pdf.php','POST',$body);
+    if($invalidRole['status']!==401||($invalidRole['json']['error_type']??null)!=='INVALID_SESSION')throw new RuntimeException('Rol de sesion que no coincide con BD no invalidado');
     if ((int)$env->db->query('SELECT COUNT(*) FROM planes_anuales')->fetchColumn()!==0) throw new RuntimeException('Upload escribió plan');
     echo "OK | UploadTest (HTTP real, preview, CSRF, sesión, rol, ownership, extensión, firma, vacío, corrupto, sin texto, UNKNOWN, tamaño, timeout; cero planes y sin residuos inválidos)\n";
 } finally { $env->close(); }

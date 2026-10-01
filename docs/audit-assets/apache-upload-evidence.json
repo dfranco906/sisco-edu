@@ -1,0 +1,58 @@
+{
+  "runtime": "real Edge browser -> Apache :80 -> sisco_db",
+  "http_status": 201,
+  "assignment": 33,
+  "year": 2026,
+  "error_type": null,
+  "token_valid": true,
+  "preview_page": true,
+  "preview_api": true,
+  "counts": {
+    "unidades": 6,
+    "capacidades": 6,
+    "temas": 18,
+    "indicadores": 18
+  },
+  "blocked_writes": 0,
+  "preview_rendered_counts": [
+    6,
+    6,
+    18,
+    18
+  ],
+  "preflight": {
+    "http_status": 200,
+    "data": {
+      "ready": true,
+      "checks": {
+        "usuario": {
+          "status": "PASS"
+        },
+        "schema": {
+          "status": "PASS"
+        },
+        "asignaciones": {
+          "status": "PASS"
+        },
+        "limites": {
+          "status": "PASS"
+        },
+        "staging": {
+          "status": "PASS"
+        },
+        "pdftotext": {
+          "status": "PASS"
+        }
+      },
+      "available_assignments": 15,
+      "limits": {
+        "max_file_bytes": 10485760,
+        "max_pages": 100,
+        "timeout_seconds": 15,
+        "max_preview_json_bytes": 5242880,
+        "staging_ttl_seconds": 7200
+      },
+      "runtime": "apache2handler"
+    }
+  }
+}

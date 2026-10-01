@@ -1,0 +1,4 @@
+# Copy to .htaccess in this directory and set the installed Xpdf executable.
+# Apache needs AllowOverride FileInfo (or All) and mod_env.
+# Applies only to these API requests; no dependency on CLI environment variables.
+SetEnv SISCO_PDFTOTEXT_PATH "C:/Program Files/Git/mingw64/bin/pdftotext.exe"

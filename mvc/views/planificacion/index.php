@@ -62,7 +62,7 @@ require_once __DIR__ . '/../layouts/header.php';
   </div>
 </div>
 <script>window.PLANIFICACION_CONFIG=<?= json_encode(['apiPlanes'=>base_url('src/api/Planificacion/planes.php'),'apiAsignaciones'=>base_url('src/api/Planificacion/asignaciones.php'),'editor'=>base_url('mvc/views/planificacion/editor.php')],JSON_UNESCAPED_SLASHES) ?>;</script>
-<script>window.PLAN_IMPORT_CONFIG=<?= json_encode(['apiUpload'=>base_url('src/api/Planificacion/importar_plan_pdf.php'),'apiAssignments'=>base_url('src/api/Planificacion/asignaciones.php'),'preview'=>base_url('mvc/views/planificacion/import_preview.php'),'csrf'=>$planImportCsrf],JSON_UNESCAPED_SLASHES) ?>;</script>
+<script>window.PLAN_IMPORT_CONFIG=<?= json_encode(['apiUpload'=>base_url('src/api/Planificacion/importar_plan_pdf.php'),'apiPreflight'=>base_url('src/api/Planificacion/preflight_importacion.php'),'apiAssignments'=>base_url('src/api/Planificacion/asignaciones.php'),'preview'=>base_url('mvc/views/planificacion/import_preview.php'),'csrf'=>$planImportCsrf],JSON_UNESCAPED_SLASHES) ?>;</script>
 <script src="<?= base_url('public/js/planificacion.js') ?>?v=<?= urlencode((string)@filemtime(__DIR__.'/../../../public/js/planificacion.js')) ?>"></script>
 <script src="<?= base_url('public/js/plan-import.js') ?>?v=<?= urlencode((string)@filemtime(__DIR__.'/../../../public/js/plan-import.js')) ?>"></script>
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

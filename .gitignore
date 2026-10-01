@@ -3,6 +3,8 @@
 src/config/db_local.php
 config.local.php
 .env
+# Apache configuration specific to this installation (see .htaccess.example).
+/src/api/Planificacion/.htaccess
 
 # Archivos temporales y logs de PHP/Apache
 *.log
