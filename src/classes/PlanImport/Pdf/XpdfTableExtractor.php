@@ -84,6 +84,8 @@ final class XpdfTableExtractor implements PdfTextExtractorInterface
         if (!in_array($mime, $this->config['allowed_mime_types'] ?? [], true)) {
             throw new PlanImportException('El MIME real del archivo no está permitido.', 'INVALID_MIME', 2, 422, ['mime'=>$mime]);
         }
+        $contents=file_get_contents($realPath);
+        if($contents!==false&&preg_match('/\/Encrypt\b/',$contents)===1)throw new PlanImportException('Los PDF protegidos o cifrados no están soportados.','PDF_PROTECTED_NOT_SUPPORTED',2,422);
         return $realPath;
     }
 

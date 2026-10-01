@@ -38,13 +38,16 @@ final class PlanImportacionService
         $existing->execute([$state['assignment'], $state['year']]);
         $id = $existing->fetchColumn();
         $catalogs=$this->catalogs();
+        $suggestions=(new CatalogMatcher())->suggestions($state['plan'],$catalogs);
+        $readiness=(new ImportReadiness())->evaluate($state['plan'],$suggestions,$state['decisions'],$id?(int)$id:null);
         return [
             'plan'=>$state['plan'], 'assignment'=>$state['assignment'], 'year'=>$state['year'],
             'expires'=>$state['expires'], 'decisions'=>$state['decisions'], 'programming'=>$state['programming'],
             'existing_plan'=>$id ? (int)$id : null,
             'context'=>$state['context'] ?? [],
             'catalogs'=>$catalogs,
-            'suggestions'=>(new CatalogMatcher())->suggestions($state['plan'],$catalogs),
+            'suggestions'=>$suggestions,
+            'readiness'=>$readiness,
             'import_warnings'=>$id ? ['Ya existe un plan para esta asignación y año. No se puede importar ni sobrescribirlo.'] : [],
         ];
     }

@@ -15,6 +15,8 @@ try {
     $body['id_asignacion']=$env->otherAssignment;
     if ($env->request('importar_plan_pdf.php','POST',$body)['status']!==403) throw new RuntimeException('Ownership');
     $body['id_asignacion']=$env->assignment;
+    $body['pdf']=new CURLFile($pdf,'application/pdf','plan.pdf.php');
+    if ($env->request('importar_plan_pdf.php','POST',$body)['json']['error_type']!=='INVALID_EXTENSION') throw new RuntimeException('Doble extensión');
     $body['pdf']=new CURLFile($pdf,'application/pdf','plan.php');
     if ($env->request('importar_plan_pdf.php','POST',$body)['json']['error_type']!=='INVALID_EXTENSION') throw new RuntimeException('Extensión');
     $invalid=$env->directory.'/invalid.pdf'; file_put_contents($invalid,'No es un PDF');
@@ -32,6 +34,10 @@ try {
         $r=$env->request('importar_plan_pdf.php','POST',$body);
         if(($r['json']['error_type']??null)!==$expected)throw new RuntimeException('Esperado '.$expected.': '.json_encode($r));
     }
+    $body['pdf']=new CURLFile($pdf,'text/x-php','../../plan <script>alert(1)</script>.pdf');
+    $meta=$env->request('importar_plan_pdf.php','POST',$body);
+    $safeName=(string)($meta['json']['data']['plan']['source']['filename']??'');
+    if($meta['status']!==201||str_contains($safeName,'/')||str_contains($safeName,'\\')||!str_ends_with(strtolower($safeName),'.pdf'))throw new RuntimeException('MIME cliente/metacaracteres/path traversal');
     $body['pdf']=new CURLFile($pdf,'application/pdf','plan.pdf');
     $configPath=$env->directory.'/src/config/plan_import.php';
     $originalConfig=file_get_contents($configPath);
@@ -40,7 +46,7 @@ try {
     if(($r['json']['error_type']??null)!=='PARSER_TIMEOUT')throw new RuntimeException('Timeout: '.json_encode($r));
     file_put_contents($configPath,$originalConfig);
     $folders=glob($env->directory.'-storage/*',GLOB_ONLYDIR);
-    if(count($folders)!==1)throw new RuntimeException('Uploads inválidos dejaron temporales');
+    if(count($folders)!==2)throw new RuntimeException('Uploads inválidos dejaron temporales');
     session_id($env->session);session_start();$_SESSION['rol']='SinPermiso';session_write_close();
     if($env->request('importar_plan_pdf.php','POST',$body)['status']!==403)throw new RuntimeException('Rol no rechazado');
     if ((int)$env->db->query('SELECT COUNT(*) FROM planes_anuales')->fetchColumn()!==0) throw new RuntimeException('Upload escribió plan');

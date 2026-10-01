@@ -7,11 +7,21 @@
     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4"><div><p class="app-eyebrow">PLAN ANUAL</p><h2 id="plan-editor-titulo" class="text-2xl sm:text-3xl font-bold">Cargando plan...</h2><p id="plan-editor-contexto" class="mt-1"></p></div><div class="app-toolbar-actions flex flex-wrap gap-2"><button id="btn-estado-plan" class="btn btn-success" type="button">Publicar</button><button id="btn-archivar-plan" class="btn btn-danger" type="button">Archivar</button><a class="btn btn-primary" href="<?= base_url('mvc/views/planificacion/index.php') ?>">Volver a planes</a></div></div>
   </header>
   <section class="plan-stats mb-6" id="plan-contadores"></section>
+  <section class="app-panel p-4 mb-6 hidden" id="plan-import-origin" aria-live="polite"></section>
   <section class="app-panel p-5 sm:p-6 mb-6">
     <form id="form-datos-plan" class="app-form-grid">
       <label class="font-semibold sm:col-span-2">Competencia general<textarea name="competencia_general" class="app-input mt-2 w-full" rows="2"></textarea></label>
       <label class="font-semibold sm:col-span-2">Competencia espec&iacute;fica<textarea name="competencia_especifica" class="app-input mt-2 w-full" rows="2"></textarea></label>
       <label class="font-semibold sm:col-span-2">Observaciones<textarea name="observaciones" class="app-input mt-2 w-full" rows="2"></textarea></label>
+      <details class="sm:col-span-2 plan-evaluation"><summary>Metadata del documento fuente</summary><div class="app-form-grid mt-3">
+        <label class="font-semibold">Instituci&oacute;n fuente<input name="institucion_fuente" class="app-input mt-2 w-full"></label>
+        <label class="font-semibold">Materia fuente<input name="materia_fuente" class="app-input mt-2 w-full"></label>
+        <label class="font-semibold">Profesor fuente<input name="profesor_fuente" class="app-input mt-2 w-full"></label>
+        <label class="font-semibold">Curso fuente<input name="curso_fuente" class="app-input mt-2 w-full"></label>
+        <label class="font-semibold">Turno fuente<input name="turno_fuente" class="app-input mt-2 w-full"></label>
+        <label class="font-semibold">A&ntilde;o fuente<input name="anio_fuente" type="number" min="2000" max="2100" class="app-input mt-2 w-full"></label>
+        <label class="font-semibold sm:col-span-2">D&iacute;as de clase fuente<textarea name="dias_clase_fuente" class="app-input mt-2 w-full" rows="2"></textarea></label>
+      </div></details>
       <div class="sm:col-span-2 flex justify-end"><button class="btn btn-primary" type="submit">Guardar datos generales</button></div>
     </form>
   </section>

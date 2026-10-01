@@ -17,6 +17,13 @@ try {
     if($r['status']!==200)throw new RuntimeException('Decisiones no guardadas');
     $r=$env->request('preview_importacion.php?token='.$token);
     if($r['json']['data']['decisions']!==$decisions)throw new RuntimeException('Decisiones no recuperadas');
+    $indicators=&$plan['unidades'][0]['capacidades'][0]['temas'][0]['indicadores'];
+    $indicators[]=['orden'=>count($indicators)+1,'codigo'=>null,'descripcion'=>'Indicador agregado en preview','check'=>null];
+    $r=$env->request('preview_importacion.php','PUT',json_encode(['token'=>$token,'plan'=>$plan,'decisions'=>$decisions]));
+    if($r['status']!==200 || end($r['json']['data']['plan']['unidades'][0]['capacidades'][0]['temas'][0]['indicadores'])['descripcion']!=='Indicador agregado en preview')throw new RuntimeException('Alta jerÃ¡rquica no sobreviviÃ³');
+    array_pop($indicators);
+    $r=$env->request('preview_importacion.php','PUT',json_encode(['token'=>$token,'plan'=>$plan,'decisions'=>$decisions]));
+    if($r['status']!==200 || count($r['json']['data']['plan']['unidades'][0]['capacidades'][0]['temas'][0]['indicadores'])!==count($indicators))throw new RuntimeException('Baja jerÃ¡rquica no sobreviviÃ³');
     foreach(['procedimientos_evaluativos','instrumentos_evaluativos'] as $table)if((int)$env->db->query('SELECT COUNT(*) FROM '.$table)->fetchColumn()!==0)throw new RuntimeException('Preview creó catálogos');
     foreach (['extra','order','parent','source'] as $mutation) {
         $bad=$plan;

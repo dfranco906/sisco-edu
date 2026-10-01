@@ -39,16 +39,19 @@ try {
     $empty = $temp.DIRECTORY_SEPARATOR.'empty.pdf'; file_put_contents($empty, '');
     $fake = $temp.DIRECTORY_SEPARATOR.'fake.pdf'; file_put_contents($fake, 'esto no es un archivo PDF');
     $corrupt = $temp.DIRECTORY_SEPARATOR.'corrupt.pdf'; file_put_contents($corrupt, '%PDF-no-es-un-pdf');
+    $protected = $temp.DIRECTORY_SEPARATOR.'protected.pdf'; file_put_contents($protected, "%PDF-1.4\ntrailer << /Encrypt 9 0 R >>\n%%EOF");
     $text = $temp.DIRECTORY_SEPARATOR.'not-pdf.txt'; file_put_contents($text, 'texto');
     expectExtractorError(fn()=>$extractor->extract($empty), 'INVALID_FILE_SIZE', 'PDF vacío');
     expectExtractorError(fn()=>$extractor->extract($fake), 'INVALID_PDF_SIGNATURE', 'firma PDF falsa');
     expectExtractorError(fn()=>$extractor->extract($corrupt), 'PDF_EXTRACTION_FAILED', 'PDF corrupto');
+    expectExtractorError(fn()=>$extractor->extract($protected), 'PDF_PROTECTED_NOT_SUPPORTED', 'PDF protegido');
     expectExtractorError(fn()=>$extractor->extract($text), 'INVALID_EXTENSION', 'extensión no PDF');
     $badConfig = $config; $badConfig['pdftotext_binary'] = $temp.DIRECTORY_SEPARATOR.'missing.exe';
     expectExtractorError(fn()=>(new XpdfTableExtractor($badConfig))->extract($fixtures[0]), 'EXTRACTOR_NOT_FOUND', 'binario inexistente');
     $pageConfig = $config; $pageConfig['limits']['max_pages'] = 1;
     $twoPages = array_values(array_filter($fixtures, static fn(string $file): bool => str_contains($file, 'Excel Avanzado')))[0];
     expectExtractorError(fn()=>(new XpdfTableExtractor($pageConfig))->extract($twoPages), 'PDF_PAGE_LIMIT', 'límite de páginas');
+    $link=$temp.DIRECTORY_SEPARATOR.'linked.pdf';if(@symlink($fixtures[0],$link))expectExtractorError(fn()=>$extractor->extract($link),'PDF_SYMLINK_NOT_ALLOWED','symlink PDF');
 
     $runner = new ProcessRunner();
     $powershell = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe';

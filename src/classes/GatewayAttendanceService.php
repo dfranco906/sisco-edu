@@ -58,7 +58,8 @@ final class GatewayAttendanceService
         $this->db->beginTransaction();
         try {
             $clases = new ClaseDiaria($this->db);
-            $idClase = $clases->procesarMarcaProfesor((string)$persona['user_id_global'], $idAula, $momento->format('Y-m-d H:i:s'));
+            $idsClases = $clases->procesarMarcaProfesorClases((string)$persona['user_id_global'], $idAula, $momento->format('Y-m-d H:i:s'));
+            $idClase = $idsClases[0] ?? null;
             if (!$idClase) {
                 $this->db->rollBack();
                 return ['ok'=>false, 'status'=>'sin_horario', 'message'=>'El profesor no tiene un horario valido para esta aula y hora.', 'data'=>['id_evento'=>$idEvento]];
@@ -71,6 +72,7 @@ final class GatewayAttendanceService
             $this->db->commit();
             return ['ok'=>true, 'status'=>'success', 'message'=>'Asistencia de profesor registrada.', 'data'=>[
                 'id_evento'=>$idEvento, 'id_clase'=>$idClase, 'id_horario'=>(int)$clase['id_horario'],
+                'ids_clases'=>$idsClases, 'cantidad_clases'=>count($idsClases),
                 'id_asistencia_profesor'=>$asistencia['id_asistencia_profesor'], 'idempotente'=>!$asistencia['creada']
             ]];
         } catch (Throwable $e) {

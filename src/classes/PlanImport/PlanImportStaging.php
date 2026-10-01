@@ -59,13 +59,28 @@ final class PlanImportStaging
         });
     }
 
-    public function delete(string $token, int $owner): void
+    public function delete(string $token, int $owner, bool $previewOnly = false): void
     {
-        $this->locked(function () use ($token, $owner): void {
+        $this->locked(function () use ($token, $owner, $previewOnly): void {
             $dir = $this->directory($token);
             $state = $this->state($dir);
             if ($state['owner'] !== $owner) $this->fail('Importación no disponible para este usuario.', 'TOKEN_FORBIDDEN', 403);
+            if ($previewOnly && $state['state'] !== 'preview') $this->fail('La importación ya fue consumida.', 'TOKEN_CONSUMED', 409);
             $this->remove($dir);
+        });
+    }
+
+    public function confirm(string $token,int $owner,callable $callback):array
+    {
+        return $this->locked(function()use($token,$owner,$callback):array{
+            $dir=$this->directory($token);$state=$this->state($dir);
+            if($state['owner']!==$owner)$this->fail('Importación no disponible para este usuario.','TOKEN_FORBIDDEN',403);
+            if($state['state']==='consumed')return ['id_plan'=>(int)$state['id_plan'],'created'=>false,'status'=>'already_confirmed'];
+            if($state['expires']<=time())$this->fail('La importación venció. Vuelva a cargar el PDF.','TOKEN_EXPIRED',410);
+            if($state['state']!=='preview')$this->fail('La importación ya fue consumida.','TOKEN_CONSUMED',409);
+            $id=(int)$callback($state,$dir.'/source.pdf');if($id<1)$this->fail('Resultado de confirmación inválido.','IMPORT_INTERNAL_ERROR',500);
+            $state['state']='consumed';$state['id_plan']=$id;$state['consumed_at']=time();$this->write($dir,$state);
+            return ['id_plan'=>$id,'created'=>true,'status'=>'created'];
         });
     }
 

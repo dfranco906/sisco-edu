@@ -116,11 +116,20 @@ class PlanificacionPedagogica
         $plan = $this->planConAcceso($idPlan, true);
         if ($plan['estado'] === 'ARCHIVADO') throw new PedagogiaException('Un plan archivado no puede editarse.', 409);
         $stmt = $this->db->prepare("UPDATE planes_anuales SET competencia_general=:general,
-            competencia_especifica=:especifica, observaciones=:observaciones WHERE id_plan=:id");
+            competencia_especifica=:especifica, observaciones=:observaciones,
+            institucion_fuente=:institucion,materia_fuente=:materia_fuente,profesor_fuente=:profesor_fuente,
+            curso_fuente=:curso_fuente,turno_fuente=:turno_fuente,anio_fuente=:anio_fuente,dias_clase_fuente=:dias_clase_fuente WHERE id_plan=:id");
         $stmt->execute([
             ':general'=>$this->nullable($datos['competencia_general'] ?? null),
             ':especifica'=>$this->nullable($datos['competencia_especifica'] ?? null),
-            ':observaciones'=>$this->nullable($datos['observaciones'] ?? null), ':id'=>$idPlan
+            ':observaciones'=>$this->nullable($datos['observaciones'] ?? null),
+            ':institucion'=>$this->nullableMax($datos['institucion_fuente']??null,255,'Institucion fuente'),
+            ':materia_fuente'=>$this->nullableMax($datos['materia_fuente']??null,255,'Materia fuente'),
+            ':profesor_fuente'=>$this->nullableMax($datos['profesor_fuente']??null,255,'Profesor fuente'),
+            ':curso_fuente'=>$this->nullableMax($datos['curso_fuente']??null,100,'Curso fuente'),
+            ':turno_fuente'=>$this->nullableMax($datos['turno_fuente']??null,100,'Turno fuente'),
+            ':anio_fuente'=>$this->anioFuente($datos['anio_fuente']??null),
+            ':dias_clase_fuente'=>$this->nullableMax($datos['dias_clase_fuente']??null,255,'Dias de clase fuente'), ':id'=>$idPlan
         ]);
     }
 
@@ -148,14 +157,16 @@ class PlanificacionPedagogica
     public function obtenerPlan(int $idPlan): array
     {
         $plan = $this->planConAcceso($idPlan, false);
+        $origin=null;if(!empty($plan['importacion_origen_json'])){try{$decoded=json_decode($plan['importacion_origen_json'],true,128,JSON_THROW_ON_ERROR);$source=$decoded['source']??[];$origin=['importado'=>true,'archivo'=>$source['filename']??null,'formato'=>$source['format']??null,'paginas'=>$source['pages']??null];}catch(Throwable){$origin=['importado'=>true,'archivo'=>null,'formato'=>null,'paginas'=>null];}}
+        $plan['importacion_origen']=$origin;unset($plan['importacion_origen_json']);
         $plan['unidades'] = $this->filas("SELECT * FROM plan_unidades WHERE id_plan=:id ORDER BY orden,id_unidad", [':id'=>$idPlan]);
         $idsUnidades = array_column($plan['unidades'], 'id_unidad');
         $capacidades = $this->porIds("SELECT * FROM plan_capacidades WHERE id_unidad IN (%s) ORDER BY orden,id_capacidad", $idsUnidades);
         $temas = $this->porIds("SELECT * FROM plan_temas WHERE id_capacidad IN (%s) ORDER BY orden,id_tema", array_column($capacidades, 'id_capacidad'));
         $indicadores = $this->porIds("SELECT * FROM plan_indicadores WHERE id_tema IN (%s) ORDER BY orden,id_indicador", array_column($temas, 'id_tema'));
         $programaciones = $this->porIds("SELECT * FROM plan_tema_programacion WHERE id_tema IN (%s) ORDER BY orden,id_programacion", array_column($temas, 'id_tema'));
-        $procedimientos = $this->porIds("SELECT tp.id_tema,tp.id_procedimiento,p.nombre FROM plan_tema_procedimientos tp JOIN procedimientos_evaluativos p ON p.id_procedimiento=tp.id_procedimiento WHERE tp.id_tema IN (%s) ORDER BY p.nombre", array_column($temas, 'id_tema'));
-        $instrumentos = $this->porIds("SELECT ti.id_tema,ti.id_instrumento,i.nombre FROM plan_tema_instrumentos ti JOIN instrumentos_evaluativos i ON i.id_instrumento=ti.id_instrumento WHERE ti.id_tema IN (%s) ORDER BY i.nombre", array_column($temas, 'id_tema'));
+        $procedimientos = $this->porIds("SELECT tp.id_tema,tp.id_procedimiento,p.nombre,tp.texto_fuente,tp.orden FROM plan_tema_procedimientos tp JOIN procedimientos_evaluativos p ON p.id_procedimiento=tp.id_procedimiento WHERE tp.id_tema IN (%s) ORDER BY tp.orden,tp.id_procedimiento", array_column($temas, 'id_tema'));
+        $instrumentos = $this->porIds("SELECT ti.id_tema,ti.id_instrumento,i.nombre,ti.texto_fuente,ti.orden FROM plan_tema_instrumentos ti JOIN instrumentos_evaluativos i ON i.id_instrumento=ti.id_instrumento WHERE ti.id_tema IN (%s) ORDER BY ti.orden,ti.id_instrumento", array_column($temas, 'id_tema'));
 
         foreach ($temas as &$tema) {
             $id = (int)$tema['id_tema'];
@@ -192,6 +203,7 @@ class PlanificacionPedagogica
             $valor = $datos[$campo] ?? null;
             if ($regla === 'required') $valor = $this->texto($valor, ucfirst(str_replace('_',' ',$campo)), 10000);
             elseif ($regla === 'short') $valor = $this->texto($valor, ucfirst(str_replace('_',' ',$campo)), 255);
+            elseif ($regla === 'code') $valor = $this->nullableMax($valor,32,'Codigo');
             elseif ($regla === 'number') $valor = ($valor === '' || $valor === null) ? null : (float)$valor;
             elseif ($regla === 'date') $valor = $this->fechaNullable($valor);
             else $valor = $this->nullable($valor);
@@ -298,16 +310,16 @@ class PlanificacionPedagogica
     public function guardarEvaluacion(int $idTema, array $procedimientos, array $instrumentos): void
     {
         $this->planConAcceso($this->planDeElemento('tema',$idTema),true);
-        $procedimientos=array_values(array_unique(array_filter(array_map('intval',$procedimientos))));
-        $instrumentos=array_values(array_unique(array_filter(array_map('intval',$instrumentos))));
-        $this->validarCatalogo('procedimientos_evaluativos','id_procedimiento',$procedimientos);
-        $this->validarCatalogo('instrumentos_evaluativos','id_instrumento',$instrumentos);
+        $procedimientos=$this->normalizarRelaciones($procedimientos,'id_procedimiento');
+        $instrumentos=$this->normalizarRelaciones($instrumentos,'id_instrumento');
+        $this->validarCatalogo('procedimientos_evaluativos','id_procedimiento',array_column($procedimientos,'id'));
+        $this->validarCatalogo('instrumentos_evaluativos','id_instrumento',array_column($instrumentos,'id'));
         $this->db->beginTransaction();
         try {
             $this->db->prepare('DELETE FROM plan_tema_procedimientos WHERE id_tema=:id')->execute([':id'=>$idTema]);
             $this->db->prepare('DELETE FROM plan_tema_instrumentos WHERE id_tema=:id')->execute([':id'=>$idTema]);
-            $p=$this->db->prepare('INSERT INTO plan_tema_procedimientos (id_tema,id_procedimiento) VALUES (:tema,:id)'); foreach($procedimientos as $id)$p->execute([':tema'=>$idTema,':id'=>$id]);
-            $i=$this->db->prepare('INSERT INTO plan_tema_instrumentos (id_tema,id_instrumento) VALUES (:tema,:id)'); foreach($instrumentos as $id)$i->execute([':tema'=>$idTema,':id'=>$id]);
+            $p=$this->db->prepare('INSERT INTO plan_tema_procedimientos (id_tema,id_procedimiento,texto_fuente,orden) VALUES (:tema,:id,:texto,:orden)'); foreach($procedimientos as $rel)$p->execute([':tema'=>$idTema,':id'=>$rel['id'],':texto'=>$rel['texto_fuente'],':orden'=>$rel['orden']]);
+            $i=$this->db->prepare('INSERT INTO plan_tema_instrumentos (id_tema,id_instrumento,texto_fuente,orden) VALUES (:tema,:id,:texto,:orden)'); foreach($instrumentos as $rel)$i->execute([':tema'=>$idTema,':id'=>$rel['id'],':texto'=>$rel['texto_fuente'],':orden'=>$rel['orden']]);
             $this->db->commit();
         }catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
     }
@@ -378,10 +390,10 @@ class PlanificacionPedagogica
     private function configElemento(string $tipo): array
     {
         return match($tipo){
-            'unidad'=>['table'=>'plan_unidades','pk'=>'id_unidad','parent'=>'id_plan','fields'=>['nombre'=>'short','descripcion'=>'nullable','horas_catedra'=>'number','proceso_inicio'=>'date','proceso_fin'=>'date','area_transversal'=>'nullable','metodologia'=>'nullable','medios_verificacion'=>'nullable']],
+            'unidad'=>['table'=>'plan_unidades','pk'=>'id_unidad','parent'=>'id_plan','fields'=>['codigo'=>'code','nombre'=>'short','descripcion'=>'nullable','horas_catedra'=>'number','tiempo_texto'=>'nullable','proceso_texto'=>'nullable','proceso_inicio'=>'date','proceso_fin'=>'date','area_transversal'=>'nullable','metodologia'=>'nullable','medios_verificacion'=>'nullable']],
             'capacidad'=>['table'=>'plan_capacidades','pk'=>'id_capacidad','parent'=>'id_unidad','fields'=>['descripcion'=>'required','proceso_desarrollo'=>'nullable']],
-            'tema'=>['table'=>'plan_temas','pk'=>'id_tema','parent'=>'id_capacidad','fields'=>['titulo'=>'short','contenido'=>'nullable','horas_catedra'=>'number']],
-            'indicador'=>['table'=>'plan_indicadores','pk'=>'id_indicador','parent'=>'id_tema','fields'=>['descripcion'=>'required']],
+            'tema'=>['table'=>'plan_temas','pk'=>'id_tema','parent'=>'id_capacidad','fields'=>['codigo'=>'code','titulo'=>'short','contenido'=>'nullable','horas_catedra'=>'number','tiempo_texto'=>'nullable','fecha_texto'=>'nullable']],
+            'indicador'=>['table'=>'plan_indicadores','pk'=>'id_indicador','parent'=>'id_tema','fields'=>['codigo'=>'code','descripcion'=>'required']],
             default=>throw new PedagogiaException('Tipo de elemento no valido.')
         };
     }
@@ -416,6 +428,10 @@ class PlanificacionPedagogica
     {
         if(!$ids)return;$m=implode(',',array_fill(0,count($ids),'?'));$s=$this->db->prepare("SELECT COUNT(*) FROM $tabla WHERE $pk IN ($m) AND activo=1");$s->execute($ids);if((int)$s->fetchColumn()!==count($ids))throw new PedagogiaException('La seleccion contiene opciones inactivas o inexistentes.');
     }
+    private function normalizarRelaciones(array $items,string $pk):array
+    {
+        $result=[];$seen=[];foreach(array_values($items) as $index=>$item){$id=is_array($item)?(int)($item['id']??$item[$pk]??0):(int)$item;if($id<1||isset($seen[$id]))continue;$text=is_array($item)?$this->nullableMax($item['texto_fuente']??null,150,'Texto fuente'):null;$order=is_array($item)?max(1,(int)($item['orden']??$index+1)):$index+1;$result[]=['id'=>$id,'texto_fuente'=>$text,'orden'=>$order];$seen[$id]=true;}usort($result,static fn(array $a,array $b):int=>$a['orden']<=>$b['orden']);foreach($result as $index=>&$row)$row['orden']=$index+1;unset($row);return$result;
+    }
     private function siguienteOrden(string $tabla,string $padre,int $id): int{$s=$this->db->prepare("SELECT COALESCE(MAX(orden),0)+1 FROM $tabla WHERE $padre=:id");$s->execute([':id'=>$id]);return(int)$s->fetchColumn();}
     private function porIds(string $sql,array $ids): array{if(!$ids)return[];$m=implode(',',array_fill(0,count($ids),'?'));$s=$this->db->prepare(sprintf($sql,$m));$s->execute(array_values($ids));return$s->fetchAll(PDO::FETCH_ASSOC);}
     private function filas(string $sql,array $p=[]): array{$s=$this->db->prepare($sql);$s->execute($p);return$s->fetchAll(PDO::FETCH_ASSOC);}
@@ -423,6 +439,8 @@ class PlanificacionPedagogica
     private function id(mixed $v,string $n): int{$x=filter_var($v,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);if(!$x)throw new PedagogiaException("$n no valido.");return(int)$x;}
     private function texto(mixed $v,string $n,int $max): string{$x=trim((string)$v);if($x===''||mb_strlen($x)>$max)throw new PedagogiaException("$n es obligatorio o demasiado extenso.");return$x;}
     private function nullable(mixed $v): ?string{$x=trim((string)$v);return$x===''?null:$x;}
+    private function nullableMax(mixed $v,int $max,string $name):?string{$x=$this->nullable($v);if($x!==null&&mb_strlen($x)>$max)throw new PedagogiaException($name.' supera el limite permitido.');return$x;}
+    private function anioFuente(mixed $v):?int{if($v===''||$v===null)return null;$year=filter_var($v,FILTER_VALIDATE_INT,['options'=>['min_range'=>2000,'max_range'=>2100]]);if($year===false)throw new PedagogiaException('Anio fuente no valido.');return(int)$year;}
     private function fecha(mixed $v,string $n): string{$x=(string)$v;$d=DateTimeImmutable::createFromFormat('!Y-m-d',$x);if(!$d||$d->format('Y-m-d')!==$x)throw new PedagogiaException("$n no valida.");return$x;}
     private function fechaNullable(mixed $v): ?string{return($v===''||$v===null)?null:$this->fecha($v,'Fecha');}
 }

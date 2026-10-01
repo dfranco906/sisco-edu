@@ -9,17 +9,47 @@ class ClaseDiaria
 
     public function procesarMarcaProfesor(string $userIdGlobal,int $idAula,string $momento): ?int
     {
+        $ids=$this->procesarMarcaProfesorClases($userIdGlobal,$idAula,$momento);
+        return $ids[0]??null;
+    }
+
+    /**
+     * Abre de forma atomica la clase del horario marcado y, si corresponde,
+     * una clase independiente por cada asignacion activa del grupo conjunto.
+     *
+     * @return list<int>
+     */
+    public function procesarMarcaProfesorClases(string $userIdGlobal,int $idAula,string $momento): array
+    {
         $fecha=$this->momento($momento);
         $horario=$this->buscarHorarioProfesor($userIdGlobal,$idAula,$fecha);
-        if(!$horario)return null;
-        return $this->crearORecuperar((int)$horario['id_asignacion'],(int)$horario['id_horario'],substr($fecha,0,10),$horario['hora_inicio'],$horario['hora_fin']);
+        if(!$horario)return [];
+        $horarios=$this->horariosParaApertura($horario,$userIdGlobal,$fecha);
+        $propia=!$this->db->inTransaction();
+        if($propia)$this->db->beginTransaction();
+        try{
+            $ids=[];
+            foreach($horarios as $fila){
+                $idAsignacion=(int)$fila['id_asignacion'];
+                if(isset($ids[$idAsignacion]))continue;
+                $ids[$idAsignacion]=$this->crearORecuperar(
+                    $idAsignacion,(int)$fila['id_horario'],substr($fecha,0,10),$fila['hora_inicio'],$fila['hora_fin']
+                );
+            }
+            if($propia)$this->db->commit();
+            return array_values($ids);
+        }catch(Throwable $e){
+            if($propia&&$this->db->inTransaction())$this->db->rollBack();
+            throw$e;
+        }
     }
 
     /** @return array<string,mixed>|null */
     public function buscarHorarioProfesor(string $userIdGlobal,int $idAula,string $momento): ?array
     {
         $fecha=$this->momento($momento);
-        $stmt=$this->db->prepare("SELECT h.id_horario,h.id_asignacion,h.hora_inicio,h.hora_fin
+        $stmt=$this->db->prepare("SELECT h.id_horario,h.id_asignacion,h.id_grado,h.id_aula,
+                h.dia_semana,h.hora_inicio,h.hora_fin,h.id_grupo_clase_conjunta
             FROM profesores p
             JOIN asignacion_docente ad ON ad.id_profesor=p.id_profesor AND ad.activo=1
             JOIN horarios h ON h.id_asignacion=ad.id_asignacion AND h.activo=1
@@ -176,6 +206,26 @@ class ClaseDiaria
             JOIN plan_tema_programacion pr ON pr.id_tema=t.id_tema
             WHERE p.id_asignacion=:asignacion AND p.estado='PUBLICADO' AND :fecha BETWEEN pr.fecha_inicio AND pr.fecha_fin
             ORDER BY DATEDIFF(pr.fecha_fin,pr.fecha_inicio),pr.orden,u.orden,c.orden,t.orden,pr.id_programacion LIMIT 1",[':asignacion'=>$idAsignacion,':fecha'=>$fecha]);
+    }
+    /** @return list<array<string,mixed>> */
+    private function horariosParaApertura(array $principal,string $userIdGlobal,string $momento): array
+    {
+        if(empty($principal['id_grupo_clase_conjunta']))return[$principal];
+        $stmt=$this->db->prepare("SELECT h.id_horario,h.id_asignacion,h.id_grado,h.id_aula,
+                h.dia_semana,h.hora_inicio,h.hora_fin,h.id_grupo_clase_conjunta
+            FROM horarios h
+            JOIN asignacion_docente ad ON ad.id_asignacion=h.id_asignacion AND ad.activo=1
+            JOIN profesores p ON p.id_profesor=ad.id_profesor AND p.activo=1
+            WHERE h.id_grupo_clase_conjunta=:grupo AND h.activo=1
+              AND p.user_id_global=:usuario AND ad.anio_lectivo=YEAR(:momento)
+            ORDER BY CASE WHEN h.id_horario=:principal THEN 0 ELSE 1 END,h.id_horario");
+        $stmt->execute([
+            ':grupo'=>$principal['id_grupo_clase_conjunta'],':usuario'=>$userIdGlobal,':momento'=>$momento,
+            ':principal'=>$principal['id_horario']
+        ]);
+        $horarios=$stmt->fetchAll(PDO::FETCH_ASSOC);
+        if(!$horarios)throw new PedagogiaException('El grupo de clase conjunta no tiene horarios activos validos.',409);
+        return$horarios;
     }
     private function copiarIndicadores(int $clase,int $tema): void{$this->db->prepare('INSERT IGNORE INTO clase_diaria_indicadores (id_clase,id_indicador) SELECT :clase,id_indicador FROM plan_indicadores WHERE id_tema=:tema')->execute([':clase'=>$clase,':tema'=>$tema]);}
     private function momento(string $v): string{$d=DateTimeImmutable::createFromFormat('!Y-m-d H:i:s',$v);if(!$d||$d->format('Y-m-d H:i:s')!==$v)throw new PedagogiaException('Fecha y hora no validas.');return$v;}
