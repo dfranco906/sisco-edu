@@ -4,32 +4,140 @@ declare(strict_types=1);
 namespace SiscoEdu\PlanImport\Pdf\Parser;
 
 use SiscoEdu\PlanImport\CanonicalPlan;
+use SiscoEdu\PlanImport\PlanImportException;
 use SiscoEdu\PlanImport\Text;
 
 final class CompetenciaContenidoParser extends AbstractTableParser
 {
-    public function format():string{return'COMPETENCIA_CONTENIDO';}
-    public function parse(array$document):array
+    public function format(): string { return 'COMPETENCIA_CONTENIDO'; }
+
+    public function parse(array $document): array
     {
-        $plan=CanonicalPlan::create($document,$this->format());$rows=$this->rows((string)$document['text']);$plan['metadata']=$this->metadata($rows,$this->format());$pageStarts=[];$headerSeqByPage=[];
-        foreach(range(1,(int)$document['pages'])as$page){$pageRows=array_values(array_filter($rows,static fn(array$row):bool=>$row['page']===$page));$headerIndex=$this->firstHeaderIndex($pageRows,['Competencia','Capacidad','Indicadores','Contenidos']);if($headerIndex===null)continue;$header=$pageRows[$headerIndex];$headerSeqByPage[$page]=(int)$header['seq'];$bullet=$this->minimumBulletPosition(array_slice($pageRows,$headerIndex+1));$pageStarts[$page]=['competence'=>0,'capacity'=>Text::position((string)$header['text'],'CAPACIDAD')??30,'indicator'=>$bullet??max(50,(Text::position((string)$header['text'],'INDICADORES')??84)-15),'content'=>Text::position((string)$header['text'],'CONTENIDOS')??118,'area'=>Text::position((string)$header['text'],'ÁREA')??145,'method'=>Text::position((string)$header['text'],'METODOLOGÍA')??170,'means'=>Text::position((string)$header['text'],'MEDIOS')??190,'date'=>Text::position((string)$header['text'],'FECHA')??206];}
-        if(!$pageStarts){$plan['warnings'][]=Text::warning('TABLE_STRUCTURE_WARNING','No se encontraron encabezados del formato competencia/contenido.');return$plan;}
-        $dataRows=array_values(array_filter($rows,function(array$row)use($headerSeqByPage):bool{return isset($headerSeqByPage[$row['page']])&&$row['seq']>$headerSeqByPage[$row['page']]&&!$this->isFooter($row)&&trim((string)$row['text'])!=='';}));
-        $unitGroups=$this->groupByGap($this->fragmentsFor($dataRows,$pageStarts,'competence','capacity'),3);if(!$unitGroups){$plan['warnings'][]=Text::warning('TABLE_STRUCTURE_WARNING','No se detectaron bloques de competencia para usarlos como unidades.');return$plan;}$units=[];foreach($unitGroups as$index=>$group)$units[]=['row'=>$group['first_row'],'data'=>CanonicalPlan::unit($index+1,null,Text::join($group['parts'])??''),'field_parts'=>['area'=>[],'method'=>[],'means'=>[],'date'=>[]]];
-        $capacityGroups=$this->withGroupRanges($this->mergeRepeatedPageContinuation($this->groupByGap($this->fragmentsFor($dataRows,$pageStarts,'capacity','indicator'),3)));$contentGroups=$this->groupContentFragments($this->fragmentsFor($dataRows,$pageStarts,'content','area'));$indicators=$this->groupBulletFragments($this->fragmentsFor($dataRows,$pageStarts,'indicator','content'));
-        foreach($capacityGroups as$group){$unitIndex=$this->precedingUnitIndex($units,(int)$group['first_row']['seq']);$capacity=CanonicalPlan::capacity(count($units[$unitIndex]['data']['capacidades'])+1,Text::join($group['parts'])??'');$topicParts=[];foreach($contentGroups as$contentGroup)if($contentGroup['center']>=$group['from']&&$contentGroup['center']<=$group['to'])foreach($contentGroup['parts']as$fragment)$topicParts[]=$fragment;$topicText=Text::join($topicParts);if($topicText!==null){$topic=CanonicalPlan::topic(1,null,$topicText);foreach($indicators as$indicator){$seq=(int)$indicator['row']['seq'];if($seq<$group['from']||$seq>$group['to'])continue;$topic['indicadores'][]=CanonicalPlan::indicator(count($topic['indicadores'])+1,null,$indicator['text']);}$capacity['temas'][]=$topic;}else foreach($indicators as$indicator){$seq=(int)$indicator['row']['seq'];if($seq>=$group['from']&&$seq<=$group['to'])$plan['warnings'][]=Text::warning('ORPHAN_INDICATOR','La capacidad no tiene contenido utilizable; no se inventó un tema.',$indicator['row'],$indicator['text']);}$units[$unitIndex]['data']['capacidades'][]=$capacity;}
-        foreach(['area'=>'area_transversal','method'=>'metodologia','means'=>'medios_verificacion','date'=>'proceso_texto']as$column=>$target){$end=['area'=>'method','method'=>'means','means'=>'date','date'=>null][$column];foreach($this->fragmentsFor($dataRows,$pageStarts,$column,$end)as$fragment){$unitIndex=$this->precedingUnitIndex($units,(int)$fragment['row']['seq']);$units[$unitIndex]['field_parts'][$column][]=$fragment;}foreach($units as&$unit)$unit['data'][$target]=Text::join($unit['field_parts'][$column],true);unset($unit);}
-        foreach($units as$unit)$plan['unidades'][]=$unit['data'];$plan['warnings'][]=Text::warning('TABLE_STRUCTURE_WARNING','Los CONTENIDOS sin numeración se agruparon de forma conservadora: un tema compuesto por cada capacidad. La preview humana debe decidir si los subdivide.');
-        $filename=Text::key((string)$document['filename']);$course=Text::key((string)($plan['metadata']['curso']??''));
-        if(str_contains($filename,'SEGUNDO CURSO')&&preg_match('/^\s*1/',$course)===1)$plan['warnings'][]=Text::warning('SOURCE_METADATA_MISMATCH','El nombre del archivo sugiere curso 2, pero el PDF declara '.$plan['metadata']['curso'].'.',null,(string)$document['filename']);
-        $plan['debug']=['columns_by_page'=>$this->debugColumnsByPage($pageStarts,$rows),'unit_markers'=>array_map(static fn(array$unit):array=>['name'=>$unit['data']['nombre'],'page'=>$unit['row']['page'],'line'=>$unit['row']['line']],$units),'capacity_groups'=>count($capacityGroups),'capacity_ranges'=>array_map(static fn(array$group):array=>['description'=>Text::join($group['parts']),'first'=>['page'=>$group['first_row']['page'],'line'=>$group['first_row']['line'],'seq'=>$group['first_row']['seq']],'last'=>['page'=>$group['last_row']['page'],'line'=>$group['last_row']['line'],'seq'=>$group['last_row']['seq']],'from'=>$group['from'],'to'=>$group['to']],$capacityGroups),'indicator_starts'=>array_map(static fn(array$indicator):array=>['text'=>$indicator['text'],'page'=>$indicator['row']['page'],'line'=>$indicator['row']['line'],'seq'=>$indicator['row']['seq']],$indicators),'association_rule'=>'Capacidad por separación vertical; contenido compuesto e indicadores asociados solo dentro del intervalo seguro de esa capacidad.'];return$plan;
+        $regions = $document['table_cells'] ?? null;
+        if (!is_array($regions) || !$regions) {
+            throw new PlanImportException('No se pudieron verificar las celdas del PDF; no se inferirán asociaciones.', 'PDF_TABLE_BOUNDARIES_UNSUPPORTED', 5, 422);
+        }
+        $plan = CanonicalPlan::create($document, $this->format());
+        $plan['metadata'] = $this->metadata($this->rows((string)$document['text']), $this->format());
+        $rows = [];
+        $indicators = [];
+        $unitBlocks = [];
+        $dates = [];
+
+        foreach ($regions as $region) {
+            $cells = $region['cells'];
+            if (Text::key($cells[0][0]['text'] ?? '') === 'COMPETENCIA' && count($cells[1]) === 1) continue;
+            foreach ($cells[7] as $cell) {
+                if (Text::key($cell['text']) !== 'FECHA') $dates[] = $cell + ['page'=>$region['page']];
+            }
+            foreach ($cells[2] as $cell) {
+                if (Text::key($cell['text']) === 'INDICADORES') continue;
+                foreach (preg_split('/\R/u', $cell['text']) ?: [] as $line) {
+                    $line = Text::clean($line);
+                    if ($line === '') continue;
+                    if (preg_match('/^[·•-]\s*(.+)$/u', $line, $m)) {
+                        $indicators[] = ['page'=>$region['page'],'box'=>$cell['box'],'parts'=>[$m[1]]];
+                    } elseif ($indicators) {
+                        // Wrapped text may cross a printed cell edge: the bullet identifies its owner.
+                        $indicators[array_key_last($indicators)]['parts'][] = $line;
+                    } else $this->ambiguous();
+                }
+            }
+            foreach ($cells[0] as $cell) {
+                if (Text::key($cell['text']) === 'COMPETENCIA') continue;
+                $block = ['name'=>Text::join(preg_split('/\R/u', $cell['text']) ?: []), 'rows'=>[]];
+                foreach ($cells[1] as $capacityCell) {
+                    if (!$this->contains($cell['box'], $capacityCell['box'])) continue;
+                    $row = ['page'=>$region['page'],'box'=>$capacityCell['box'],'description'=>$this->cellText($capacityCell),'contents'=>[], 'indicators'=>[], 'fields'=>[]];
+                    foreach ($cells[3] as $content) if ($this->contains($row['box'], $content['box'])) $row['contents'][] = $this->cellText($content);
+                    foreach ([4=>'area_transversal',5=>'metodologia',6=>'medios_verificacion'] as $column=>$field) {
+                        foreach ($cells[$column] as $context) if ($this->contains($context['box'], $row['box'])) $row['fields'][$field][] = $this->cellText($context);
+                    }
+                    if ($row['description'] === null && !Text::join($row['contents'])) continue;
+                    $rowIndex = count($rows);
+                    $rows[] = $row;
+                    $block['rows'][] = $rowIndex;
+                }
+                if ($block['rows']) $unitBlocks[] = $block;
+            }
+        }
+
+        // A blank tail of a merged cell gets its label from the following page.
+        foreach ($dates as $i=>&$date) {
+            if (Text::clean($date['text']) === '' && isset($dates[$i+1]) && $dates[$i+1]['page'] === $date['page']+1) $date['text'] = $dates[$i+1]['text'];
+        }
+        unset($date);
+        foreach ($indicators as $indicator) {
+            $matches = [];
+            foreach ($rows as $i=>$row) if ($row['page'] === $indicator['page'] && $this->contains($row['box'], $indicator['box'])) $matches[] = $i;
+            if (count($matches) !== 1) $this->ambiguous();
+            $rows[$matches[0]]['indicators'][] = Text::join($indicator['parts']);
+        }
+        foreach ($rows as &$row) {
+            foreach ($dates as $date) if ($date['page'] === $row['page'] && $this->contains($date['box'], $row['box'])) $row['fields']['proceso_texto'][] = $this->cellText($date);
+        }
+        unset($row);
+
+        $pending = [];
+        $units = [];
+        foreach ($unitBlocks as $block) {
+            if ($block['name'] === null) { $pending = array_merge($pending, $block['rows']); continue; }
+            $unitIndex = count($units)-1;
+            if ($unitIndex < 0 || Text::key($units[$unitIndex]['data']['nombre']) !== Text::key($block['name'])) {
+                $units[] = ['data'=>CanonicalPlan::unit(count($units)+1, null, $block['name']), 'rows'=>[]];
+                $unitIndex = count($units)-1;
+            }
+            $units[$unitIndex]['rows'] = array_merge($units[$unitIndex]['rows'], $pending, $block['rows']);
+            $pending = [];
+        }
+        if ($pending || !$units) $this->ambiguous();
+        foreach ($units as $unit) {
+            $data = $unit['data'];
+            $merged = [];
+            $fields = [];
+            foreach ($unit['rows'] as $rowIndex) {
+                $row = $rows[$rowIndex];
+                $last = count($merged)-1;
+                if ($last>=0 && $row['page'] === $merged[$last]['page']+1 &&
+                    ($merged[$last]['description'] === null || Text::key($merged[$last]['description']) === Text::key($row['description'] ?? ''))) {
+                    $merged[$last]['description'] ??= $row['description'];
+                    $merged[$last]['contents'] = array_merge($merged[$last]['contents'], $row['contents']);
+                    $merged[$last]['indicators'] = array_merge($merged[$last]['indicators'], $row['indicators']);
+                    $merged[$last]['fields'] = array_merge_recursive($merged[$last]['fields'], $row['fields']);
+                    $merged[$last]['page'] = $row['page'];
+                } else $merged[] = $row;
+            }
+            foreach ($merged as $row) {
+                if ($row['description'] === null || !Text::join($row['contents']) || !$row['indicators']) $this->ambiguous();
+                $capacity = CanonicalPlan::capacity(count($data['capacidades'])+1, $row['description']);
+                $topic = CanonicalPlan::topic(1, null, Text::join($row['contents']));
+                $topic['fecha_texto'] = Text::join($row['fields']['proceso_texto'] ?? [], true);
+                foreach ($row['indicators'] as $text) $topic['indicadores'][] = CanonicalPlan::indicator(count($topic['indicadores'])+1, null, $text);
+                $capacity['temas'][] = $topic;
+                $data['capacidades'][] = $capacity;
+                $fields = array_merge_recursive($fields, $row['fields']);
+            }
+            foreach (['area_transversal','metodologia','medios_verificacion','proceso_texto'] as $field) $data[$field] = Text::join($fields[$field] ?? [], true);
+            $plan['unidades'][] = $data;
+        }
+        $plan['warnings'][] = Text::warning('TABLE_STRUCTURE_WARNING','Los CONTENIDOS sin numeración se conservaron como un tema compuesto por capacidad; sus asociaciones se verificaron por los límites de las celdas.');
+        if (str_contains(Text::key((string)$document['filename']), 'SEGUNDO CURSO') && preg_match('/^\s*1/', (string)$plan['metadata']['curso'])) {
+            $plan['warnings'][] = Text::warning('SOURCE_METADATA_MISMATCH','El nombre del archivo sugiere curso 2, pero el PDF declara '.$plan['metadata']['curso'].'.',null,(string)$document['filename']);
+        }
+        $plan['debug'] = ['association_rule'=>'Límites de celdas impresos; continuación entre páginas; indicadores por inicio de viñeta.', 'table_regions'=>count($regions)];
+        return $plan;
     }
-    private function minimumBulletPosition(array$rows):?int{$minimum=null;foreach($rows as$row)foreach(['·','•']as$bullet){$position=Text::position((string)$row['text'],$bullet);if($position!==null)$minimum=$minimum===null?$position:min($minimum,$position);}return$minimum;}
-    private function fragmentsFor(array$rows,array$pageStarts,string$startName,?string$endName):array{$fragments=[];foreach($rows as$row){$starts=$pageStarts[$row['page']]??null;if($starts===null)continue;$text=$this->column($row,$starts[$startName],$endName===null?null:$starts[$endName]);if(in_array(Text::key($text),['DE ENSENANZA','VERIFICACION'],true))continue;if($text!=='')$fragments[]=['row'=>$row,'text'=>$text];}return$fragments;}
-    private function groupByGap(array$fragments,int$maximumGap):array{$groups=[];foreach($fragments as$fragment){$seq=(int)$fragment['row']['seq'];if(!$groups||$seq-(int)$groups[array_key_last($groups)]['last_row']['seq']>$maximumGap)$groups[]=['first_row'=>$fragment['row'],'last_row'=>$fragment['row'],'parts'=>[$fragment]];else{$groups[array_key_last($groups)]['last_row']=$fragment['row'];$groups[array_key_last($groups)]['parts'][]=$fragment;}}return$groups;}
-    private function groupContentFragments(array$fragments):array{$groups=[];foreach($fragments as$fragment){$text=Text::clean((string)$fragment['text']);$append=false;if($groups){$last=array_key_last($groups);$previous=Text::clean((string)$groups[$last]['parts'][array_key_last($groups[$last]['parts'])]['text']);$gap=(int)$fragment['row']['seq']-(int)$groups[$last]['last_row']['seq'];$append=$gap<=20&&(preg_match('/(?:\bde|\by|,)\s*$/ui',$previous)===1||preg_match('/^[\p{Ll}]/u',$text)===1);}if($append){$groups[$last]['parts'][]=$fragment;$groups[$last]['last_row']=$fragment['row'];}else$groups[]=['first_row'=>$fragment['row'],'last_row'=>$fragment['row'],'parts'=>[$fragment]];}foreach($groups as&$group)$group['center']=(int)floor(((int)$group['first_row']['seq']+(int)$group['last_row']['seq'])/2);unset($group);return$groups;}
-    private function mergeRepeatedPageContinuation(array$groups):array{$merged=[];foreach($groups as$group){if($merged){$last=array_key_last($merged);$same=Text::key(Text::join($merged[$last]['parts']))===Text::key(Text::join($group['parts']));$nextPage=$group['first_row']['page']===$merged[$last]['last_row']['page']+1;if($same&&$nextPage){$merged[$last]['last_row']=$group['last_row'];continue;}}$merged[]=$group;}return$merged;}
-    private function withGroupRanges(array$groups):array{foreach($groups as$index=>&$group){$previous=$groups[$index-1]['last_row']['seq']??null;$next=$groups[$index+1]['first_row']['seq']??null;$first=(int)$group['first_row']['seq'];$last=(int)$group['last_row']['seq'];$group['from']=$previous===null?PHP_INT_MIN:(int)floor(($previous+$first)/2)+1;$group['to']=$next===null?PHP_INT_MAX:(int)floor(($last+$next)/2);}unset($group);return$groups;}
-    private function precedingUnitIndex(array$units,int$seq):int{$found=0;foreach($units as$index=>$unit){if((int)$unit['row']['seq']>$seq)break;$found=$index;}return$found;}
-    private function debugColumnsByPage(array$pageStarts,array$rows):array{$debug=[];foreach($pageStarts as$page=>$starts){$width=1;foreach($rows as$row)if($row['page']===$page)$width=max($width,mb_strlen((string)$row['text'],'UTF-8'));$names=array_keys($starts);foreach($names as$index=>$name){$next=$names[$index+1]??null;$end=$next===null?$width:$starts[$next];$debug[$page][$name]=['x_char_start'=>$starts[$name],'x_char_end'=>$end,'x_relative_start'=>round($starts[$name]/$width,4),'x_relative_end'=>round($end/$width,4)];}}return$debug;}
+
+    private function contains(array $outer, array $inner): bool
+    {
+        $center = ($inner[1]+$inner[3])/2;
+        return $center > $outer[1]-0.05 && $center < $outer[3]+0.05;
+    }
+
+    private function cellText(array $cell): ?string { return Text::join(preg_split('/\R/u', $cell['text']) ?: []); }
+
+    private function ambiguous(): never
+    {
+        throw new PlanImportException('La tabla contiene una asociación ambigua entre competencia, capacidad, contenido o indicador. Revise el PDF antes de importar.', 'PDF_TABLE_ASSOCIATION_AMBIGUOUS', 5, 422);
+    }
 }

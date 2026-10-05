@@ -51,7 +51,15 @@ final class XpdfTableExtractor implements PdfTextExtractorInterface
         if ($pages > (int) $limits['max_pages']) {
             throw new PlanImportException('El PDF supera el máximo de páginas permitido.', 'PDF_PAGE_LIMIT', 2, 422, ['pages'=>$pages]);
         }
+        $tableCells = null;
+        if (preg_match('/COMPETENCIA\s+CAPACIDAD\s+INDICADORES\s+CONTENIDOS/ui', $text)) {
+            require_once __DIR__.'/PdfTableCells.php';
+            $cellLimits = $limits;
+            $cellLimits['timeout_seconds'] = max(0.01, (float)$limits['timeout_seconds'] - $result['elapsed_ms']/1000);
+            $tableCells = (new PdfTableCells($binary, $this->runner))->extract($realPath, $pages, $cellLimits);
+        }
         return [
+            'table_cells'=>$tableCells,
             'path'=>$realPath,
             'filename'=>basename($realPath),
             'sha256'=>hash_file('sha256', $realPath),

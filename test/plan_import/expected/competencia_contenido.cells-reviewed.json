@@ -1,0 +1,722 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "filename": "Plan Anual - segundo curso - BCB - Excel Avanzado.pdf",
+    "format": "COMPETENCIA_CONTENIDO",
+    "sha256": "268cb10c7d3ae3ad421ed615b44dedc59fcbe8662f5c5aab75d993a8c0b3cdac",
+    "pages": 2,
+    "text_layer": true,
+    "extractor": {
+      "name": "pdftotext",
+      "mode": "table",
+      "version": "4.00",
+      "elapsed_ms": 0
+    }
+  },
+  "metadata": {
+    "institucion": "COLEGIO “PRESBITERIANO SAN PABLO”",
+    "materia": "Informática",
+    "profesor": "LIC. DANILO FRANCO",
+    "curso": "1° BCB",
+    "turno": null,
+    "anio": 2026,
+    "dias_clase": "VIERNES",
+    "competencia_general": null,
+    "competencia_especifica": null
+  },
+  "unidades": [
+    {
+      "orden": 1,
+      "codigo": null,
+      "nombre": "Manejo del sistema operativo avanzado",
+      "descripcion": null,
+      "horas_catedra": null,
+      "tiempo_texto": null,
+      "proceso_texto": "De marzo a junio",
+      "area_transversal": "Ambiental: la sala de informática se debe mantener en un Ambiente limpio y saludable",
+      "metodologia": "Clase Teórico con: Trabajo Dual",
+      "medios_verificacion": "Libro de Informática y computadora",
+      "capacidades": [
+        {
+          "orden": 1,
+          "descripcion": "Comprende la evolución histórica de la informática.",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Historia, evolución y generaciones",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De marzo a junio",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Identifica el concepto del ábaco",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Reconoce la creación de la calculadora",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Identifica las generaciones de la computadora",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 2,
+          "descripcion": "Identifica las partes de un sistema operativo",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Hardware Software Tipos de computadora",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De marzo a junio",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Reconoce el hardware y sus partes",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Reconoce el software y sus tipos",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Conoce los tipo de computadoras",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 3,
+          "descripcion": "Utiliza diferentes herramientas de un sistema operativo",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Entorno de un sistema Operativo y sus fundamentos",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De marzo a junio",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Reconoce el entorno de Windows 10",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Visualiza el escritorio y sus partes",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Crea accesos directos en el escritorio",
+                  "check": null
+                },
+                {
+                  "orden": 4,
+                  "codigo": null,
+                  "descripcion": "Identifica el modo de organización de carpetas",
+                  "check": null
+                },
+                {
+                  "orden": 5,
+                  "codigo": null,
+                  "descripcion": "Conoce el modo de organizar ventanas",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "orden": 2,
+      "codigo": null,
+      "nombre": "Uso avanzado de Microsoft Office Word",
+      "descripcion": null,
+      "horas_catedra": null,
+      "tiempo_texto": null,
+      "proceso_texto": "De marzo a junio De Julio a Noviembre",
+      "area_transversal": "Ambiental: la sala de informática se debe mantener en un Ambiente limpio y saludable Experiencia de Vida Cotidiana",
+      "metodologia": "Clase Teórico y Práctico con: Trabajo Dual Clase Teórico y Trabajo Grupal Clase Teórico y Práctico con: Trabajo Dual Trabajo Grupal Clase Teórico y Clase Teórico y Práctico con:",
+      "medios_verificacion": "Libro de Informática Y computador Libro de R.S.A Prueba oral: Libro de Informática R.S.A Prueba escrita Libro de Y computador Libro de Y computador R.S.A Libro de Informática Libro de Informática y Computador R.S.A",
+      "capacidades": [
+        {
+          "orden": 1,
+          "descripcion": "Reconoce el Microsoft Word como el procesador de texto más avanzado",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Acceso al programa de Word Entorno del programa Guardar Formato fuente Formato párrafo Numeración y viñetas",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De marzo a junio",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Identifica el acceso al programa",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Reconoce las partes del programa",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Utiliza las diferentes formas de guardado",
+                  "check": null
+                },
+                {
+                  "orden": 4,
+                  "codigo": null,
+                  "descripcion": "Identifica el formato fuente",
+                  "check": null
+                },
+                {
+                  "orden": 5,
+                  "codigo": null,
+                  "descripcion": "Identifica el formato párrafo",
+                  "check": null
+                },
+                {
+                  "orden": 6,
+                  "codigo": null,
+                  "descripcion": "Reconoce el procedimiento de las",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 2,
+          "descripcion": "Comprende el manejo de la ortografía en el procesador con las configuraciones de tipo de visualización",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Ortografía Configuración de Tipos de visualización de",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De marzo a junio",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Conoce el cambio ortográfico",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Utiliza las tres configuraciones de la",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Identifica los tipos de visualización",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 3,
+          "descripcion": "Utiliza las herramientas de la configuración general de las paginas",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Impresión de documentos Saltos Encabezado y pie de Numeración de pagina",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De marzo a junio",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Conoce las ventajas de impresión",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Aplica el encabezado a las paginas",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Realiza los saltos de pagina",
+                  "check": null
+                },
+                {
+                  "orden": 4,
+                  "codigo": null,
+                  "descripcion": "Configura la numeración de pagina",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 4,
+          "descripcion": "Utiliza los distintos objetos en Word",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Insertar imágenes, tablas, autoformas, organigramas y diagramas",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Reconoce la inserción de imágenes",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Aplica las tablas con sus filas y",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Inserta distintas autoformas",
+                  "check": null
+                },
+                {
+                  "orden": 4,
+                  "codigo": null,
+                  "descripcion": "Diseña un organigrama con la",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 5,
+          "descripcion": "Identifica la seguridad de los documentos con sus estilos, hipervínculos y marcadores",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Seguridad de los documentos Estilos Marcadores Hipervínculos",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Conoce la contraseña de apertura",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Conoce la contraseña de Escritura",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Aplica el estilo al texto",
+                  "check": null
+                },
+                {
+                  "orden": 4,
+                  "codigo": null,
+                  "descripcion": "Utiliza los marcadores",
+                  "check": null
+                },
+                {
+                  "orden": 5,
+                  "codigo": null,
+                  "descripcion": "Utiliza los hipervínculos",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 6,
+          "descripcion": "Comprende el uso de combinar correspondencia",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Combinación de correspondencia",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Conoce los pasos para crear una",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Diseña la planilla para la",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Diseña el certificado para la",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 7,
+          "descripcion": "Identifica la utilización adecuada de las etiquetas con el manejo de las formulas y ecuaciones",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Etiquetas Formulas y Ecuaciones",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Aplica el proceso de la etiqueta",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Inserta las formulas en el documento",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 8,
+          "descripcion": "Reconoce la utilización del documento maestro con la ventaja de las tablas de ilustración",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Documentos maestros Crear tablas de ilustración",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Identifica el significado del documento maestro",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Crea un índice de tareas",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Crea un índice automático",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 9,
+          "descripcion": "Identifica el manejo del Macros y sus formularios",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Macros Formularios",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Identifica los pasos para crear un",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Conoce el modo de creación de",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 10,
+          "descripcion": "Comprende el modo guardado del documento",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "HTML Compartir documentos PDF",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Aplica el guardado del documento como HTML",
+                  "check": null
+                },
+                {
+                  "orden": 2,
+                  "codigo": null,
+                  "descripcion": "Identifica el modo de compartir un documento en pantalla",
+                  "check": null
+                },
+                {
+                  "orden": 3,
+                  "codigo": null,
+                  "descripcion": "Aplica el guardado como PDF",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        },
+        {
+          "orden": 11,
+          "descripcion": "Utiliza el teclado de forma correcta",
+          "proceso_desarrollo": null,
+          "temas": [
+            {
+              "orden": 1,
+              "codigo": null,
+              "titulo": "Dactilografía computarizada",
+              "contenido": null,
+              "horas_catedra": null,
+              "tiempo_texto": null,
+              "fecha_texto": "De Julio a Noviembre",
+              "indicadores": [
+                {
+                  "orden": 1,
+                  "codigo": null,
+                  "descripcion": "Conoce la manera correcta de utilizar el teclado",
+                  "check": null
+                }
+              ],
+              "procedimientos_evaluativos": [],
+              "instrumentos_evaluativos": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "warnings": [
+    {
+      "type": "TABLE_STRUCTURE_WARNING",
+      "page": null,
+      "line": null,
+      "text": null,
+      "message": "Los CONTENIDOS sin numeración se conservaron como un tema compuesto por capacidad; sus asociaciones se verificaron por los límites de las celdas."
+    },
+    {
+      "type": "SOURCE_METADATA_MISMATCH",
+      "page": null,
+      "line": null,
+      "text": "Plan Anual - segundo curso - BCB - Excel Avanzado.pdf",
+      "message": "El nombre del archivo sugiere curso 2, pero el PDF declara 1° BCB."
+    }
+  ],
+  "confidence": {
+    "scale": "rule_completeness_0_100",
+    "metadata": 85,
+    "estructura": 100,
+    "asociaciones": 90,
+    "global": 93,
+    "criteria": {
+      "metadata": {
+        "expected": [
+          "institucion",
+          "materia",
+          "profesor",
+          "curso",
+          "anio",
+          "dias_clase"
+        ],
+        "found": [
+          "institucion",
+          "materia",
+          "profesor",
+          "curso",
+          "anio",
+          "dias_clase"
+        ]
+      },
+      "estructura": [
+        {
+          "criterion": "Existe al menos una unidad",
+          "weight": 15,
+          "passed": true
+        },
+        {
+          "criterion": "Todas las unidades tienen capacidad",
+          "weight": 20,
+          "passed": true
+        },
+        {
+          "criterion": "Todas las capacidades tienen tema",
+          "weight": 20,
+          "passed": true
+        },
+        {
+          "criterion": "Todos los temas tienen indicador",
+          "weight": 20,
+          "passed": true
+        },
+        {
+          "criterion": "Órdenes secuenciales no vacíos",
+          "weight": 5,
+          "passed": true
+        },
+        {
+          "criterion": "Códigos jerárquicos coherentes o no aplicables",
+          "weight": 10,
+          "passed": true
+        },
+        {
+          "criterion": "Horas presentes cuando el formato las exige",
+          "weight": 10,
+          "passed": true
+        }
+      ],
+      "asociaciones": [
+        {
+          "criterion": "Sin temas huérfanos",
+          "weight": 40,
+          "passed": true
+        },
+        {
+          "criterion": "Sin indicadores huérfanos",
+          "weight": 40,
+          "passed": true
+        },
+        {
+          "criterion": "Sin columnas ambiguas",
+          "weight": 10,
+          "passed": true
+        },
+        {
+          "criterion": "Sin reconstrucción conservadora de tabla",
+          "weight": 10,
+          "passed": false
+        }
+      ],
+      "formula_global": "30% metadata + 40% estructura + 30% asociaciones"
+    }
+  }
+}
