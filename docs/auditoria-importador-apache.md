@@ -203,3 +203,106 @@ y credencial, identidad valida e idempotencia. Resultado: **PASS**.
 `SessionValidationTest` (**21 comprobaciones**) y `SessionLoginTest` tambien
 pasaron, junto con la sintaxis PHP y `git diff --check`. Estos tests son regresiones y la
 prueba del entorno real es el login y preflight de Apache descriptos arriba.
+
+## Cierre y verificacion repetida: 2026-10-05
+
+Se retomo la tarea con el arbol de trabajo limpio en
+`ed5d84a2439f2d7b6fca844d2df9d04f92087a22`, rama
+`frontend-recovery-audit`. Las fases 1 a 4 ya estaban implementadas y verificadas
+el 1 de octubre; no fue necesario modificar nuevamente codigo del importador.
+Se repitio la prueba contra Apache/XAMPP y `sisco_db`, sin ejecutar la herramienta
+de reparacion de identidad ni cambiar datos reales.
+
+Se hizo un login real nuevo mediante el formulario, con la cuenta SuperAdmin
+existente y su credencial vigente, sin crear una identidad de prueba. Resultado:
+HTTP 302 y dashboard accesible. Su contexto, verificado mediante un probe
+temporal autenticado y restringido a loopback, fue:
+
+| Campo | Resultado |
+| --- | --- |
+| Runtime | `apache2handler` |
+| session_status | 2, activa |
+| isset(id_usuario) | true |
+| ID positivo, existente y activo | PASS |
+| Rol | SuperAdmin, coincidente con BD |
+| Profesor vinculado | false; no requerido para ese rol |
+| Asignacion seleccionada | 33 |
+| Anio enviado / anio_lectivo | 2026 / 2026 |
+| getenv(SISCO_PDFTOTEXT_PATH) | presente en Apache |
+| Ejecutable existente / ejecutable | PASS / PASS |
+
+Los SHA-256 de los archivos de upload, autenticacion y preflight ejecutados por
+Apache coincidieron con los archivos del checkout local. El probe no devolvio
+rutas de instalacion, cookies, IDs de sesion ni credenciales y fue eliminado
+despues de recopilar la evidencia.
+
+Se abrio Planificacion en Edge, se selecciono la asignacion 33, anio 2026 y el
+fixture `Plan Anual - tercer curso - BTI - Administracion financiera.pdf`.
+El formulario envio su multipart real; el servidor respondio HTTP **201**, con
+token staging de formato valido. El navegador navego al preview y la API de
+preview respondio HTTP **200**. Los conteos del JSON y de la pantalla fueron
+**6 unidades, 6 capacidades, 18 temas y 18 indicadores**. `agent-browser`,
+conectado al navegador de auditoria, leyo esos mismos contadores visibles.
+No se sustituyeron respuestas ni se simulo la extraccion.
+
+El preflight autenticado respondio HTTP **200**, `ready=true`, con **6 PASS**:
+usuario, schema, asignaciones, limites, staging y pdftotext. Esta cuenta
+administrativa ve **169 asignaciones**, frente a las 15 de la cuenta Profesor
+usada en la auditoria anterior; los conteos corresponden a roles distintos.
+Los limites comprobados fueron 10 MiB por PDF, 100 paginas, 15 segundos de
+extraccion, 5 MiB de JSON de preview y 7200 segundos de vigencia de staging.
+
+La automatizacion bloqueo las escrituras del navegador excepto el login durante
+la prueba de autenticacion y el upload durante la prueba de importacion.
+Solicitudes de confirmacion: **0**. No se pulsaron confirmar, cancelar ni editar.
+La copia temporal del PDF y su preview permanecen en staging sujetos a su TTL;
+no constituyen un plan insertado en la BD.
+
+Una comparacion por hash de todas las filas de las diez tablas del plan,
+tomada antes del login y despues del upload/preview, dio `unchanged=true`:
+
+| Tabla | Filas antes y despues |
+| --- | ---: |
+| planes_anuales | 3 |
+| plan_unidades | 2 |
+| plan_capacidades | 2 |
+| plan_temas | 4 |
+| plan_indicadores | 4 |
+| plan_tema_programacion | 4 |
+| procedimientos_evaluativos | 7 |
+| instrumentos_evaluativos | 7 |
+| plan_tema_procedimientos | 8 |
+| plan_tema_instrumentos | 9 |
+
+Evidencias nuevas:
+
+- [Upload, contexto seguro, preflight y conservacion de datos](audit-assets/apache-upload-evidence-2026-10-05.json).
+- [Contadores visibles del preview](audit-assets/apache-import-preview-counts-2026-10-05.png).
+
+Regresiones ejecutadas nuevamente:
+`C:\xampp\php\php.exe test\plan_import\run_all.php`: **29/29 PASS, 0 FAIL**.
+Incluyen validacion de sesiones, login, preflight y reparacion de identidad.
+Se ejecutan con BDs temporales y no se usan como prueba de Apache.
+Los cuatro JSON de salida que regeneran tiempos `elapsed_ms` se restituyeron
+tras comprobar que solamente habia cambiado ese dato de rendimiento.
+
+Resultado solicitado al cierre:
+
+- CAUSA EXACTA INVALID_CONTEXT: propietario de staging `owner=0`, procedente
+  de la identidad SuperAdmin con ID cero anterior a la reparacion autorizada.
+- ID_USUARIO REAL: **valido**, positivo, existente y activo. No se repitio la reparacion.
+- APACHE SIRVE LA RAMA CORRECTA: **SI**, hashes coincidentes.
+- HEAD LOCAL: `ed5d84a2439f2d7b6fca844d2df9d04f92087a22`.
+- PDFTOTEXT EN APACHE: **PASS**.
+- STAGING: **PASS**.
+- UPLOAD REAL: **PASS**, HTTP 201.
+- PREVIEW REAL: **PASS**, API HTTP 200 y pantalla navegable.
+- CONTEOS: unidades **6**, capacidades **6**, temas **18**, indicadores **18**.
+- ARCHIVOS MODIFICADOS EN ESTE CIERRE: este informe y los dos archivos
+  nuevos de evidencia PNG/JSON indicados arriba.
+- TESTS: **29/29 PASS**; evidencia real de Apache documentada por separado.
+- DATOS REALES INSERTADOS: **0**.
+- LISTO PARA FASE DE PROGRAMACION: **SI**. Esa fase no se ejecuto en esta tarea.
+
+No se modificaron firmware, publicacion, programacion pedagogica, ClaseDiaria,
+GatewayAttendanceService, asistencia ni informes.

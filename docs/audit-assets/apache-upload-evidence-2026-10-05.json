@@ -1,0 +1,111 @@
+{
+  "runtime": "real Edge browser -> Apache :80 -> sisco_db",
+  "http_status": 201,
+  "assignment": 33,
+  "year": 2026,
+  "error_type": null,
+  "token_valid": true,
+  "preview_page": true,
+  "preview_api": true,
+  "counts": {
+    "unidades": 6,
+    "capacidades": 6,
+    "temas": 18,
+    "indicadores": 18
+  },
+  "blocked_writes": 0,
+  "context": {
+    "runtime": "apache2handler",
+    "session_status": 2,
+    "id_usuario_present": true,
+    "id_usuario": 29,
+    "rol": "SuperAdmin",
+    "usuario_existente_activo": true,
+    "profesor_vinculado": false,
+    "profesor_requerido": false,
+    "id_asignacion": 33,
+    "anio": 2026,
+    "anio_lectivo": 2026,
+    "pdftotext_env_present": true,
+    "pdftotext_is_file": true,
+    "pdftotext_is_executable": true,
+    "served_upload_sha256": "8ad06860f25afe0f3d0f6fe3e68c4f067d402051686b5dafd374d0030ce0b8de",
+    "served_auth_sha256": "21094f65590e14b1e52a809814c8f7a328110bef8a391d9c4d3cdb44f460f182",
+    "served_preflight_sha256": "55aabbc9e10b6190dd4998a464e256bc125cdc75bdf37eb22c34952a13259a47"
+  },
+  "verified_at": "2026-10-05T12:52:35.740Z",
+  "head_local": "ed5d84a2439f2d7b6fca844d2df9d04f92087a22",
+  "preview_rendered_counts": [
+    6,
+    6,
+    18,
+    18
+  ],
+  "preflight": {
+    "http_status": 200,
+    "data": {
+      "ready": true,
+      "checks": {
+        "usuario": {
+          "status": "PASS"
+        },
+        "schema": {
+          "status": "PASS"
+        },
+        "asignaciones": {
+          "status": "PASS"
+        },
+        "limites": {
+          "status": "PASS"
+        },
+        "staging": {
+          "status": "PASS"
+        },
+        "pdftotext": {
+          "status": "PASS"
+        }
+      },
+      "available_assignments": 169,
+      "limits": {
+        "max_file_bytes": 10485760,
+        "max_pages": 100,
+        "timeout_seconds": 15,
+        "max_preview_json_bytes": 5242880,
+        "staging_ttl_seconds": 7200
+      },
+      "runtime": "apache2handler"
+    }
+  },
+  "agent_browser_visible_counts": "6 unidades · 6 capacidades · 18 temas · 18 indicadores",
+  "apache_serves_current_checkout": true,
+  "confirmation_requests": 0,
+  "academic_data": {
+    "unchanged": true,
+    "counts": {
+      "planes_anuales": 3,
+      "plan_unidades": 2,
+      "plan_capacidades": 2,
+      "plan_temas": 4,
+      "plan_indicadores": 4,
+      "plan_tema_programacion": 4,
+      "procedimientos_evaluativos": 7,
+      "instrumentos_evaluativos": 7,
+      "plan_tema_procedimientos": 8,
+      "plan_tema_instrumentos": 9
+    },
+    "rows_inserted": 0
+  },
+  "regressions": {
+    "command": "C:/xampp/php/php.exe test/plan_import/run_all.php",
+    "passed": 29,
+    "failed": 0,
+    "environment": "temporary databases and PHP development server; separate from Apache evidence"
+  },
+  "temporary_probe_removed": true,
+  "login": {
+    "http_status": 302,
+    "dashboard_reached": true,
+    "confirmation_requests": 0
+  },
+  "temporary_probe_http_status_after_removal": 404
+}
