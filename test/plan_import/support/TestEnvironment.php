@@ -81,6 +81,22 @@ final class PlanImportTestEnvironment
         return ['status'=>$status,'json'=>$json];
     }
     public function insert(string $sql,array $params): int { $s=$this->db->prepare($sql);$s->execute($params);return(int)$this->db->lastInsertId(); }
+    /** Reloj MySQL exclusivo de la copia temporal; nunca acepta fechas del Gateway en producción. */
+    public function setClock(string $moment): void
+    {
+        if(!preg_match('/^sisco_pdf_test_[a-f0-9]{12}$/D',$this->database))throw new RuntimeException('Reloj requiere BD temporal.');
+        $date=DateTimeImmutable::createFromFormat('!Y-m-d H:i:s',$moment,new DateTimeZone('America/Asuncion'));
+        if(!$date || $date->format('Y-m-d H:i:s')!==$moment)throw new RuntimeException('Reloj test inválido.');
+        $file=$this->directory.'/src/config/db.php';
+        $code=file_get_contents($file);
+        if(!str_contains($code,"// TEMPORARY_TEST_CLOCK")){
+            $anchor='$this->conn->exec("set names utf8");';
+            if(substr_count($code,$anchor)!==1)throw new RuntimeException('No se pudo aislar el reloj.');
+            $code=str_replace($anchor,$anchor."\n            // TEMPORARY_TEST_CLOCK\n            ".'$this->conn->exec("SET timestamp = ".(int)file_get_contents(__DIR__."/test-clock.txt"));',$code);
+            file_put_contents($file,$code);
+        }
+        file_put_contents($this->directory.'/src/config/test-clock.txt',(string)$date->getTimestamp());
+    }
     public function close(): void
     {
         if (is_resource($this->server)) { proc_terminate($this->server); proc_close($this->server); $this->server=null; }

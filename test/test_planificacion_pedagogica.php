@@ -3,7 +3,9 @@ require_once __DIR__ . '/../src/config/db.php';
 require_once __DIR__ . '/../src/classes/PlanificacionPedagogica.php';
 require_once __DIR__ . '/../src/classes/ClaseDiaria.php';
 
-$db=(new Database())->getConnection();
+require_once __DIR__.'/plan_import/support/TestEnvironment.php';
+$env=new PlanImportTestEnvironment();
+$db=$env->db;
 $token='PLAN_TEST_'.date('YmdHis').'_'.random_int(100,999);
 $ciBase=substr(hash('sha256',$token),0,12);
 $ids=['eventos'=>[],'asistencias_estudiantes'=>[],'estudiantes'=>[],'unidades'=>[],'capacidades'=>[],'temas'=>[]];
@@ -12,6 +14,12 @@ function comprobar(bool $condicion,string $nombre): void { global $resultados; $
 function insertar(PDO $db,string $sql,array $params): int {$s=$db->prepare($sql);$s->execute($params);return(int)$db->lastInsertId();}
 
 try {
+    // Esta conexión pertenece exclusivamente al entorno temporal.
+    if(!preg_match('/^sisco_pdf_test_[a-f0-9]{12}$/D',$env->database))throw new RuntimeException('BD no temporal');
+    $tables=$db->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+    $db->exec('SET FOREIGN_KEY_CHECKS=0');
+    foreach($tables as $table){if(!preg_match('/^[a-zA-Z0-9_]+$/D',$table))throw new RuntimeException('Tabla inválida');$db->exec('TRUNCATE TABLE '.$table);}
+    $db->exec('SET FOREIGN_KEY_CHECKS=1');
     $ids['aula']=insertar($db,'INSERT INTO aulas (nombre,codigo,ubicacion) VALUES (:n,:c,:u)',[':n'=>$token.' Aula',':c'=>$token,':u'=>'Prueba automatizada']);
     $ids['grado']=insertar($db,'INSERT INTO grados (nombre,id_aula,room_id) VALUES (:n,:a,:r)',[':n'=>$token.' Grado',':a'=>$ids['aula'],':r'=>$token]);
     $ids['profesor']=insertar($db,'INSERT INTO profesores (nombre,apellido,cedula_identidad,user_id_global,activo) VALUES (:n,:a,:c,:u,1)',[':n'=>'Profesor',':a'=>$token,':c'=>'9'.$ciBase,':u'=>$token.'_PROF']);
@@ -22,7 +30,9 @@ try {
     $ids['horario']=insertar($db,"INSERT INTO horarios (id_asignacion,id_grado,id_aula,dia_semana,hora_inicio,hora_fin,activo,permite_superposicion) VALUES (:a,:g,:u,'Lunes','07:00:00','07:40:00',1,0)",[':a'=>$ids['asignacion'],':g'=>$ids['grado'],':u'=>$ids['aula']]);
     for($i=1;$i<=5;$i++)$ids['estudiantes'][]=insertar($db,'INSERT INTO estudiantes (nombre,apellido,cedula_identidad,id_grado,user_id_global,activo) VALUES (:n,:a,:c,:g,:u,1)',[':n'=>'Alumno'.$i,':a'=>$token,':c'=>$i.$ciBase,':u'=>$token.'_EST_'.$i,':g'=>$ids['grado']]);
 
-    $servicio=new PlanificacionPedagogica($db,['id_usuario'=>0,'rol'=>'SuperAdmin']);
+    $studentPrints=[];
+    foreach($ids['estudiantes'] as $index=>$student)$studentPrints[$student]=insertar($db,"INSERT INTO huellas_templates (user_id_global,id_estudiante,fingerprint_data,formato,activo) VALUES (?,?,?,'HEX',1)",[$token.'_EST_'.($index+1),$student,str_repeat('A',3072)]);
+    $servicio=new PlanificacionPedagogica($db,['id_usuario'=>$ids['usuario'],'rol'=>'Profesor']);
     $ids['plan']=$servicio->crearPlan(['id_asignacion'=>$ids['asignacion'],'anio'=>2026,'competencia_general'=>'Competencia de prueba','competencia_especifica'=>'Competencia especifica']);
     for($u=1;$u<=3;$u++){
         $unidad=$servicio->guardarElemento('unidad',['id_plan'=>$ids['plan'],'nombre'=>"Unidad $u",'descripcion'=>"Descripcion $u",'horas_catedra'=>10]);$ids['unidades'][]=$unidad;
@@ -33,10 +43,13 @@ try {
     $tema=$ids['temas'][0];
     $servicio->guardarElemento('indicador',['id_tema'=>$tema,'descripcion'=>'Indicador 2']);
     $servicio->guardarElemento('indicador',['id_tema'=>$tema,'descripcion'=>'Indicador 3']);
+    $db->exec("INSERT INTO procedimientos_evaluativos (nombre,activo) VALUES ('Observacion temporal',1),('Analisis temporal',1)");
+    $db->exec("INSERT INTO instrumentos_evaluativos (nombre,activo) VALUES ('Lista temporal',1),('Rubrica temporal',1)");
     $catalogos=$servicio->catalogos();
     $servicio->guardarEvaluacion($tema,array_column(array_slice($catalogos['procedimientos'],0,2),'id_procedimiento'),array_column(array_slice($catalogos['instrumentos'],0,2),'id_instrumento'));
     $servicio->guardarProgramacion(['id_tema'=>$tema,'fecha_inicio'=>'2026-08-31','fecha_fin'=>'2026-08-31','horas_catedra_planificadas'=>1]);
     $servicio->guardarProgramacion(['id_tema'=>$tema,'fecha_inicio'=>'2026-09-07','fecha_fin'=>'2026-09-07','horas_catedra_planificadas'=>1]);
+    foreach(array_slice($ids['temas'],1) as $index=>$otherTopic){$date='2026-09-'.($index===0?'01':'02');$servicio->guardarProgramacion(['id_tema'=>$otherTopic,'fecha_inicio'=>$date,'fecha_fin'=>$date,'horas_catedra_planificadas'=>1]);}
     $servicio->cambiarEstado($ids['plan'],'PUBLICADO');
     $plan=$servicio->obtenerPlan($ids['plan']);
     comprobar(count($plan['unidades'])===3,'plan con 3 unidades');
@@ -50,7 +63,7 @@ try {
 
     for($i=0;$i<3;$i++){
         $ids['eventos'][]=insertar($db,"INSERT INTO eventos_asistencia (user_id_global,id_aula,estado,timestamp_evento,origen_node_id,sincronizado,activo) VALUES (:u,:a,'PRESENTE','2026-08-31 07:10:00','TEST',1,1)",[':u'=>$token.'_EST_'.($i+1),':a'=>$ids['aula']]);
-        $ids['asistencias_estudiantes'][]=insertar($db,"INSERT INTO asistencias_estudiantes (id_estudiante,huella_id,fecha,hora,estado,activo) VALUES (:estudiante,1,'2026-08-31','07:10:00','PRESENTE',1)",[':estudiante'=>$ids['estudiantes'][$i]]);
+        $ids['asistencias_estudiantes'][]=insertar($db,"INSERT INTO asistencias_estudiantes (id_estudiante,huella_id,fecha,hora,estado,activo) VALUES (:estudiante,:huella,'2026-08-31','07:10:00','PRESENTE',1)",[':estudiante'=>$ids['estudiantes'][$i],':huella'=>$studentPrints[$ids['estudiantes'][$i]]]);
     }
     $clases=new ClaseDiaria($db);$ids['clase']=$clases->crearORecuperar($ids['asignacion'],$ids['horario'],'2026-08-31','07:00:00','07:40:00');
     $repetida=$clases->crearORecuperar($ids['asignacion'],$ids['horario'],'2026-08-31','07:00:00','07:40:00');
@@ -59,8 +72,8 @@ try {
     comprobar($desdeHuella===$ids['clase'],'marca del profesor resuelve horario, plan y clase');
     $informe=$clases->informe($ids['clase']);$presentes=count(array_filter($informe['estudiantes'],fn($e)=>$e['estado']==='PRESENTE'));
     comprobar(count($informe['estudiantes'])===5,'informe contiene 5 alumnos');comprobar($presentes===3,'informe calcula 3 presentes');comprobar(count($informe['estudiantes'])-$presentes===2,'informe calcula 2 ausentes');
-    $clases->guardarRegistro($ids['clase'],$ids['estudiantes'][0],null,'Participo activamente',0);
-    $clases->guardarRegistro($ids['clase'],$ids['estudiantes'][4],null,'Ausencia justificada',0);
+    $clases->guardarRegistro($ids['clase'],$ids['estudiantes'][0],null,'Participo activamente',$ids['usuario']);
+    $clases->guardarRegistro($ids['clase'],$ids['estudiantes'][4],null,'Ausencia justificada',$ids['usuario']);
     $reabierto=$clases->informe($ids['clase']);$obs=array_column($reabierto['estudiantes'],'observacion','id_estudiante');
     comprobar(($obs[$ids['estudiantes'][0]]??'')==='Participo activamente','persiste observacion de presente');
     comprobar(($obs[$ids['estudiantes'][4]]??'')==='Ausencia justificada','persiste observacion de ausente');
@@ -68,18 +81,7 @@ try {
     $ids['clase_sin_contenido']=$clases->crearORecuperar($ids['asignacion'],$ids['horario'],'2026-09-14','07:00:00','07:40:00');
     comprobar($clases->informe($ids['clase_sin_contenido'])['sin_contenido']===true,'fecha sin programacion no inventa contenido');
 } finally {
-    try {
-        if(!empty($ids['clase'])){$db->prepare('DELETE FROM registros_anecdoticos WHERE id_clase=?')->execute([$ids['clase']]);$db->prepare('DELETE FROM clase_diaria_indicadores WHERE id_clase=?')->execute([$ids['clase']]);$db->prepare('DELETE FROM clases_diarias WHERE id_clase=?')->execute([$ids['clase']]);}
-        if(!empty($ids['clase_sin_contenido']))$db->prepare('DELETE FROM clases_diarias WHERE id_clase=?')->execute([$ids['clase_sin_contenido']]);
-        if(!empty($ids['plan'])){$db->prepare('DELETE pi FROM plan_indicadores pi JOIN plan_temas t ON t.id_tema=pi.id_tema JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE t FROM plan_temas t JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE c FROM plan_capacidades c JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE FROM plan_unidades WHERE id_plan=?')->execute([$ids['plan']]);$db->prepare('DELETE FROM planes_anuales WHERE id_plan=?')->execute([$ids['plan']]);}
-        foreach($ids['eventos'] as $id)$db->prepare('DELETE FROM eventos_asistencia WHERE id_evento=?')->execute([$id]);
-        foreach($ids['asistencias_estudiantes'] as $id)$db->prepare('DELETE FROM asistencias_estudiantes WHERE id_asistencia_estudiante=?')->execute([$id]);
-        if(!empty($ids['horario']))$db->prepare('DELETE FROM horarios WHERE id_horario=?')->execute([$ids['horario']]);
-        if(!empty($ids['asignacion']))$db->prepare('DELETE FROM asignacion_docente WHERE id_asignacion=?')->execute([$ids['asignacion']]);
-        foreach($ids['estudiantes'] as $id)$db->prepare('DELETE FROM estudiantes WHERE id_estudiante=?')->execute([$id]);
-        foreach(['materia'=>'materias','profesor'=>'profesores','grado'=>'grados','aula'=>'aulas'] as $k=>$tabla)if(!empty($ids[$k])){$pk=['materia'=>'id_materia','profesor'=>'id_profesor','grado'=>'id_grado','aula'=>'id_aula'][$k];$db->prepare("DELETE FROM $tabla WHERE $pk=?")->execute([$ids[$k]]);}
-        if(!empty($ids['usuario']))$db->prepare('DELETE FROM usuarios WHERE id_usuario=?')->execute([$ids['usuario']]);
-    } catch(Throwable $limpieza){fwrite(STDERR,'FALLA LIMPIEZA: '.$limpieza->getMessage()."\n");}
+    $env->close();
 }
-echo 'RESUMEN | '.count($resultados)." OK\n";
+echo 'RESUMEN | '.count($resultados)." OK (BD temporal eliminada; identidad positiva)\n";
 ?>

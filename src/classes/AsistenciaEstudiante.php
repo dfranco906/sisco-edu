@@ -38,7 +38,7 @@ class AsistenciaEstudiante {
         $buscar = $this->conn->prepare("SELECT id_asistencia_estudiante
             FROM {$this->table_name}
             WHERE id_estudiante=:estudiante AND activo=1 AND fecha=:fecha
-              AND hora>=:inicio AND hora<:fin
+              AND hora>=:inicio AND hora<=:fin
             ORDER BY hora,id_asistencia_estudiante LIMIT 1 FOR UPDATE");
         $buscar->execute([':estudiante'=>$idEstudiante, ':fecha'=>$fecha, ':inicio'=>$horaInicio, ':fin'=>$horaFin]);
         $existente = $buscar->fetchColumn();

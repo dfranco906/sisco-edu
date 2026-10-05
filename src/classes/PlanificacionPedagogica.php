@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/api_auth.php';
+require_once __DIR__ . '/PlanProgrammingRules.php';
 
 class PedagogiaException extends RuntimeException
 {
@@ -113,45 +114,35 @@ class PlanificacionPedagogica
 
     public function actualizarPlan(int $idPlan, array $datos): void
     {
-        $plan = $this->planConAcceso($idPlan, true);
-        if ($plan['estado'] === 'ARCHIVADO') throw new PedagogiaException('Un plan archivado no puede editarse.', 409);
-        $stmt = $this->db->prepare("UPDATE planes_anuales SET competencia_general=:general,
-            competencia_especifica=:especifica, observaciones=:observaciones,
-            institucion_fuente=:institucion,materia_fuente=:materia_fuente,profesor_fuente=:profesor_fuente,
-            curso_fuente=:curso_fuente,turno_fuente=:turno_fuente,anio_fuente=:anio_fuente,dias_clase_fuente=:dias_clase_fuente WHERE id_plan=:id");
-        $stmt->execute([
-            ':general'=>$this->nullable($datos['competencia_general'] ?? null),
-            ':especifica'=>$this->nullable($datos['competencia_especifica'] ?? null),
-            ':observaciones'=>$this->nullable($datos['observaciones'] ?? null),
-            ':institucion'=>$this->nullableMax($datos['institucion_fuente']??null,255,'Institucion fuente'),
-            ':materia_fuente'=>$this->nullableMax($datos['materia_fuente']??null,255,'Materia fuente'),
-            ':profesor_fuente'=>$this->nullableMax($datos['profesor_fuente']??null,255,'Profesor fuente'),
-            ':curso_fuente'=>$this->nullableMax($datos['curso_fuente']??null,100,'Curso fuente'),
-            ':turno_fuente'=>$this->nullableMax($datos['turno_fuente']??null,100,'Turno fuente'),
-            ':anio_fuente'=>$this->anioFuente($datos['anio_fuente']??null),
-            ':dias_clase_fuente'=>$this->nullableMax($datos['dias_clase_fuente']??null,255,'Dias de clase fuente'), ':id'=>$idPlan
-        ]);
+        $this->transaccion(function () use ($idPlan,$datos): void {
+            $this->planParaMutacion($idPlan);
+            $stmt = $this->db->prepare("UPDATE planes_anuales SET competencia_general=:general,
+                competencia_especifica=:especifica, observaciones=:observaciones,
+                institucion_fuente=:institucion,materia_fuente=:materia_fuente,profesor_fuente=:profesor_fuente,
+                curso_fuente=:curso_fuente,turno_fuente=:turno_fuente,anio_fuente=:anio_fuente,dias_clase_fuente=:dias_clase_fuente WHERE id_plan=:id");
+            $stmt->execute([
+                ':general'=>$this->nullable($datos['competencia_general'] ?? null),
+                ':especifica'=>$this->nullable($datos['competencia_especifica'] ?? null),
+                ':observaciones'=>$this->nullable($datos['observaciones'] ?? null),
+                ':institucion'=>$this->nullableMax($datos['institucion_fuente']??null,255,'Institucion fuente'),
+                ':materia_fuente'=>$this->nullableMax($datos['materia_fuente']??null,255,'Materia fuente'),
+                ':profesor_fuente'=>$this->nullableMax($datos['profesor_fuente']??null,255,'Profesor fuente'),
+                ':curso_fuente'=>$this->nullableMax($datos['curso_fuente']??null,100,'Curso fuente'),
+                ':turno_fuente'=>$this->nullableMax($datos['turno_fuente']??null,100,'Turno fuente'),
+                ':anio_fuente'=>$this->anioFuente($datos['anio_fuente']??null),
+                ':dias_clase_fuente'=>$this->nullableMax($datos['dias_clase_fuente']??null,255,'Dias de clase fuente'), ':id'=>$idPlan
+            ]);
+        });
     }
 
     public function cambiarEstado(int $idPlan, string $estado): void
     {
-        $this->planConAcceso($idPlan, true);
-        if (!in_array($estado, ['BORRADOR','PUBLICADO','ARCHIVADO'], true)) throw new PedagogiaException('Estado no valido.');
-        if ($estado === 'PUBLICADO') {
-            $stmt = $this->db->prepare("SELECT COUNT(DISTINCT t.id_tema) temas_completos
-                FROM plan_unidades u
-                JOIN plan_capacidades c ON c.id_unidad=u.id_unidad
-                JOIN plan_temas t ON t.id_capacidad=c.id_capacidad
-                WHERE u.id_plan=:id
-                  AND EXISTS (SELECT 1 FROM plan_indicadores i WHERE i.id_tema=t.id_tema)
-                  AND EXISTS (SELECT 1 FROM plan_tema_programacion pr WHERE pr.id_tema=t.id_tema)");
-            $stmt->execute([':id'=>$idPlan]);
-            $totales = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$totales || !(int)$totales['temas_completos']) {
-                throw new PedagogiaException('Para publicar se requiere al menos un tema con indicador y programacion.', 409);
-            }
-        }
-        $this->db->prepare('UPDATE planes_anuales SET estado=:estado WHERE id_plan=:id')->execute([':estado'=>$estado, ':id'=>$idPlan]);
+        $this->transaccion(function () use ($idPlan, $estado): void {
+            $plan=$this->planParaMutacion($idPlan);
+            if (!in_array($estado, ['BORRADOR','PUBLICADO','ARCHIVADO'], true)) throw new PedagogiaException('Estado no valido.');
+            if ($estado === 'PUBLICADO') $this->exigirCobertura($idPlan,(int)$plan['anio']);
+            $this->db->prepare('UPDATE planes_anuales SET estado=:estado WHERE id_plan=:id')->execute([':estado'=>$estado, ':id'=>$idPlan]);
+        });
     }
 
     public function obtenerPlan(int $idPlan): array
@@ -186,6 +177,7 @@ class PlanificacionPedagogica
             $unidad['capacidades']=array_values(array_filter($capacidades, fn($x)=>(int)$x['id_unidad']===$id));
         }
         unset($unidad);
+        $plan['cobertura']=$this->coberturaPublicacion($idPlan,(int)$plan['anio']);
         return $plan;
     }
 
@@ -214,6 +206,7 @@ class PlanificacionPedagogica
         }
         $this->db->beginTransaction();
         try {
+            $plan=$this->planParaMutacion($idPlan);
             if ($id) {
                 $actual = $this->fila("SELECT {$config['parent']} FROM {$config['table']} WHERE {$config['pk']}=:id", [':id'=>$id]);
                 if (!$actual || (int)$actual[$config['parent']] !== $idPadre) throw new PedagogiaException('El registro no pertenece al padre indicado.', 409);
@@ -229,6 +222,7 @@ class PlanificacionPedagogica
                 $this->db->prepare("INSERT INTO {$config['table']} (".implode(',',$columnas).") VALUES (".implode(',',$marcadores).")")->execute($params);
                 $id=(int)$this->db->lastInsertId();
             }
+            if($plan['estado']==='PUBLICADO')$this->exigirCobertura($idPlan,(int)$plan['anio']);
             $this->db->commit();
             return $id;
         } catch (Throwable $e) {
@@ -257,12 +251,14 @@ class PlanificacionPedagogica
         }
         $this->db->beginTransaction();
         try {
+            $plan=$this->planParaMutacion($idPlan);
             $resumen=$this->resumenDescendientes($tipo,$id);
             if ($tipo==='indicador') {
                 $this->db->prepare('DELETE FROM plan_indicadores WHERE id_indicador=:id')->execute([':id'=>$id]);
             } else {
                 $this->eliminarSubarbol($tipo,$id,$idsTemas);
             }
+            if($plan['estado']==='PUBLICADO')$this->exigirCobertura($idPlan,(int)$plan['anio']);
             $this->db->commit();
             return $resumen;
         } catch(Throwable $e) {
@@ -284,7 +280,7 @@ class PlanificacionPedagogica
         $stmt->execute(array_merge($ids,[(int)$primer['padre']]));
         if((int)$stmt->fetchColumn()!==count($ids))throw new PedagogiaException('Los elementos no pertenecen al mismo nivel.',409);
         $this->db->beginTransaction();
-        try { $up=$this->db->prepare("UPDATE {$config['table']} SET orden=:orden WHERE {$config['pk']}=:id"); foreach($ids as $i=>$x)$up->execute([':orden'=>$i+1,':id'=>$x]); $this->db->commit(); }
+        try { $this->planParaMutacion($idPlan); $up=$this->db->prepare("UPDATE {$config['table']} SET orden=:orden WHERE {$config['pk']}=:id"); foreach($ids as $i=>$x)$up->execute([':orden'=>$i+1,':id'=>$x]); $this->db->commit(); }
         catch(Throwable $e){if($this->db->inTransaction())$this->db->rollBack();throw $e;}
     }
 
@@ -316,6 +312,7 @@ class PlanificacionPedagogica
         $this->validarCatalogo('instrumentos_evaluativos','id_instrumento',array_column($instrumentos,'id'));
         $this->db->beginTransaction();
         try {
+            $this->planParaMutacion($this->planDeElemento('tema',$idTema));
             $this->db->prepare('DELETE FROM plan_tema_procedimientos WHERE id_tema=:id')->execute([':id'=>$idTema]);
             $this->db->prepare('DELETE FROM plan_tema_instrumentos WHERE id_tema=:id')->execute([':id'=>$idTema]);
             $p=$this->db->prepare('INSERT INTO plan_tema_procedimientos (id_tema,id_procedimiento,texto_fuente,orden) VALUES (:tema,:id,:texto,:orden)'); foreach($procedimientos as $rel)$p->execute([':tema'=>$idTema,':id'=>$rel['id'],':texto'=>$rel['texto_fuente'],':orden'=>$rel['orden']]);
@@ -326,33 +323,111 @@ class PlanificacionPedagogica
 
     public function guardarProgramacion(array $datos): int
     {
-        $idTema=$this->id($datos['id_tema']??null,'Tema');
-        $plan=$this->planConAcceso($this->planDeElemento('tema',$idTema),true);
-        $inicio=$this->fecha($datos['fecha_inicio']??null,'Fecha de inicio');
-        $fin=$this->fecha($datos['fecha_fin']??$inicio,'Fecha de fin');
-        if($fin<$inicio)throw new PedagogiaException('La fecha final no puede ser anterior a la inicial.');
-        if((int)substr($inicio,0,4)!==(int)$plan['anio']||(int)substr($fin,0,4)!==(int)$plan['anio'])throw new PedagogiaException('La programacion debe pertenecer al anio del plan.');
-        $id=empty($datos['id_programacion'])?null:$this->id($datos['id_programacion'],'Programacion');
-        $solape=$this->db->prepare("SELECT COUNT(*) FROM plan_tema_programacion pr
-            JOIN plan_temas t ON t.id_tema=pr.id_tema JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad
-            JOIN plan_unidades u ON u.id_unidad=c.id_unidad
-            WHERE u.id_plan=:plan AND pr.id_tema<>:tema AND pr.fecha_inicio<=:fin AND pr.fecha_fin>=:inicio");
-        $solape->execute([':plan'=>$plan['id_plan'],':tema'=>$idTema,':inicio'=>$inicio,':fin'=>$fin]);
-        if((int)$solape->fetchColumn()>0)throw new PedagogiaException('El periodo se superpone con otro tema del mismo plan.',409);
-        $params=[':tema'=>$idTema,':inicio'=>$inicio,':fin'=>$fin,':horas'=>($datos['horas_catedra_planificadas']??'')===''?null:(float)$datos['horas_catedra_planificadas'],':obs'=>$this->nullable($datos['observaciones']??null)];
-        try {
-            if($id){$params[':id']=$id;$stmt=$this->db->prepare('UPDATE plan_tema_programacion SET fecha_inicio=:inicio,fecha_fin=:fin,horas_catedra_planificadas=:horas,observaciones=:obs WHERE id_programacion=:id AND id_tema=:tema');$stmt->execute($params);if(!$stmt->rowCount()&&!$this->fila('SELECT id_programacion FROM plan_tema_programacion WHERE id_programacion=:id AND id_tema=:tema',[':id'=>$id,':tema'=>$idTema]))throw new PedagogiaException('Programacion no encontrada.',404);}
-            else{$params[':orden']=$this->siguienteOrden('plan_tema_programacion','id_tema',$idTema);$this->db->prepare('INSERT INTO plan_tema_programacion (id_tema,fecha_inicio,fecha_fin,horas_catedra_planificadas,observaciones,orden) VALUES (:tema,:inicio,:fin,:horas,:obs,:orden)')->execute($params);$id=(int)$this->db->lastInsertId();}
-        }catch(PDOException $e){if($e->getCode()==='23000')throw new PedagogiaException('Ese periodo ya esta programado para el tema.',409);throw $e;}
-        return $id;
+        return $this->transaccion(function () use ($datos): int {
+            $row=$this->normalizarProgramacion($datos);
+            $plan=$this->planParaMutacion($this->planDeElemento('tema',$row['id_tema']));
+            $id=empty($datos['id_programacion'])?null:$this->id($datos['id_programacion'],'Programacion');
+            $rows=$this->programacionesPlan((int)$plan['id_plan']);
+            if($id && !array_filter($rows,fn($r)=>(int)$r['id_programacion']===$id && (int)$r['id_tema']===$row['id_tema']))throw new PedagogiaException('Programacion no encontrada.',404);
+            $rows=array_values(array_filter($rows,fn($r)=>!$id || (int)$r['id_programacion']!==$id));
+            $rows[]=$row;
+            $this->validarProgramaciones($rows,(int)$plan['id_plan'],(int)$plan['anio']);
+            if($id){
+                $this->db->prepare('UPDATE plan_tema_programacion SET fecha_inicio=?,fecha_fin=?,horas_catedra_planificadas=?,observaciones=? WHERE id_programacion=?')->execute([$row['fecha_inicio'],$row['fecha_fin'],$row['horas_catedra_planificadas'],$row['observaciones'],$id]);
+            }else $id=$this->insertarProgramacion($row);
+            if($plan['estado']==='PUBLICADO')$this->exigirCobertura((int)$plan['id_plan'],(int)$plan['anio']);
+            return $id;
+        });
+    }
+
+    /** Reemplaza la programación anual completa de forma atómica. */
+    public function guardarProgramaciones(int $idPlan,array $rows): array
+    {
+        return $this->transaccion(function () use ($idPlan,$rows): array {
+            $plan=$this->planParaMutacion($idPlan);
+            if(!array_is_list($rows))throw new PedagogiaException('La programación anual debe ser una lista.');
+            $normalized=array_map(fn($r)=>is_array($r)?$this->normalizarProgramacion($r):throw new PedagogiaException('Programación no válida.'),$rows);
+            $this->validarProgramaciones($normalized,$idPlan,(int)$plan['anio']);
+            $this->db->prepare('DELETE pr FROM plan_tema_programacion pr JOIN plan_temas t ON t.id_tema=pr.id_tema JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?')->execute([$idPlan]);
+            foreach($normalized as $row)$this->insertarProgramacion($row);
+            if($plan['estado']==='PUBLICADO')$this->exigirCobertura($idPlan,(int)$plan['anio']);
+            return $this->coberturaPublicacion($idPlan,(int)$plan['anio']);
+        });
     }
 
     public function eliminarProgramacion(int $id): void
     {
-        $fila=$this->fila('SELECT id_tema FROM plan_tema_programacion WHERE id_programacion=:id',[':id'=>$id]);
-        if(!$fila)throw new PedagogiaException('Programacion no encontrada.',404);
-        $this->planConAcceso($this->planDeElemento('tema',(int)$fila['id_tema']),true);
-        $this->db->prepare('DELETE FROM plan_tema_programacion WHERE id_programacion=:id')->execute([':id'=>$id]);
+        $this->transaccion(function () use ($id): void {
+            $fila=$this->fila('SELECT id_tema FROM plan_tema_programacion WHERE id_programacion=:id',[':id'=>$id]);
+            if(!$fila)throw new PedagogiaException('Programacion no encontrada.',404);
+            $plan=$this->planParaMutacion($this->planDeElemento('tema',(int)$fila['id_tema']));
+            $this->db->prepare('DELETE FROM plan_tema_programacion WHERE id_programacion=:id')->execute([':id'=>$id]);
+            if($plan['estado']==='PUBLICADO')$this->exigirCobertura((int)$plan['id_plan'],(int)$plan['anio']);
+        });
+    }
+
+    private function temasPlan(int $idPlan): array
+    {
+        return $this->filas('SELECT t.id_tema,(SELECT COUNT(*) FROM plan_indicadores i WHERE i.id_tema=t.id_tema) indicadores FROM plan_temas t JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?',[$idPlan]);
+    }
+
+    private function programacionesPlan(int $idPlan): array
+    {
+        return $this->filas('SELECT pr.*,pr.id_tema topic_key FROM plan_tema_programacion pr JOIN plan_temas t ON t.id_tema=pr.id_tema JOIN plan_capacidades c ON c.id_capacidad=t.id_capacidad JOIN plan_unidades u ON u.id_unidad=c.id_unidad WHERE u.id_plan=?',[$idPlan]);
+    }
+
+    private function validarProgramaciones(array $rows,int $idPlan,int $year): void
+    {
+        $check=PlanProgrammingRules::inspect($rows,array_column($this->temasPlan($idPlan),'id_tema'),$year);
+        if($check['errores'])throw new PedagogiaException($check['errores'][0],409);
+    }
+
+    private function coberturaPublicacion(int $idPlan,int $year): array
+    {
+        $topics=$this->temasPlan($idPlan);
+        $check=PlanProgrammingRules::inspect($this->programacionesPlan($idPlan),array_column($topics,'id_tema'),$year);
+        $total=count($topics);$indicators=count(array_filter($topics,fn($t)=>(int)$t['indicadores']>0));$scheduled=count($check['temas_validos']);
+        $message='Listo para publicar.';
+        if(!$total)$message='No se puede publicar: agregue al menos un tema.';
+        elseif($indicators<$total)$message='No se puede publicar: '.($total-$indicators).' de '.$total.' temas todavía no tienen indicadores.';
+        elseif($scheduled<$total)$message='No se puede publicar: '.($total-$scheduled).' de '.$total.' temas todavía no tienen programación exacta válida.';
+        elseif($check['errores'])$message='No se puede publicar: '.$check['errores'][0];
+        return ['total_temas'=>$total,'temas_con_indicadores'=>$indicators,'temas_programados'=>$scheduled,'temas_sin_indicadores'=>$total-$indicators,'temas_sin_programacion'=>$total-$scheduled,'solapamientos'=>$check['solapamientos'],'fechas_invalidas'=>$check['fechas_invalidas'],'duplicados'=>$check['duplicados'],'can_publish'=>$total>0 && $indicators===$total && $scheduled===$total && !$check['errores'],'mensaje'=>$message];
+    }
+
+    private function exigirCobertura(int $idPlan,int $year): void
+    {
+        $coverage=$this->coberturaPublicacion($idPlan,$year);
+        if(!$coverage['can_publish'])throw new PedagogiaException($coverage['mensaje'],409);
+    }
+
+    private function normalizarProgramacion(array $data): array
+    {
+        $id=$this->id($data['id_tema']??null,'Tema');
+        $hours=$data['horas_catedra_planificadas']??null;
+        if($hours==='')$hours=null;
+        if($hours!==null && (!is_numeric($hours) || !is_finite((float)$hours) || (float)$hours<0))throw new PedagogiaException('Horas programadas no válidas.');
+        return ['id_tema'=>$id,'topic_key'=>(string)$id,'fecha_inicio'=>$data['fecha_inicio']??null,'fecha_fin'=>$data['fecha_fin']??null,'horas_catedra_planificadas'=>$hours===null?null:(float)$hours,'observaciones'=>$this->nullableMax($data['observaciones']??null,10000,'Observaciones')];
+    }
+
+    private function insertarProgramacion(array $row): int
+    {
+        $order=$this->siguienteOrden('plan_tema_programacion','id_tema',$row['id_tema']);
+        $this->db->prepare('INSERT INTO plan_tema_programacion (id_tema,fecha_inicio,fecha_fin,horas_catedra_planificadas,observaciones,orden) VALUES (?,?,?,?,?,?)')->execute([$row['id_tema'],$row['fecha_inicio'],$row['fecha_fin'],$row['horas_catedra_planificadas'],$row['observaciones'],$order]);
+        return (int)$this->db->lastInsertId();
+    }
+
+    private function planParaMutacion(int $idPlan): array
+    {
+        $this->db->prepare('SELECT id_plan FROM planes_anuales WHERE id_plan=? FOR UPDATE')->execute([$idPlan]);
+        return $this->planConAcceso($idPlan,true);
+    }
+
+    private function transaccion(callable $action): mixed
+    {
+        $own=!$this->db->inTransaction();if($own)$this->db->beginTransaction();
+        try{$result=$action();if($own)$this->db->commit();return $result;}
+        catch(Throwable $e){if($own && $this->db->inTransaction())$this->db->rollBack();throw $e;}
     }
 
     private function planConAcceso(int $idPlan, bool $escritura): array
@@ -365,6 +440,7 @@ class PlanificacionPedagogica
         $stmt->execute([':id'=>$idPlan]); $plan=$stmt->fetch(PDO::FETCH_ASSOC);
         if(!$plan)throw new PedagogiaException('Plan no encontrado.',404);
         asegurarAccesoAsignacion($this->db,$this->usuario,(int)$plan['id_asignacion'],$escritura);
+        if($escritura && $plan['estado']==='ARCHIVADO')throw new PedagogiaException('El plan está archivado y es de solo lectura.',409);
         return $plan;
     }
 

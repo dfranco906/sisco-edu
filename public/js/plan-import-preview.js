@@ -93,7 +93,7 @@
       section.appendChild(grid);
     });
     section.appendChild(smallButton('Agregar fechas confirmadas',function(){
-      preview.programming.push({unidad_orden:unitOrder,capacidad_orden:capacityOrder,tema_orden:topic.orden,fecha_inicio:preview.year+'-01-01',fecha_fin:preview.year+'-01-01',horas_catedra_planificadas:null,observaciones:null});dirty=true;render();
+      preview.programming.push({unidad_orden:unitOrder,capacidad_orden:capacityOrder,tema_orden:topic.orden,fecha_inicio:'',fecha_fin:'',horas_catedra_planificadas:null,observaciones:null});dirty=true;render();
     },false));
     return section;
   }
@@ -236,6 +236,7 @@
   }
 
   async function savePreview(plan) {
+    if ((preview.programming||[]).some(row=>!row.fecha_inicio||!row.fecha_fin)) throw new Error('Seleccione inicio y fin para todas las programaciones agregadas.');
     preview.decisions=collectDecisions();
     preview = await request(config.apiPreview, { method:'PUT', headers:{'Content-Type':'application/json','X-CSRF-Token':config.csrf}, body:JSON.stringify({token:config.token,plan:plan,decisions:preview.decisions,programming:preview.programming||[]}) });
     dirty=false;render();

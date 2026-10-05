@@ -9,6 +9,18 @@
   <section class="plan-stats mb-6" id="plan-contadores"></section>
   <section class="app-panel p-4 mb-6 hidden" id="plan-import-origin" aria-live="polite"></section>
   <section class="app-panel p-5 sm:p-6 mb-6">
+    <h3 class="text-xl font-bold">PROGRAMACI&Oacute;N ANUAL</h3>
+    <p class="mt-2">El periodo del PDF es una referencia. Seleccione y confirme las fechas exactas de cada tema.</p>
+    <p id="plan-programacion-resumen" class="mt-3" aria-live="polite"></p>
+    <p id="plan-programacion-estado" class="font-bold mt-2" aria-live="polite"></p>
+    <form id="form-programacion-anual" class="mt-4">
+      <div class="app-table-wrap"><table class="app-table"><thead><tr><th>Unidad</th><th>C&oacute;digo tema</th><th>Tema</th><th>Periodo fuente</th><th>Fecha inicio</th><th>Fecha fin</th><th>Horas</th><th>Estado</th></tr></thead><tbody id="plan-programacion-filas"></tbody></table></div>
+      <p class="text-sm mt-3">Puede dejar ambas fechas vac&iacute;as para un tema pendiente. Los periodos con una sola fecha se rechazan. Se guarda el a&ntilde;o completo en una sola operaci&oacute;n.</p>
+      <button class="btn btn-primary mt-3" type="submit">Guardar programaci&oacute;n anual</button>
+      <p id="mensaje-programacion-anual" class="mt-3" aria-live="polite"></p>
+    </form>
+  </section>
+  <section class="app-panel p-5 sm:p-6 mb-6">
     <form id="form-datos-plan" class="app-form-grid">
       <label class="font-semibold sm:col-span-2">Competencia general<textarea name="competencia_general" class="app-input mt-2 w-full" rows="2"></textarea></label>
       <label class="font-semibold sm:col-span-2">Competencia espec&iacute;fica<textarea name="competencia_especifica" class="app-input mt-2 w-full" rows="2"></textarea></label>

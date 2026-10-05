@@ -80,9 +80,9 @@ class ClaseDiaria
                 JOIN grados g ON g.id_grado=ad.id_grado AND g.id_aula=:aula AND g.activo=1
                 JOIN asistencias_profesores ap ON ap.id_profesor=ad.id_profesor AND ap.activo=1 AND ap.fecha=cd.fecha
                 WHERE cd.fecha=DATE(:momento)
-                  AND TIME(:momento)>=cd.hora_inicio AND TIME(:momento)<cd.hora_fin
+                  AND TIME(:momento)>=GREATEST(cd.hora_inicio,ap.hora)
+                  AND TIME(:momento)<=LEAST(cd.hora_fin,ADDTIME(GREATEST(cd.hora_inicio,ap.hora),SEC_TO_TIME(:ventana * 60)))
                   AND ap.hora>=SUBTIME(cd.hora_inicio,'00:10:00') AND ap.hora<cd.hora_fin
-                  AND TIME(:momento)<=ADDTIME(ap.hora,SEC_TO_TIME(:ventana * 60))
                 ORDER BY ap.hora DESC,cd.id_clase DESC LIMIT 1";
         $stmt=$this->db->prepare($sql);
         $stmt->execute([':aula'=>$idAula, ':momento'=>$fecha, ':ventana'=>$ventanaMinutos]);
@@ -117,7 +117,9 @@ class ClaseDiaria
             $stmt->execute([':asignacion'=>$idAsignacion,':horario'=>$idHorario,':plan'=>$contenido['id_plan']??null,':unidad'=>$contenido['id_unidad']??null,':capacidad'=>$contenido['id_capacidad']??null,':tema'=>$contenido['id_tema']??null,':fecha'=>$fecha,':inicio'=>$inicio,':fin'=>$fin]);
             $id=(int)$this->db->lastInsertId();
             if(!$id){$q=$this->db->prepare('SELECT id_clase FROM clases_diarias WHERE id_asignacion=:a AND fecha=:f AND hora_inicio=:i AND hora_fin=:n');$q->execute([':a'=>$idAsignacion,':f'=>$fecha,':i'=>$inicio,':n'=>$fin]);$id=(int)$q->fetchColumn();}
-            if(!empty($contenido['id_tema']))$this->copiarIndicadores($id,(int)$contenido['id_tema']);
+            // Una repetición conserva el tema ya asociado y nunca mezcla indicadores de otra programación.
+            $persistida=$this->fila('SELECT id_tema FROM clases_diarias WHERE id_clase=:id',[':id'=>$id]);
+            if(!empty($persistida['id_tema']))$this->copiarIndicadores($id,(int)$persistida['id_tema']);
             if($propia)$this->db->commit();return$id;
         }catch(Throwable $e){if($propia&&$this->db->inTransaction())$this->db->rollBack();throw$e;}
     }
@@ -159,10 +161,10 @@ class ClaseDiaria
             WHERE ci.id_clase=:id ORDER BY i.orden,i.id_indicador",[':id'=>$idClase]);
         $clase['estudiantes']=$this->filas("SELECT e.id_estudiante,e.nombre,e.apellido,
             CASE WHEN EXISTS(SELECT 1 FROM asistencias_estudiantes ae WHERE ae.id_estudiante=e.id_estudiante AND ae.activo=1
-                AND ae.fecha=cd.fecha AND ae.hora>=cd.hora_inicio AND ae.hora<cd.hora_fin AND ae.estado IN ('PRESENTE','TARDANZA'))
+                AND ae.fecha=cd.fecha AND ae.hora>=cd.hora_inicio AND ae.hora<=cd.hora_fin AND ae.estado IN ('PRESENTE','TARDANZA'))
               THEN 'PRESENTE' ELSE 'AUSENTE' END estado,
             (SELECT ae.id_asistencia_estudiante FROM asistencias_estudiantes ae WHERE ae.id_estudiante=e.id_estudiante AND ae.activo=1
-                AND ae.fecha=cd.fecha AND ae.hora>=cd.hora_inicio AND ae.hora<cd.hora_fin ORDER BY ae.hora LIMIT 1) id_asistencia_estudiante,
+                AND ae.fecha=cd.fecha AND ae.hora>=cd.hora_inicio AND ae.hora<=cd.hora_fin ORDER BY ae.hora LIMIT 1) id_asistencia_estudiante,
             ra.observacion
             FROM clases_diarias cd JOIN asignacion_docente ad ON ad.id_asignacion=cd.id_asignacion
             JOIN grados g ON g.id_grado=ad.id_grado JOIN estudiantes e ON e.id_grado=g.id_grado AND e.activo=1
@@ -200,12 +202,14 @@ class ClaseDiaria
 
     private function contenidoProgramado(int $idAsignacion,string $fecha): ?array
     {
-        return $this->fila("SELECT p.id_plan,u.id_unidad,c.id_capacidad,t.id_tema
+        $candidates=$this->filas("SELECT DISTINCT p.id_plan,u.id_unidad,c.id_capacidad,t.id_tema
             FROM planes_anuales p JOIN plan_unidades u ON u.id_plan=p.id_plan
             JOIN plan_capacidades c ON c.id_unidad=u.id_unidad JOIN plan_temas t ON t.id_capacidad=c.id_capacidad
             JOIN plan_tema_programacion pr ON pr.id_tema=t.id_tema
             WHERE p.id_asignacion=:asignacion AND p.estado='PUBLICADO' AND :fecha BETWEEN pr.fecha_inicio AND pr.fecha_fin
-            ORDER BY DATEDIFF(pr.fecha_fin,pr.fecha_inicio),pr.orden,u.orden,c.orden,t.orden,pr.id_programacion LIMIT 1",[':asignacion'=>$idAsignacion,':fecha'=>$fecha]);
+            LIMIT 2",[':asignacion'=>$idAsignacion,':fecha'=>$fecha]);
+        if(count($candidates)>1)throw new PedagogiaException('La fecha tiene varios temas programados. Corrija los solapamientos del plan.',409);
+        return $candidates[0]??null;
     }
     /** @return list<array<string,mixed>> */
     private function horariosParaApertura(array $principal,string $userIdGlobal,string $momento): array

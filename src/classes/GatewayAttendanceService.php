@@ -122,9 +122,9 @@ final class GatewayAttendanceService
                     FROM profesores p WHERE p.cedula_identidad=:ci AND p.activo=1 LIMIT 1";
         } else {
             $sql = "SELECT e.id_estudiante,e.id_grado,e.user_id_global,
-                    COALESCE(e.huella_id,(SELECT ht.id_huella FROM huellas_templates ht WHERE ht.activo=1
+                    (SELECT ht.id_huella FROM huellas_templates ht WHERE ht.activo=1
                       AND (ht.id_estudiante=e.id_estudiante OR ht.user_id_global=e.user_id_global)
-                      ORDER BY ht.id_huella DESC LIMIT 1)) id_huella
+                      ORDER BY (ht.id_huella=e.huella_id) DESC,ht.id_huella DESC LIMIT 1) id_huella
                     FROM estudiantes e WHERE e.cedula_identidad=:ci AND e.activo=1 LIMIT 1";
         }
         $stmt = $this->db->prepare($sql);

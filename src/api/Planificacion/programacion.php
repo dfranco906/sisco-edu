@@ -6,6 +6,11 @@ $usuario=usuarioActual(['SuperAdmin','Administracion','Coordinador','Profesor'])
 try{
     $db=(new Database())->getConnection();$servicio=new PlanificacionPedagogica($db,$usuario);$datos=entradaJson();$accion=(string)($datos['accion']??'guardar');
     if($accion==='guardar'){$id=$servicio->guardarProgramacion($datos);responderJson(['success'=>true,'status'=>'success','message'=>'Programacion guardada.','data'=>['id_programacion'=>$id]]);}
+    if($accion==='guardar_anual'){
+        if(!is_array($datos['programaciones']??null))throw new PedagogiaException('La programación anual debe ser una lista.');
+        $coverage=$servicio->guardarProgramaciones(enteroPositivo($datos['id_plan']??null,'Plan'),$datos['programaciones']);
+        responderJson(['success'=>true,'status'=>'success','message'=>'Programación anual guardada.','data'=>['cobertura'=>$coverage]]);
+    }
     if($accion==='eliminar'){$servicio->eliminarProgramacion(enteroPositivo($datos['id_programacion']??null,'Programacion'));responderJson(['success'=>true,'status'=>'success','message'=>'Programacion eliminada.']);}
     throw new PedagogiaException('Accion no valida.');
 }catch(PedagogiaException $e){responderJson(['success'=>false,'status'=>'error','message'=>$e->getMessage()],$e->http);}
