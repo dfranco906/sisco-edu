@@ -5,14 +5,8 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/biometria.php';
 
-$headers = getallheaders();
-$key = $headers['X-GATEWAY-KEY'] ?? '';
-
-if ($key !== GATEWAY_API_KEY) {
-    http_response_code(404);
-    echo json_encode(["status" => "not_found"]);
-    exit;
-}
+require_once __DIR__.'/../../config/device_auth.php';
+requireDevice('GET');
 
 $huella_id = $_GET['huella_id'] ?? null;
 

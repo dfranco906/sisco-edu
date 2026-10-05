@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
+// Secreto efímero exclusivo de pruebas; heredado por el servidor de la copia.
+if (!getenv('SISCO_GATEWAY_API_KEY')) putenv('SISCO_GATEWAY_API_KEY='.bin2hex(random_bytes(32)));
 
 final class PlanImportTestEnvironment
 {

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/api_auth.php';
+require_once __DIR__.'/../../config/biometric_auth.php';
+requireBiometricWriter();
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../classes/DistribucionHuellaProfesor.php';
 

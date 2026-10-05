@@ -5,13 +5,18 @@
 #include <Adafruit_GFX.h>
 #include <Preferences.h>
 #include "dy50_template_transport.h"
+#include "durable_delivery.h"
+#include "room_provisioning.h"
 
-// Debe coincidir con aulas.id_aula; el codigo es solo para la pantalla.
-const int ID_AULA = 30 ;
-const char *CODIGO_AULA = "3_RO_BTI";
-const int MI_LORA_ID = 101;
-const int GATEWAY_LORA_ID = 100;
-const int LORA_NETWORK_ID = 18;
+RoomConfig roomConfig;
+#define ID_AULA (roomConfig.id_aula)
+#define CODIGO_AULA (roomConfig.codigo)
+#define MI_LORA_ID (roomConfig.lora_id)
+#define GATEWAY_LORA_ID (roomConfig.gateway_lora_id)
+#define LORA_NETWORK_ID (roomConfig.network_id)
+DurableDelivery<32> pendingAttendance;
+bool provisioned = false;
+String serialCommand;
 constexpr size_t HUELLA_TEMPLATE_BYTES = 1536;
 constexpr size_t HUELLA_TEMPLATE_HEX_CHARS = HUELLA_TEMPLATE_BYTES * 2;
 constexpr int CHARS_POR_CHUNK = 128;
@@ -59,7 +64,9 @@ void enviarComandoLoRa(int destino, const String &payload);
 void enviarAckLoRa(int chunk);
 void atenderComandosLoRa();
 void verificarLecturaHuella();
-void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado);
+bool enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado);
+void diagnosticoSerie();
+void reintentarAsistencias();
 bool guardarHuellaDY50(const String &hex, int slot, String &crcHex, String &error);
 void cargarDbLocalDesdeNVS();
 void guardarSlotEnNVS(int slot);
@@ -70,6 +77,9 @@ String campo(const String &texto, int indice);
 void setup() {
   Serial.begin(115200);
   delay(300);
+  provisioned = loadRoomConfig(roomConfig);
+  if (!pendingAttendance.begin("astpending")) { Serial.println("ERROR NVS cola"); for (;;) delay(1000); }
+  while (!provisioned) { diagnosticoSerie(); delay(10); }
   Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
                 (unsigned int)HUELLA_TEMPLATE_BYTES,
                 (unsigned int)HUELLA_TEMPLATE_HEX_CHARS,
@@ -105,7 +115,14 @@ void setup() {
 }
 
 void loop() {
+  diagnosticoSerie();
   atenderComandosLoRa();
+  if (estadoSync == SYNC_IDLE) reintentarAsistencias();
+  static uint32_t nextHeartbeat = 0;
+  if (estadoSync == SYNC_IDLE && SiscoReliability::due(millis(), nextHeartbeat)) {
+    enviarComandoLoRa(GATEWAY_LORA_ID, "HB:" + String(ID_AULA) + ":" + String(MI_LORA_ID));
+    nextHeartbeat = millis() + 60000 + esp_random() % 5000;
+  }
   if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL && estadoSync == SYNC_IDLE) {
     estadoActual = ESPERANDO_PROFE; tiempoLimiteEstado = millis() + 15000;
     msgOled("SALIDA", "Dedo de profe"); delay(400);
@@ -226,6 +243,19 @@ void atenderComandosLoRa() {
   const int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
   if (c1 < 0 || c2 < 0 || c3 < 0 || linea.substring(5, c1).toInt() != GATEWAY_LORA_ID) return;
   const String payload = linea.substring(c2 + 1, c3);
+  if (payload.startsWith("ASTACK:")) {
+    const String id = campo(payload, 1);
+    for (size_t i = 0; i < pendingAttendance.capacity(); ++i) {
+      if (pendingAttendance.at(i).length() && campo(pendingAttendance.at(i), 1) == id) {
+        const String ci = campo(pendingAttendance.at(i), 3);
+        if (pendingAttendance.remove(i)) msgOled("REGISTRADO", ci);
+        return;
+      }
+    }
+    return;
+  }
+  // Evita interpretar mensajes administrativos como chunk 0 por toInt().
+  if (payload.length() == 0 || payload[0] < '0' || payload[0] > '9') return;
   const int sep = payload.indexOf(':'); if (sep <= 0) return;
   const int chunk = payload.substring(0, sep).toInt();
   const String resto = payload.substring(sep + 1);
@@ -273,7 +303,7 @@ void atenderComandosLoRa() {
   } else {
     huellaBuffer[longitudHuellaHex] = '\0';
     int slot = -1;
-    for (int s = 1; s <= 200; ++s) if (dbLocal[s].registrado && String(dbLocal[s].ci) == String(ciSyncActual)) { slot = s; break; }
+    for (int s = 1; s <= 200; ++s) if (dbLocal[s].registrado && String(dbLocal[s].ci) == String(ciSyncActual) && String(dbLocal[s].tipo) == String(tipoSyncActual)) { slot = s; break; }
     if (slot < 0) for (int s = 1; s <= 200; ++s) if (!dbLocal[s].registrado) { slot = s; break; }
     String crcVerificado, error;
     if (slot > 0 && guardarHuellaDY50(String(huellaBuffer), slot, crcVerificado, error)) {
@@ -285,9 +315,34 @@ void atenderComandosLoRa() {
   delay(1000); limpiarSyncRecibida(); estadoSync = SYNC_IDLE; msgOled(String(CODIGO_AULA), "Listo");
 }
 
-void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado) {
-  enviarComandoLoRa(GATEWAY_LORA_ID, "AST:" + String(ID_AULA) + ":" + ci + ":" + tipo + ":" + estado);
-  msgOled("ENVIADO", ci);
+bool enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado) {
+  const String id = newSourceEventId();
+  if (!id.length() || !pendingAttendance.enqueue("AST2:" + id + ":" + String(ID_AULA) + ":" + ci + ":" + tipo + ":" + estado)) {
+    msgOled("NO GUARDADO", "Cola/NVS llena"); return false;
+  }
+  msgOled("PENDIENTE", ci); return true;
+}
+
+void reintentarAsistencias() {
+  int i = pendingAttendance.ready(millis());
+  if (i < 0) return;
+  enviarComandoLoRa(GATEWAY_LORA_ID, pendingAttendance.at(i));
+  pendingAttendance.retry(i, millis());
+}
+
+void diagnosticoSerie() {
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\r') continue;
+    if (c != '\n') { if (serialCommand.length() < 1024) serialCommand += c; continue; }
+    if (serialCommand == "CONFIG") {
+      Serial.printf("id_aula=%d codigo=%s lora_id=%d gateway_lora_id=%d network_id=%d pendientes=%u\n", ID_AULA, CODIGO_AULA, MI_LORA_ID, GATEWAY_LORA_ID, LORA_NETWORK_ID, (unsigned)pendingAttendance.count());
+    } else if (serialCommand.startsWith("PROVISION ")) {
+      provisioned = provisionRoom(serialCommand.substring(10), roomConfig) || provisioned;
+      Serial.println(provisioned ? "Configurado; identidad NVS bloqueada" : "ERROR provisioning");
+    } else Serial.println("Comandos: CONFIG; PROVISION {id_aula,codigo,lora_id,gateway_lora_id,network_id}");
+    serialCommand = "";
+  }
 }
 
 void verificarLecturaHuella() {
@@ -310,7 +365,7 @@ void verificarLecturaHuella() {
     else { estadoActual = NORMAL; msgOled("ERROR", "No es profesor"); delay(1000); }
     return;
   }
-  if (estadoActual == NORMAL && millis() - ultimoRegistroSlot[slot] < TIEMPO_COOLDOWN) { msgOled("YA MARCADO", dbLocal[slot].ci); delay(1000); return; }
-  enviarAsistenciaPorLoRa(dbLocal[slot].ci, dbLocal[slot].tipo, estadoActual == SALIDA_ACTIVA ? "RET_ANTICIPADO" : "PRESENTE");
-  ultimoRegistroSlot[slot] = millis(); estadoActual = NORMAL; delay(1000); msgOled(String(CODIGO_AULA), "Listo");
+  if (estadoActual == NORMAL && ultimoRegistroSlot[slot] != 0 && millis() - ultimoRegistroSlot[slot] < TIEMPO_COOLDOWN) { msgOled("YA MARCADO", dbLocal[slot].ci); delay(1000); return; }
+  if (enviarAsistenciaPorLoRa(dbLocal[slot].ci, dbLocal[slot].tipo, estadoActual == SALIDA_ACTIVA ? "RET_ANTICIPADO" : "PRESENTE")) ultimoRegistroSlot[slot] = millis();
+  estadoActual = NORMAL; delay(1000);
 }

@@ -30,8 +30,13 @@ class NodoEsp32 {
     }
 
     public function leer() {
-        $query = "SELECT n.id_nodo,n.node_id,n.room_id,n.lora_id,n.tipo,n.estado,n.ultimo_heartbeat,n.activo,
-                         a.id_aula,a.nombre AS aula,a.codigo AS codigo_aula
+        $query = "SELECT n.id_nodo,n.node_id,n.room_id,n.lora_id,n.tipo,n.ultimo_heartbeat,n.activo,
+                         IF(n.ultimo_heartbeat >= DATE_SUB(NOW(), INTERVAL 180 SECOND),'online','offline') AS estado,
+                         a.id_aula,a.nombre AS aula,a.codigo AS codigo_aula,
+                         (SELECT MAX(e.fecha_recibido) FROM eventos_asistencia e WHERE e.id_aula=a.id_aula) AS ultimo_evento,
+                         (SELECT COUNT(*) FROM sync_biometrica s WHERE s.id_aula=a.id_aula AND s.estado='PENDIENTE') AS sync_pendiente,
+                         (SELECT COUNT(*) FROM sync_biometrica s WHERE s.id_aula=a.id_aula AND s.estado='ENVIADO') AS sync_enviado,
+                         (SELECT COUNT(*) FROM sync_biometrica s WHERE s.id_aula=a.id_aula AND s.estado='ERROR') AS sync_error
                   FROM " . $this->table_name . " n
                   LEFT JOIN aulas a ON a.codigo=n.room_id
                   WHERE n.activo = 1

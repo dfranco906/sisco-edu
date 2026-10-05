@@ -1,49 +1,13 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-
-require_once __DIR__ . '/../../config/db.php';
-require_once __DIR__ . '/../../config/app.php';
-
-$headers = getallheaders();
-$key = $headers['X-GATEWAY-KEY'] ?? '';
-
-if ($key !== GATEWAY_API_KEY) {
-    http_response_code(404);
-    echo json_encode(["status" => "not_found"]);
-    exit;
+require_once __DIR__.'/../../config/db.php';
+require_once __DIR__.'/../../config/device_auth.php';
+requireDevice('POST');
+$id=filter_input(INPUT_POST,'id_sync',FILTER_VALIDATE_INT);
+$estado=(string)($_POST['estado'] ?? '');
+if (!$id || $estado !== 'ERROR') {
+    http_response_code(422); echo json_encode(['ok'=>false,'status'=>'error','message'=>'Usar confirmar_entrega_aula para confirmar instalación']); exit;
 }
-
-$db = (new Database())->getConnection();
-
-$id_sync = $_POST['id_sync'] ?? null;
-$estado = $_POST['estado'] ?? null;
-$mensaje = $_POST['mensaje'] ?? '';
-
-if (!$id_sync || !$estado) {
-    echo json_encode(["status" => "error", "message" => "Faltan datos"]);
-    exit;
-}
-
-if (!in_array($estado, ["CONFIRMADO", "ERROR"])) {
-    echo json_encode(["status" => "error", "message" => "Estado inválido"]);
-    exit;
-}
-
-$stmt = $db->prepare("
-    UPDATE sync_biometrica
-    SET estado = :estado,
-        mensaje = :mensaje,
-        fecha_actualizacion = NOW()
-    WHERE id_sync = :id_sync
-");
-
-$resultado = $stmt->execute([
-    ":estado" => $estado,
-    ":mensaje" => $mensaje,
-    ":id_sync" => $id_sync
-]);
-
-echo json_encode([
-    "status" => $resultado ? "success" : "error",
-    "message" => $resultado ? "Sincronización confirmada" : "Error al confirmar"
-]);
+$db=(new Database())->getConnection();
+$db->prepare("UPDATE sync_biometrica SET estado=IF(COALESCE(intentos,0)>=5,'ERROR','PENDIENTE'), mensaje=?, fecha_actualizacion=NOW() WHERE id_sync=? AND estado='ENVIADO'")
+    ->execute([substr((string)($_POST['mensaje'] ?? ''),0,255),$id]);
+echo json_encode(['status'=>'success']);

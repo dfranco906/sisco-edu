@@ -69,6 +69,7 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
 
         const { respuesta: resBackend, data: resultado } = await solicitarJson(window.BASE_URL + "src/api/Huella/guardar_template.php", {
             method: "POST",
+            headers: await biometricHeaders(),
             body: formData
         });
 
@@ -111,7 +112,7 @@ async function sincronizarHuellaProfesor(userIdGlobal) {
         seleccion.aulas.forEach(aula => formData.append("id_aulas[]", aula.id_aula));
         const { respuesta, data } = await solicitarJson(
             window.BASE_URL + "src/api/Huella/sincronizar_profesor.php",
-            { method: "POST", body: formData },
+            { method: "POST", body: formData, headers: await biometricHeaders() },
             15000
         );
         if (!respuesta.ok || data.status !== "success") {
@@ -203,6 +204,12 @@ function escaparHuella(valor) {
 }
 
 window.sincronizarHuellaProfesor = sincronizarHuellaProfesor;
+
+async function biometricHeaders() {
+    const { respuesta, data } = await solicitarJson(window.BASE_URL + "src/api/Huella/csrf.php", {}, 15000);
+    if (!respuesta.ok || !data.csrf) throw new Error(data.message || "No se pudo validar la sesión biométrica");
+    return { "X-CSRF-Token": data.csrf };
+}
 
 async function solicitarJson(url, opciones = {}, timeoutMs = 90000) {
     const controlador = new AbortController();

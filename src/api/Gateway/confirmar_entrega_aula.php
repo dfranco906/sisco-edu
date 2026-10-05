@@ -3,7 +3,8 @@ header("Content-Type: application/json; charset=UTF-8");
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/biometria.php';
-if ((getallheaders()['X-GATEWAY-KEY'] ?? '') !== GATEWAY_API_KEY) { http_response_code(404); echo json_encode(["status" => "not_found"]); exit; }
+require_once __DIR__.'/../../config/device_auth.php';
+requireDevice('POST');
 $id_sync = filter_input(INPUT_POST, 'id_sync', FILTER_VALIDATE_INT);
 $id_huella = filter_input(INPUT_POST, 'id_huella', FILTER_VALIDATE_INT);
 $id_aula = filter_input(INPUT_POST, 'id_aula', FILTER_VALIDATE_INT);

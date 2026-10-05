@@ -5,11 +5,8 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/biometria.php';
 
-if ((getallheaders()['X-GATEWAY-KEY'] ?? '') !== GATEWAY_API_KEY) {
-    http_response_code(404);
-    echo json_encode(["status" => "not_found"]);
-    exit;
-}
+require_once __DIR__.'/../../config/device_auth.php';
+requireDevice('GET');
 
 $db = (new Database())->getConnection();
 

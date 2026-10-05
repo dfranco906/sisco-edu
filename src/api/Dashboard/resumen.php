@@ -2,6 +2,8 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__.'/../../config/api_auth.php';
+usuarioActual(['SuperAdmin','Administracion','Coordinador']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);

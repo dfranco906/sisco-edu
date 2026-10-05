@@ -55,13 +55,14 @@ final class GatewayAttendanceService
         if (empty($persona['id_huella'])) {
             return ['ok'=>false, 'status'=>'huella_no_configurada', 'message'=>'El profesor no tiene una huella activa.', 'data'=>['id_evento'=>$idEvento]];
         }
-        $this->db->beginTransaction();
+        $ownsTransaction = !$this->db->inTransaction();
+        if ($ownsTransaction) $this->db->beginTransaction();
         try {
             $clases = new ClaseDiaria($this->db);
             $idsClases = $clases->procesarMarcaProfesorClases((string)$persona['user_id_global'], $idAula, $momento->format('Y-m-d H:i:s'));
             $idClase = $idsClases[0] ?? null;
             if (!$idClase) {
-                $this->db->rollBack();
+                if ($ownsTransaction) $this->db->rollBack();
                 return ['ok'=>false, 'status'=>'sin_horario', 'message'=>'El profesor no tiene un horario valido para esta aula y hora.', 'data'=>['id_evento'=>$idEvento]];
             }
             $clase = $this->clase($idClase);
@@ -69,14 +70,14 @@ final class GatewayAttendanceService
                 (int)$persona['id_profesor'], (int)$persona['id_huella'], $clase['fecha'],
                 $momento->format('H:i:s'), $clase['hora_inicio'], $clase['hora_fin']
             );
-            $this->db->commit();
+            if ($ownsTransaction) $this->db->commit();
             return ['ok'=>true, 'status'=>'success', 'message'=>'Asistencia de profesor registrada.', 'data'=>[
                 'id_evento'=>$idEvento, 'id_clase'=>$idClase, 'id_horario'=>(int)$clase['id_horario'],
                 'ids_clases'=>$idsClases, 'cantidad_clases'=>count($idsClases),
                 'id_asistencia_profesor'=>$asistencia['id_asistencia_profesor'], 'idempotente'=>!$asistencia['creada']
             ]];
         } catch (Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($ownsTransaction && $this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }
@@ -87,26 +88,27 @@ final class GatewayAttendanceService
         if (empty($persona['id_huella'])) {
             return ['ok'=>false, 'status'=>'huella_no_configurada', 'message'=>'El estudiante no tiene una huella activa.', 'data'=>['id_evento'=>$idEvento]];
         }
-        $this->db->beginTransaction();
+        $ownsTransaction = !$this->db->inTransaction();
+        if ($ownsTransaction) $this->db->beginTransaction();
         try {
             $clase = (new ClaseDiaria($this->db))->buscarClaseActivaParaAlumno(
                 $idAula, $momento->format('Y-m-d H:i:s'), VENTANA_ASISTENCIA_ALUMNOS_MINUTOS
             );
             if (!$clase || (int)$clase['id_grado'] !== (int)$persona['id_grado']) {
-                $this->db->rollBack();
+                if ($ownsTransaction) $this->db->rollBack();
                 return ['ok'=>false, 'status'=>'sin_clase_activa', 'message'=>'No hay una clase activa para este estudiante.', 'data'=>['id_evento'=>$idEvento]];
             }
             $asistencia = (new AsistenciaEstudiante($this->db))->registrarOReutilizar(
                 (int)$persona['id_estudiante'], (int)$persona['id_huella'], $clase['fecha'],
                 $momento->format('H:i:s'), $clase['hora_inicio'], $clase['hora_fin']
             );
-            $this->db->commit();
+            if ($ownsTransaction) $this->db->commit();
             return ['ok'=>true, 'status'=>'success', 'message'=>'Asistencia de estudiante registrada.', 'data'=>[
                 'id_evento'=>$idEvento, 'id_clase'=>(int)$clase['id_clase'],
                 'id_asistencia_estudiante'=>$asistencia['id_asistencia_estudiante'], 'idempotente'=>!$asistencia['creada']
             ]];
         } catch (Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($ownsTransaction && $this->db->inTransaction()) $this->db->rollBack();
             throw $e;
         }
     }

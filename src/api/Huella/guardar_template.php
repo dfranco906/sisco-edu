@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/biometria.php';
 require_once __DIR__ . '/../../classes/DistribucionHuellaProfesor.php';
+require_once __DIR__ . '/../../config/biometric_auth.php';
+requireBiometricWriter();
 $db = (new Database())->getConnection();
 $tipo = strtolower(trim($_POST['tipo_persona'] ?? $_POST['tipo_usuario'] ?? 'estudiante'));
 $template = trim($_POST['template'] ?? '');

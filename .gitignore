@@ -56,3 +56,4 @@ $RECYCLE.BIN/
 !database/
 !database/migrations/
 !database/migrations/*.sql
+src/config/devices.local.php
