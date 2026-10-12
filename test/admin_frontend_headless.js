@@ -699,7 +699,7 @@ async function ejecutar() {
             for (let i = 0; i < 60; i += 1) {
                 const select = document.querySelector('#informe-asignacion');
                 const lista = document.querySelector('#lista-clases');
-                if (select?.options.length > 1 && lista && !/Cargando/i.test(lista.textContent)) {
+                if (select?.options.length > 1 && lista?.querySelector('[data-clase], .plan-empty')) {
                     return { asignaciones: select.options.length, filtro: Boolean(document.querySelector('#informe-fecha')), lista: lista.textContent.trim().length };
                 }
                 await new Promise((resolve) => setTimeout(resolve, 100));
