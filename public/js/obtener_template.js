@@ -1,8 +1,8 @@
 async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante") {
-    const ipESP32 = "192.168.100.125";
+    const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "192.168.100.125";
     const baseESP32 = `http://${ipESP32}`;
 
-    mostrarEstadoHuella("Conectando con ESP32...", true);
+    mostrarEstadoHuella(`Conectando con ESP32 Registrador (${ipESP32})...`, true);
 
     try {
         bloquearBotonesHuella(true);

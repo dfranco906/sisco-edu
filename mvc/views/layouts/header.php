@@ -19,6 +19,14 @@ if (!isset($_SESSION['id_usuario'])) {
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<?= base_url('public/css/theme.css') ?>">
+    <script>
+        window.BASE_URL = "<?= base_url() ?>/";
+        window.CONFIG_RED = {
+            ipRegistrador: "<?= IP_ESP32_REGISTRADOR ?>",
+            ipGateway: "<?= IP_ESP32_GATEWAY ?>",
+            servidorUrl: "<?= base_url() ?>/"
+        };
+    </script>
 </head>
 <body class="min-h-screen" style="background: var(--color-bg);">
 

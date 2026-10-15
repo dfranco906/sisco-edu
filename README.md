@@ -81,26 +81,38 @@ Interfaz para que el profesor desglose su materia en:
 
 ---
 
-## ESTRUCTURA DEL PROYECTO
+## 📁 Estructura del Proyecto
+
+Consulta [**`PRODUCT.md`**](PRODUCT.md) para la visión del producto y [**`AGENTS.md`**](AGENTS.md) para las reglas de desarrollo.
+
 ```
 SISCO-EDU/
-├── docs/               # Documentación, diagramas UML, MER y manuales.
-│   ├── sql/            # Script de creacion de tablas en mysql.
-│   ├── guias/          # Documentos para manejar ramas y commits del proyecto. 
-├── hardware/           # Código para los ESP32 (Trigger y Gateway).
-│   ├── node_trigger/   # Código (.ino) para el lector de huellas.
-│   └── gateway_lora/   # Código (.ino) para el orquestador LoRa.
-├── public/             # Archivos accesibles desde la web (punto de entrada).
-│   ├── assets/         # Imágenes, iconos y fuentes.
-│   ├── css/            # Estilos (aquí irá el archivo generado por Tailwind).
-│   └── js/             # Scripts de validación y peticiones Fetch.
-├── src/                # El "corazón" del sistema (no accesible por URL).
-│   ├── api/            # Endpoints que reciben datos del ESP32 y del Frontend.
-│   ├── classes/        # Clases PHP (Usuario.php, Asistencia.php, Plan.php).
-│   ├── config/         # Conexión a la base de datos (db.php).
-│   ├── includes/       # Partes reutilizables (header.php, footer.php, navbar.php).
-│   └── views/          # Las páginas reales (login.php, dashboard.php, reportes.php).
-├── tailwind.config.js  # Configuración de Tailwind CSS.
-├── .gitignore          # Archivos que Git debe ignorar (ej. carpetas de XAMPP).
-└── index.php           # El archivo principal que carga el Login.
+├── database/                # Scripts de migraciones SQL versionadas.
+│   └── migrations/          # Integridad relacional y contratos biométricos.
+├── docs/                    # Documentación técnica, manuales y datasheets.
+│   ├── base_de_datos/       # Dumps y esquemas SQL de referencia.
+│   ├── datasheets/          # Hojas de datos de componentes (LoRa RYLR998, etc.).
+│   └── guias/               # Guías institucionales, flujos de Git y especificaciones.
+├── hardware/                # Firmware para microcontroladores ESP32 (Arduino IDE).
+│   ├── nodo_aula/           # Terminal biométrica de aula (nodo_aula.ino).
+│   ├── nodo_gateway/        # Puente LoRa <-> Wi-Fi (nodo_gateway.ino).
+│   ├── nodo_registrador/    # Estación de enrolamiento de huellas (nodo_registrador.ino).
+│   ├── comun/               # Configuraciones (configuracion_red.h) y protocolo DY50.
+│   └── laboratorio_prototipos/ # Pruebas de encendido, LoRa y prototipos previos.
+├── mvc/                     # Capa de presentación web.
+│   └── views/               # Vistas modulares por entidad (estudiantes, profesores, etc.).
+├── pruebas/                 # Scripts de prueba y verificación por módulo.
+├── public/                  # Recursos estáticos servidos al navegador.
+│   ├── css/                 # Estilos y variables de diseño (Tailwind).
+│   └── js/                  # Lógica del cliente, CRUDs y comunicación biométrica.
+├── src/                     # Núcleo backend y lógica de negocio.
+│   ├── api/                 # Endpoints REST modulares.
+│   ├── classes/             # Modelos y clases orientadas a objetos (PDO).
+│   ├── config/              # Configuraciones centrales (red.php, app.php, db.php).
+│   └── middleware/          # Verificación de sesiones y roles (auth.php).
+├── AGENTS.md                # Reglas de ingeniería, Clean Code y estándares del proyecto.
+├── PRODUCT.md               # Visión, misión, actores, alcance y especificaciones técnicas.
+├── config.local.example.php # Plantilla de configuración local (IPs y Base de Datos).
+├── index.php                # Punto de entrada de la aplicación web.
+└── README.md                # Documento general del proyecto.
 ```

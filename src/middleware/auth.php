@@ -1,8 +1,12 @@
 <?php
-session_start();
+require_once __DIR__ . '/../config/app.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (!isset($_SESSION['usuario'])) {
-    header("Location: /tiago3roBTI2026/sisco-edu/index.php");
+    header("Location: " . base_url('index.php'));
     exit();
 }
 
