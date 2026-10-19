@@ -11,6 +11,8 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <?php
         $modulos = [
+            ["🔴 Clase en Vivo", "Monitor biométrico de aula en tiempo real y lección del día", "clases/panel.php", true],
+            ["📖 Planes Anuales", "Estructura pedagógica MEC y programación de clases", "planes_anuales/index.php"],
             ["Profesores", "Gestionar profesores", "profesores/index.php"],
             ["Estudiantes", "Gestionar estudiantes", "estudiantes/index.php"],
             ["Horarios", "Gestionar horarios", "horarios/index.php"],

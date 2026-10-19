@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../../src/config/app.php';
 $currentPath = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $navItems = [
     ['Dashboard', 'mvc/views/dashboard.php'],
+    ['Clase en Vivo', 'mvc/views/clases/panel.php'],
+    ['Planes Anuales', 'mvc/views/planes_anuales/index.php'],
     ['Profesores', 'mvc/views/profesores/index.php'],
     ['Estudiantes', 'mvc/views/estudiantes/index.php'],
     ['Horarios', 'mvc/views/horarios/index.php'],
