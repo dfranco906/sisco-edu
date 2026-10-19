@@ -18,113 +18,89 @@ class Coordinador {
     /**
      * Retorna los grados que supervisa un usuario con métricas cuantitativas agrupadas en batch.
      */
-    public function obtenerGradosCoordinados(int $id_usuario, ?string $rol = null): array {
+    public function obtenerGradosCoordinados(int $id_usuario, ?string $rol = null, ?string $fecha = null): array {
         $esAdmin = in_array($rol, ['SuperAdmin', 'Administrador', 'Administracion'], true);
+        $fecha = $fecha ?? date('Y-m-d');
 
-        if ($esAdmin) {
-            $sql = "SELECT g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno, g.anho_lectivo,
-                           a.id_aula, a.nombre AS aula_nombre, a.capacidad, a.codigo_sala, a.ubicacion
-                    FROM grados g
-                    LEFT JOIN aulas a ON g.id_aula = a.id_aula
-                    WHERE g.activo = 1
-                    ORDER BY g.nombre ASC";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute();
-        } else {
-            // Verificar si tiene asignaciones específicas en coordinador_grados
+        $sql = "SELECT g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno, g.anho_lectivo,
+                       a.id_aula, a.nombre AS aula_nombre, a.capacidad, a.codigo_sala, a.ubicacion,
+                       COALESCE(e.total_estudiantes, 0) AS total_estudiantes,
+                       COALESCE(m.total_materias, 0) AS total_materias,
+                       COALESCE(ah.presentes, 0) AS presentes,
+                       COALESCE(ah.tardanzas, 0) AS tardanzas,
+                       COALESCE(ah.ausentes, 0) AS ausentes,
+                       COALESCE(ah.justificados, 0) AS justificados
+                FROM grados g
+                LEFT JOIN aulas a ON g.id_aula = a.id_aula
+                LEFT JOIN (
+                    SELECT id_grado, COUNT(*) AS total_estudiantes
+                    FROM estudiantes
+                    WHERE activo = 1
+                    GROUP BY id_grado
+                ) e ON e.id_grado = g.id_grado
+                LEFT JOIN (
+                    SELECT id_grado, COUNT(DISTINCT id_materia) AS total_materias
+                    FROM asignacion_docente
+                    WHERE activo = 1
+                    GROUP BY id_grado
+                ) m ON m.id_grado = g.id_grado
+                LEFT JOIN (
+                    SELECT e2.id_grado,
+                           COUNT(DISTINCT CASE WHEN UPPER(ae.estado) = 'PRESENTE' THEN ae.id_estudiante END) AS presentes,
+                           COUNT(DISTINCT CASE WHEN UPPER(ae.estado) = 'TARDANZA' THEN ae.id_estudiante END) AS tardanzas,
+                           COUNT(DISTINCT CASE WHEN UPPER(ae.estado) IN ('AUSENTE', 'FALTA') THEN ae.id_estudiante END) AS ausentes,
+                           COUNT(DISTINCT CASE WHEN UPPER(ae.estado) = 'JUSTIFICADO' THEN ae.id_estudiante END) AS justificados
+                    FROM asistencias_estudiantes ae
+                    JOIN estudiantes e2 ON ae.id_estudiante = e2.id_estudiante
+                    WHERE ae.fecha = :fecha AND ae.activo = 1
+                    GROUP BY e2.id_grado
+                ) ah ON ah.id_grado = g.id_grado";
+
+        $params = [':fecha' => $fecha];
+
+        if (!$esAdmin) {
             $sqlCheck = "SELECT COUNT(*) FROM coordinador_grados WHERE id_usuario = :id_usuario AND activo = 1";
             $stmtCheck = $this->conn->prepare($sqlCheck);
             $stmtCheck->execute([':id_usuario' => $id_usuario]);
-            $tieneEspecificos = (int)$stmtCheck->fetchColumn() > 0;
-
-            if ($tieneEspecificos) {
-                $sql = "SELECT g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno, g.anho_lectivo,
-                               a.id_aula, a.nombre AS aula_nombre, a.capacidad, a.codigo_sala, a.ubicacion
-                        FROM coordinador_grados cg
-                        JOIN grados g ON cg.id_grado = g.id_grado
-                        LEFT JOIN aulas a ON g.id_aula = a.id_aula
-                        WHERE cg.id_usuario = :id_usuario AND cg.activo = 1 AND g.activo = 1
-                        ORDER BY g.nombre ASC";
-                $stmt = $this->conn->prepare($sql);
-                $stmt->execute([':id_usuario' => $id_usuario]);
+            if ((int)$stmtCheck->fetchColumn() > 0) {
+                $sql .= " JOIN coordinador_grados cg ON cg.id_grado = g.id_grado WHERE cg.id_usuario = :id_usuario AND cg.activo = 1 AND g.activo = 1 ORDER BY g.nombre ASC";
+                $params[':id_usuario'] = $id_usuario;
             } else {
-                $sql = "SELECT g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno, g.anho_lectivo,
-                               a.id_aula, a.nombre AS aula_nombre, a.capacidad, a.codigo_sala, a.ubicacion
-                        FROM grados g
-                        LEFT JOIN aulas a ON g.id_aula = a.id_aula
-                        WHERE g.activo = 1
-                        ORDER BY g.nombre ASC";
-                $stmt = $this->conn->prepare($sql);
-                $stmt->execute();
+                $sql .= " WHERE g.activo = 1 ORDER BY g.nombre ASC";
             }
+        } else {
+            $sql .= " WHERE g.activo = 1 ORDER BY g.nombre ASC";
         }
 
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
         $grados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if (empty($grados)) {
-            return [];
-        }
-
-        $idsGrados = array_map(fn($g) => (int)$g['id_grado'], $grados);
-        $inClause = implode(',', array_fill(0, count($idsGrados), '?'));
-
-        // Batch 1: Conteo de estudiantes por grado
-        $sqlEstCount = "SELECT id_grado, COUNT(*) AS total FROM estudiantes WHERE id_grado IN ($inClause) AND activo = 1 GROUP BY id_grado";
-        $stmtEstCount = $this->conn->prepare($sqlEstCount);
-        $stmtEstCount->execute($idsGrados);
-        $estCountMap = $stmtEstCount->fetchAll(PDO::FETCH_KEY_PAIR);
-
-        // Batch 2: Conteo de materias por grado
-        $sqlMatCount = "SELECT id_grado, COUNT(DISTINCT id_materia) AS total FROM asignacion_docente WHERE id_grado IN ($inClause) AND activo = 1 GROUP BY id_grado";
-        $stmtMatCount = $this->conn->prepare($sqlMatCount);
-        $stmtMatCount->execute($idsGrados);
-        $matCountMap = $stmtMatCount->fetchAll(PDO::FETCH_KEY_PAIR);
-
-        // Batch 3: Asistencia de hoy por grado
-        $hoy = date('Y-m-d');
-        $paramsHoy = array_merge($idsGrados, [$hoy]);
-        $sqlHoyCount = "SELECT e.id_grado, ae.estado, COUNT(DISTINCT ae.id_estudiante) AS total
-                        FROM asistencias_estudiantes ae
-                        JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
-                        WHERE e.id_grado IN ($inClause) AND ae.fecha = ? AND ae.activo = 1
-                        GROUP BY e.id_grado, ae.estado";
-        $stmtHoyCount = $this->conn->prepare($sqlHoyCount);
-        $stmtHoyCount->execute($paramsHoy);
-        $hoyRows = $stmtHoyCount->fetchAll(PDO::FETCH_ASSOC);
-
-        $asistHoyMap = [];
-        foreach ($hoyRows as $hr) {
-            $idG = (int)$hr['id_grado'];
-            $est = strtoupper((string)$hr['estado']);
-            if (!isset($asistHoyMap[$idG])) {
-                $asistHoyMap[$idG] = ['presentes' => 0, 'tardanzas' => 0, 'ausentes' => 0];
-            }
-            if ($est === 'PRESENTE') $asistHoyMap[$idG]['presentes'] += (int)$hr['total'];
-            elseif ($est === 'TARDANZA') $asistHoyMap[$idG]['tardanzas'] += (int)$hr['total'];
-            elseif ($est === 'AUSENTE' || $est === 'FALTA') $asistHoyMap[$idG]['ausentes'] += (int)$hr['total'];
-        }
-
-        // Enriquecer en memoria (0 consultas adicionales)
         foreach ($grados as &$grado) {
-            $idG = (int)$grado['id_grado'];
-            $grado['total_estudiantes'] = (int)($estCountMap[$idG] ?? 0);
-            $grado['total_materias'] = (int)($matCountMap[$idG] ?? 0);
-            $grado['metricas_hoy'] = $asistHoyMap[$idG] ?? ['presentes' => 0, 'tardanzas' => 0, 'ausentes' => 0];
+            $grado['total_estudiantes'] = (int)$grado['total_estudiantes'];
+            $grado['total_materias'] = (int)$grado['total_materias'];
+            $grado['metricas_hoy'] = [
+                'presentes' => (int)$grado['presentes'],
+                'tardanzas' => (int)$grado['tardanzas'],
+                'ausentes' => (int)$grado['ausentes'],
+                'justificados' => (int)$grado['justificados'],
+            ];
         }
+        unset($grado);
 
         return $grados;
     }
 
     /**
-     * Métricas globales de asistencia del día para el coordinador
+     * Métricas globales de asistencia para el coordinador calculadas en memoria a partir de los grados
      */
-    public function obtenerMetricasGenerales(int $id_usuario, ?string $rol = null, ?string $fecha = null): array {
+    public function obtenerMetricasGenerales(int $id_usuario, ?string $rol = null, ?string $fecha = null, ?array $grados = null): array {
         $fecha = $fecha ?? date('Y-m-d');
-        $grados = $this->obtenerGradosCoordinados($id_usuario, $rol);
+        if ($grados === null) {
+            $grados = $this->obtenerGradosCoordinados($id_usuario, $rol, $fecha);
+        }
 
-        $idsGrados = array_map(fn($g) => (int)$g['id_grado'], $grados);
-
-        if (empty($idsGrados)) {
+        if (empty($grados)) {
             return [
                 'total_aulas' => 0,
                 'total_estudiantes' => 0,
@@ -137,24 +113,10 @@ class Coordinador {
             ];
         }
 
-        $totalEstudiantes = array_sum(array_column($grados, 'total_estudiantes'));
-
-        $inClause = implode(',', array_fill(0, count($idsGrados), '?'));
-        $params = array_merge($idsGrados, [$fecha]);
-        $sqlAsist = "SELECT ae.estado, COUNT(DISTINCT ae.id_estudiante) AS total
-                     FROM asistencias_estudiantes ae
-                     JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
-                     WHERE e.id_grado IN ($inClause)
-                       AND ae.fecha = ?
-                       AND ae.activo = 1
-                     GROUP BY ae.estado";
-        $stmtAsist = $this->conn->prepare($sqlAsist);
-        $stmtAsist->execute($params);
-        $estadosRaw = $stmtAsist->fetchAll(PDO::FETCH_KEY_PAIR);
-
-        $presentes = (int)($estadosRaw['PRESENTE'] ?? $estadosRaw['presente'] ?? 0);
-        $tardanzas = (int)($estadosRaw['TARDANZA'] ?? $estadosRaw['tardanza'] ?? 0);
-        $justificados = (int)($estadosRaw['JUSTIFICADO'] ?? $estadosRaw['justificado'] ?? 0);
+        $totalEstudiantes = (int)array_sum(array_column($grados, 'total_estudiantes'));
+        $presentes = (int)array_sum(array_map(fn($g) => $g['metricas_hoy']['presentes'] ?? 0, $grados));
+        $tardanzas = (int)array_sum(array_map(fn($g) => $g['metricas_hoy']['tardanzas'] ?? 0, $grados));
+        $justificados = (int)array_sum(array_map(fn($g) => $g['metricas_hoy']['justificados'] ?? 0, $grados));
         $marcados = $presentes + $tardanzas + $justificados;
         $ausentes = max(0, $totalEstudiantes - $marcados);
 

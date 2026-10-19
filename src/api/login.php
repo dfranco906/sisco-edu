@@ -16,9 +16,16 @@ if (empty($usuario) || empty($password)) {
 require_once '../config/app.php';
 require_once '../middleware/auth.php';
 
-$query = "SELECT id_usuario, usuario, password, rol, activo, nombre, apellido
-          FROM usuarios
-          WHERE usuario = :usuario
+// Unificamos la consulta del usuario con sus entidades asociadas en UNA sola sentencia (cero latencia de roundtrips)
+$query = "SELECT u.id_usuario, u.usuario, u.password, u.rol, u.activo, u.nombre, u.apellido,
+                 p.id_profesor,
+                 e.id_estudiante, e.id_grado,
+                 t.id_tutor
+          FROM usuarios u
+          LEFT JOIN profesores p ON p.id_usuario = u.id_usuario
+          LEFT JOIN estudiantes e ON e.id_usuario = u.id_usuario
+          LEFT JOIN tutores t ON t.id_usuario = u.id_usuario
+          WHERE u.usuario = :usuario
           LIMIT 1";
 
 $stmt = $db->prepare($query);
@@ -50,24 +57,11 @@ $_SESSION['rol'] = $user['rol'];
 $_SESSION['nombre'] = $user['nombre'];
 $_SESSION['apellido'] = $user['apellido'];
 
-// Si es profesor, estudiante o tutor, guardar su id de entidad para agilizar consultas
-if ($user['rol'] === 'Profesor') {
-    $stmtProf = $db->prepare("SELECT id_profesor FROM profesores WHERE id_usuario = :id_usuario LIMIT 1");
-    $stmtProf->execute([':id_usuario' => $user['id_usuario']]);
-    $_SESSION['id_profesor'] = $stmtProf->fetchColumn() ?: null;
-} elseif ($user['rol'] === 'Estudiante') {
-    $stmtEst = $db->prepare("SELECT id_estudiante, id_grado FROM estudiantes WHERE id_usuario = :id_usuario LIMIT 1");
-    $stmtEst->execute([':id_usuario' => $user['id_usuario']]);
-    $estRow = $stmtEst->fetch(PDO::FETCH_ASSOC);
-    if ($estRow) {
-        $_SESSION['id_estudiante'] = (int)$estRow['id_estudiante'];
-        $_SESSION['id_grado'] = (int)$estRow['id_grado'];
-    }
-} elseif ($user['rol'] === 'Tutor') {
-    $stmtTut = $db->prepare("SELECT id_tutor FROM tutores WHERE id_usuario = :id_usuario LIMIT 1");
-    $stmtTut->execute([':id_usuario' => $user['id_usuario']]);
-    $_SESSION['id_tutor'] = $stmtTut->fetchColumn() ?: null;
-}
+// Guardar los IDs asociados obtenidos de forma atómica en la misma consulta
+$_SESSION['id_profesor'] = !empty($user['id_profesor']) ? (int)$user['id_profesor'] : null;
+$_SESSION['id_estudiante'] = !empty($user['id_estudiante']) ? (int)$user['id_estudiante'] : null;
+$_SESSION['id_grado'] = !empty($user['id_grado']) ? (int)$user['id_grado'] : null;
+$_SESSION['id_tutor'] = !empty($user['id_tutor']) ? (int)$user['id_tutor'] : null;
 
 $rutaDestino = obtenerRutaDashboardPorRol($user['rol']);
 header("Location: " . base_url($rutaDestino));

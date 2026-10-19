@@ -16,6 +16,10 @@ if (in_array($rol, ['SuperAdmin', 'Administrador'], true) && isset($_GET['id_pro
     $stmtP = $db->prepare("SELECT id_profesor, nombre, apellido, cedula_identidad FROM profesores WHERE id_profesor = :id LIMIT 1");
     $stmtP->execute([':id' => (int)$_GET['id_profesor']]);
     $profesor = $stmtP->fetch(PDO::FETCH_ASSOC) ?: null;
+} elseif (!empty($_SESSION['id_profesor'])) {
+    $stmtP = $db->prepare("SELECT id_profesor, nombre, apellido, cedula_identidad FROM profesores WHERE id_profesor = :id LIMIT 1");
+    $stmtP->execute([':id' => (int)$_SESSION['id_profesor']]);
+    $profesor = $stmtP->fetch(PDO::FETCH_ASSOC) ?: null;
 } else {
     $stmtP = $db->prepare("SELECT id_profesor, nombre, apellido, cedula_identidad FROM profesores WHERE id_usuario = :id_usuario LIMIT 1");
     $stmtP->execute([':id_usuario' => $idUsuario]);
@@ -44,17 +48,32 @@ if (!$profesor) {
 
 $idProfesor = (int)$profesor['id_profesor'];
 
-// Consultar materias asignadas al profesor
+// Consultar materias y avance curricular en UNA SOLA consulta agregada (sin N+1)
 $sqlMaterias = "SELECT ad.id_asignacion, ad.carga_horaria,
                        m.id_materia, m.nombre AS materia_nombre,
                        g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno,
                        a.nombre AS aula_nombre,
-                       pa.id_plan, pa.estado AS plan_estado
+                       pa.id_plan, pa.estado AS plan_estado,
+                       COALESCE(tt.total_temas, 0) AS total_temas,
+                       COALESCE(td.temas_dictados, 0) AS temas_dictados
                 FROM asignacion_docente ad
                 JOIN materias m ON ad.id_materia = m.id_materia
                 LEFT JOIN grados g ON ad.id_grado = g.id_grado
                 LEFT JOIN aulas a ON g.id_aula = a.id_aula
                 LEFT JOIN planes_anuales pa ON pa.id_asignacion = ad.id_asignacion
+                LEFT JOIN (
+                    SELECT pu.id_plan, COUNT(pt.id_tema) AS total_temas
+                    FROM plan_temas pt
+                    JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
+                    JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
+                    GROUP BY pu.id_plan
+                ) tt ON tt.id_plan = pa.id_plan
+                LEFT JOIN (
+                    SELECT cd.id_plan, COUNT(DISTINCT cd.id_tema) AS temas_dictados
+                    FROM clases_diarias cd
+                    WHERE cd.id_tema IS NOT NULL
+                    GROUP BY cd.id_plan
+                ) td ON td.id_plan = pa.id_plan
                 WHERE ad.id_profesor = :id_profesor AND ad.activo = 1
                 ORDER BY g.nombre ASC, m.nombre ASC";
 $stmtMat = $db->prepare($sqlMaterias);
@@ -62,30 +81,11 @@ $stmtMat->execute([':id_profesor' => $idProfesor]);
 $materias = $stmtMat->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($materias as &$mat) {
-    $idPlan = !empty($mat['id_plan']) ? (int)$mat['id_plan'] : null;
-    $totalTemas = 0;
-    $temasDictados = 0;
-
-    if ($idPlan !== null) {
-        $sqlT = "SELECT COUNT(pt.id_tema) 
-                 FROM plan_temas pt
-                 JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
-                 JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
-                 WHERE pu.id_plan = :id_plan";
-        $stmtT = $db->prepare($sqlT);
-        $stmtT->execute([':id_plan' => $idPlan]);
-        $totalTemas = (int)$stmtT->fetchColumn();
-
-        $sqlD = "SELECT COUNT(DISTINCT cd.id_tema) FROM clases_diarias cd WHERE cd.id_plan = :id_plan AND cd.id_tema IS NOT NULL";
-        $stmtD = $db->prepare($sqlD);
-        $stmtD->execute([':id_plan' => $idPlan]);
-        $temasDictados = (int)$stmtD->fetchColumn();
-    }
-
-    $mat['total_temas'] = $totalTemas;
-    $mat['temas_dictados'] = $temasDictados;
+    $totalTemas = (int)$mat['total_temas'];
+    $temasDictados = (int)$mat['temas_dictados'];
     $mat['porcentaje_avance'] = ($totalTemas > 0) ? round(($temasDictados / $totalTemas) * 100) : 0;
 }
+unset($mat);
 ?>
 
 <main class="flex-1 p-6 md:p-10 bg-slate-950 text-slate-100 min-h-screen">
@@ -100,7 +100,7 @@ foreach ($materias as &$mat) {
                     Prof. <?= htmlspecialchars($profesor['nombre'] . ' ' . $profesor['apellido'], ENT_QUOTES, 'UTF-8') ?>
                 </h2>
                 <div class="flex items-center gap-3 mt-1.5 text-xs text-slate-300">
-                    <span class="font-mono bg-slate-800 px-2.5 py-0.5 rounded text-slate-200">CI: <?= htmlspecialchars($profesor['cedula_identidad'], ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="font-mono bg-slate-800 px-2.5 py-0.5 rounded text-slate-200">CI: <?= htmlspecialchars($profesor['cedula_identidad'] ?? 'S/D', ENT_QUOTES, 'UTF-8') ?></span>
                     <span>• Cátedras Asignadas: <strong class="text-white"><?= count($materias) ?></strong></span>
                 </div>
             </div>

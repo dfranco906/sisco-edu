@@ -43,12 +43,27 @@ class EstudiantePortal {
         $sql = "SELECT ad.id_asignacion, ad.carga_horaria,
                        m.id_materia, m.nombre AS materia_nombre,
                        p.id_profesor, p.nombre AS prof_nombre, p.apellido AS prof_apellido, up.email AS prof_email,
-                       pa.id_plan, pa.estado AS plan_estado
+                       pa.id_plan, pa.estado AS plan_estado,
+                       COALESCE(tt.total_temas, 0) AS total_temas,
+                       COALESCE(td.temas_dictados, 0) AS temas_dictados
                 FROM asignacion_docente ad
                 JOIN materias m ON ad.id_materia = m.id_materia
                 LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
                 LEFT JOIN usuarios up ON p.id_usuario = up.id_usuario
                 LEFT JOIN planes_anuales pa ON pa.id_asignacion = ad.id_asignacion
+                LEFT JOIN (
+                    SELECT pu.id_plan, COUNT(pt.id_tema) AS total_temas
+                    FROM plan_temas pt
+                    JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
+                    JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
+                    GROUP BY pu.id_plan
+                ) tt ON tt.id_plan = pa.id_plan
+                LEFT JOIN (
+                    SELECT cd.id_plan, COUNT(DISTINCT cd.id_tema) AS temas_dictados
+                    FROM clases_diarias cd
+                    WHERE cd.id_tema IS NOT NULL
+                    GROUP BY cd.id_plan
+                ) td ON td.id_plan = pa.id_plan
                 WHERE ad.id_grado = :id_grado AND ad.activo = 1
                 ORDER BY m.nombre ASC";
         $stmt = $this->conn->prepare($sql);
@@ -59,32 +74,7 @@ class EstudiantePortal {
             return [];
         }
 
-        $idsPlanes = array_values(array_filter(array_map(fn($m) => !empty($m['id_plan']) ? (int)$m['id_plan'] : null, $materias)));
         $idsAsignaciones = array_values(array_filter(array_map(fn($m) => (int)$m['id_asignacion'], $materias)));
-
-        // Batch 1: Total temas
-        $totalTemasMap = [];
-        $temasDictadosMap = [];
-        if (!empty($idsPlanes)) {
-            $inPlanes = implode(',', array_fill(0, count($idsPlanes), '?'));
-            $sqlTotalTemas = "SELECT pu.id_plan, COUNT(pt.id_tema) AS total_temas
-                              FROM plan_temas pt
-                              JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
-                              JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
-                              WHERE pu.id_plan IN ($inPlanes)
-                              GROUP BY pu.id_plan";
-            $stmtTT = $this->conn->prepare($sqlTotalTemas);
-            $stmtTT->execute($idsPlanes);
-            $totalTemasMap = $stmtTT->fetchAll(PDO::FETCH_KEY_PAIR);
-
-            $sqlDictados = "SELECT cd.id_plan, COUNT(DISTINCT cd.id_tema) AS temas_dictados
-                            FROM clases_diarias cd
-                            WHERE cd.id_plan IN ($inPlanes) AND cd.id_tema IS NOT NULL
-                            GROUP BY cd.id_plan";
-            $stmtTD = $this->conn->prepare($sqlDictados);
-            $stmtTD->execute($idsPlanes);
-            $temasDictadosMap = $stmtTD->fetchAll(PDO::FETCH_KEY_PAIR);
-        }
 
         // Batch 2: Asistencias del estudiante en las asignaciones de este grado
         $asistMap = [];
@@ -114,13 +104,10 @@ class EstudiantePortal {
 
         // Ensamblado en memoria
         foreach ($materias as &$mat) {
-            $idPlan = !empty($mat['id_plan']) ? (int)$mat['id_plan'] : null;
             $idAsig = (int)$mat['id_asignacion'];
 
-            $totalTemas = (int)($totalTemasMap[$idPlan] ?? 0);
-            $temasDictados = (int)($temasDictadosMap[$idPlan] ?? 0);
-            $mat['total_temas'] = $totalTemas;
-            $mat['temas_dictados'] = $temasDictados;
+            $totalTemas = (int)$mat['total_temas'];
+            $temasDictados = (int)$mat['temas_dictados'];
             $mat['porcentaje_avance'] = ($totalTemas > 0) ? round(($temasDictados / $totalTemas) * 100) : 0;
 
             $p = $asistMap[$idAsig]['presente'] ?? 0;

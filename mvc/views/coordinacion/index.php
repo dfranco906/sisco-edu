@@ -14,8 +14,8 @@ $idUsuario = (int)$_SESSION['id_usuario'];
 $rol = $_SESSION['rol'];
 $fechaFiltro = $_GET['fecha'] ?? date('Y-m-d');
 
-$metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fechaFiltro);
-$grados = $coordinadorService->obtenerGradosCoordinados($idUsuario, $rol);
+$grados = $coordinadorService->obtenerGradosCoordinados($idUsuario, $rol, $fechaFiltro);
+$metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fechaFiltro, $grados);
 ?>
 
 <main class="flex-1 p-6 md:p-10 bg-slate-950 text-slate-100 min-h-screen">
