@@ -37,10 +37,18 @@ try {
         http_response_code(422); echo json_encode(["status"=>"error", "message"=>"CRC32 del aula no coincide con el template central"]); exit;
     }
     $db->beginTransaction();
-    $db->prepare("INSERT INTO aula_huellas_sync (id_sync,id_huella,id_aula,ci,slot_local,tipo_persona,estado)
-        VALUES (:id_sync,:id_huella,:id_aula,:ci,:slot,:tipo,'RECIBIDO')
-        ON DUPLICATE KEY UPDATE slot_local=VALUES(slot_local), ci=VALUES(ci), tipo_persona=VALUES(tipo_persona), estado='RECIBIDO'")
-      ->execute([':id_sync'=>$id_sync, ':id_huella'=>$id_huella, ':id_aula'=>$id_aula, ':ci'=>$ci, ':slot'=>$slot, ':tipo'=>$tipo]);
+    $driver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
+    if ($driver === 'pgsql') {
+        $db->prepare("INSERT INTO aula_huellas_sync (id_sync,id_huella,id_aula,ci,slot_local,tipo_persona,estado)
+            VALUES (:id_sync,:id_huella,:id_aula,:ci,:slot,:tipo,'RECIBIDO')
+            ON CONFLICT (id_sync) DO UPDATE SET slot_local=EXCLUDED.slot_local, ci=EXCLUDED.ci, tipo_persona=EXCLUDED.tipo_persona, estado='RECIBIDO'")
+          ->execute([':id_sync'=>$id_sync, ':id_huella'=>$id_huella, ':id_aula'=>$id_aula, ':ci'=>$ci, ':slot'=>$slot, ':tipo'=>$tipo]);
+    } else {
+        $db->prepare("INSERT INTO aula_huellas_sync (id_sync,id_huella,id_aula,ci,slot_local,tipo_persona,estado)
+            VALUES (:id_sync,:id_huella,:id_aula,:ci,:slot,:tipo,'RECIBIDO')
+            ON DUPLICATE KEY UPDATE slot_local=VALUES(slot_local), ci=VALUES(ci), tipo_persona=VALUES(tipo_persona), estado='RECIBIDO'")
+          ->execute([':id_sync'=>$id_sync, ':id_huella'=>$id_huella, ':id_aula'=>$id_aula, ':ci'=>$ci, ':slot'=>$slot, ':tipo'=>$tipo]);
+    }
     $db->prepare("UPDATE sync_biometrica SET estado='CONFIRMADO', mensaje=:mensaje, fecha_actualizacion=NOW() WHERE id_sync=:id")
       ->execute([':id'=>$id_sync, ':mensaje'=>'Huella instalada y verificada por aula. CRC32='.$crc32]);
     $db->prepare("UPDATE huellas_templates SET pendiente_sync=0 WHERE id_huella=:id")->execute([':id'=>$id_huella]);

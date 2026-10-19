@@ -18,7 +18,7 @@ class Database {
             $local = [];
         }
 
-        $this->driver = getenv('DB_DRIVER') ?: ($local['DB_DRIVER'] ?? 'mysql');
+        $this->driver = getenv('DB_DRIVER') ?: ($local['DB_DRIVER'] ?? 'pgsql');
         $this->host = getenv('DB_HOST') ?: ($local['DB_HOST'] ?? 'localhost');
         $this->port = getenv('DB_PORT') ?: ($local['DB_PORT'] ?? ($this->driver === 'pgsql' ? '5432' : '3306'));
         $this->db_name = getenv('DB_NAME') ?: ($local['DB_NAME'] ?? ($this->driver === 'pgsql' ? 'postgres' : 'sisco_db'));
