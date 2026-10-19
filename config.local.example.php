@@ -26,7 +26,9 @@ return [
 
     // Credenciales de Base de Datos (opcionales si difieren de localhost/root)
     'DB_HOST'              => 'localhost',
+    'DB_PORT'              => 3306, // Por ejemplo 25060 para Aiven o Railway Cloud
     'DB_NAME'              => 'sisco_db',
     'DB_USER'              => 'root',
     'DB_PASS'              => '',
+    'DB_SSL'               => false, // Activar en true para conexiones remotas con TLS
 ];

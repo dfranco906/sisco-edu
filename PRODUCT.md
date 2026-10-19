@@ -92,12 +92,18 @@ Proveer un ecosistema tecnológico distribuido, resiliente, modular y de bajo co
 
 ---
 
-## 🌐 7. Gestión Centralizada de IPs y Red
+## 🌐 7. Gestión Dinámica de IPs, Nodos IoT y Conectividad Remota
 
-Para evitar modificar el código fuente al cambiar de entorno de prueba o encargado de proyecto:
-1. **Web / Backend:** Edita los valores en [`src/config/red.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/src/config/red.php) o crea un archivo local `config.local.php` (ignorado por Git) copiando [`config.local.example.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/config.local.example.php).
-2. **Microcontroladores:** Edita [`hardware/comun/configuracion_red.h`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/hardware/comun/configuracion_red.h) antes de flashear los ESP32.
-3. **Frontend (JS):** Las vistas web inyectan automáticamente las IPs en `window.CONFIG_RED`, por lo que los scripts en JavaScript nunca contienen IPs quemadas.
+Para evitar modificar el código fuente al cambiar de red local, encargado de proyecto o servidor:
+
+1. **Módulo Web de Configuración:** Desde el panel de administración ([`mvc/views/configuracion/index.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/mvc/views/configuracion/index.php)), el administrador puede modificar las IPs del Servidor, ESP32 Registrador y ESP32 Gateway, probar la conectividad en vivo mediante pings/diagnósticos y ajustar parámetros LoRa sin tocar una sola línea de código.
+2. **Almacenamiento Persistente en Base de Datos:** Los parámetros se almacenan en la tabla [`configuraciones_sistema`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/database/migrations/20261019_crear_tabla_configuraciones_sistema.sql). El archivo [`src/config/red.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/src/config/red.php) resuelve las configuraciones siguiendo una jerarquía estricta:
+   $$\text{Variables de Entorno} \longrightarrow \text{config.local.php} \longrightarrow \text{Base de Datos (configuraciones\_sistema)} \longrightarrow \text{Valores por Defecto}$$
+3. **Frontend Reactivo (JS):** Las vistas web inyectan automáticamente las IPs activas en `window.CONFIG_RED.ipRegistrador` y `window.CONFIG_RED.ipGateway`.
+4. **Firmware ESP32:** Los valores por defecto de fábrica residen en [`hardware/comun/configuracion_red.h`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/hardware/comun/configuracion_red.h).
+5. **Arquitectura para Alta Disponibilidad Cloud:**
+   * **Base de Datos Remota (Aiven / Railway / RDS):** La conexión en [`src/config/db.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/src/config/db.php) soporta puertos no estándar (`DB_PORT`) y modo SSL seguro (`DB_SSL`). Esto permite que múltiples desarrolladores y el Gateway sincronicen contra la misma nube sin depender de un XAMPP local.
+   * **Túnel Seguro (Cloudflare Tunnel):** Permite exponer el backend local hacia un dominio público con HTTPS (`https://sisco.institucion.edu.py`) sin abrir puertos en el router escolar ni exponer la red interna.
 
 ---
 
@@ -107,6 +113,9 @@ Para evitar modificar el código fuente al cambiar de entorno de prueba o encarg
 - [x] Migración del transporte de red de ESP-NOW a LoRa P2P con confirmación Stop-and-Wait.
 - [x] Centralización de configuraciones de red y desacople de rutas fijas (`tiago3roBTI2026`).
 - [x] Reorganización de la estructura de carpetas en módulos limpios y legibles.
+- [x] Módulo web interactivo de configuración del sistema y persistencia dinámica en base de datos.
+- [x] Soporte para bases de datos en la nube (MySQL SSL + puertos personalizados).
 - [ ] Exportación de reportes de asistencia consolidados en PDF y Excel para la Dirección.
 - [ ] Cifrado AES-128 en las tramas de radio LoRa para entornos de producción extendidos.
 - [ ] Incorporación de WebSockets o SSE para actualización instantánea del Dashboard.
+

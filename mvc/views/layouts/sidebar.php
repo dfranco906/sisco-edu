@@ -19,6 +19,7 @@ $adminPaths = [
     'mvc/views/grados/',
     'mvc/views/materias/',
     'mvc/views/asignaciones/',
+    'mvc/views/configuracion/',
 ];
 ?>
 
