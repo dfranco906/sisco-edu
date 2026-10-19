@@ -18,7 +18,19 @@ $formCrear = [
         ["name" => "email", "label" => "Email", "type" => "email"],
         ["name" => "celular", "label" => "Celular", "type" => "number"],
         ["name" => "password", "label" => "Contraseña", "type" => "password"],
-        ["name" => "rol", "label" => "Rol", "type" => "text"]
+        [
+            "name" => "rol",
+            "label" => "Rol en el Sistema",
+            "type" => "select",
+            "options" => [
+                ["value" => "SuperAdmin", "label" => "SuperAdmin (Acceso Total)"],
+                ["value" => "Administrador", "label" => "Administrador"],
+                ["value" => "Coordinador", "label" => "Coordinador Académico"],
+                ["value" => "Profesor", "label" => "Profesor"],
+                ["value" => "Estudiante", "label" => "Estudiante (Solo Lectura)"],
+                ["value" => "Tutor", "label" => "Padre / Madre / Tutor (Solo Lectura)"],
+            ]
+        ]
     ]
 ];
 $apiActualizar = "src/api/Usuario/actualizar_usuario.php";
