@@ -24,11 +24,22 @@ return [
     // Clave secreta enviada en la cabecera X-GATEWAY-KEY
     'GATEWAY_API_KEY'      => 'SISCO_GATEWAY_2026_SECRETO',
 
-    // Credenciales de Base de Datos (opcionales si difieren de localhost/root)
+    // --- Credenciales de Base de Datos ---
+    // Opción 1: MySQL Local (XAMPP por defecto)
+    'DB_DRIVER'            => 'mysql',
     'DB_HOST'              => 'localhost',
-    'DB_PORT'              => 3306, // Por ejemplo 25060 para Aiven o Railway Cloud
+    'DB_PORT'              => 3306,
     'DB_NAME'              => 'sisco_db',
     'DB_USER'              => 'root',
     'DB_PASS'              => '',
-    'DB_SSL'               => false, // Activar en true para conexiones remotas con TLS
+    'DB_SSL'               => false,
+
+    // Opción 2: Supabase PostgreSQL (Cloud)
+    // 'DB_DRIVER'            => 'pgsql',
+    // 'DB_HOST'              => 'aws-0-us-east-1.pooler.supabase.com', // Reemplazar con el pooler de tu región
+    // 'DB_PORT'              => 6543,                                  // Puerto del Transaction Pooler (IPv4)
+    // 'DB_NAME'              => 'postgres',
+    // 'DB_USER'              => 'postgres.tu_project_ref',
+    // 'DB_PASS'              => 'TU_PASSWORD_DE_SUPABASE',
+    // 'DB_SSL'               => true,
 ];

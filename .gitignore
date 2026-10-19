@@ -2,6 +2,7 @@
 # Ignorar archivos de configuración de base de datos local que contienen contraseñas
 src/config/db_local.php
 config.local.php
+.mcp.json
 .env
 
 # Archivos temporales y logs de PHP/Apache
