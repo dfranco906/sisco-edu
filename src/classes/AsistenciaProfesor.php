@@ -15,12 +15,8 @@ class AsistenciaProfesor {
     }
 
     public function crear() {
-        $query = "INSERT INTO {$this->table_name}
-                  SET id_profesor=:id_profesor,
-                      huella_id=:huella_id,
-                      fecha=:fecha,
-                      hora=:hora,
-                      estado=:estado";
+        $query = "INSERT INTO {$this->table_name} (id_profesor, huella_id, fecha, hora, estado)
+                  VALUES (:id_profesor, :huella_id, :fecha, :hora, :estado)";
 
         $stmt = $this->conn->prepare($query);
 

@@ -14,8 +14,8 @@ class NodoEsp32 {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET node_id=:node_id, id_aula=:id_aula, tipo=:tipo";
+        $query = "INSERT INTO " . $this->table_name . " (node_id, id_aula, tipo)
+                  VALUES (:node_id, :id_aula, :tipo)";
 
         $stmt = $this->conn->prepare($query);
 

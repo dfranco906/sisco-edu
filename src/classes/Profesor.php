@@ -14,11 +14,8 @@ class Profesor {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . " 
-                  SET nombre=:nombre, 
-                      apellido=:apellido, 
-                      cedula_identidad=:cedula, 
-                      user_id_global=:user_id_global";
+        $query = "INSERT INTO " . $this->table_name . " (nombre, apellido, cedula_identidad, user_id_global)
+                  VALUES (:nombre, :apellido, :cedula, :user_id_global)";
 
         $stmt = $this->conn->prepare($query);
 

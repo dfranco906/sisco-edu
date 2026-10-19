@@ -13,8 +13,8 @@ class Aula {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET nombre=:nombre, codigo=:codigo, ubicacion=:ubicacion";
+        $query = "INSERT INTO " . $this->table_name . " (nombre, codigo, ubicacion)
+                  VALUES (:nombre, :codigo, :ubicacion)";
 
         $stmt = $this->conn->prepare($query);
 

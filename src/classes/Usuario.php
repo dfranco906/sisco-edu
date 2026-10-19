@@ -18,14 +18,8 @@ class Usuario {
 
     // ✅ CREATE
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET nombre=:nombre,
-                      apellido=:apellido,
-                      usuario=:usuario,
-                      email=:email,
-                      celular=:celular,
-                      password=:password,
-                      rol=:rol";
+        $query = "INSERT INTO " . $this->table_name . " (nombre, apellido, usuario, email, celular, password, rol)
+                  VALUES (:nombre, :apellido, :usuario, :email, :celular, :password, :rol)";
 
         $stmt = $this->conn->prepare($query);
 

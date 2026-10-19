@@ -23,12 +23,8 @@ class HuellaTemplate {
         }
         $this->formato = 'HEX';
         $this->fingerprint_data = strtolower(trim($this->fingerprint_data));
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET user_id_global=:user_id_global,
-                      fingerprint_data=:fingerprint_data,
-                      formato=:formato,
-                      slot_index=:slot_index,
-                      pendiente_sync=1";
+        $query = "INSERT INTO " . $this->table_name . " (user_id_global, fingerprint_data, formato, slot_index, pendiente_sync)
+                  VALUES (:user_id_global, :fingerprint_data, :formato, :slot_index, 1)";
 
         $stmt = $this->conn->prepare($query);
 

@@ -11,12 +11,8 @@ class Estudiante {
     }
 
     public function crear() {
-        $query = "INSERT INTO estudiantes
-                  SET nombre=:nombre,
-                      apellido=:apellido,
-                      cedula_identidad=:cedula,
-                      id_grado=:id_grado,
-                      user_id_global=:user_id_global";
+        $query = "INSERT INTO estudiantes (nombre, apellido, cedula_identidad, id_grado, user_id_global)
+                  VALUES (:nombre, :apellido, :cedula, :id_grado, :user_id_global)";
 
         $stmt = $this->conn->prepare($query);
 

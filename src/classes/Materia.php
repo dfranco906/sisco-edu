@@ -15,8 +15,8 @@ class Materia {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . " 
-                  SET nombre=:nombre, descripcion=:descripcion, carga_horaria_semanal=:carga";
+        $query = "INSERT INTO " . $this->table_name . " (nombre, descripcion, carga_horaria_semanal)
+                  VALUES (:nombre, :descripcion, :carga)";
 
         $stmt = $this->conn->prepare($query);
 

@@ -14,11 +14,8 @@ class SyncBiometrica {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET id_huella=:id_huella,
-                      id_aula=:id_aula,
-                      estado=:estado,
-                      intentos=:intentos";
+        $query = "INSERT INTO " . $this->table_name . " (id_huella, id_aula, estado, intentos)
+                  VALUES (:id_huella, :id_aula, :estado, :intentos)";
 
         $stmt = $this->conn->prepare($query);
 

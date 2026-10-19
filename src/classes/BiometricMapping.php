@@ -13,10 +13,8 @@ class BiometricMapping {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET user_id_global=:user_id_global,
-                      id_aula=:id_aula,
-                      sensor_slot=:sensor_slot";
+        $query = "INSERT INTO " . $this->table_name . " (user_id_global, id_aula, sensor_slot)
+                  VALUES (:user_id_global, :id_aula, :sensor_slot)";
 
         $stmt = $this->conn->prepare($query);
 

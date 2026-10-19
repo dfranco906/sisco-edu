@@ -15,12 +15,8 @@ class Asistencia {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET user_id_global=:user_id_global,
-                      id_aula=:id_aula,
-                      fecha_hora=:fecha_hora,
-                      tipo_usuario=:tipo,
-                      estado=:estado";
+        $query = "INSERT INTO " . $this->table_name . " (user_id_global, id_aula, fecha_hora, tipo_usuario, estado)
+                  VALUES (:user_id_global, :id_aula, :fecha_hora, :tipo, :estado)";
 
         $stmt = $this->conn->prepare($query);
 

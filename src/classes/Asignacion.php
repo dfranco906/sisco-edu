@@ -2,11 +2,10 @@
 class Asignacion {
     private $conn;
     private $table_name = "asignacion_docente";
-    private $col_anio = "año_lectivo";
 
     public $id_profesor;
     public $id_materia;
-    public $aÃ±o_lectivo;
+    public $año_lectivo;
     public $id_asignacion;
 
     public function __construct($db) {
@@ -14,16 +13,14 @@ class Asignacion {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . "
-                  SET id_profesor=:id_p,
-                      id_materia=:id_m,
-                      `" . $this->col_anio . "`=:anio";
+        $query = "INSERT INTO " . $this->table_name . " (id_profesor, id_materia, \"año_lectivo\")
+                  VALUES (:id_p, :id_m, :anio)";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":id_p", $this->id_profesor);
         $stmt->bindParam(":id_m", $this->id_materia);
-        $stmt->bindParam(":anio", $this->aÃ±o_lectivo);
+        $stmt->bindParam(":anio", $this->año_lectivo);
 
         return $stmt->execute();
     }
@@ -33,8 +30,8 @@ class Asignacion {
                     ad.id_asignacion,
                     CONCAT(p.nombre, ' ', p.apellido) AS profesor,
                     m.nombre AS materia,
-                    ad.`" . $this->col_anio . "` AS `aÃ±o_lectivo`,
-                    CONCAT(p.nombre, ' ', p.apellido, ' - ', m.nombre, ' - ', ad.`" . $this->col_anio . "`) AS descripcion
+                    ad.\"año_lectivo\" AS \"año_lectivo\",
+                    CONCAT(p.nombre, ' ', p.apellido, ' - ', m.nombre, ' - ', ad.\"año_lectivo\") AS descripcion
                   FROM asignacion_docente ad
                   LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
                   LEFT JOIN materias m ON ad.id_materia = m.id_materia
@@ -53,9 +50,9 @@ class Asignacion {
                     ad.id_materia,
                     CONCAT(p.nombre, ' ', p.apellido) AS profesor,
                     m.nombre AS materia,
-                    ad.`" . $this->col_anio . "` AS `aÃ±o_lectivo`,
+                    ad.\"año_lectivo\" AS \"año_lectivo\",
                     ad.activo,
-                    CONCAT(p.nombre, ' ', p.apellido, ' - ', m.nombre, ' - ', ad.`" . $this->col_anio . "`) AS descripcion
+                    CONCAT(p.nombre, ' ', p.apellido, ' - ', m.nombre, ' - ', ad.\"año_lectivo\") AS descripcion
                   FROM asignacion_docente ad
                   LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
                   LEFT JOIN materias m ON ad.id_materia = m.id_materia
@@ -71,14 +68,14 @@ class Asignacion {
         $query = "UPDATE " . $this->table_name . "
                   SET id_profesor=:id_profesor,
                       id_materia=:id_materia,
-                      `" . $this->col_anio . "`=:anio
+                      \"año_lectivo\"=:anio
                   WHERE id_asignacion=:id_asignacion";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":id_profesor", $this->id_profesor);
         $stmt->bindParam(":id_materia", $this->id_materia);
-        $stmt->bindParam(":anio", $this->aÃ±o_lectivo);
+        $stmt->bindParam(":anio", $this->año_lectivo);
         $stmt->bindParam(":id_asignacion", $this->id_asignacion);
 
         return $stmt->execute();

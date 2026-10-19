@@ -89,7 +89,17 @@ class Horario
             WHERE h.activo = :activo
             ORDER BY
                 g.nombre,
-                FIELD(h.dia_semana, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'),
+                CASE h.dia_semana 
+                    WHEN 'Lunes' THEN 1 
+                    WHEN 'Martes' THEN 2 
+                    WHEN 'Miércoles' THEN 3 
+                    WHEN 'Miercoles' THEN 3 
+                    WHEN 'Jueves' THEN 4 
+                    WHEN 'Viernes' THEN 5 
+                    WHEN 'Sábado' THEN 6 
+                    WHEN 'Sabado' THEN 6 
+                    ELSE 7 
+                END,
                 h.hora_inicio
         ");
         $stmt->execute([":activo" => $activo]);
