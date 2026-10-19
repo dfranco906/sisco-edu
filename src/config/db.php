@@ -2,6 +2,8 @@
 // src/config/db.php
 
 class Database {
+    private static ?PDO $cachedConn = null;
+
     private $driver;
     private $host;
     private $port;
@@ -28,6 +30,11 @@ class Database {
     }
 
     public function getConnection() {
+        if (self::$cachedConn !== null) {
+            $this->conn = self::$cachedConn;
+            return $this->conn;
+        }
+
         $this->conn = null;
         try {
             if ($this->driver === 'pgsql') {
@@ -36,6 +43,7 @@ class Database {
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::ATTR_PERSISTENT => true,
                 ];
             } else {
                 $dsn = "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";charset=utf8mb4";
@@ -43,12 +51,14 @@ class Database {
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::ATTR_PERSISTENT => true,
                 ];
                 if ($this->ssl) {
                     $opciones[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
                 }
             }
             $this->conn = new PDO($dsn, $this->username, $this->password, $opciones);
+            self::$cachedConn = $this->conn;
         } catch (PDOException $exception) {
             error_log("Error de conexión BD ({$this->driver}): " . $exception->getMessage());
             throw new RuntimeException("Error al conectar con la base de datos.");

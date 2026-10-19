@@ -7,6 +7,7 @@ require_once __DIR__ . '/../config/app.php';
  * Clase EstudiantePortal
  * Gestiona el acceso de solo lectura para estudiantes,
  * mostrando sus materias cursadas en formato de tarjetas con indicadores de avance y asistencia.
+ * Optimizado con consultas batch para máxima velocidad.
  */
 class EstudiantePortal {
     private PDO $conn;
@@ -36,6 +37,7 @@ class EstudiantePortal {
 
     /**
      * Retorna las materias cursadas por el estudiante con indicador de avance temático y asistencia
+     * Ejecutado con consultas batch agrupadas.
      */
     public function obtenerMisMaterias(int $id_estudiante, int $id_grado): array {
         $sql = "SELECT ad.id_asignacion, ad.carga_horaria,
@@ -53,48 +55,77 @@ class EstudiantePortal {
         $stmt->execute([':id_grado' => $id_grado]);
         $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        if (empty($materias)) {
+            return [];
+        }
+
+        $idsPlanes = array_values(array_filter(array_map(fn($m) => !empty($m['id_plan']) ? (int)$m['id_plan'] : null, $materias)));
+        $idsAsignaciones = array_values(array_filter(array_map(fn($m) => (int)$m['id_asignacion'], $materias)));
+
+        // Batch 1: Total temas
+        $totalTemasMap = [];
+        $temasDictadosMap = [];
+        if (!empty($idsPlanes)) {
+            $inPlanes = implode(',', array_fill(0, count($idsPlanes), '?'));
+            $sqlTotalTemas = "SELECT pu.id_plan, COUNT(pt.id_tema) AS total_temas
+                              FROM plan_temas pt
+                              JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
+                              JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
+                              WHERE pu.id_plan IN ($inPlanes)
+                              GROUP BY pu.id_plan";
+            $stmtTT = $this->conn->prepare($sqlTotalTemas);
+            $stmtTT->execute($idsPlanes);
+            $totalTemasMap = $stmtTT->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            $sqlDictados = "SELECT cd.id_plan, COUNT(DISTINCT cd.id_tema) AS temas_dictados
+                            FROM clases_diarias cd
+                            WHERE cd.id_plan IN ($inPlanes) AND cd.id_tema IS NOT NULL
+                            GROUP BY cd.id_plan";
+            $stmtTD = $this->conn->prepare($sqlDictados);
+            $stmtTD->execute($idsPlanes);
+            $temasDictadosMap = $stmtTD->fetchAll(PDO::FETCH_KEY_PAIR);
+        }
+
+        // Batch 2: Asistencias del estudiante en las asignaciones de este grado
+        $asistMap = [];
+        if (!empty($idsAsignaciones)) {
+            $inAsig = implode(',', array_fill(0, count($idsAsignaciones), '?'));
+            $paramsAsist = array_merge([$id_estudiante], $idsAsignaciones);
+            $sqlAsist = "SELECT h.id_asignacion, ae.estado, COUNT(*) AS cantidad
+                         FROM asistencias_estudiantes ae
+                         JOIN horarios h ON ae.id_horario = h.id_horario
+                         WHERE ae.id_estudiante = ? AND h.id_asignacion IN ($inAsig) AND ae.activo = 1
+                         GROUP BY h.id_asignacion, ae.estado";
+            $stmtAsist = $this->conn->prepare($sqlAsist);
+            $stmtAsist->execute($paramsAsist);
+            $asistRows = $stmtAsist->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($asistRows as $ar) {
+                $idAsig = (int)$ar['id_asignacion'];
+                $estado = strtoupper((string)$ar['estado']);
+                if (!isset($asistMap[$idAsig])) {
+                    $asistMap[$idAsig] = ['presente' => 0, 'tardanza' => 0, 'ausente' => 0];
+                }
+                if ($estado === 'PRESENTE') $asistMap[$idAsig]['presente'] += (int)$ar['cantidad'];
+                elseif ($estado === 'TARDANZA') $asistMap[$idAsig]['tardanza'] += (int)$ar['cantidad'];
+                elseif ($estado === 'AUSENTE' || $estado === 'FALTA') $asistMap[$idAsig]['ausente'] += (int)$ar['cantidad'];
+            }
+        }
+
+        // Ensamblado en memoria
         foreach ($materias as &$mat) {
             $idPlan = !empty($mat['id_plan']) ? (int)$mat['id_plan'] : null;
             $idAsig = (int)$mat['id_asignacion'];
 
-            // Conteo de temas en el plan
-            $totalTemas = 0;
-            $temasDictados = 0;
-            if ($idPlan !== null) {
-                $sqlT = "SELECT COUNT(pt.id_tema) 
-                         FROM plan_temas pt
-                         JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
-                         JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
-                         WHERE pu.id_plan = :id_plan";
-                $stmtT = $this->conn->prepare($sqlT);
-                $stmtT->execute([':id_plan' => $idPlan]);
-                $totalTemas = (int)$stmtT->fetchColumn();
-
-                $sqlD = "SELECT COUNT(DISTINCT cd.id_tema)
-                         FROM clases_diarias cd
-                         WHERE cd.id_plan = :id_plan AND cd.id_tema IS NOT NULL";
-                $stmtD = $this->conn->prepare($sqlD);
-                $stmtD->execute([':id_plan' => $idPlan]);
-                $temasDictados = (int)$stmtD->fetchColumn();
-            }
-
+            $totalTemas = (int)($totalTemasMap[$idPlan] ?? 0);
+            $temasDictados = (int)($temasDictadosMap[$idPlan] ?? 0);
             $mat['total_temas'] = $totalTemas;
             $mat['temas_dictados'] = $temasDictados;
             $mat['porcentaje_avance'] = ($totalTemas > 0) ? round(($temasDictados / $totalTemas) * 100) : 0;
 
-            // Conteo de asistencias del estudiante en esta materia
-            $sqlAsist = "SELECT ae.estado, COUNT(*) AS cantidad
-                         FROM asistencias_estudiantes ae
-                         JOIN horarios h ON ae.id_horario = h.id_horario
-                         WHERE ae.id_estudiante = :id_estudiante AND h.id_asignacion = :id_asignacion AND ae.activo = 1
-                         GROUP BY ae.estado";
-            $stmtAsist = $this->conn->prepare($sqlAsist);
-            $stmtAsist->execute([':id_estudiante' => $id_estudiante, ':id_asignacion' => $idAsig]);
-            $raw = $stmtAsist->fetchAll(PDO::FETCH_KEY_PAIR);
-
-            $p = (int)($raw['PRESENTE'] ?? $raw['presente'] ?? 0);
-            $t = (int)($raw['TARDANZA'] ?? $raw['tardanza'] ?? 0);
-            $a = (int)($raw['AUSENTE'] ?? $raw['ausente'] ?? $raw['FALTA'] ?? 0);
+            $p = $asistMap[$idAsig]['presente'] ?? 0;
+            $t = $asistMap[$idAsig]['tardanza'] ?? 0;
+            $a = $asistMap[$idAsig]['ausente'] ?? 0;
             $total = $p + $t + $a;
 
             $mat['asistencias_presente'] = $p;

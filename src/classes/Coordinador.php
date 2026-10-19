@@ -6,6 +6,7 @@ require_once __DIR__ . '/../config/app.php';
 /**
  * Clase Coordinador
  * Gestiona el alcance operativo, métricas y exploración pedagógica para coordinadores.
+ * Optimizado con consultas batch masivas para máxima velocidad y mínima latencia.
  */
 class Coordinador {
     private PDO $conn;
@@ -15,9 +16,7 @@ class Coordinador {
     }
 
     /**
-     * Retorna los grados que supervisa un usuario.
-     * Si el rol es SuperAdmin o Administrador, o si no tiene asignaciones específicas,
-     * retorna todos los grados activos.
+     * Retorna los grados que supervisa un usuario con métricas cuantitativas agrupadas en batch.
      */
     public function obtenerGradosCoordinados(int $id_usuario, ?string $rol = null): array {
         $esAdmin = in_array($rol, ['SuperAdmin', 'Administrador', 'Administracion'], true);
@@ -49,7 +48,6 @@ class Coordinador {
                 $stmt = $this->conn->prepare($sql);
                 $stmt->execute([':id_usuario' => $id_usuario]);
             } else {
-                // Fallback: si es coordinador pero aún no le asignaron específicos, lista todos los activos
                 $sql = "SELECT g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno, g.anho_lectivo,
                                a.id_aula, a.nombre AS aula_nombre, a.capacidad, a.codigo_sala, a.ubicacion
                         FROM grados g
@@ -63,12 +61,55 @@ class Coordinador {
 
         $grados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Enriquecer cada grado con estadísticas rápidas
+        if (empty($grados)) {
+            return [];
+        }
+
+        $idsGrados = array_map(fn($g) => (int)$g['id_grado'], $grados);
+        $inClause = implode(',', array_fill(0, count($idsGrados), '?'));
+
+        // Batch 1: Conteo de estudiantes por grado
+        $sqlEstCount = "SELECT id_grado, COUNT(*) AS total FROM estudiantes WHERE id_grado IN ($inClause) AND activo = 1 GROUP BY id_grado";
+        $stmtEstCount = $this->conn->prepare($sqlEstCount);
+        $stmtEstCount->execute($idsGrados);
+        $estCountMap = $stmtEstCount->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        // Batch 2: Conteo de materias por grado
+        $sqlMatCount = "SELECT id_grado, COUNT(DISTINCT id_materia) AS total FROM asignacion_docente WHERE id_grado IN ($inClause) AND activo = 1 GROUP BY id_grado";
+        $stmtMatCount = $this->conn->prepare($sqlMatCount);
+        $stmtMatCount->execute($idsGrados);
+        $matCountMap = $stmtMatCount->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        // Batch 3: Asistencia de hoy por grado
+        $hoy = date('Y-m-d');
+        $paramsHoy = array_merge($idsGrados, [$hoy]);
+        $sqlHoyCount = "SELECT e.id_grado, ae.estado, COUNT(DISTINCT ae.id_estudiante) AS total
+                        FROM asistencias_estudiantes ae
+                        JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
+                        WHERE e.id_grado IN ($inClause) AND ae.fecha = ? AND ae.activo = 1
+                        GROUP BY e.id_grado, ae.estado";
+        $stmtHoyCount = $this->conn->prepare($sqlHoyCount);
+        $stmtHoyCount->execute($paramsHoy);
+        $hoyRows = $stmtHoyCount->fetchAll(PDO::FETCH_ASSOC);
+
+        $asistHoyMap = [];
+        foreach ($hoyRows as $hr) {
+            $idG = (int)$hr['id_grado'];
+            $est = strtoupper((string)$hr['estado']);
+            if (!isset($asistHoyMap[$idG])) {
+                $asistHoyMap[$idG] = ['presentes' => 0, 'tardanzas' => 0, 'ausentes' => 0];
+            }
+            if ($est === 'PRESENTE') $asistHoyMap[$idG]['presentes'] += (int)$hr['total'];
+            elseif ($est === 'TARDANZA') $asistHoyMap[$idG]['tardanzas'] += (int)$hr['total'];
+            elseif ($est === 'AUSENTE' || $est === 'FALTA') $asistHoyMap[$idG]['ausentes'] += (int)$hr['total'];
+        }
+
+        // Enriquecer en memoria (0 consultas adicionales)
         foreach ($grados as &$grado) {
-            $id_grado = (int)$grado['id_grado'];
-            $grado['total_estudiantes'] = $this->contarEstudiantesGrado($id_grado);
-            $grado['total_materias'] = $this->contarMateriasGrado($id_grado);
-            $grado['metricas_hoy'] = $this->obtenerMetricasAsistenciaGradoHoy($id_grado);
+            $idG = (int)$grado['id_grado'];
+            $grado['total_estudiantes'] = (int)($estCountMap[$idG] ?? 0);
+            $grado['total_materias'] = (int)($matCountMap[$idG] ?? 0);
+            $grado['metricas_hoy'] = $asistHoyMap[$idG] ?? ['presentes' => 0, 'tardanzas' => 0, 'ausentes' => 0];
         }
 
         return $grados;
@@ -96,15 +137,9 @@ class Coordinador {
             ];
         }
 
+        $totalEstudiantes = array_sum(array_column($grados, 'total_estudiantes'));
+
         $inClause = implode(',', array_fill(0, count($idsGrados), '?'));
-
-        // Total estudiantes matriculados en sus grados
-        $sqlEst = "SELECT COUNT(*) FROM estudiantes WHERE id_grado IN ($inClause) AND activo = 1";
-        $stmtEst = $this->conn->prepare($sqlEst);
-        $stmtEst->execute($idsGrados);
-        $totalEstudiantes = (int)$stmtEst->fetchColumn();
-
-        // Conteo de asistencias por estado para la fecha
         $params = array_merge($idsGrados, [$fecha]);
         $sqlAsist = "SELECT ae.estado, COUNT(DISTINCT ae.id_estudiante) AS total
                      FROM asistencias_estudiantes ae
@@ -140,7 +175,8 @@ class Coordinador {
     }
 
     /**
-     * Retorna toda la información detallada para el Explorador de Aula (3 Pestañas)
+     * Retorna la información detallada para el Explorador de Aula (3 Pestañas)
+     * Ejecutado con consultas batch de alta velocidad.
      */
     public function obtenerDetalleAula(int $id_grado): ?array {
         // 1. Datos del grado y aula
@@ -158,7 +194,7 @@ class Coordinador {
             return null;
         }
 
-        // 2. Pestaña 1: Materias asignadas
+        // 2. Materias asignadas
         $sqlMaterias = "SELECT ad.id_asignacion, ad.carga_horaria,
                                m.id_materia, m.nombre AS materia_nombre,
                                p.id_profesor, p.nombre AS prof_nombre, p.apellido AS prof_apellido, p.cedula_identidad AS prof_ci,
@@ -173,49 +209,103 @@ class Coordinador {
         $stmtMaterias->execute([':id_grado' => $id_grado]);
         $materias = $stmtMaterias->fetchAll(PDO::FETCH_ASSOC);
 
-        // Estudiantes del grado para el cálculo de asistencia por materia
+        // Estudiantes del grado
         $estudiantesGrado = $this->obtenerEstudiantesGrado($id_grado);
 
-        foreach ($materias as &$materia) {
-            $id_plan = !empty($materia['id_plan']) ? (int)$materia['id_plan'] : null;
-            $id_asignacion = (int)$materia['id_asignacion'];
+        // Optimizaciones batch para materias
+        $idsPlanes = array_values(array_filter(array_map(fn($m) => !empty($m['id_plan']) ? (int)$m['id_plan'] : null, $materias)));
+        $idsAsignaciones = array_values(array_filter(array_map(fn($m) => (int)$m['id_asignacion'], $materias)));
 
-            // Conteo de temas totales del plan
-            $totalTemas = 0;
-            $temasDictados = 0;
+        // Batch: Temas totales de los planes de esta aula
+        $totalTemasMap = [];
+        $temasDictadosMap = [];
+        if (!empty($idsPlanes)) {
+            $inPlanes = implode(',', array_fill(0, count($idsPlanes), '?'));
+            
+            $sqlTotalTemas = "SELECT pu.id_plan, COUNT(pt.id_tema) AS total_temas
+                              FROM plan_temas pt
+                              JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
+                              JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
+                              WHERE pu.id_plan IN ($inPlanes)
+                              GROUP BY pu.id_plan";
+            $stmtTT = $this->conn->prepare($sqlTotalTemas);
+            $stmtTT->execute($idsPlanes);
+            $totalTemasMap = $stmtTT->fetchAll(PDO::FETCH_KEY_PAIR);
 
-            if ($id_plan !== null) {
-                $sqlTemas = "SELECT COUNT(pt.id_tema) 
-                             FROM plan_temas pt
-                             JOIN plan_capacidades pc ON pt.id_capacidad = pc.id_capacidad
-                             JOIN plan_unidades pu ON pc.id_unidad = pu.id_unidad
-                             WHERE pu.id_plan = :id_plan";
-                $stmtTemas = $this->conn->prepare($sqlTemas);
-                $stmtTemas->execute([':id_plan' => $id_plan]);
-                $totalTemas = (int)$stmtTemas->fetchColumn();
+            $sqlDictados = "SELECT cd.id_plan, COUNT(DISTINCT cd.id_tema) AS temas_dictados
+                            FROM clases_diarias cd
+                            WHERE cd.id_plan IN ($inPlanes) AND cd.id_tema IS NOT NULL
+                            GROUP BY cd.id_plan";
+            $stmtTD = $this->conn->prepare($sqlDictados);
+            $stmtTD->execute($idsPlanes);
+            $temasDictadosMap = $stmtTD->fetchAll(PDO::FETCH_KEY_PAIR);
+        }
 
-                // Temas dictados (registrados en clases_diarias)
-                $sqlDictados = "SELECT COUNT(DISTINCT cd.id_tema)
-                                FROM clases_diarias cd
-                                WHERE cd.id_plan = :id_plan AND cd.id_tema IS NOT NULL";
-                $stmtDictados = $this->conn->prepare($sqlDictados);
-                $stmtDictados->execute([':id_plan' => $id_plan]);
-                $temasDictados = (int)$stmtDictados->fetchColumn();
+        // Batch: Asistencias de alumnos en las asignaciones de esta aula
+        $procesoMap = [];
+        if (!empty($idsAsignaciones)) {
+            $inAsig = implode(',', array_fill(0, count($idsAsignaciones), '?'));
+            $sqlAsistAll = "SELECT h.id_asignacion, ae.id_estudiante, ae.estado, COUNT(*) AS cantidad
+                            FROM asistencias_estudiantes ae
+                            JOIN horarios h ON ae.id_horario = h.id_horario
+                            WHERE h.id_asignacion IN ($inAsig) AND ae.activo = 1
+                            GROUP BY h.id_asignacion, ae.id_estudiante, ae.estado";
+            $stmtAsistAll = $this->conn->prepare($sqlAsistAll);
+            $stmtAsistAll->execute($idsAsignaciones);
+            $asistAllRows = $stmtAsistAll->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($asistAllRows as $ar) {
+                $idAsig = (int)$ar['id_asignacion'];
+                $idEst = (int)$ar['id_estudiante'];
+                $est = strtoupper((string)$ar['estado']);
+                if (!isset($procesoMap[$idAsig][$idEst])) {
+                    $procesoMap[$idAsig][$idEst] = ['presentes' => 0, 'tardanzas' => 0, 'ausentes' => 0];
+                }
+                if ($est === 'PRESENTE') $procesoMap[$idAsig][$idEst]['presentes'] += (int)$ar['cantidad'];
+                elseif ($est === 'TARDANZA') $procesoMap[$idAsig][$idEst]['tardanzas'] += (int)$ar['cantidad'];
+                elseif ($est === 'AUSENTE' || $est === 'FALTA') $procesoMap[$idAsig][$idEst]['ausentes'] += (int)$ar['cantidad'];
             }
+        }
 
+        // Ensamblado en memoria
+        foreach ($materias as &$materia) {
+            $idPlan = !empty($materia['id_plan']) ? (int)$materia['id_plan'] : null;
+            $idAsig = (int)$materia['id_asignacion'];
+
+            $totalTemas = (int)($totalTemasMap[$idPlan] ?? 0);
+            $temasDictados = (int)($temasDictadosMap[$idPlan] ?? 0);
             $porcentajeAvance = ($totalTemas > 0) ? round(($temasDictados / $totalTemas) * 100) : 0;
+
             $materia['total_temas'] = $totalTemas;
             $materia['temas_dictados'] = $temasDictados;
             $materia['porcentaje_avance'] = $porcentajeAvance;
 
-            // Desglose de proceso/asistencia de alumnos en esta materia
-            $materia['alumnos_proceso'] = $this->obtenerProcesoAlumnosMateria($id_asignacion, $estudiantesGrado);
+            // Formar lista de proceso de alumnos
+            $alumnosProceso = [];
+            foreach ($estudiantesGrado as $eg) {
+                $idEst = (int)$eg['id_estudiante'];
+                $p = $procesoMap[$idAsig][$idEst]['presentes'] ?? 0;
+                $t = $procesoMap[$idAsig][$idEst]['tardanzas'] ?? 0;
+                $a = $procesoMap[$idAsig][$idEst]['ausentes'] ?? 0;
+                $tot = $p + $t + $a;
+                $tasa = ($tot > 0) ? round((($p + $t) / $tot) * 100) : 100;
+
+                $alumnosProceso[] = [
+                    'id_estudiante' => $idEst,
+                    'nombre_completo' => $eg['apellido'] . ', ' . $eg['nombre'],
+                    'cedula_identidad' => $eg['cedula_identidad'],
+                    'presentes' => $p,
+                    'tardanzas' => $t,
+                    'ausentes' => $a,
+                    'total_clases' => $tot,
+                    'porcentaje' => $tasa,
+                ];
+            }
+            $materia['alumnos_proceso'] = $alumnosProceso;
         }
 
-        // 3. Pestaña 2: Estudiantes
+        // 3. Estudiantes y 4. Tutores
         $estudiantes = $estudiantesGrado;
-
-        // 4. Pestaña 3: Tutores del grado
         $tutores = $this->obtenerTutoresPorGrado($id_grado);
 
         return [
@@ -227,7 +317,7 @@ class Coordinador {
     }
 
     /**
-     * Estudiantes matriculados en un grado con información de sus tutores
+     * Estudiantes matriculados en un grado con información de sus tutores en batch
      */
     public function obtenerEstudiantesGrado(int $id_grado): array {
         $sql = "SELECT e.id_estudiante, e.nombre, e.apellido, e.cedula_identidad,
@@ -241,26 +331,33 @@ class Coordinador {
         $stmt->execute([':id_grado' => $id_grado]);
         $estudiantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        if (empty($estudiantes)) {
+            return [];
+        }
+
+        $idsEstudiantes = array_map(fn($e) => (int)$e['id_estudiante'], $estudiantes);
+        $inClause = implode(',', array_fill(0, count($idsEstudiantes), '?'));
+
+        // Batch query de tutores para todos los alumnos del curso
+        $sqlTutores = "SELECT et.id_estudiante, t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email,
+                              et.parentesco, et.es_principal
+                       FROM estudiante_tutores et
+                       JOIN tutores t ON et.id_tutor = t.id_tutor
+                       WHERE et.id_estudiante IN ($inClause) AND et.activo = 1";
+        $stmtTut = $this->conn->prepare($sqlTutores);
+        $stmtTut->execute($idsEstudiantes);
+        $tutoresRows = $stmtTut->fetchAll(PDO::FETCH_ASSOC);
+
+        $tutoresMap = [];
+        foreach ($tutoresRows as $tr) {
+            $tutoresMap[(int)$tr['id_estudiante']][] = $tr;
+        }
+
         foreach ($estudiantes as &$est) {
-            $id_est = (int)$est['id_estudiante'];
-            $est['tutores'] = $this->obtenerTutoresDeEstudiante($id_est);
+            $est['tutores'] = $tutoresMap[(int)$est['id_estudiante']] ?? [];
         }
 
         return $estudiantes;
-    }
-
-    /**
-     * Tutores vinculados a un estudiante
-     */
-    public function obtenerTutoresDeEstudiante(int $id_estudiante): array {
-        $sql = "SELECT t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email,
-                       et.parentesco, et.es_principal
-                FROM estudiante_tutores et
-                JOIN tutores t ON et.id_tutor = t.id_tutor
-                WHERE et.id_estudiante = :id_estudiante AND et.activo = 1";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':id_estudiante' => $id_estudiante]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -279,7 +376,6 @@ class Coordinador {
         $stmt->execute([':id_grado' => $id_grado]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Agrupar por tutor
         $tutoresMap = [];
         foreach ($rows as $r) {
             $idTutor = (int)$r['id_tutor'];
@@ -303,89 +399,5 @@ class Coordinador {
         }
 
         return array_values($tutoresMap);
-    }
-
-    /**
-     * Resumen de asistencia de alumnos para una materia/asignación específica
-     */
-    private function obtenerProcesoAlumnosMateria(int $id_asignacion, array $estudiantes): array {
-        // Enlazar asistencias a través de los horarios de esta asignación
-        $sql = "SELECT ae.id_estudiante, ae.estado, COUNT(*) AS cantidad
-                FROM asistencias_estudiantes ae
-                JOIN horarios h ON ae.id_horario = h.id_horario
-                WHERE h.id_asignacion = :id_asignacion AND ae.activo = 1
-                GROUP BY ae.id_estudiante, ae.estado";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':id_asignacion' => $id_asignacion]);
-        $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $map = [];
-        foreach ($registros as $reg) {
-            $idEst = (int)$reg['id_estudiante'];
-            $estado = strtoupper((string)$reg['estado']);
-            if (!isset($map[$idEst])) {
-                $map[$idEst] = ['presentes' => 0, 'ausentes' => 0, 'tardanzas' => 0];
-            }
-            if ($estado === 'PRESENTE') {
-                $map[$idEst]['presentes'] += (int)$reg['cantidad'];
-            } elseif ($estado === 'TARDANZA') {
-                $map[$idEst]['tardanzas'] += (int)$reg['cantidad'];
-            } elseif ($estado === 'AUSENTE' || $estado === 'FALTA') {
-                $map[$idEst]['ausentes'] += (int)$reg['cantidad'];
-            }
-        }
-
-        $resultado = [];
-        foreach ($estudiantes as $est) {
-            $idEst = (int)$est['id_estudiante'];
-            $p = $map[$idEst]['presentes'] ?? 0;
-            $a = $map[$idEst]['ausentes'] ?? 0;
-            $t = $map[$idEst]['tardanzas'] ?? 0;
-            $totalClases = $p + $a + $t;
-            $tasa = ($totalClases > 0) ? round((($p + $t) / $totalClases) * 100) : 100;
-
-            $resultado[] = [
-                'id_estudiante' => $idEst,
-                'nombre_completo' => $est['apellido'] . ', ' . $est['nombre'],
-                'cedula_identidad' => $est['cedula_identidad'],
-                'presentes' => $p,
-                'ausentes' => $a,
-                'tardanzas' => $t,
-                'total_clases' => $totalClases,
-                'porcentaje' => $tasa,
-            ];
-        }
-
-        return $resultado;
-    }
-
-    private function contarEstudiantesGrado(int $id_grado): int {
-        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM estudiantes WHERE id_grado = :id_grado AND activo = 1");
-        $stmt->execute([':id_grado' => $id_grado]);
-        return (int)$stmt->fetchColumn();
-    }
-
-    private function contarMateriasGrado(int $id_grado): int {
-        $stmt = $this->conn->prepare("SELECT COUNT(DISTINCT id_materia) FROM asignacion_docente WHERE id_grado = :id_grado AND activo = 1");
-        $stmt->execute([':id_grado' => $id_grado]);
-        return (int)$stmt->fetchColumn();
-    }
-
-    private function obtenerMetricasAsistenciaGradoHoy(int $id_grado): array {
-        $hoy = date('Y-m-d');
-        $sql = "SELECT ae.estado, COUNT(DISTINCT ae.id_estudiante) AS total
-                FROM asistencias_estudiantes ae
-                JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
-                WHERE e.id_grado = :id_grado AND ae.fecha = :fecha AND ae.activo = 1
-                GROUP BY ae.estado";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':id_grado' => $id_grado, ':fecha' => $hoy]);
-        $raw = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-        return [
-            'presentes' => (int)($raw['PRESENTE'] ?? $raw['presente'] ?? 0),
-            'tardanzas' => (int)($raw['TARDANZA'] ?? $raw['tardanza'] ?? 0),
-            'ausentes' => (int)($raw['AUSENTE'] ?? $raw['ausente'] ?? 0),
-        ];
     }
 }
