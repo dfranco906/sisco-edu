@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnDispararHuella.addEventListener('click', () => {
         const idEst = simularSelectEst.value;
         if (!idEst) {
-            alert("Por favor seleccione un estudiante en el menú desplegable");
+            window.Toast ? Toast.warning("Por favor seleccione un estudiante en el menú desplegable") : alert("Por favor seleccione un estudiante");
             return;
         }
         if (!currentClaseData) return;
@@ -525,12 +525,17 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(r => r.json())
         .then(res => {
             if (res.status === 'success') {
+                if (window.Toast) Toast.success("Marcación biométrica registrada exitosamente");
                 refrescarPanel(true);
             } else {
-                alert(`Error: ${res.message}`);
+                if (window.Toast) Toast.error(res.message, "Error en simulación");
+                else alert(`Error: ${res.message}`);
             }
         })
-        .catch(e => alert(e.message));
+        .catch(e => {
+            if (window.Toast) Toast.error(e.message);
+            else alert(e.message);
+        });
     });
 
     btnSimularProf.addEventListener('click', () => {
@@ -549,12 +554,17 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(r => r.json())
         .then(res => {
             if (res.status === 'success') {
+                if (window.Toast) Toast.success("Profesor registrado en el aula");
                 refrescarPanel(true);
             } else {
-                alert(`Error: ${res.message}`);
+                if (window.Toast) Toast.error(res.message, "Error");
+                else alert(`Error: ${res.message}`);
             }
         })
-        .catch(e => alert(e.message));
+        .catch(e => {
+            if (window.Toast) Toast.error(e.message);
+            else alert(e.message);
+        });
     });
 
     btnMarcarTodos.addEventListener('click', () => {

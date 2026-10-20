@@ -1,51 +1,53 @@
-let itemEditando = null;
-
 document.addEventListener("DOMContentLoaded", () => {
     const btnCrear = document.getElementById("btn-crear");
     const modalCrear = document.getElementById("modal-crear");
-    const cerrarCrear = document.getElementById("cerrar-modal");
+    const cerrarModal = document.getElementById("cerrar-modal");
     const formCrear = document.getElementById("form-crear");
     const mensajeCrear = document.getElementById("mensaje-form");
 
     const modalEditar = document.getElementById("modal-editar");
+    const cerrarModalEditar = document.getElementById("cerrar-modal-editar");
     const cancelarEditar = document.getElementById("cancelar-editar");
-    const cerrarEditar = document.getElementById("cerrar-modal-editar");
     const formEditar = document.getElementById("form-editar");
     const mensajeEditar = document.getElementById("mensaje-editar");
 
-    const abrirModal = (modal) => {
-        modal?.classList.remove("hidden");
-        document.body.classList.add("modal-open");
-    };
+    let itemEditando = null;
 
-    const cerrarModal = (modal) => {
-        modal?.classList.add("hidden");
-        if (!document.querySelector(".app-modal:not(.hidden)")) document.body.classList.remove("modal-open");
-    };
-
-    if (btnCrear && modalCrear) btnCrear.onclick = () => abrirModal(modalCrear);
-    if (cerrarCrear && modalCrear) cerrarCrear.onclick = () => cerrarModal(modalCrear);
-    document.querySelectorAll(".js-cerrar-modal-crear").forEach((boton) => {
-        boton.addEventListener("click", () => cerrarModal(modalCrear));
-    });
-
-    if (cancelarEditar && modalEditar) {
-        cancelarEditar.onclick = () => cerrarModal(modalEditar);
+    if (btnCrear && modalCrear) {
+        btnCrear.addEventListener("click", () => {
+            mensajeCrear.innerHTML = "";
+            modalCrear.classList.remove("hidden");
+            document.body.classList.add("modal-open");
+        });
     }
-    if (cerrarEditar && modalEditar) cerrarEditar.onclick = () => cerrarModal(modalEditar);
 
-    [modalCrear, modalEditar].forEach((modal) => {
-        modal?.addEventListener("click", (evento) => {
-            if (evento.target === modal) cerrarModal(modal);
+    if (cerrarModal && modalCrear) {
+        cerrarModal.addEventListener("click", () => {
+            modalCrear.classList.add("hidden");
+            document.body.classList.remove("modal-open");
+        });
+    }
+
+    document.querySelectorAll(".js-cerrar-modal-crear").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            modalCrear?.classList.add("hidden");
+            document.body.classList.remove("modal-open");
         });
     });
 
-    document.addEventListener("keydown", (evento) => {
-        if (evento.key === "Escape") {
-            cerrarModal(modalCrear);
-            cerrarModal(modalEditar);
-        }
-    });
+    if (cerrarModalEditar && modalEditar) {
+        cerrarModalEditar.addEventListener("click", () => {
+            modalEditar.classList.add("hidden");
+            document.body.classList.remove("modal-open");
+        });
+    }
+
+    if (cancelarEditar && modalEditar) {
+        cancelarEditar.addEventListener("click", () => {
+            modalEditar.classList.add("hidden");
+            document.body.classList.remove("modal-open");
+        });
+    }
 
     cargarSelects();
 
@@ -74,12 +76,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     ${exito ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
                 `;
 
+                if (window.Toast) {
+                    if (exito) {
+                        Toast.success(data.message ?? "Registro guardado correctamente");
+                    } else {
+                        Toast.error(data.message ?? "Error al guardar el registro");
+                    }
+                }
+
                 if (exito) formCrear.reset();
 
             } catch (error) {
                 console.error(error);
                 mensajeCrear.className = "text-red-600 font-semibold mb-3";
                 mensajeCrear.innerHTML = "Error al procesar la solicitud";
+                if (window.Toast) Toast.error("Error al comunicarse con el servidor");
             }
         };
     }
@@ -101,20 +112,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 const data = await res.json();
+                const exito = data.status === "success";
 
-                mensajeEditar.className = data.status === "success"
+                mensajeEditar.className = exito
                     ? "text-green-600 font-semibold mb-3"
                     : "text-red-600 font-semibold mb-3";
 
                 mensajeEditar.innerHTML = `
                     ${data.message}
-                    ${data.status === "success" ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
+                    ${exito ? `<br><button onclick="location.reload()" class="btn btn-primary mt-3">Actualizar tabla</button>` : ""}
                 `;
+
+                if (window.Toast) {
+                    if (exito) {
+                        Toast.success(data.message ?? "Registro actualizado correctamente");
+                    } else {
+                        Toast.error(data.message ?? "Error al actualizar el registro");
+                    }
+                }
 
             } catch (error) {
                 console.error(error);
                 mensajeEditar.className = "text-red-600 font-semibold mb-3";
-                mensajeEditar.innerHTML = "Error al actualizar";
+                mensajeEditar.innerHTML = "Error al procesar la solicitud";
+                if (window.Toast) Toast.error("Error al actualizar el registro");
             }
         };
     }
@@ -160,7 +181,7 @@ window.editarRegistro = function(item) {
 
     camposEditables.forEach(campo => {
         campos.innerHTML += `
-            <label class="block mb-2 font-semibold">${campo}</label>
+            <label class="block mb-2 font-semibold text-slate-800 dark:text-slate-200 capitalize">${campo.replace('_', ' ')}</label>
             <input 
                 name="${campo}"
                 value="${item[campo] ?? ""}"
@@ -174,13 +195,26 @@ window.editarRegistro = function(item) {
     document.body.classList.add("modal-open");
 };
 
-async function ejecutarAccionRegistro(api, id, mensajeConfirmacion) {
+async function ejecutarAccionRegistro(api, id, mensajeConfirmacion, tipoAccion = 'warning') {
     if (!api || !window.ID_CAMPO) {
-        alert("Accion no configurada para este modulo");
+        if (window.Toast) {
+            Toast.warning("Acción no configurada para este módulo");
+        } else {
+            alert("Acción no configurada para este módulo");
+        }
         return;
     }
 
-    if (!confirm(mensajeConfirmacion)) return;
+    const confirmado = window.SISCO && window.SISCO.confirm
+        ? await SISCO.confirm({
+            title: tipoAccion === 'danger' ? "¿Eliminar permanentemente?" : "¿Confirmar operación?",
+            message: mensajeConfirmacion,
+            confirmText: tipoAccion === 'danger' ? "Eliminar" : "Confirmar",
+            type: tipoAccion
+        })
+        : confirm(mensajeConfirmacion);
+
+    if (!confirmado) return;
 
     const formData = new FormData();
     formData.append(window.ID_CAMPO, id);
@@ -199,18 +233,30 @@ async function ejecutarAccionRegistro(api, id, mensajeConfirmacion) {
         } catch (error) {
             data = {
                 status: res.ok ? "success" : "error",
-                message: texto || "Operacion finalizada"
+                message: texto || "Operación finalizada"
             };
         }
 
-        alert(data.message ?? "Operacion finalizada");
+        const esExito = data.status === "success";
 
-        if (data.status === "success") {
-            location.reload();
+        if (window.Toast) {
+            if (esExito) {
+                Toast.success(data.message ?? "Operación finalizada con éxito");
+            } else {
+                Toast.error(data.message ?? "No se pudo completar la operación");
+            }
+        }
+
+        if (esExito) {
+            setTimeout(() => {
+                location.reload();
+            }, 650);
         }
     } catch (error) {
         console.error(error);
-        alert("Error al procesar la solicitud");
+        if (window.Toast) {
+            Toast.error("Error al procesar la solicitud con el servidor");
+        }
     }
 }
 
@@ -218,7 +264,8 @@ window.desactivarRegistro = function(id) {
     ejecutarAccionRegistro(
         window.API_DESACTIVAR,
         id,
-        "Seguro que desea desactivar este registro?"
+        "¿Seguro que desea desactivar este registro?",
+        "warning"
     );
 };
 
@@ -226,7 +273,8 @@ window.restaurarRegistro = function(id) {
     ejecutarAccionRegistro(
         window.API_RESTAURAR,
         id,
-        "Seguro que desea restaurar este registro?"
+        "¿Seguro que desea restaurar este registro al estado activo?",
+        "primary"
     );
 };
 
@@ -234,6 +282,7 @@ window.eliminarRegistro = function(id) {
     ejecutarAccionRegistro(
         window.API_ELIMINAR,
         id,
-        "Seguro que desea eliminar este registro? Esta accion no se puede deshacer."
+        "¿Seguro que desea eliminar este registro permanentemente? Esta acción no se puede deshacer.",
+        "danger"
     );
 };

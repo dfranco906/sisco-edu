@@ -436,21 +436,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toast feedback
     function mostrarToast(mensaje, tipo = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `px-4 py-3 rounded-xl shadow-lg text-sm font-semibold pointer-events-auto transition-all transform duration-300 ease-out translate-y-2 opacity-0 flex items-center gap-2 ${
-            tipo === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
-        }`;
-        toast.innerHTML = `<span>${tipo === 'success' ? '✓' : '✕'}</span> <span>${mensaje}</span>`;
-        document.getElementById('toast-container').appendChild(toast);
-
-        requestAnimationFrame(() => {
-            toast.classList.remove('translate-y-2', 'opacity-0');
-        });
-
-        setTimeout(() => {
-            toast.classList.add('opacity-0', 'translate-y-2');
-            setTimeout(() => toast.remove(), 300);
-        }, 3500);
+        if (window.Toast) {
+            if (tipo === 'error') return Toast.error(mensaje);
+            if (tipo === 'warning') return Toast.warning(mensaje);
+            return Toast.success(mensaje);
+        }
+        console.log(`[${tipo}] ${mensaje}`);
     }
 
     // Modal close listeners
@@ -936,10 +927,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(e => mostrarToast(e.message, 'error'));
     });
 
-    window.confirmarEliminarPlan = function(idPlan) {
-        if (!confirm('¿Estás seguro de eliminar este plan anual completo junto con todas sus unidades, capacidades y temas? Esta acción no se puede deshacer.')) {
-            return;
-        }
+    window.confirmarEliminarPlan = async function(idPlan) {
+        const confirmado = await SISCO.confirm({
+            title: '¿Eliminar Plan Anual?',
+            message: '¿Estás seguro de eliminar este plan anual completo junto con todas sus unidades, capacidades y temas? Esta acción no se puede deshacer.',
+            confirmText: 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            type: 'danger'
+        });
+        if (!confirmado) return;
 
         fetch(API_ELIMINAR_PLAN, {
             method: 'POST',
@@ -1025,8 +1021,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(e => mostrarToast(e.message, 'error'));
     });
 
-    window.confirmarEliminarUnidad = function(idUnidad) {
-        if (!confirm('¿Eliminar esta unidad temática y todas sus capacidades y temas asociados?')) return;
+    window.confirmarEliminarUnidad = async function(idUnidad) {
+        const confirmado = await SISCO.confirm({
+            title: '¿Eliminar Unidad Temática?',
+            message: '¿Eliminar esta unidad temática y todas sus capacidades y temas asociados?',
+            confirmText: 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            type: 'danger'
+        });
+        if (!confirmado) return;
         fetch(API_ELIMINAR_UNIDAD, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1104,8 +1107,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(e => mostrarToast(e.message, 'error'));
     });
 
-    window.confirmarEliminarCapacidad = function(idCapacidad) {
-        if (!confirm('¿Eliminar esta capacidad MEC y todas sus lecciones programadas?')) return;
+    window.confirmarEliminarCapacidad = async function(idCapacidad) {
+        const confirmado = await SISCO.confirm({
+            title: '¿Eliminar Capacidad?',
+            message: '¿Eliminar esta capacidad MEC y todas sus lecciones programadas?',
+            confirmText: 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            type: 'danger'
+        });
+        if (!confirmado) return;
         fetch(API_ELIMINAR_CAPACIDAD, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1228,8 +1238,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(e => mostrarToast(e.message, 'error'));
     });
 
-    window.confirmarEliminarTema = function(idTema) {
-        if (!confirm('¿Eliminar este tema pedagógico y sus indicadores programados?')) return;
+    window.confirmarEliminarTema = async function(idTema) {
+        const confirmado = await SISCO.confirm({
+            title: '¿Eliminar Lección?',
+            message: '¿Eliminar este tema pedagógico y sus indicadores programados?',
+            confirmText: 'Sí, eliminar',
+            cancelText: 'Cancelar',
+            type: 'danger'
+        });
+        if (!confirmado) return;
         fetch(API_ELIMINAR_TEMA, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

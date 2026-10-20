@@ -345,7 +345,16 @@
     }
 
     async function desactivarHorario(idHorario) {
-        if (!confirm("¿Seguro que desea desactivar este horario?")) return;
+        const confirmado = window.SISCO && window.SISCO.confirm
+            ? await SISCO.confirm({
+                title: "Desactivar Horario",
+                message: "¿Seguro que desea desactivar este horario de clase?",
+                confirmText: "Desactivar",
+                type: "warning"
+            })
+            : confirm("¿Seguro que desea desactivar este horario?");
+
+        if (!confirmado) return;
 
         const datos = new FormData();
         datos.append("id_horario", idHorario);
@@ -353,13 +362,22 @@
         try {
             const json = await obtenerJson(config.apiDesactivar, { method: "POST", body: datos });
             if (json.status !== "success") {
-                alert(json.message || "No se pudo desactivar el horario.");
+                if (window.Toast) {
+                    Toast.error(json.message || "No se pudo desactivar el horario.");
+                } else {
+                    alert(json.message || "No se pudo desactivar el horario.");
+                }
                 return;
             }
+            if (window.Toast) Toast.success("Horario desactivado correctamente");
             await recargarHorarios();
         } catch (error) {
             console.error(error);
-            alert("Error al desactivar el horario.");
+            if (window.Toast) {
+                Toast.error("Error al desactivar el horario.");
+            } else {
+                alert("Error al desactivar el horario.");
+            }
         }
     }
 

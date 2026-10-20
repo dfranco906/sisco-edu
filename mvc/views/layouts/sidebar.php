@@ -177,6 +177,18 @@ $adminPaths = [
         </div>
 
         <div class="flex items-center gap-1">
+            <!-- Botón Cambiar Tema (Header Sidebar) -->
+            <button type="button" data-action="toggle-theme"
+                    class="sidebar-theme-toggle hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+                    title="Alternar Modo Oscuro / Claro" aria-label="Alternar tema claro y oscuro">
+                <svg class="theme-icon-sun w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg class="theme-icon-moon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+
             <!-- Botón Colapsar / Expandir (Solo Desktop) -->
             <button id="app-sidebar-collapse-btn" type="button"
                     class="sidebar-collapse-btn hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
@@ -249,8 +261,23 @@ $adminPaths = [
         <?php endforeach; ?>
     </nav>
 
-    <!-- Botón de Cerrar Sesión -->
-    <div class="pt-3 mt-auto border-t border-slate-800/80">
+    <!-- Alternar Tema y Botón de Cerrar Sesión -->
+    <div class="pt-3 mt-auto border-t border-slate-800/80 space-y-1">
+        <button type="button" data-action="toggle-theme"
+           class="app-theme-btn w-full group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer">
+            <svg class="theme-icon-sun w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="theme-icon-moon w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <span class="app-nav-text flex-1 truncate text-left">Modo Claro / Oscuro</span>
+            
+            <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
+                Cambiar tema
+            </span>
+        </button>
+
         <a href="<?= base_url('src/api/logout.php') ?>"
            class="app-logout group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-200 hover:bg-rose-950/30 transition-colors">
             <svg class="app-nav-icon w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
