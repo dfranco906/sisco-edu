@@ -94,7 +94,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
         <div class="app-table-wrap">
             <table class="min-w-full text-sm">
-                <thead class="bg-gray-100">
+                <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                     <tr>
                         <?php foreach ($columnas as $col): ?>
                             <th class="p-3 text-left"><?= ucfirst(str_replace('_', ' ', $col)) ?></th>

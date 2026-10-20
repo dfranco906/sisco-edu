@@ -23,22 +23,22 @@ $nivelesDisponibles = array_values(array_filter(array_unique(array_map(fn($g) =>
 $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn($g) => trim((string)($g['bachillerato_nombre'] ?? '')), $grados))));
 ?>
 
-<main class="flex-1 p-6 md:p-10 bg-slate-950 text-slate-100 min-h-screen">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-10">
     <!-- Encabezado -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 font-bold text-lg">🏫</span>
-                <h2 class="text-2xl font-bold tracking-tight text-white">Coordinación Académica</h2>
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400 font-bold text-lg">🏫</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Coordinación Académica</h2>
             </div>
-            <p class="text-sm text-slate-400 mt-1">Supervisión en tiempo real de asistencia, grados coordinados y avance pedagógico</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Supervisión en tiempo real de asistencia, grados coordinados y avance pedagógico</p>
         </div>
 
-        <form method="GET" class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-xl">
-            <label for="fecha" class="text-xs text-slate-400 font-medium px-1">Fecha:</label>
+        <form method="GET" class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 rounded-xl shadow-sm">
+            <label for="fecha" class="text-xs text-slate-500 dark:text-slate-400 font-medium px-1">Fecha:</label>
             <input type="date" id="fecha" name="fecha" value="<?= htmlspecialchars($fechaFiltro, ENT_QUOTES, 'UTF-8') ?>"
-                   class="bg-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-indigo-500">
-            <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors">
+                   class="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500">
+            <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
                 Filtrar
             </button>
         </form>
@@ -47,69 +47,69 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
     <!-- Métricas del Día (KPI Cards) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <!-- Presentes -->
-        <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 to-slate-900 border border-emerald-800/40 shadow-sm relative overflow-hidden">
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/40 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800/40 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Presentes Hoy</span>
-                <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-lg">🟢</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Presentes Hoy</span>
+                <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-lg">🟢</span>
             </div>
             <div class="mt-3 flex items-baseline gap-2">
-                <span class="text-3xl font-extrabold text-white"><?= $metricas['presentes'] ?></span>
-                <span class="text-xs text-emerald-400 font-medium">alumnos</span>
+                <span class="text-3xl font-extrabold text-slate-900 dark:text-white"><?= $metricas['presentes'] ?></span>
+                <span class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">alumnos</span>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Marcación biométrica puntual</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Marcación biométrica puntual</p>
         </div>
 
         <!-- Ausentes -->
-        <div class="p-5 rounded-2xl bg-gradient-to-br from-rose-950/40 to-slate-900 border border-rose-800/40 shadow-sm relative overflow-hidden">
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-rose-100/40 dark:from-rose-950/40 dark:to-slate-900 border border-rose-200 dark:border-rose-800/40 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-rose-400">Ausentes</span>
-                <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 text-lg">🔴</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">Ausentes</span>
+                <span class="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 text-lg">🔴</span>
             </div>
             <div class="mt-3 flex items-baseline gap-2">
-                <span class="text-3xl font-extrabold text-white"><?= $metricas['ausentes'] ?></span>
-                <span class="text-xs text-rose-400 font-medium">alumnos</span>
+                <span class="text-3xl font-extrabold text-slate-900 dark:text-white"><?= $metricas['ausentes'] ?></span>
+                <span class="text-xs text-rose-700 dark:text-rose-400 font-medium">alumnos</span>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Sin registro biométrico al momento</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Sin registro biométrico al momento</p>
         </div>
 
         <!-- Tardanzas -->
-        <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-950/40 to-slate-900 border border-amber-800/40 shadow-sm relative overflow-hidden">
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/40 dark:from-amber-950/40 dark:to-slate-900 border border-amber-200 dark:border-amber-800/40 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Tardanzas</span>
-                <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 text-lg">🟡</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Tardanzas</span>
+                <span class="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-lg">🟡</span>
             </div>
             <div class="mt-3 flex items-baseline gap-2">
-                <span class="text-3xl font-extrabold text-white"><?= $metricas['tardanzas'] ?></span>
-                <span class="text-xs text-amber-400 font-medium">alumnos</span>
+                <span class="text-3xl font-extrabold text-slate-900 dark:text-white"><?= $metricas['tardanzas'] ?></span>
+                <span class="text-xs text-amber-700 dark:text-amber-400 font-medium">alumnos</span>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Ingresos fuera del margen de tolerancia</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Ingresos fuera de tolerancia</p>
         </div>
 
         <!-- Justificados / Tasa General -->
-        <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-800/40 shadow-sm relative overflow-hidden">
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/40 dark:from-indigo-950/40 dark:to-slate-900 border border-indigo-200 dark:border-indigo-800/40 shadow-sm relative overflow-hidden">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Tasa de Asistencia</span>
-                <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 text-lg">📊</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">Tasa de Asistencia</span>
+                <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-lg">📊</span>
             </div>
             <div class="mt-3 flex items-baseline gap-2">
-                <span class="text-3xl font-extrabold text-white"><?= $metricas['porcentaje_asistencia'] ?>%</span>
-                <span class="text-xs text-slate-400">de <?= $metricas['total_estudiantes'] ?> matriculados</span>
+                <span class="text-3xl font-extrabold text-slate-900 dark:text-white"><?= $metricas['porcentaje_asistencia'] ?>%</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">de <?= $metricas['total_estudiantes'] ?> matriculados</span>
             </div>
-            <p class="text-xs text-indigo-300 mt-2"><?= $metricas['justificados'] ?> justificados hoy</p>
+            <p class="text-xs text-indigo-600 dark:text-indigo-300 mt-2"><?= $metricas['justificados'] ?> justificados hoy</p>
         </div>
     </div>
 
     <!-- Barra de Filtros en Cascada y Navegación Pedagógica -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-6 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80 mb-3">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl mb-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80 mb-3">
             <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-600 inline-block"></span>
                     Filtros de Navegación Pedagógica en Cascada
                 </h3>
-                <p class="text-xs text-slate-400">Elegí turno, ciclo formativo o bachillerato para localizar el aula al instante.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Elegí turno, ciclo formativo o bachillerato para localizar el aula al instante.</p>
             </div>
-            <span id="label-conteo-aulas" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 text-indigo-300 border border-slate-700 shrink-0">
+            <span id="label-conteo-aulas" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-700 shrink-0">
                 <?= count($grados) ?> aula(s)
             </span>
         </div>
@@ -117,10 +117,10 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <!-- 1. Turno -->
             <div>
-                <label for="filtro-coord-turno" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                <label for="filtro-coord-turno" class="block font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                     1. Turno
                 </label>
-                <select id="filtro-coord-turno" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                <select id="filtro-coord-turno" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
                     <option value="">Todos los turnos</option>
                     <?php foreach ($turnosDisponibles as $t): ?>
                         <option value="<?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></option>
@@ -130,10 +130,10 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
 
             <!-- 2. Ciclo / Nivel -->
             <div>
-                <label for="filtro-coord-nivel" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                <label for="filtro-coord-nivel" class="block font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                     2. Ciclo / Nivel
                 </label>
-                <select id="filtro-coord-nivel" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                <select id="filtro-coord-nivel" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
                     <option value="">Todos los ciclos</option>
                     <?php foreach ($nivelesDisponibles as $n): ?>
                         <option value="<?= htmlspecialchars($n, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($n, ENT_QUOTES, 'UTF-8') ?></option>
@@ -143,10 +143,10 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
 
             <!-- 3. Bachillerato -->
             <div>
-                <label for="filtro-coord-bach" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                <label for="filtro-coord-bach" class="block font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                     3. Bachillerato
                 </label>
-                <select id="filtro-coord-bach" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                <select id="filtro-coord-bach" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
                     <option value="">Todos / General</option>
                     <?php foreach ($bachilleratosDisponibles as $b): ?>
                         <option value="<?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?></option>
@@ -156,18 +156,18 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
 
             <!-- 4. Buscador por texto -->
             <div>
-                <label for="filtro-coord-busqueda" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                <label for="filtro-coord-busqueda" class="block font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                     Buscar Aula o Curso
                 </label>
                 <input type="text" id="filtro-coord-busqueda" placeholder="Ej: 1° BTI, Sala 4..."
-                       class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+                       class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
             </div>
         </div>
     </div>
 
     <?php if (empty($grados)): ?>
-        <div class="p-12 text-center rounded-2xl bg-slate-900/50 border border-slate-800">
-            <p class="text-base font-semibold text-slate-300">No tienes aulas o grados asignados a tu supervisión actualmente.</p>
+        <div class="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <p class="text-base font-semibold text-slate-700 dark:text-slate-300">No tienes aulas o grados asignados a tu supervisión actualmente.</p>
             <p class="text-xs text-slate-500 mt-1">Solicita al Administrador la vinculación de tus grados correspondientes.</p>
         </div>
     <?php else: ?>
@@ -187,7 +187,7 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                 $nombreCompleto = strtolower($g['grado_nombre'] . ' ' . ($g['seccion'] ?? '') . ' ' . ($g['aula_nombre'] ?? '') . ' ' . $turnoStr . ' ' . $nivelStr . ' ' . $bachStr);
                 ?>
                 <a href="<?= base_url('mvc/views/coordinacion/aula_detalle.php?id_grado=' . $idGrado) ?>"
-                   class="card-grado group block p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/60 hover:bg-slate-850/80 transition-all duration-200 shadow-lg hover:shadow-indigo-500/5"
+                   class="card-grado group block p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/60 hover:bg-slate-50/80 dark:hover:bg-slate-850/80 transition-all duration-200 shadow-sm hover:shadow-md"
                    data-turno="<?= htmlspecialchars($turnoStr, ENT_QUOTES, 'UTF-8') ?>"
                    data-nivel="<?= htmlspecialchars($nivelStr, ENT_QUOTES, 'UTF-8') ?>"
                    data-bachillerato="<?= htmlspecialchars($bachStr, ENT_QUOTES, 'UTF-8') ?>"
@@ -197,30 +197,30 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                         <div>
                             <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                                 <?php if (!empty($turnoStr)): ?>
-                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
                                         <?= htmlspecialchars($turnoStr, ENT_QUOTES, 'UTF-8') ?>
                                     </span>
                                 <?php endif; ?>
                                 <?php if (!empty($nivelStr)): ?>
-                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
                                         <?= htmlspecialchars($nivelStr, ENT_QUOTES, 'UTF-8') ?>
                                     </span>
                                 <?php endif; ?>
                                 <?php if (!empty($bachStr)): ?>
-                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                                         <?= htmlspecialchars($bachStr, ENT_QUOTES, 'UTF-8') ?>
                                     </span>
                                 <?php endif; ?>
                             </div>
-                            <h4 class="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors">
+                            <h4 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                                 <?= htmlspecialchars($g['grado_nombre'], ENT_QUOTES, 'UTF-8') ?>
                                 <?php if (!empty($g['seccion'])): ?>
-                                    <span class="text-sm text-slate-400 font-normal">Secc. <?= htmlspecialchars($g['seccion'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="text-sm text-slate-500 dark:text-slate-400 font-normal">Secc. <?= htmlspecialchars($g['seccion'], ENT_QUOTES, 'UTF-8') ?></span>
                                 <?php endif; ?>
                             </h4>
                         </div>
                         <div class="text-right shrink-0">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 text-xs font-medium text-slate-300 border border-slate-700/60">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
                                 🚪 <?= htmlspecialchars($g['aula_nombre'] ?? 'Sin asignar', ENT_QUOTES, 'UTF-8') ?>
                             </span>
                             <?php if (!empty($g['capacidad'])): ?>
@@ -230,24 +230,24 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                     </div>
 
                     <!-- Datos cuantitativos -->
-                    <div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 mb-4 text-xs">
+                    <div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 mb-4 text-xs">
                         <div class="flex items-center gap-2">
-                            <span class="text-slate-400 font-medium">👥 Estudiantes:</span>
-                            <span class="font-bold text-white"><?= $totalAlumnos ?></span>
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">👥 Estudiantes:</span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?= $totalAlumnos ?></span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-slate-400 font-medium">📚 Materias:</span>
-                            <span class="font-bold text-white"><?= $totalMaterias ?></span>
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">📚 Materias:</span>
+                            <span class="font-bold text-slate-900 dark:text-white"><?= $totalMaterias ?></span>
                         </div>
                     </div>
 
                     <!-- Barra de Asistencia de Hoy -->
                     <div class="space-y-1.5 mb-4">
                         <div class="flex justify-between text-xs">
-                            <span class="text-slate-400">Asistencia de hoy:</span>
-                            <span class="font-bold text-emerald-400"><?= $tasaHoy ?>%</span>
+                            <span class="text-slate-500 dark:text-slate-400">Asistencia de hoy:</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400"><?= $tasaHoy ?>%</span>
                         </div>
-                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden flex">
+                        <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex">
                             <?php
                             $pctPres = ($totalAlumnos > 0) ? ($hoyPres / $totalAlumnos) * 100 : 0;
                             $pctTard = ($totalAlumnos > 0) ? ($hoyTard / $totalAlumnos) * 100 : 0;
@@ -255,7 +255,7 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                             <div style="width: <?= $pctPres ?>%" class="h-full bg-emerald-500" title="Presentes"></div>
                             <div style="width: <?= $pctTard ?>%" class="h-full bg-amber-500" title="Tardanzas"></div>
                         </div>
-                        <div class="flex justify-between text-[10px] text-slate-400">
+                        <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
                             <span>🟢 <?= $hoyPres ?> pres.</span>
                             <span>🟡 <?= $hoyTard ?> tard.</span>
                             <span>🔴 <?= $hoyAus ?> aus.</span>
@@ -263,7 +263,7 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                     </div>
 
                     <!-- Footer enlace -->
-                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-indigo-400 group-hover:text-indigo-300">
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
                         <span>Explorar Aula (Materias, Alumnos, Tutores)</span>
                         <span class="group-hover:translate-x-1 transition-transform">→</span>
                     </div>
@@ -271,9 +271,9 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
             <?php endforeach; ?>
         </div>
 
-        <div id="empty-grados-filtros" class="hidden p-12 text-center rounded-2xl bg-slate-900/50 border border-slate-800 my-6">
+        <div id="empty-grados-filtros" class="hidden p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 my-6 shadow-sm">
             <span class="text-3xl block mb-2">🔍</span>
-            <p class="text-base font-semibold text-slate-300">No se encontraron aulas con los filtros seleccionados.</p>
+            <p class="text-base font-semibold text-slate-700 dark:text-slate-300">No se encontraron aulas con los filtros seleccionados.</p>
             <p class="text-xs text-slate-500 mt-1">Probá restablecer los filtros de turno, ciclo o bachillerato.</p>
         </div>
     <?php endif; ?>

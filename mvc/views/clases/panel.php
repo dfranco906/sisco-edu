@@ -3,31 +3,31 @@ require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 
-<main class="flex-1 p-6 md:p-10 overflow-y-auto">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto">
     <!-- Barra Superior -->
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 animate-pulse">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 animate-pulse">
                     ● EN VIVO
                 </span>
-                <h2 class="text-2xl font-bold text-slate-800">Panel de Clase y Asistencia Biométrica</h2>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Panel de Clase y Asistencia Biométrica</h2>
             </div>
-            <p class="text-sm text-slate-500 mt-1">
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Monitoreo en tiempo real de huellas dactilares, lección pedagógica del día y lista de presentes/ausentes.
             </p>
         </div>
 
         <!-- Controles de Aula y Fecha -->
         <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm text-xs">
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
                 <span class="text-slate-400 font-semibold uppercase">Aula:</span>
-                <select id="select-aula" class="bg-transparent font-bold text-slate-800 focus:outline-none">
+                <select id="select-aula" class="bg-transparent font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
                     <option value="">Cargando aulas...</option>
                 </select>
             </div>
 
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm text-xs font-mono text-slate-700">
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-mono text-slate-700 dark:text-slate-300">
                 <span>📅</span>
                 <span id="label-servidor-tiempo">-</span>
             </div>
@@ -58,64 +58,64 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         <!-- 1. Encabezado de la Clase y Docente -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Datos de la Materia y Horario -->
-            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
-                        <span class="text-[11px] uppercase tracking-wider text-indigo-600 font-bold">Materia Activa</span>
-                        <h3 id="clase-materia" class="text-xl font-bold text-slate-900 mt-0.5">-</h3>
+                        <span class="text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-bold">Materia Activa</span>
+                        <h3 id="clase-materia" class="text-xl font-bold text-slate-900 dark:text-white mt-0.5">-</h3>
                     </div>
                     <div class="text-right">
-                        <span id="clase-grado-badge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        <span id="clase-grado-badge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30">
                             -
                         </span>
-                        <p id="clase-horario" class="text-xs font-mono text-slate-500 mt-1 font-semibold">-</p>
+                        <p id="clase-horario" class="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1 font-semibold">-</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
                     <div>
                         <span class="text-slate-400 font-medium">Aula Física</span>
-                        <p id="clase-aula" class="font-bold text-slate-800 mt-0.5">-</p>
+                        <p id="clase-aula" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">-</p>
                     </div>
                     <div>
                         <span class="text-slate-400 font-medium">Horas Cátedra</span>
-                        <p id="clase-hc" class="font-bold text-slate-800 mt-0.5">-</p>
+                        <p id="clase-hc" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">-</p>
                     </div>
                     <div>
                         <span class="text-slate-400 font-medium">Duración Total</span>
-                        <p id="clase-duracion" class="font-bold text-slate-800 mt-0.5">-</p>
+                        <p id="clase-duracion" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">-</p>
                     </div>
                     <div>
                         <span class="text-slate-400 font-medium">Fecha de la Clase</span>
-                        <p id="clase-fecha" class="font-bold text-slate-800 mt-0.5 font-mono">-</p>
+                        <p id="clase-fecha" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5 font-mono">-</p>
                     </div>
                 </div>
             </div>
 
             <!-- Tarjeta del Docente y su Asistencia -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Profesor a Cargo</span>
-                        <span id="badge-asist-profesor" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-600">
+                        <span id="badge-asist-profesor" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             Verificando...
                         </span>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-lg">
                             👨‍🏫
                         </div>
                         <div>
-                            <h4 id="profesor-nombre" class="font-bold text-slate-900 text-base leading-tight">-</h4>
-                            <p id="profesor-ci" class="text-xs text-slate-500 font-mono mt-0.5">CI: -</p>
+                            <h4 id="profesor-nombre" class="font-bold text-slate-900 dark:text-white text-base leading-tight">-</h4>
+                            <p id="profesor-ci" class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">CI: -</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                     <span id="profesor-hora-marcacion">Hora de Marcación: --:--:--</span>
-                    <button id="btn-simular-prof" type="button" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">
+                    <button id="btn-simular-prof" type="button" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold underline">
                         Simular Huella
                     </button>
                 </div>
@@ -171,21 +171,21 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         <div>
             <!-- Tarjetas Métricas -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <span class="text-xs font-semibold text-slate-400 uppercase">Matriculados</span>
-                    <p id="metric-total" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+                    <p id="metric-total" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">0</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <span class="text-xs font-semibold text-emerald-600 uppercase">Presentes (Huella)</span>
-                    <p id="metric-presentes" class="text-2xl font-bold text-emerald-600 mt-1">0</p>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Presentes (Huella)</span>
+                    <p id="metric-presentes" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">0</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <span class="text-xs font-semibold text-rose-500 uppercase">Ausentes</span>
-                    <p id="metric-ausentes" class="text-2xl font-bold text-rose-500 mt-1">0</p>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-semibold text-rose-500 dark:text-rose-400 uppercase">Ausentes</span>
+                    <p id="metric-ausentes" class="text-2xl font-bold text-rose-500 dark:text-rose-400 mt-1">0</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <span class="text-xs font-semibold text-indigo-600 uppercase">% Asistencia</span>
-                    <p id="metric-porcentaje" class="text-2xl font-bold text-indigo-600 mt-1">0%</p>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase">% Asistencia</span>
+                    <p id="metric-porcentaje" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">0%</p>
                 </div>
             </div>
 
@@ -193,13 +193,13 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 <!-- Columna Presentes -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                            <h4 class="font-bold text-slate-800 text-sm">Estudiantes Presentes</h4>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Estudiantes Presentes</h4>
                         </div>
-                        <span id="badge-count-presentes" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">0</span>
+                        <span id="badge-count-presentes" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40">0</span>
                     </div>
 
                     <div id="lista-presentes" class="space-y-2 flex-1 overflow-y-auto max-h-96 pr-1">
@@ -208,13 +208,13 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </div>
 
                 <!-- Columna Ausentes -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                            <h4 class="font-bold text-slate-800 text-sm">Estudiantes Ausentes</h4>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Estudiantes Ausentes</h4>
                         </div>
-                        <span id="badge-count-ausentes" class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700">0</span>
+                        <span id="badge-count-ausentes" class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-800/40">0</span>
                     </div>
 
                     <div id="lista-ausentes" class="space-y-2 flex-1 overflow-y-auto max-h-96 pr-1">
@@ -226,21 +226,21 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
 
         <!-- 4. Consola de Pruebas: Simulación Rápida de Huella Dactilar -->
-        <div class="bg-slate-800 rounded-xl p-5 text-white shadow-md border border-slate-700">
+        <div class="bg-slate-100 dark:bg-slate-900/90 rounded-xl p-5 text-slate-800 dark:text-white shadow-md border border-slate-200 dark:border-slate-800">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-amber-400">⚡ Consola de Pruebas Rápidas:</span>
-                        <h4 class="text-sm font-semibold text-slate-200">Simulador de Marcación Biométrica</h4>
+                        <span class="text-sm font-bold text-amber-500 dark:text-amber-400">⚡ Consola de Pruebas Rápidas:</span>
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-200">Simulador de Marcación Biométrica</h4>
                     </div>
-                    <p class="text-xs text-slate-400 mt-0.5">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         Permite disparar la marcación de huella de cualquier estudiante o docente sin tocar hardware físico para verificar la detección de clase y lección.
                     </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <select id="simular-select-estudiante" class="px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 min-w-[220px]">
+                <select id="simular-select-estudiante" class="px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 min-w-[220px]">
                     <option value="">Seleccione estudiante del curso...</option>
                 </select>
 
@@ -248,7 +248,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     <span>👆</span> Marcar Huella Estudiante
                 </button>
 
-                <button id="btn-marcar-todos" type="button" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-medium transition-all">
+                <button id="btn-marcar-todos" type="button" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-all">
                     Marcar Todos Presentes
                 </button>
             </div>
