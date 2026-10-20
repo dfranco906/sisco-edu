@@ -148,6 +148,10 @@ switch ($rolActual) {
 $adminPaths = [
     'mvc/views/administracion/',
     'mvc/views/usuarios/',
+    'mvc/views/tutores/',
+    'mvc/views/turnos/',
+    'mvc/views/niveles/',
+    'mvc/views/bachilleratos/',
     'mvc/views/aulas/',
     'mvc/views/grados/',
     'mvc/views/materias/',

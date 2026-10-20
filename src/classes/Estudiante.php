@@ -1,12 +1,19 @@
 <?php
-class Estudiante {
-    private $conn;
+declare(strict_types=1);
 
-    public $id_estudiante, $nombre, $apellido, $cedula_identidad;
+require_once __DIR__ . '/IdentidadHelper.php';
+
+class Estudiante {
+    private PDO $conn;
+
+    public $id_estudiante;
+    public $nombre;
+    public $apellido;
+    public $cedula_identidad;
     public $id_grado;
     public $user_id_global;
 
-    public function __construct($db) {
+    public function __construct(PDO $db) {
         $this->conn = $db;
     }
 
@@ -48,23 +55,64 @@ class Estudiante {
         return $total;
     }
 
+    public function sincronizarTodasLasMatriculas(?int $idGrado = null): array {
+        $sql = "SELECT id_estudiante, id_grado FROM estudiantes WHERE activo = 1 AND id_grado IS NOT NULL";
+        $params = [];
+        if ($idGrado !== null && $idGrado > 0) {
+            $sql .= " AND id_grado = :id_grado";
+            $params[':id_grado'] = $idGrado;
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        $estudiantes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $totalEstudiantes = 0;
+        $totalMatriculas = 0;
+
+        foreach ($estudiantes as $e) {
+            $mats = $this->matricularEnMateriasDeGrado((int)$e['id_estudiante'], (int)$e['id_grado']);
+            $totalMatriculas += $mats;
+            $totalEstudiantes++;
+        }
+
+        return [
+            'estudiantes_procesados' => $totalEstudiantes,
+            'matriculas_sincronizadas' => $totalMatriculas
+        ];
+    }
+
     public function crear(): array {
-        $query = "INSERT INTO estudiantes (nombre, apellido, cedula_identidad, id_grado, user_id_global)
-                  VALUES (:nombre, :apellido, :cedula, :id_grado, :user_id_global)";
+        $nombre = trim((string)$this->nombre);
+        $apellido = trim((string)$this->apellido);
+        $cedula = trim((string)$this->cedula_identidad);
+
+        $idUsuario = IdentidadHelper::asegurarUsuario(
+            $this->conn,
+            'Estudiante',
+            $cedula,
+            $nombre,
+            $apellido
+        );
+
+        $query = "INSERT INTO estudiantes (nombre, apellido, cedula_identidad, id_grado, user_id_global, id_usuario, activo)
+                  VALUES (:nombre, :apellido, :cedula, :id_grado, :user_id_global, :id_usuario, 1)
+                  RETURNING id_estudiante";
 
         $stmt = $this->conn->prepare($query);
 
         $ok = $stmt->execute([
-            ":nombre" => trim((string)$this->nombre),
-            ":apellido" => trim((string)$this->apellido),
-            ":cedula" => trim((string)$this->cedula_identidad),
+            ":nombre" => $nombre,
+            ":apellido" => $apellido,
+            ":cedula" => $cedula,
             ":id_grado" => !empty($this->id_grado) ? (int)$this->id_grado : null,
-            ":user_id_global" => $this->user_id_global
+            ":user_id_global" => !empty($this->user_id_global) ? $this->user_id_global : ('EST_' . uniqid() . '_' . random_int(100, 999)),
+            ":id_usuario" => $idUsuario
         ]);
 
         $matriculadas = 0;
         if ($ok) {
-            $idNuevo = (int)$this->conn->lastInsertId();
+            $idNuevo = (int)$stmt->fetchColumn();
             $this->id_estudiante = $idNuevo;
             if (!empty($this->id_grado)) {
                 $matriculadas = $this->matricularEnMateriasDeGrado($idNuevo, (int)$this->id_grado);
@@ -78,7 +126,7 @@ class Estudiante {
         ];
     }
 
-    public function leer() {
+    public function leer(): PDOStatement {
         $query = "SELECT 
                     e.id_estudiante,
                     e.nombre,
@@ -106,7 +154,7 @@ class Estudiante {
         return $stmt;
     }
 
-    public function leerDesactivados() {
+    public function leerDesactivados(): PDOStatement {
         $query = "SELECT 
                     e.id_estudiante,
                     e.nombre,
@@ -134,19 +182,29 @@ class Estudiante {
         return $stmt;
     }
 
-    public function actualizar() {
+    public function actualizar(): bool {
         if (empty($this->id_estudiante)) return false;
+
+        $idUsuario = IdentidadHelper::asegurarUsuario(
+            $this->conn,
+            'Estudiante',
+            (string)$this->cedula_identidad,
+            (string)$this->nombre,
+            (string)$this->apellido
+        );
 
         $campos = [
             "nombre=:nombre",
             "apellido=:apellido",
-            "cedula_identidad=:cedula"
+            "cedula_identidad=:cedula",
+            "id_usuario = COALESCE(id_usuario, :id_usuario)"
         ];
 
         $params = [
             ":nombre" => $this->nombre,
             ":apellido" => $this->apellido,
             ":cedula" => $this->cedula_identidad,
+            ":id_usuario" => $idUsuario,
             ":id" => $this->id_estudiante
         ];
 
@@ -174,7 +232,7 @@ class Estudiante {
         return $ok;
     }
 
-    public function desactivar() {
+    public function desactivar(): bool {
         if (empty($this->id_estudiante)) return false;
 
         $query = "UPDATE estudiantes
@@ -185,7 +243,7 @@ class Estudiante {
         return $stmt->execute([":id" => $this->id_estudiante]);
     }
 
-    public function restaurar() {
+    public function restaurar(): bool {
         if (empty($this->id_estudiante)) return false;
 
         $query = "UPDATE estudiantes
@@ -196,7 +254,7 @@ class Estudiante {
         return $stmt->execute([":id" => $this->id_estudiante]);
     }
 
-    public function eliminar() {
+    public function eliminar(): bool {
         if (empty($this->id_estudiante)) return false;
 
         $query = "DELETE FROM estudiantes WHERE id_estudiante=:id";

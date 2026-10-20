@@ -273,4 +273,196 @@ class Tutor {
             'tutores' => $tutores,
         ];
     }
+
+    public function crear(array $datos): int {
+        $nombre = trim((string)($datos['nombre'] ?? ''));
+        $apellido = trim((string)($datos['apellido'] ?? ''));
+        $cedula = trim((string)($datos['cedula_identidad'] ?? ''));
+        $celular = trim((string)($datos['celular'] ?? ''));
+        $email = trim((string)($datos['email'] ?? ''));
+        $direccion = trim((string)($datos['direccion'] ?? ''));
+
+        if (empty($nombre) || empty($apellido) || empty($cedula)) {
+            throw new InvalidArgumentException("Nombre, apellido y cédula de identidad son obligatorios.");
+        }
+
+        require_once __DIR__ . '/IdentidadHelper.php';
+        $idUsuario = IdentidadHelper::asegurarUsuario(
+            $this->conn,
+            'Tutor',
+            $cedula,
+            $nombre,
+            $apellido,
+            $email,
+            $celular
+        );
+
+        $stmt = $this->conn->prepare("
+            INSERT INTO tutores (id_usuario, nombre, apellido, cedula_identidad, celular, email, direccion, activo, fecha_registro)
+            VALUES (:id_usuario, :nombre, :apellido, :cedula, :celular, :email, :direccion, 1, NOW())
+            RETURNING id_tutor
+        ");
+        $stmt->execute([
+            ':id_usuario' => $idUsuario,
+            ':nombre' => $nombre,
+            ':apellido' => $apellido,
+            ':cedula' => $cedula,
+            ':celular' => $celular ?: null,
+            ':email' => $email ?: null,
+            ':direccion' => $direccion ?: null,
+        ]);
+
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function leer(): array {
+        $sql = "SELECT t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion,
+                       t.id_usuario, t.activo,
+                       COUNT(DISTINCT et.id_estudiante) AS total_hijos,
+                       CONCAT(t.nombre, ' ', t.apellido, ' - CI: ', t.cedula_identidad) AS nombre_completo
+                FROM tutores t
+                LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
+                WHERE t.activo = 1
+                GROUP BY t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion, t.id_usuario, t.activo
+                ORDER BY t.apellido ASC, t.nombre ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function leerDesactivados(): array {
+        $sql = "SELECT t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion,
+                       t.id_usuario, t.activo,
+                       COUNT(DISTINCT et.id_estudiante) AS total_hijos,
+                       CONCAT(t.nombre, ' ', t.apellido, ' - CI: ', t.cedula_identidad) AS nombre_completo
+                FROM tutores t
+                LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
+                WHERE t.activo = 0
+                GROUP BY t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion, t.id_usuario, t.activo
+                ORDER BY t.apellido ASC, t.nombre ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function actualizar(int $id_tutor, array $datos): bool {
+        $nombre = trim((string)($datos['nombre'] ?? ''));
+        $apellido = trim((string)($datos['apellido'] ?? ''));
+        $cedula = trim((string)($datos['cedula_identidad'] ?? ''));
+        $celular = trim((string)($datos['celular'] ?? ''));
+        $email = trim((string)($datos['email'] ?? ''));
+        $direccion = trim((string)($datos['direccion'] ?? ''));
+
+        if ($id_tutor <= 0 || empty($nombre) || empty($apellido) || empty($cedula)) {
+            return false;
+        }
+
+        require_once __DIR__ . '/IdentidadHelper.php';
+        $idUsuario = IdentidadHelper::asegurarUsuario(
+            $this->conn,
+            'Tutor',
+            $cedula,
+            $nombre,
+            $apellido,
+            $email,
+            $celular
+        );
+
+        $stmt = $this->conn->prepare("
+            UPDATE tutores
+            SET nombre = :nombre,
+                apellido = :apellido,
+                cedula_identidad = :cedula,
+                celular = :celular,
+                email = :email,
+                direccion = :direccion,
+                id_usuario = COALESCE(id_usuario, :id_usuario)
+            WHERE id_tutor = :id_tutor
+        ");
+        return $stmt->execute([
+            ':nombre' => $nombre,
+            ':apellido' => $apellido,
+            ':cedula' => $cedula,
+            ':celular' => $celular ?: null,
+            ':email' => $email ?: null,
+            ':direccion' => $direccion ?: null,
+            ':id_usuario' => $idUsuario,
+            ':id_tutor' => $id_tutor
+        ]);
+    }
+
+    public function desactivar(int $id_tutor): bool {
+        $stmt = $this->conn->prepare("UPDATE tutores SET activo = 0 WHERE id_tutor = :id_tutor");
+        return $stmt->execute([':id_tutor' => $id_tutor]);
+    }
+
+    public function restaurar(int $id_tutor): bool {
+        $stmt = $this->conn->prepare("UPDATE tutores SET activo = 1 WHERE id_tutor = :id_tutor");
+        return $stmt->execute([':id_tutor' => $id_tutor]);
+    }
+
+    public function vincularEstudiante(int $id_tutor, int $id_estudiante, string $parentesco = 'Tutor/a', int $es_principal = 0): bool {
+        if ($id_tutor <= 0 || $id_estudiante <= 0) {
+            return false;
+        }
+
+        $stmtCheck = $this->conn->prepare("
+            SELECT id_estudiante_tutor
+            FROM estudiante_tutores
+            WHERE id_tutor = :id_tutor AND id_estudiante = :id_estudiante
+            LIMIT 1
+        ");
+        $stmtCheck->execute([':id_tutor' => $id_tutor, ':id_estudiante' => $id_estudiante]);
+        $existe = $stmtCheck->fetchColumn();
+
+        if ($existe) {
+            $stmtUp = $this->conn->prepare("
+                UPDATE estudiante_tutores
+                SET parentesco = :parentesco,
+                    es_principal = :es_principal,
+                    activo = 1
+                WHERE id_estudiante_tutor = :id
+            ");
+            return $stmtUp->execute([
+                ':parentesco' => trim($parentesco) ?: 'Tutor/a',
+                ':es_principal' => $es_principal,
+                ':id' => $existe
+            ]);
+        }
+
+        $stmtIns = $this->conn->prepare("
+            INSERT INTO estudiante_tutores (id_estudiante, id_tutor, parentesco, es_principal, activo, fecha_asignacion)
+            VALUES (:id_estudiante, :id_tutor, :parentesco, :es_principal, 1, NOW())
+        ");
+        return $stmtIns->execute([
+            ':id_estudiante' => $id_estudiante,
+            ':id_tutor' => $id_tutor,
+            ':parentesco' => trim($parentesco) ?: 'Tutor/a',
+            ':es_principal' => $es_principal
+        ]);
+    }
+
+    public function desvincularEstudiante(int $id_tutor, int $id_estudiante): bool {
+        $stmt = $this->conn->prepare("
+            UPDATE estudiante_tutores
+            SET activo = 0
+            WHERE id_tutor = :id_tutor AND id_estudiante = :id_estudiante
+        ");
+        return $stmt->execute([':id_tutor' => $id_tutor, ':id_estudiante' => $id_estudiante]);
+    }
+
+    public function obtenerEstudiantesVinculados(int $id_tutor): array {
+        $stmt = $this->conn->prepare("
+            SELECT et.id_estudiante_tutor, et.parentesco, et.es_principal, et.fecha_asignacion,
+                   e.id_estudiante, e.nombre, e.apellido, e.cedula_identidad,
+                   g.id_grado, g.nombre AS grado_nombre, g.seccion
+            FROM estudiante_tutores et
+            JOIN estudiantes e ON et.id_estudiante = e.id_estudiante
+            LEFT JOIN grados g ON e.id_grado = g.id_grado
+            WHERE et.id_tutor = :id_tutor AND et.activo = 1 AND e.activo = 1
+            ORDER BY e.apellido ASC, e.nombre ASC
+        ");
+        $stmt->execute([':id_tutor' => $id_tutor]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

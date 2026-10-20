@@ -20,6 +20,7 @@ $totales = [
     'total_materias' => 0,
     'total_asignaciones' => 0,
     'total_usuarios' => 0,
+    'total_tutores' => 0,
     'total_aulas' => 0
 ];
 
@@ -34,6 +35,7 @@ try {
             (SELECT COUNT(*) FROM materias WHERE activo = 1) AS total_materias,
             (SELECT COUNT(*) FROM asignacion_docente WHERE activo = 1) AS total_asignaciones,
             (SELECT COUNT(*) FROM usuarios WHERE activo = 1) AS total_usuarios,
+            (SELECT COUNT(*) FROM tutores WHERE activo = 1) AS total_tutores,
             (SELECT COUNT(*) FROM aulas WHERE activo = 1) AS total_aulas
     ");
     if ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -272,11 +274,11 @@ try {
                     <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Control de cuentas, espacios físicos y configuración de conectividad</p>
                 </div>
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                    3 Módulos
+                    4 Módulos
                 </span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
                 <!-- Usuarios -->
                 <a href="<?= base_url('mvc/views/usuarios/index.php') ?>" class="app-card p-6 flex flex-col justify-between group hover:border-blue-300 hover:shadow-md transition duration-200">
@@ -291,11 +293,33 @@ try {
                         </div>
                         <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">Usuarios y Roles</h3>
                         <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
-                            Cuentas del personal institucional, credenciales de acceso y asignación de roles (Docente, Coordinador, etc.).
+                            Cuentas del personal institucional, credenciales de acceso y asignación de roles.
                         </p>
                     </div>
                     <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
                         <span>Gestionar usuarios</span>
+                        <span class="group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </a>
+
+                <!-- Tutores y Familias -->
+                <a href="<?= base_url('mvc/views/tutores/index.php') ?>" class="app-card p-6 flex flex-col justify-between group hover:border-blue-300 hover:shadow-md transition duration-200">
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-105 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                <?= (int)$totales['total_tutores'] ?> tutores
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">Tutores y Familias</h3>
+                        <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                            Padrón de padres, madres y tutores legales vinculados con sus respectivos hijos a cargo.
+                        </p>
+                    </div>
+                    <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
+                        <span>Gestionar familias</span>
                         <span class="group-hover:translate-x-1 transition-transform">→</span>
                     </div>
                 </a>

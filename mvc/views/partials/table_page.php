@@ -74,6 +74,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
 
             <div class="app-toolbar-actions flex flex-wrap gap-3">
+                <?= $toolbarExtraHtml ?? '' ?>
                 <?php if (isset($formCrear)): ?>
                 <button id="btn-crear"
                     class="btn btn-success">
@@ -135,6 +136,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </form>
     </div>
 </div>
+    <?= $modalExtraHtml ?? '' ?>
 </main>
 <script>
     window.BASE_URL = "<?= base_url('') ?>";

@@ -6,7 +6,7 @@ $columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado",
 
 $filtros = [
     "buscar" => ["nombre", "apellido", "cedula_identidad", "grado"],
-    "placeholder" => "Buscar estudiante por nombre, apellido o CI...",
+    "placeholder" => "Buscar estudiante por nombre, apellido, CI o curso...",
     "pestanas" => [
         "campo" => "grado",
         "todosLabel" => "Todos los cursos"
@@ -18,7 +18,7 @@ $formCrear = [
     "campos" => [
         ["name" => "nombre", "label" => "Nombre", "type" => "text"],
         ["name" => "apellido", "label" => "Apellido", "type" => "text"],
-        ["name" => "cedula_identidad", "label" => "Cédula de Identidad", "type" => "text"],
+        ["name" => "cedula_identidad", "label" => "Cédula de Identidad (Usuario y contraseña inicial)", "type" => "text"],
         [
             "name" => "id_grado",
             "label" => "Grado / Curso (Matriculación automática de materias)",
@@ -33,8 +33,20 @@ $formCrear = [
 $apiActualizar = "src/api/Estudiante/actualizar_estudiante.php";
 $apiDesactivar = "src/api/Estudiante/desactivar_estudiante.php";
 $urlDesactivados = "mvc/views/estudiantes/desactivados.php";
-$urlVolver = "mvc/views/dashboard.php";
+$urlVolver = "mvc/views/administracion/index.php";
 $idCampo = "id_estudiante";
-$camposEditar = ["nombre", "apellido", "cedula_identidad"];
+$camposEditar = [
+    "nombre",
+    "apellido",
+    "cedula_identidad",
+    [
+        "name" => "id_grado",
+        "label" => "Grado / Curso (Actualiza matrículas)",
+        "type" => "select",
+        "api" => "src/api/Grado/leer_grados.php",
+        "value" => "id_grado",
+        "labelField" => "descripcion"
+    ]
+];
 
 require_once __DIR__ . '/../partials/table_page.php';
