@@ -29,28 +29,34 @@ class AsistenciaEstudiante {
         return $stmt->execute();
     }
 
-    public function leer() {
+    public function leer(int $limit = 500, int $offset = 0) {
         $query = "SELECT ae.*, e.nombre, e.apellido, g.nombre AS grado
                   FROM {$this->table_name} ae
                   INNER JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
                   LEFT JOIN grados g ON e.id_grado = g.id_grado
                   WHERE ae.activo = 1
-                  ORDER BY ae.id_asistencia_estudiante DESC";
+                  ORDER BY ae.id_asistencia_estudiante DESC
+                  LIMIT :limit OFFSET :offset";
 
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt;
     }
 
-    public function leerDesactivados() {
+    public function leerDesactivados(int $limit = 500, int $offset = 0) {
         $query = "SELECT ae.*, e.nombre, e.apellido, g.nombre AS grado
                   FROM {$this->table_name} ae
                   INNER JOIN estudiantes e ON ae.id_estudiante = e.id_estudiante
                   LEFT JOIN grados g ON e.id_grado = g.id_grado
                   WHERE ae.activo = 0
-                  ORDER BY ae.id_asistencia_estudiante DESC";
+                  ORDER BY ae.id_asistencia_estudiante DESC
+                  LIMIT :limit OFFSET :offset";
 
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt;
     }

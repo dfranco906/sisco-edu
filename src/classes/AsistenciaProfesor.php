@@ -29,26 +29,32 @@ class AsistenciaProfesor {
         return $stmt->execute();
     }
 
-    public function leer() {
+    public function leer(int $limit = 500, int $offset = 0) {
         $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido) AS profesor, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
                   FROM {$this->table_name} ap
                   INNER JOIN profesores p ON ap.id_profesor = p.id_profesor
                   WHERE ap.activo = 1
-                  ORDER BY ap.id_asistencia_profesor DESC";
+                  ORDER BY ap.id_asistencia_profesor DESC
+                  LIMIT :limit OFFSET :offset";
 
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt;
     }
 
-    public function leerDesactivados() {
+    public function leerDesactivados(int $limit = 500, int $offset = 0) {
         $query = "SELECT ap.*, p.nombre, p.apellido, CONCAT(p.nombre, ' ', p.apellido) AS profesor, CONCAT(p.nombre, ' ', p.apellido, ' - CI: ', p.cedula_identidad) AS nombre_completo
                   FROM {$this->table_name} ap
                   INNER JOIN profesores p ON ap.id_profesor = p.id_profesor
                   WHERE ap.activo = 0
-                  ORDER BY ap.id_asistencia_profesor DESC";
+                  ORDER BY ap.id_asistencia_profesor DESC
+                  LIMIT :limit OFFSET :offset";
 
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt;
     }

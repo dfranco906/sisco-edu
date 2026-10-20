@@ -7,7 +7,9 @@ require_once __DIR__ . '/../../classes/AsistenciaProfesor.php';
 try {
     $db = (new Database())->getConnection();
     $asistencia = new AsistenciaProfesor($db);
-    $stmt = $asistencia->leer();
+    $limit = isset($_GET['limit']) ? max(1, min(1000, (int)$_GET['limit'])) : 500;
+    $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
+    $stmt = $asistencia->leer($limit, $offset);
 
     echo json_encode(["status" => "success", "message" => "Asistencias de profesores obtenidas", "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 } catch (Throwable $e) {

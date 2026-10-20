@@ -8,7 +8,13 @@ class EventoAsistencia {
         $stmt = $this->conn->prepare("INSERT INTO {$this->table_name} (user_id_global,id_aula,estado,timestamp_evento,origen_node_id,sincronizado) VALUES (:user_id_global,:id_aula,:estado,:timestamp_evento,:origen_node_id,:sincronizado)");
         return $stmt->execute([':user_id_global'=>$this->user_id_global, ':id_aula'=>$this->id_aula, ':estado'=>$this->estado, ':timestamp_evento'=>$this->timestamp_evento, ':origen_node_id'=>$this->origen_node_id, ':sincronizado'=>$this->sincronizado]);
     }
-    public function leer() { $stmt=$this->conn->prepare("SELECT * FROM {$this->table_name} WHERE activo=1 ORDER BY id_evento DESC"); $stmt->execute(); return $stmt; }
+    public function leer(int $limit = 200, int $offset = 0) {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table_name} WHERE activo = 1 ORDER BY id_evento DESC LIMIT :limit OFFSET :offset");
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt;
+    }
     public function actualizar() {
         $stmt=$this->conn->prepare("UPDATE {$this->table_name} SET user_id_global=:user_id_global,id_aula=:id_aula,estado=:estado,timestamp_evento=:timestamp_evento,origen_node_id=:origen_node_id,sincronizado=:sincronizado WHERE id_evento=:id");
         return $stmt->execute([':user_id_global'=>$this->user_id_global, ':id_aula'=>$this->id_aula, ':estado'=>$this->estado, ':timestamp_evento'=>$this->timestamp_evento, ':origen_node_id'=>$this->origen_node_id, ':sincronizado'=>$this->sincronizado, ':id'=>$this->id_evento]);
