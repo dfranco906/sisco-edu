@@ -64,31 +64,42 @@ class Horario
         ]);
     }
 
-    private function consultaListado($activo)
+    private function consultaListado($activo, ?int $id_profesor = null)
     {
-        $stmt = $this->conn->prepare("
+        $sql = "
             SELECT
                 h.id_horario,
                 h.id_asignacion,
-                h.id_grado,
+                COALESCE(h.id_grado, ad.id_grado) AS id_grado,
                 h.dia_semana,
                 h.hora_inicio,
                 h.hora_fin,
-                h.id_aula,
+                COALESCE(h.id_aula, g.id_aula, aul_asig.id_aula) AS id_aula,
                 h.activo,
-                g.nombre AS grado,
-                a.nombre AS aula,
+                COALESCE(g.nombre, g_asig.nombre) AS grado,
+                COALESCE(a.nombre, aul_asig.nombre) AS aula,
                 m.nombre AS materia,
                 CONCAT(p.nombre, ' ', p.apellido) AS profesor
             FROM horarios h
+            LEFT JOIN asignacion_docente ad ON h.id_asignacion = ad.id_asignacion
             LEFT JOIN grados g ON h.id_grado = g.id_grado
             LEFT JOIN aulas a ON h.id_aula = a.id_aula
-            LEFT JOIN asignacion_docente ad ON h.id_asignacion = ad.id_asignacion
+            LEFT JOIN grados g_asig ON ad.id_grado = g_asig.id_grado
+            LEFT JOIN aulas aul_asig ON g_asig.id_aula = aul_asig.id_aula
             LEFT JOIN materias m ON ad.id_materia = m.id_materia
             LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
             WHERE h.activo = :activo
+        ";
+        $params = [":activo" => $activo];
+
+        if ($id_profesor !== null) {
+            $sql .= " AND ad.id_profesor = :id_profesor ";
+            $params[":id_profesor"] = $id_profesor;
+        }
+
+        $sql .= "
             ORDER BY
-                g.nombre,
+                COALESCE(g.nombre, g_asig.nombre),
                 CASE h.dia_semana 
                     WHEN 'Lunes' THEN 1 
                     WHEN 'Martes' THEN 2 
@@ -101,20 +112,22 @@ class Horario
                     ELSE 7 
                 END,
                 h.hora_inicio
-        ");
-        $stmt->execute([":activo" => $activo]);
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt;
     }
 
-    public function leer()
+    public function leer(?int $id_profesor = null)
     {
-        return $this->consultaListado(1);
+        return $this->consultaListado(1, $id_profesor);
     }
 
-    public function leerDesactivados()
+    public function leerDesactivados(?int $id_profesor = null)
     {
-        return $this->consultaListado(0);
+        return $this->consultaListado(0, $id_profesor);
     }
 
     public function actualizar()

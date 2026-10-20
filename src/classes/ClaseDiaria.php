@@ -42,11 +42,66 @@ class ClaseDiaria {
     /**
      * Detecta o inicializa la clase activa en un aula/fecha/hora determinada
      */
-    public function obtenerOCrearClaseActiva(int $id_aula, ?string $timestamp = null): ?array {
+    public function obtenerOCrearClaseActiva(?int $id_aula = null, ?string $timestamp = null, ?int $id_profesor = null): ?array {
         $fechaHora = $timestamp ? new DateTime($timestamp) : new DateTime();
         $fecha = $fechaHora->format('Y-m-d');
         $hora = $fechaHora->format('H:i:s');
         $diaInfo = self::obtenerDiaEspanol((int)$fechaHora->format('w'));
+
+        // Si no se proporcionó aula, resolver automáticamente
+        if (!$id_aula) {
+            if ($id_profesor !== null) {
+                // 1. Buscar aula según horario de hoy para el profesor
+                $sqlAulaHoy = "SELECT COALESCE(h.id_aula, g.id_aula) AS id_aula
+                               FROM horarios h
+                               JOIN asignacion_docente a ON a.id_asignacion = h.id_asignacion AND a.activo = 1
+                               LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
+                               WHERE a.id_profesor = :id_profesor
+                                 AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
+                                 AND h.activo = 1
+                               ORDER BY (CASE 
+                                            WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
+                                            ELSE 1
+                                         END), h.hora_inicio ASC
+                               LIMIT 1";
+                $stmtAH = $this->conn->prepare($sqlAulaHoy);
+                $stmtAH->execute([
+                    ':id_profesor' => $id_profesor,
+                    ':dia1' => $diaInfo['con_tilde'],
+                    ':dia2' => $diaInfo['sin_tilde'],
+                    ':hora' => $hora
+                ]);
+                $id_aula = (int)$stmtAH->fetchColumn();
+
+                // 2. Si hoy no tiene clases, tomar la primera aula asignada al profesor
+                if (!$id_aula) {
+                    $sqlAulaFall = "SELECT COALESCE(h.id_aula, g.id_aula) AS id_aula
+                                    FROM asignacion_docente a
+                                    LEFT JOIN grados g ON g.id_grado = a.id_grado
+                                    LEFT JOIN horarios h ON h.id_asignacion = a.id_asignacion
+                                    WHERE a.id_profesor = :id_profesor
+                                      AND a.activo = 1
+                                      AND COALESCE(h.id_aula, g.id_aula) IS NOT NULL
+                                    LIMIT 1";
+                    $stmtAF = $this->conn->prepare($sqlAulaFall);
+                    $stmtAF->execute([':id_profesor' => $id_profesor]);
+                    $id_aula = (int)$stmtAF->fetchColumn();
+                }
+            } else {
+                $stmtA = $this->conn->query("
+                    SELECT COALESCE(
+                        (SELECT id_aula FROM horarios WHERE activo = 1 AND id_aula IS NOT NULL LIMIT 1),
+                        (SELECT id_aula FROM aulas WHERE activo = 1 ORDER BY id_aula ASC LIMIT 1),
+                        1
+                    )
+                ");
+                $id_aula = (int)$stmtA->fetchColumn();
+            }
+        }
+
+        if (!$id_aula) {
+            return null;
+        }
 
         // 1. Buscar horario activo en el aula en este día y rango de horas (con 30 min de tolerancia antes/después)
         $sqlHorario = "SELECT h.*, 
@@ -64,20 +119,28 @@ class ClaseDiaria {
                        LEFT JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula, :id_aula)
                        WHERE (h.id_aula = :id_aula OR g.id_aula = :id_aula)
                          AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
-                         AND h.activo = 1
-                       ORDER BY (CASE 
-                                    WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
-                                    ELSE 1
-                                 END), h.hora_inicio ASC
-                       LIMIT 1";
+                         AND h.activo = 1";
 
-        $stmtH = $this->conn->prepare($sqlHorario);
-        $stmtH->execute([
+        $paramsH = [
             ':id_aula' => $id_aula,
             ':dia1' => $diaInfo['con_tilde'],
             ':dia2' => $diaInfo['sin_tilde'],
             ':hora' => $hora
-        ]);
+        ];
+
+        if ($id_profesor !== null) {
+            $sqlHorario .= " AND a.id_profesor = :id_profesor";
+            $paramsH[':id_profesor'] = $id_profesor;
+        }
+
+        $sqlHorario .= " ORDER BY (CASE 
+                                     WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
+                                     ELSE 1
+                                  END), h.hora_inicio ASC
+                        LIMIT 1";
+
+        $stmtH = $this->conn->prepare($sqlHorario);
+        $stmtH->execute($paramsH);
         $horario = $stmtH->fetch(PDO::FETCH_ASSOC);
 
         // Si no hay horario hoy en esa aula, buscar cualquier horario de la materia o primer horario del aula
@@ -96,10 +159,17 @@ class ClaseDiaria {
                               LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
                               LEFT JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula, :id_aula)
                               WHERE (h.id_aula = :id_aula OR g.id_aula = :id_aula)
-                                AND h.activo = 1
-                              LIMIT 1";
+                                AND h.activo = 1";
+
+            $paramsC = [':id_aula' => $id_aula];
+            if ($id_profesor !== null) {
+                $sqlCualquiera .= " AND a.id_profesor = :id_profesor";
+                $paramsC[':id_profesor'] = $id_profesor;
+            }
+            $sqlCualquiera .= " LIMIT 1";
+
             $stmtC = $this->conn->prepare($sqlCualquiera);
-            $stmtC->execute([':id_aula' => $id_aula]);
+            $stmtC->execute($paramsC);
             $horario = $stmtC->fetch(PDO::FETCH_ASSOC);
         }
 
@@ -173,14 +243,14 @@ class ClaseDiaria {
         }
 
         // 4. Retornar el detalle en vivo completo
-        return $this->obtenerDetalleClase($id_clase);
+        return $this->obtenerDetalleClase($id_clase, $id_profesor);
     }
 
     /**
      * Obtiene el estado completo de la clase en vivo:
      * Datos pedagógicos, lección, indicadores, profesor y lista de estudiantes presentes / ausentes
      */
-    public function obtenerDetalleClase(int $id_clase): ?array {
+    public function obtenerDetalleClase(int $id_clase, ?int $id_profesor = null): ?array {
         $sql = "SELECT c.*,
                        a.id_profesor, a.id_materia, a.id_grado, a.carga_horaria,
                        prof.nombre AS profesor_nombre, prof.apellido AS profesor_apellido,
@@ -202,11 +272,17 @@ class ClaseDiaria {
                 LEFT JOIN plan_temas pt ON pt.id_tema = c.id_tema
                 LEFT JOIN plan_capacidades pc ON pc.id_capacidad = c.id_capacidad
                 LEFT JOIN plan_unidades pu ON pu.id_unidad = c.id_unidad
-                WHERE c.id_clase = :id_clase
-                LIMIT 1";
+                WHERE c.id_clase = :id_clase";
+
+        $params = [':id_clase' => $id_clase];
+        if ($id_profesor !== null) {
+            $sql .= " AND a.id_profesor = :id_profesor";
+            $params[':id_profesor'] = $id_profesor;
+        }
+        $sql .= " LIMIT 1";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':id_clase' => $id_clase]);
+        $stmt->execute($params);
         $clase = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$clase) {
@@ -215,7 +291,7 @@ class ClaseDiaria {
 
         $fecha = $clase['fecha'];
         $id_grado = (int)$clase['id_grado'];
-        $id_profesor = (int)$clase['id_profesor'];
+        $id_profesor_actual = (int)$clase['id_profesor'];
 
         // 1. Obtener indicadores de la clase y su estado de cumplimiento
         $stmtInd = $this->conn->prepare("
@@ -265,7 +341,7 @@ class ClaseDiaria {
             ORDER BY hora ASC
             LIMIT 1
         ");
-        $stmtProfAsist->execute([':profesor' => $id_profesor, ':fecha' => $fecha]);
+        $stmtProfAsist->execute([':profesor' => $id_profesor_actual, ':fecha' => $fecha]);
         $asistProfesor = $stmtProfAsist->fetch(PDO::FETCH_ASSOC);
 
         $clase['profesor_asistencia'] = [
@@ -344,7 +420,6 @@ class ClaseDiaria {
      * Registra o actualiza la asistencia de un estudiante para la clase
      */
     public function registrarAsistenciaEstudiante(int $id_estudiante, string $fecha, string $hora, string $estado = 'PRESENTE'): bool {
-        // Verificar si ya existe registro en la fecha
         $stmtCheck = $this->conn->prepare("
             SELECT id_asistencia_estudiante FROM asistencias_estudiantes 
             WHERE id_estudiante = :id AND fecha = :fecha AND activo = 1

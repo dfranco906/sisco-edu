@@ -3,8 +3,18 @@ header("Content-Type: application/json; charset=UTF-8");
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../classes/ClaseDiaria.php';
 
-$id_clase = filter_input(INPUT_GET, 'id_clase', FILTER_VALIDATE_INT);
-$id_aula = filter_input(INPUT_GET, 'id_aula', FILTER_VALIDATE_INT);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$rol = $_SESSION['rol'] ?? '';
+$id_profesor = null;
+if ($rol === 'Profesor' && !empty($_SESSION['id_profesor'])) {
+    $id_profesor = (int)$_SESSION['id_profesor'];
+}
+
+$id_clase = isset($_GET['id_clase']) && is_numeric($_GET['id_clase']) ? (int)$_GET['id_clase'] : null;
+$id_aula = isset($_GET['id_aula']) && is_numeric($_GET['id_aula']) ? (int)$_GET['id_aula'] : null;
 $timestamp = trim($_GET['timestamp'] ?? date('Y-m-d H:i:s'));
 
 try {
@@ -13,29 +23,55 @@ try {
 
     $clase = null;
     if ($id_clase) {
-        $clase = $claseModel->obtenerDetalleClase($id_clase);
+        $clase = $claseModel->obtenerDetalleClase($id_clase, $id_profesor);
     } else {
-        // Si no se pasa aula, buscar la primera aula activa que tenga horarios hoy o aula con id más bajo
-        if (!$id_aula) {
-            $stmtAula = $db->query("
-                SELECT COALESCE(
-                    (SELECT id_aula FROM horarios WHERE activo = 1 AND id_aula IS NOT NULL LIMIT 1),
-                    (SELECT id_aula FROM aulas WHERE activo = 1 ORDER BY id_aula ASC LIMIT 1),
-                    1
-                )
-            ");
-            $id_aula = (int)$stmtAula->fetchColumn();
-        }
-        $clase = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp);
+        $clase = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp, $id_profesor);
     }
 
-    // Obtener lista de aulas disponibles para el selector rápido del panel
-    $stmtAulas = $db->query("SELECT id_aula, nombre, codigo, ubicacion FROM aulas WHERE activo = 1 ORDER BY id_aula ASC");
-    $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
+    // Aulas y Grados disponibles según el rol
+    if ($id_profesor !== null) {
+        $stmtAulas = $db->prepare("
+            SELECT DISTINCT aul.id_aula, aul.nombre, aul.codigo, aul.ubicacion, g.nombre AS grado_nombre
+            FROM asignacion_docente ad
+            LEFT JOIN grados g ON g.id_grado = ad.id_grado
+            LEFT JOIN horarios h ON h.id_asignacion = ad.id_asignacion
+            JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula)
+            WHERE ad.id_profesor = :id_profesor
+              AND ad.activo = 1
+              AND aul.activo = 1
+            ORDER BY aul.nombre ASC
+        ");
+        $stmtAulas->execute([':id_profesor' => $id_profesor]);
+        $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
 
-    // Obtener lista de grados disponibles
-    $stmtGrados = $db->query("SELECT id_grado, nombre, id_aula FROM grados WHERE activo = 1 ORDER BY id_grado ASC");
-    $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
+        $stmtGrados = $db->prepare("
+            SELECT DISTINCT g.id_grado, g.nombre, g.id_aula
+            FROM asignacion_docente ad
+            JOIN grados g ON g.id_grado = ad.id_grado
+            WHERE ad.id_profesor = :id_profesor
+              AND ad.activo = 1
+              AND g.activo = 1
+            ORDER BY g.nombre ASC
+        ");
+        $stmtGrados->execute([':id_profesor' => $id_profesor]);
+        $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $stmtAulas = $db->query("
+            SELECT id_aula, nombre, codigo, ubicacion, '' AS grado_nombre
+            FROM aulas
+            WHERE activo = 1
+            ORDER BY id_aula ASC
+        ");
+        $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtGrados = $db->query("
+            SELECT id_grado, nombre, id_aula
+            FROM grados
+            WHERE activo = 1
+            ORDER BY id_grado ASC
+        ");
+        $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     http_response_code(200);
     echo json_encode([

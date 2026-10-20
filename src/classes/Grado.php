@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 class Grado {
-    private $conn;
+    private PDO $conn;
 
-    public $id_grado;
-    public $nombre;
-    public $id_aula;
+    public ?int $id_grado = null;
+    public ?string $nombre = null;
+    public ?int $id_aula = null;
 
-    public function __construct($db) {
+    public function __construct(PDO $db) {
         $this->conn = $db;
     }
 
-    public function crear() {
+    public function crear(): bool {
         $stmt = $this->conn->prepare("
             INSERT INTO grados(nombre, id_aula)
             VALUES(:nombre, :id_aula)
@@ -22,7 +24,26 @@ class Grado {
         ]);
     }
 
-    public function leer() {
+    public function leer(?int $id_profesor = null): PDOStatement {
+        if ($id_profesor !== null) {
+            $stmt = $this->conn->prepare("
+                SELECT DISTINCT
+                    g.id_grado,
+                    g.nombre,
+                    g.id_aula,
+                    a.nombre AS aula,
+                    g.activo,
+                    CONCAT(g.nombre, ' - ', a.nombre) AS descripcion
+                FROM grados g
+                INNER JOIN aulas a ON g.id_aula = a.id_aula
+                INNER JOIN asignacion_docente ad ON ad.id_grado = g.id_grado
+                WHERE g.activo = 1 AND ad.id_profesor = :id_profesor AND ad.activo = 1
+                ORDER BY g.nombre ASC
+            ");
+            $stmt->execute([':id_profesor' => $id_profesor]);
+            return $stmt;
+        }
+
         $stmt = $this->conn->prepare("
             SELECT 
                 g.id_grado,
@@ -40,7 +61,7 @@ class Grado {
         return $stmt;
     }
 
-    public function leerDesactivados() {
+    public function leerDesactivados(): PDOStatement {
         $stmt = $this->conn->prepare("
             SELECT 
                 g.id_grado,
@@ -58,12 +79,11 @@ class Grado {
         return $stmt;
     }
 
-    public function actualizar() {
+    public function actualizar(): bool {
         $stmt = $this->conn->prepare("
             UPDATE grados
-            SET nombre=:nombre,
-                id_aula=:id_aula
-            WHERE id_grado=:id_grado
+            SET nombre = :nombre, id_aula = :id_aula
+            WHERE id_grado = :id_grado
         ");
 
         return $stmt->execute([
@@ -73,39 +93,42 @@ class Grado {
         ]);
     }
 
-    public function desactivar() {
+    public function desactivar(): bool {
         $stmt = $this->conn->prepare("
-            UPDATE grados SET activo = 0 WHERE id_grado = :id_grado
-        ");
-
-        return $stmt->execute([":id_grado" => $this->id_grado]);
-    }
-
-    public function restaurar() {
-        $stmt = $this->conn->prepare("
-            UPDATE grados SET activo = 1 WHERE id_grado = :id_grado
-        ");
-
-        return $stmt->execute([":id_grado" => $this->id_grado]);
-    }
-
-    public function contarEstudiantesAsociados() {
-        $stmt = $this->conn->prepare("
-            SELECT COUNT(*) FROM estudiantes
+            UPDATE grados
+            SET activo = 0
             WHERE id_grado = :id_grado
         ");
-        $stmt->execute([":id_grado" => $this->id_grado]);
 
+        return $stmt->execute([
+            ":id_grado" => $this->id_grado
+        ]);
+    }
+
+    public function restaurar(): bool {
+        $stmt = $this->conn->prepare("
+            UPDATE grados
+            SET activo = 1
+            WHERE id_grado = :id_grado
+        ");
+
+        return $stmt->execute([
+            ":id_grado" => $this->id_grado
+        ]);
+    }
+
+    public function contarDependencias(): int {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                (SELECT COUNT(*) FROM horarios WHERE id_grado = :id_grado) +
+                (SELECT COUNT(*) FROM estudiantes WHERE id_grado = :id_grado) as total
+        ");
+        $stmt->execute([":id_grado" => $this->id_grado]);
         return (int) $stmt->fetchColumn();
     }
 
-    public function eliminar() {
-        $stmt = $this->conn->prepare("
-            DELETE FROM grados WHERE id_grado = :id_grado
-        ");
-        $stmt->execute([":id_grado" => $this->id_grado]);
-
-        return $stmt->rowCount() > 0;
+    public function eliminar(): bool {
+        $stmt = $this->conn->prepare("DELETE FROM grados WHERE id_grado = :id_grado");
+        return $stmt->execute([":id_grado" => $this->id_grado]);
     }
 }
-?>

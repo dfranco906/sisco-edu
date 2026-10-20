@@ -2,21 +2,26 @@
 require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 require_once __DIR__ . '/../../../src/config/app.php';
+
+$rol = $_SESSION['rol'] ?? '';
+$esDocente = ($rol === 'Profesor');
 ?>
 
 <main class="app-main flex-1 p-4 sm:p-6 lg:p-10">
     <header class="app-page-header p-5 sm:p-6 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-                <h2 class="text-2xl sm:text-3xl font-bold">Horarios por Grado</h2>
-                <p class="mt-1">Organizá los horarios semanales según grado y aula asignada.</p>
+                <h2 class="text-2xl sm:text-3xl font-bold"><?= $esDocente ? 'Mis Horarios de Clase' : 'Horarios por Grado' ?></h2>
+                <p class="mt-1"><?= $esDocente ? 'Consultá tus clases semanales según los grados y materias que tenés asignados.' : 'Organizá los horarios semanales según grado y aula asignada.' ?></p>
             </div>
 
             <div class="app-toolbar-actions flex flex-wrap gap-3">
+                <?php if (!$esDocente): ?>
                 <button id="btn-crear-horario" type="button"
                         class="btn btn-success">
                     + Crear horario
                 </button>
+                <?php endif; ?>
                 <a href="<?= base_url('mvc/views/dashboard.php') ?>"
                    class="btn btn-primary">
                     Volver
@@ -50,15 +55,17 @@ require_once __DIR__ . '/../../../src/config/app.php';
     <section class="app-panel p-4 sm:p-6" aria-labelledby="titulo-lista-horarios">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-5">
             <div>
-                <h3 id="titulo-lista-horarios" class="text-xl font-bold">Lista completa</h3>
+                <h3 id="titulo-lista-horarios" class="text-xl font-bold"><?= $esDocente ? 'Mis clases asignadas' : 'Lista completa' ?></h3>
                 <p class="text-sm mt-1" style="color: var(--color-muted);">
-                    Vista administrativa para buscar, editar o desactivar horarios.
+                    <?= $esDocente ? 'Detalle completo de tus horarios en cada grado y turno.' : 'Vista administrativa para buscar, editar o desactivar horarios.' ?>
                 </p>
             </div>
+            <?php if (!$esDocente): ?>
             <a href="<?= base_url('mvc/views/horarios/desactivados.php') ?>"
                class="btn btn-dark">
                 Ver desactivados
             </a>
+            <?php endif; ?>
         </div>
 
         <div class="app-filters mb-5">
@@ -87,17 +94,20 @@ require_once __DIR__ . '/../../../src/config/app.php';
                         <th>Materia</th>
                         <th>Profesor</th>
                         <th>Aula</th>
+                        <?php if (!$esDocente): ?>
                         <th>Acciones</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody id="tabla-horarios-body">
-                    <tr><td colspan="8" class="text-center">Cargando horarios...</td></tr>
+                    <tr><td colspan="<?= $esDocente ? '7' : '8' ?>" class="text-center">Cargando horarios...</td></tr>
                 </tbody>
             </table>
         </div>
     </section>
 </main>
 
+<?php if (!$esDocente): ?>
 <div id="modal-crear-horario" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
     <div class="app-modal-dialog max-w-2xl">
         <div class="flex items-start justify-between gap-4 mb-5">
@@ -231,13 +241,15 @@ require_once __DIR__ . '/../../../src/config/app.php';
         </form>
     </div>
 </div>
+<?php endif; ?>
 
 <script>
 window.HORARIOS_CONFIG = <?= json_encode([
     'apiHorarios' => base_url('src/api/Horario/leer_horarios.php'),
     'apiGrados' => base_url('src/api/Grado/leer_grados.php'),
     'apiAsignaciones' => base_url('src/api/Asignaciones/leer_asignaciones.php'),
-    'apiDesactivar' => base_url('src/api/Horario/desactivar_horario.php')
+    'apiDesactivar' => base_url('src/api/Horario/desactivar_horario.php'),
+    'esDocente' => $esDocente
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="<?= base_url('public/js/horarios.js') ?>"></script>
