@@ -1,13 +1,14 @@
 <?php
 $titulo = "Aulas desactivadas";
 $api = "src/api/Aula/leer_aulas_desactivadas.php";
-$columnas = ["id_aula", "nombre", "codigo", "ubicacion", "activo"];
+$columnas = ["id_aula", "nombre", "codigo", "piso", "ubicacion", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "codigo"],
+    "buscar" => ["nombre", "codigo", "piso", "ubicacion"],
     "placeholder" => "Buscar aula desactivada...",
-    "selects" => [
-        ["campo" => "ubicacion", "label" => "Ubicacion"]
+    "pestanas" => [
+        "campo" => "piso",
+        "todosLabel" => "Todos los pisos"
     ]
 ];
 
@@ -17,4 +18,3 @@ $urlVolver = "mvc/views/aulas/index.php";
 $idCampo = "id_aula";
 
 require_once __DIR__ . '/../partials/table_page.php';
-?>

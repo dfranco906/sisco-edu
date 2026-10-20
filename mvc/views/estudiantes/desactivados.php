@@ -2,13 +2,14 @@
 $titulo = "Estudiantes desactivados";
 $api = "src/api/Estudiante/leer_estudiantes_desactivados.php";
 
-$columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado", "activo"];
+$columnas = ["id_estudiante", "nombre", "apellido", "cedula_identidad", "grado", "materias_matriculadas", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "apellido", "cedula_identidad"],
+    "buscar" => ["nombre", "apellido", "cedula_identidad", "grado"],
     "placeholder" => "Buscar estudiante desactivado...",
-    "selects" => [
-        ["campo" => "grado", "label" => "Grado"]
+    "pestanas" => [
+        "campo" => "grado",
+        "todosLabel" => "Todos los cursos"
     ]
 ];
 

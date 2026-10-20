@@ -5,10 +5,20 @@ $api = "src/api/Usuario/leer_usuarios_desactivados.php";
 $columnas = ["id_usuario", "nombre", "apellido", "usuario", "email", "celular", "rol", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "apellido", "usuario", "email"],
+    "buscar" => ["nombre", "apellido", "usuario", "email", "rol"],
     "placeholder" => "Buscar usuario desactivado...",
-    "selects" => [
-        ["campo" => "rol", "label" => "Rol"]
+    "pestanas" => [
+        "campo" => "rol",
+        "todosLabel" => "Todos",
+        "opciones" => [
+            ["valor" => "", "label" => "Todos"],
+            ["valor" => "SuperAdmin", "label" => "SuperAdmin"],
+            ["valor" => "Administrador", "label" => "Administradores"],
+            ["valor" => "Coordinador", "label" => "Coordinadores"],
+            ["valor" => "Profesor", "label" => "Profesores"],
+            ["valor" => "Estudiante", "label" => "Estudiantes"],
+            ["valor" => "Tutor", "label" => "Tutores"]
+        ]
     ]
 ];
 

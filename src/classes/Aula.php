@@ -6,6 +6,7 @@ class Aula {
     public $id_aula;
     public $nombre;
     public $codigo;
+    public $piso;
     public $ubicacion;
 
     public function __construct($db) {
@@ -13,13 +14,14 @@ class Aula {
     }
 
     public function crear() {
-        $query = "INSERT INTO " . $this->table_name . " (nombre, codigo, ubicacion)
-                  VALUES (:nombre, :codigo, :ubicacion)";
+        $query = "INSERT INTO " . $this->table_name . " (nombre, codigo, piso, ubicacion)
+                  VALUES (:nombre, :codigo, :piso, :ubicacion)";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":codigo", $this->codigo);
+        $stmt->bindParam(":piso", $this->piso);
         $stmt->bindParam(":ubicacion", $this->ubicacion);
 
         return $stmt->execute();
@@ -28,7 +30,7 @@ class Aula {
     public function leer() {
         $query = "SELECT * FROM " . $this->table_name . "
                   WHERE activo = 1
-                  ORDER BY id_aula DESC";
+                  ORDER BY piso ASC, nombre ASC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -39,7 +41,7 @@ class Aula {
     public function leerDesactivadas() {
         $query = "SELECT * FROM " . $this->table_name . "
                   WHERE activo = 0
-                  ORDER BY id_aula DESC";
+                  ORDER BY piso ASC, nombre ASC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -51,6 +53,7 @@ class Aula {
         $query = "UPDATE " . $this->table_name . "
                   SET nombre=:nombre,
                       codigo=:codigo,
+                      piso=:piso,
                       ubicacion=:ubicacion
                   WHERE id_aula=:id";
 
@@ -58,6 +61,7 @@ class Aula {
 
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":codigo", $this->codigo);
+        $stmt->bindParam(":piso", $this->piso);
         $stmt->bindParam(":ubicacion", $this->ubicacion);
         $stmt->bindParam(":id", $this->id_aula);
 
@@ -86,26 +90,13 @@ class Aula {
         return $stmt->execute();
     }
 
-    public function contarGradosAsociados() {
-        $query = "SELECT COUNT(*) FROM grados
-                  WHERE id_aula=:id";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id_aula);
-        $stmt->execute();
-
-        return (int) $stmt->fetchColumn();
-    }
-
     public function eliminar() {
         $query = "DELETE FROM " . $this->table_name . "
                   WHERE id_aula=:id";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id_aula);
-        $stmt->execute();
 
-        return $stmt->rowCount() > 0;
+        return $stmt->execute();
     }
 }
-?>

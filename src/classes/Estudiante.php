@@ -10,19 +10,72 @@ class Estudiante {
         $this->conn = $db;
     }
 
-    public function crear() {
+    public function matricularEnMateriasDeGrado(int $id_estudiante, int $id_grado): int {
+        if ($id_estudiante <= 0 || $id_grado <= 0) {
+            return 0;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT DISTINCT ad.id_materia, ad.id_asignacion
+            FROM asignacion_docente ad
+            WHERE ad.id_grado = :id_grado AND ad.activo = 1
+        ");
+        $stmt->execute([':id_grado' => $id_grado]);
+        $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($materias)) {
+            return 0;
+        }
+
+        $stmtMatricula = $this->conn->prepare("
+            INSERT INTO matriculas (id_estudiante, id_grado, id_materia, id_asignacion, anho_lectivo, activo)
+            VALUES (:id_estudiante, :id_grado, :id_materia, :id_asignacion, 2026, 1)
+            ON CONFLICT (id_estudiante, id_materia, anho_lectivo)
+            DO UPDATE SET id_grado = EXCLUDED.id_grado, id_asignacion = EXCLUDED.id_asignacion, activo = 1
+        ");
+
+        $total = 0;
+        foreach ($materias as $m) {
+            $ok = $stmtMatricula->execute([
+                ':id_estudiante' => $id_estudiante,
+                ':id_grado' => $id_grado,
+                ':id_materia' => (int)$m['id_materia'],
+                ':id_asignacion' => !empty($m['id_asignacion']) ? (int)$m['id_asignacion'] : null
+            ]);
+            if ($ok) $total++;
+        }
+
+        return $total;
+    }
+
+    public function crear(): array {
         $query = "INSERT INTO estudiantes (nombre, apellido, cedula_identidad, id_grado, user_id_global)
                   VALUES (:nombre, :apellido, :cedula, :id_grado, :user_id_global)";
 
         $stmt = $this->conn->prepare($query);
 
-        return $stmt->execute([
-            ":nombre" => $this->nombre,
-            ":apellido" => $this->apellido,
-            ":cedula" => $this->cedula_identidad,
-            ":id_grado" => $this->id_grado,
+        $ok = $stmt->execute([
+            ":nombre" => trim((string)$this->nombre),
+            ":apellido" => trim((string)$this->apellido),
+            ":cedula" => trim((string)$this->cedula_identidad),
+            ":id_grado" => !empty($this->id_grado) ? (int)$this->id_grado : null,
             ":user_id_global" => $this->user_id_global
         ]);
+
+        $matriculadas = 0;
+        if ($ok) {
+            $idNuevo = (int)$this->conn->lastInsertId();
+            $this->id_estudiante = $idNuevo;
+            if (!empty($this->id_grado)) {
+                $matriculadas = $this->matricularEnMateriasDeGrado($idNuevo, (int)$this->id_grado);
+            }
+        }
+
+        return [
+            'ok' => $ok,
+            'id_estudiante' => $this->id_estudiante,
+            'materias_matriculadas' => $matriculadas
+        ];
     }
 
     public function leer() {
@@ -32,13 +85,21 @@ class Estudiante {
                     e.apellido,
                     e.cedula_identidad,
                     e.user_id_global,
+                    e.id_grado,
                     g.nombre AS grado,
+                    COALESCE(m.total_materias, 0) AS materias_matriculadas,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
                   LEFT JOIN grados g ON e.id_grado = g.id_grado
+                  LEFT JOIN (
+                      SELECT id_estudiante, COUNT(*) AS total_materias
+                      FROM matriculas
+                      WHERE activo = 1
+                      GROUP BY id_estudiante
+                  ) m ON e.id_estudiante = m.id_estudiante
                   WHERE e.activo = 1
-                  ORDER BY e.nombre ASC";
+                  ORDER BY g.nombre ASC, e.apellido ASC, e.nombre ASC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -52,11 +113,19 @@ class Estudiante {
                     e.apellido,
                     e.cedula_identidad,
                     e.user_id_global,
+                    e.id_grado,
                     g.nombre AS grado,
+                    COALESCE(m.total_materias, 0) AS materias_matriculadas,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
                   LEFT JOIN grados g ON e.id_grado = g.id_grado
+                  LEFT JOIN (
+                      SELECT id_estudiante, COUNT(*) AS total_materias
+                      FROM matriculas
+                      WHERE activo = 1
+                      GROUP BY id_estudiante
+                  ) m ON e.id_estudiante = m.id_estudiante
                   WHERE e.activo = 0
                   ORDER BY e.nombre ASC";
 
@@ -96,7 +165,13 @@ class Estudiante {
                   WHERE id_estudiante=:id";
 
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute($params);
+        $ok = $stmt->execute($params);
+
+        if ($ok && !empty($this->id_grado)) {
+            $this->matricularEnMateriasDeGrado((int)$this->id_estudiante, (int)$this->id_grado);
+        }
+
+        return $ok;
     }
 
     public function desactivar() {
@@ -121,27 +196,11 @@ class Estudiante {
         return $stmt->execute([":id" => $this->id_estudiante]);
     }
 
-    public function contarDependencias() {
-        $query = "SELECT
-                    (SELECT COUNT(*) FROM asistencias_estudiantes WHERE id_estudiante=:id1) +
-                    (SELECT COUNT(*) FROM solicitudes_huella WHERE id_estudiante=:id2)";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ":id1" => $this->id_estudiante,
-            ":id2" => $this->id_estudiante
-        ]);
-
-        return (int) $stmt->fetchColumn();
-    }
-
     public function eliminar() {
         if (empty($this->id_estudiante)) return false;
 
-        $stmt = $this->conn->prepare("DELETE FROM estudiantes WHERE id_estudiante=:id");
-        $stmt->execute([":id" => $this->id_estudiante]);
-
-        return $stmt->rowCount() > 0;
+        $query = "DELETE FROM estudiantes WHERE id_estudiante=:id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([":id" => $this->id_estudiante]);
     }
 }
-?>

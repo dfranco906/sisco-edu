@@ -11,12 +11,14 @@ try {
     $aula->id_aula = $_POST['id_aula'] ?? null;
     $aula->nombre = $_POST['nombre'] ?? null;
     $aula->codigo = $_POST['codigo'] ?? null;
-    $aula->ubicacion = $_POST['ubicacion'] ?? null;
+    $aula->piso = !empty($_POST['piso']) ? trim($_POST['piso']) : '1° Piso';
+    $aula->ubicacion = !empty($_POST['ubicacion']) ? trim($_POST['ubicacion']) : $aula->piso;
 
-    if (!$aula->id_aula || !$aula->nombre || !$aula->codigo || !$aula->ubicacion) {
+    if (!$aula->id_aula || !$aula->nombre || !$aula->codigo) {
+        http_response_code(400);
         echo json_encode([
             "status" => "error",
-            "message" => "Datos incompletos"
+            "message" => "Datos incompletos para actualizar el aula"
         ]);
         exit;
     }
@@ -29,10 +31,9 @@ try {
     ]);
 
 } catch (Throwable $e) {
+    http_response_code(400);
     echo json_encode([
         "status" => "error",
-        "message" => "Error interno",
-        "debug" => $e->getMessage()
+        "message" => "Error al actualizar aula: " . $e->getMessage()
     ]);
 }
-?>

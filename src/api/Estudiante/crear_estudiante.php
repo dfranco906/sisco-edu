@@ -11,26 +11,32 @@ try {
     $estudiante->nombre = $_POST['nombre'] ?? null;
     $estudiante->apellido = $_POST['apellido'] ?? null;
     $estudiante->cedula_identidad = $_POST['cedula_identidad'] ?? null;
-    $estudiante->id_grado = $_POST['id_grado'] ?? null;
+    $estudiante->id_grado = !empty($_POST['id_grado']) ? (int)$_POST['id_grado'] : null;
     $estudiante->user_id_global = $_POST['user_id_global'] ?? ('EST_' . uniqid() . '_' . random_int(100, 999));
 
     if (!$estudiante->nombre || !$estudiante->apellido || !$estudiante->cedula_identidad || !$estudiante->id_grado) {
-        echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Datos incompletos. Todos los campos incluyendo el grado son obligatorios."]);
         exit;
     }
 
     $resultado = $estudiante->crear();
+    $exito = is_array($resultado) ? ($resultado['ok'] ?? false) : (bool)$resultado;
+    $matriculadas = is_array($resultado) ? ($resultado['materias_matriculadas'] ?? 0) : 0;
 
+    http_response_code($exito ? 201 : 400);
     echo json_encode([
-        "status" => $resultado ? "success" : "error",
-        "message" => $resultado ? "Estudiante creado correctamente" : "Error al crear estudiante"
+        "status" => $exito ? "success" : "error",
+        "message" => $exito
+            ? "Estudiante registrado correctamente y matriculado en {$matriculadas} materias del curso."
+            : "Error al crear el estudiante",
+        "materias_matriculadas" => $matriculadas
     ]);
 
 } catch (Throwable $e) {
+    http_response_code(400);
     echo json_encode([
         "status" => "error",
-        "message" => "Error interno",
-        "debug" => $e->getMessage()
+        "message" => "Error interno al crear estudiante: " . $e->getMessage()
     ]);
 }
-?>

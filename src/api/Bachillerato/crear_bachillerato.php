@@ -14,18 +14,26 @@ try {
 
     if (empty(trim((string)$bach->nombre)) || empty(trim((string)$bach->codigo))) {
         http_response_code(400);
-        echo json_encode(["status" => "error", "message" => "Nombre y código del bachillerato son obligatorios"]);
+        echo json_encode(["status" => "error", "message" => "El nombre y el código del bachillerato son obligatorios."]);
         exit;
     }
 
     $res = $bach->crear();
-    http_response_code($res ? 201 : 400);
+    $exito = is_array($res) ? ($res['ok'] ?? false) : (bool)$res;
+    $codigo = is_array($res) ? ($res['code'] ?? 200) : ($exito ? 201 : 400);
+    $mensaje = is_array($res) ? ($res['message'] ?? '') : ($exito ? "Bachillerato creado correctamente" : "Error al registrar el bachillerato");
+
+    http_response_code($codigo);
     echo json_encode([
-        "status" => $res ? "success" : "error",
-        "message" => $res ? "Bachillerato creado correctamente" : "Error al registrar bachillerato"
+        "status" => $exito ? "success" : "error",
+        "message" => $mensaje
     ]);
 } catch (Throwable $e) {
     error_log("Error en crear_bachillerato: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error interno al crear bachillerato"]);
+    $esDuplicado = str_contains($e->getMessage(), '23505') || str_contains($e->getMessage(), 'unique constraint');
+    http_response_code($esDuplicado ? 409 : 400);
+    echo json_encode([
+        "status" => "error",
+        "message" => $esDuplicado ? "Ya existe una especialidad con ese código o nombre." : "Error al registrar el bachillerato: " . $e->getMessage()
+    ]);
 }

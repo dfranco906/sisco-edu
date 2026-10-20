@@ -88,6 +88,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         </div>
 
+        <div id="pestanas-tabla" class="app-tabs mb-4"></div>
         <div id="filtros-tabla" class="app-filters mb-6"></div>
 
         <div class="app-table-wrap">

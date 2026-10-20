@@ -13,18 +13,26 @@ try {
 
     if (empty(trim((string)$nivel->nombre))) {
         http_response_code(400);
-        echo json_encode(["status" => "error", "message" => "El nombre del nivel o ciclo es obligatorio"]);
+        echo json_encode(["status" => "error", "message" => "El nombre del nivel es obligatorio"]);
         exit;
     }
 
     $res = $nivel->crear();
-    http_response_code($res ? 201 : 400);
+    $exito = is_array($res) ? ($res['ok'] ?? false) : (bool)$res;
+    $codigo = is_array($res) ? ($res['code'] ?? 200) : ($exito ? 201 : 400);
+    $mensaje = is_array($res) ? ($res['message'] ?? '') : ($exito ? "Nivel creado correctamente" : "Error al registrar el nivel");
+
+    http_response_code($codigo);
     echo json_encode([
-        "status" => $res ? "success" : "error",
-        "message" => $res ? "Nivel/Ciclo creado correctamente" : "Error al registrar nivel"
+        "status" => $exito ? "success" : "error",
+        "message" => $mensaje
     ]);
 } catch (Throwable $e) {
     error_log("Error en crear_nivel: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error interno al crear nivel"]);
+    $esDuplicado = str_contains($e->getMessage(), '23505') || str_contains($e->getMessage(), 'unique constraint');
+    http_response_code($esDuplicado ? 409 : 400);
+    echo json_encode([
+        "status" => "error",
+        "message" => $esDuplicado ? "Ya existe un nivel registrado con ese nombre o código." : "Error al registrar el nivel: " . $e->getMessage()
+    ]);
 }
