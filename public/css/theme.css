@@ -832,6 +832,225 @@ body.sidebar-open {
     display: none;
 }
 
+/* Matriz Horario Semanal Moderno */
+.schedule-matrix-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0.85rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-card);
+}
+
+.schedule-matrix-table {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+.schedule-matrix-table th,
+.schedule-matrix-table td {
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.45rem;
+    vertical-align: top;
+}
+
+.schedule-matrix-table th:last-child,
+.schedule-matrix-table td:last-child {
+    border-right: none;
+}
+
+.schedule-matrix-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-table-thead);
+    color: var(--color-text);
+    font-weight: 800;
+    font-size: 0.82rem;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+}
+
+.schedule-matrix-table thead th.dia-actual {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--color-primary);
+}
+
+.schedule-matrix-table .slot-time-col {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: var(--color-table-thead);
+    width: 135px;
+    min-width: 135px;
+    max-width: 145px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.6rem 0.4rem;
+}
+
+.matrix-slot-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    background: #DBEAFE;
+    color: #1E40AF;
+    margin-bottom: 0.25rem;
+}
+
+.matrix-slot-badge.is-receso {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.matrix-slot-hours {
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--color-muted);
+}
+
+.matrix-subject-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 5.2rem;
+    border-radius: 0.65rem;
+    padding: 0.6rem 0.55rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: all 180ms ease;
+}
+
+.matrix-subject-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: rgba(37, 99, 235, 0.4);
+}
+
+.matrix-subject-card.is-live-class {
+    border: 2px solid #10B981 !important;
+    background: rgba(16, 185, 129, 0.06);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+    position: relative;
+}
+
+.matrix-subject-card.is-receso-card {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px dashed rgba(245, 158, 11, 0.45);
+    min-height: 3.5rem;
+}
+
+.matrix-live-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #065F46;
+    background: #A7F3D0;
+    border-radius: 9999px;
+    padding: 0.12rem 0.5rem;
+    margin-bottom: 0.35rem;
+    width: fit-content;
+    align-self: center;
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #059669;
+    animation: livePulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+.matrix-subject-name {
+    font-weight: 800;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    color: var(--color-text);
+    text-align: center;
+    word-break: break-word;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0;
+}
+
+.btn-ver-horario {
+    display: block;
+    width: 100%;
+    margin-top: 0.45rem;
+    padding: 0.32rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+    border-radius: 0.45rem;
+    background: var(--color-primary);
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, transform 100ms ease;
+}
+
+.btn-ver-horario:hover {
+    background: var(--color-primary-dark);
+}
+
+.btn-ver-horario:active {
+    transform: scale(0.98);
+}
+
+.matrix-empty-cell {
+    background: var(--color-table-row-hover);
+    opacity: 0.35;
+}
+
+[data-theme="dark"] .matrix-slot-badge,
+.dark .matrix-slot-badge {
+    background: #1E293B;
+    color: #93C5FD;
+}
+
+[data-theme="dark"] .matrix-slot-badge.is-receso,
+.dark .matrix-slot-badge.is-receso {
+    background: #78350F;
+    color: #FDE68A;
+}
+
+[data-theme="dark"] .matrix-live-pill,
+.dark .matrix-live-pill {
+    background: #064E3B;
+    color: #6EE7B7;
+}
+
+[data-theme="dark"] .matrix-subject-card.is-live-class,
+.dark .matrix-subject-card.is-live-class {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: #34D399 !important;
+}
+
+[data-theme="dark"] .matrix-subject-card.is-receso-card,
+.dark .matrix-subject-card.is-receso-card {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
 .room-badge {
     display: inline-flex;
     border-radius: 999px;

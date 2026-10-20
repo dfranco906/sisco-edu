@@ -17,10 +17,15 @@ if ($rol === 'Profesor' && !empty($_SESSION['id_profesor'])) {
     $id_profesor = (int)$_GET['id_profesor'];
 }
 
+$id_grado = null;
+if (isset($_GET['id_grado']) && is_numeric($_GET['id_grado'])) {
+    $id_grado = (int)$_GET['id_grado'];
+}
+
 try {
     $db = (new Database())->getConnection();
     $horario = new Horario($db);
-    $stmt = $horario->leerDesactivados($id_profesor);
+    $stmt = $horario->leerDesactivados($id_profesor, $id_grado);
 
     http_response_code(200);
     echo json_encode([

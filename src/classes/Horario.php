@@ -64,7 +64,7 @@ class Horario
         ]);
     }
 
-    private function consultaListado($activo, ?int $id_profesor = null)
+    private function consultaListado($activo, ?int $id_profesor = null, ?int $id_grado = null)
     {
         $sql = "
             SELECT
@@ -77,14 +77,29 @@ class Horario
                 COALESCE(h.id_aula, g.id_aula, aul_asig.id_aula) AS id_aula,
                 h.activo,
                 COALESCE(g.nombre, g_asig.nombre) AS grado,
-                COALESCE(a.nombre, aul_asig.nombre) AS aula,
-                m.nombre AS materia,
-                CONCAT(p.nombre, ' ', p.apellido) AS profesor
+                COALESCE(a.nombre, aul_asig.nombre, 'Sin aula') AS aula,
+                COALESCE(a.ubicacion, aul_asig.ubicacion, 'Sin ubicación') AS ubicacion,
+                COALESCE(a.codigo, aul_asig.codigo, '') AS codigo_aula,
+                COALESCE(m.nombre, 'RECESO') AS materia,
+                ad.id_materia,
+                ad.id_profesor,
+                CASE 
+                    WHEN UPPER(COALESCE(m.nombre, '')) = 'RECESO' THEN 'Receso Escolar'
+                    WHEN p.nombre IS NOT NULL THEN CONCAT(p.nombre, ' ', p.apellido)
+                    ELSE 'Docente no asignado'
+                END AS profesor,
+                p.cedula_identidad AS profesor_ci,
+                COALESCE((
+                    SELECT COUNT(DISTINCT e.id_estudiante)
+                    FROM estudiantes e
+                    WHERE e.id_grado = COALESCE(h.id_grado, ad.id_grado)
+                      AND e.activo = 1
+                ), 0) AS total_estudiantes
             FROM horarios h
             LEFT JOIN asignacion_docente ad ON h.id_asignacion = ad.id_asignacion
             LEFT JOIN grados g ON h.id_grado = g.id_grado
-            LEFT JOIN aulas a ON h.id_aula = a.id_aula
             LEFT JOIN grados g_asig ON ad.id_grado = g_asig.id_grado
+            LEFT JOIN aulas a ON COALESCE(h.id_aula, g.id_aula) = a.id_aula
             LEFT JOIN aulas aul_asig ON g_asig.id_aula = aul_asig.id_aula
             LEFT JOIN materias m ON ad.id_materia = m.id_materia
             LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
@@ -95,6 +110,11 @@ class Horario
         if ($id_profesor !== null) {
             $sql .= " AND ad.id_profesor = :id_profesor ";
             $params[":id_profesor"] = $id_profesor;
+        }
+
+        if ($id_grado !== null) {
+            $sql .= " AND COALESCE(h.id_grado, ad.id_grado) = :id_grado ";
+            $params[":id_grado"] = $id_grado;
         }
 
         $sql .= "
@@ -120,14 +140,14 @@ class Horario
         return $stmt;
     }
 
-    public function leer(?int $id_profesor = null)
+    public function leer(?int $id_profesor = null, ?int $id_grado = null)
     {
-        return $this->consultaListado(1, $id_profesor);
+        return $this->consultaListado(1, $id_profesor, $id_grado);
     }
 
-    public function leerDesactivados(?int $id_profesor = null)
+    public function leerDesactivados(?int $id_profesor = null, ?int $id_grado = null)
     {
-        return $this->consultaListado(0, $id_profesor);
+        return $this->consultaListado(0, $id_profesor, $id_grado);
     }
 
     public function actualizar()
