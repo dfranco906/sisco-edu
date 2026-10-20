@@ -473,9 +473,9 @@
         } catch (error) {
             console.error(error);
             const estadoSemanal = $("#estado-horario-semanal");
-            if (estadoSemanal) estadoSemanal.textContent = "No se pudieron cargar los datos de horarios.";
+            if (estadoSemanal) estadoSemanal.textContent = "No se pudieron cargar los datos de horarios: " + error.message;
             const tablaBody = $("#tabla-horarios-body");
-            if (tablaBody) tablaBody.innerHTML = '<tr><td colspan="8" class="text-center text-red-600">Error al cargar horarios.</td></tr>';
+            if (tablaBody) tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-red-600">Error al cargar horarios: ${escapar(error.message)}</td></tr>`;
         }
     }
 

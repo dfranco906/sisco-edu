@@ -28,7 +28,6 @@ switch ($rolActual) {
             ['Profesores', 'mvc/views/profesores/index.php'],
             ['Estudiantes', 'mvc/views/estudiantes/index.php'],
             ['Horarios', 'mvc/views/horarios/index.php'],
-            ['Asist. Estudiantes', 'mvc/views/asistencias_estudiantes/index.php'],
             ['Asist. Profesores', 'mvc/views/asistencias_profesores/index.php'],
             ['Administración', 'mvc/views/administracion/index.php'],
         ];
@@ -42,7 +41,6 @@ switch ($rolActual) {
             ['Profesores', 'mvc/views/profesores/index.php'],
             ['Estudiantes', 'mvc/views/estudiantes/index.php'],
             ['Horarios', 'mvc/views/horarios/index.php'],
-            ['Asist. Estudiantes', 'mvc/views/asistencias_estudiantes/index.php'],
             ['Asist. Profesores', 'mvc/views/asistencias_profesores/index.php'],
         ];
         break;
@@ -53,7 +51,6 @@ switch ($rolActual) {
             ['Clase en Vivo', 'mvc/views/clases/panel.php'],
             ['Mis Planes Anuales', 'mvc/views/planes_anuales/index.php'],
             ['Horarios', 'mvc/views/horarios/index.php'],
-            ['Asist. Estudiantes', 'mvc/views/asistencias_estudiantes/index.php'],
         ];
         break;
 

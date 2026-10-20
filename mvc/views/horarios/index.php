@@ -16,12 +16,11 @@ $esDocente = ($rol === 'Profesor');
             </div>
 
             <div class="app-toolbar-actions flex flex-wrap gap-3">
-                <?php if (!$esDocente): ?>
                 <button id="btn-crear-horario" type="button"
-                        class="btn btn-success">
+                        class="btn btn-success <?= $esDocente ? 'hidden' : '' ?>"
+                        <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?>>
                     + Crear horario
                 </button>
-                <?php endif; ?>
                 <a href="<?= base_url('mvc/views/dashboard.php') ?>"
                    class="btn btn-primary">
                     Volver
@@ -107,8 +106,7 @@ $esDocente = ($rol === 'Profesor');
     </section>
 </main>
 
-<?php if (!$esDocente): ?>
-<div id="modal-crear-horario" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
+<div id="modal-crear-horario" class="app-modal hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
     <div class="app-modal-dialog max-w-2xl">
         <div class="flex items-start justify-between gap-4 mb-5">
             <div>
@@ -178,7 +176,7 @@ $esDocente = ($rol === 'Profesor');
     </div>
 </div>
 
-<div id="modal-editar-horario" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="titulo-editar-horario">
+<div id="modal-editar-horario" class="app-modal hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-editar-horario">
     <div class="app-modal-dialog max-w-2xl">
         <div class="flex items-start justify-between gap-4 mb-5">
             <div>
@@ -241,7 +239,6 @@ $esDocente = ($rol === 'Profesor');
         </form>
     </div>
 </div>
-<?php endif; ?>
 
 <script>
 window.HORARIOS_CONFIG = <?= json_encode([
@@ -252,6 +249,6 @@ window.HORARIOS_CONFIG = <?= json_encode([
     'esDocente' => $esDocente
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 </script>
-<script src="<?= base_url('public/js/horarios.js') ?>"></script>
+<script src="<?= base_url('public/js/horarios.js?v=' . filemtime(__DIR__ . '/../../../public/js/horarios.js')) ?>"></script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
