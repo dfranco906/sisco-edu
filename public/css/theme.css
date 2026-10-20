@@ -90,6 +90,8 @@ body {
     flex: 0 0 16rem;
     width: 16rem;
     height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
     background: linear-gradient(180deg, var(--color-sidebar) 0%, #111827 100%);
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 12px 0 30px rgba(15, 23, 42, 0.16);
@@ -111,8 +113,10 @@ body {
     html.sidebar-init-collapsed .app-sidebar {
         flex: 0 0 4.75rem;
         width: 4.75rem;
+        max-width: 4.75rem;
         padding-left: 0.65rem;
         padding-right: 0.65rem;
+        overflow: hidden;
     }
 
     /* En modo colapsado, el header se organiza verticalmente centrado */
@@ -149,10 +153,12 @@ body {
         align-items: center;
         justify-content: center;
         width: 100%;
+        max-width: 100%;
         height: 2.65rem;
         padding: 0.25rem;
         border-radius: 12px;
         box-sizing: border-box;
+        overflow: hidden;
         cursor: pointer;
     }
 
@@ -207,6 +213,11 @@ body {
         justify-content: center;
         padding-left: 0.5rem;
         padding-right: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        height: 2.65rem;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     .app-sidebar.is-collapsed .app-logout,
@@ -214,6 +225,11 @@ body {
         justify-content: center;
         padding-left: 0.5rem;
         padding-right: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        height: 2.65rem;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     .app-sidebar.is-collapsed .sidebar-chevron,
@@ -221,24 +237,12 @@ body {
         transform: rotate(180deg);
     }
 
-    /* Tooltips en modo colapsado */
-    .app-sidebar.is-collapsed .app-nav-link:hover .sidebar-tooltip,
-    .app-sidebar.is-collapsed .app-logout:hover .sidebar-tooltip,
-    .app-sidebar.is-collapsed .sidebar-brand-mini:hover .sidebar-tooltip,
-    .app-sidebar.is-collapsed .sidebar-collapse-btn:hover .sidebar-tooltip,
-    html.sidebar-init-collapsed .app-sidebar .app-nav-link:hover .sidebar-tooltip,
-    html.sidebar-init-collapsed .app-sidebar .app-logout:hover .sidebar-tooltip,
-    html.sidebar-init-collapsed .app-sidebar .sidebar-brand-mini:hover .sidebar-tooltip,
-    html.sidebar-init-collapsed .app-sidebar .sidebar-collapse-btn:hover .sidebar-tooltip {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(-50%) translateX(4px);
-    }
+    /* Tooltips manejados mediante title nativo */
 }
 
-.app-sidebar,
 .app-sidebar-nav {
     min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;

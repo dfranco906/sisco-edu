@@ -179,9 +179,6 @@ $adminPaths = [
             <span class="sidebar-logo-badge w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/25">
                 SE
             </span>
-            <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
-                SISCO-EDU
-            </span>
         </a>
 
         <div class="sidebar-header-actions flex items-center gap-1">
@@ -204,9 +201,6 @@ $adminPaths = [
                 <svg class="sidebar-chevron w-4 h-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
-                <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
-                    Colapsar menú
-                </span>
             </button>
 
             <!-- Botón Cerrar (Solo Móvil) -->
@@ -260,14 +254,10 @@ $adminPaths = [
             }
             ?>
             <a href="<?= base_url($path) ?>"
-               class="app-nav-link group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 <?= $isActive ? 'is-active' : '' ?>">
+               class="app-nav-link group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 <?= $isActive ? 'is-active' : '' ?>"
+               title="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>">
                 <?= obtenerIconoNav($iconoClave) ?>
                 <span class="app-nav-text flex-1 truncate"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-                
-                <!-- Tooltip flotante en modo colapsado -->
-                <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
-                    <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>
-                </span>
             </a>
         <?php endforeach; ?>
     </nav>
@@ -275,7 +265,8 @@ $adminPaths = [
     <!-- Alternar Tema y Botón de Cerrar Sesión -->
     <div class="pt-3 mt-auto border-t border-slate-800/80 space-y-1">
         <button type="button" data-action="toggle-theme"
-           class="app-theme-btn w-full group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer">
+           class="app-theme-btn w-full group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer"
+           title="Alternar Modo Oscuro / Claro">
             <svg class="theme-icon-sun w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
@@ -283,22 +274,15 @@ $adminPaths = [
                 <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
             <span class="app-nav-text flex-1 truncate text-left">Modo Claro / Oscuro</span>
-            
-            <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
-                Cambiar tema
-            </span>
         </button>
 
         <a href="<?= base_url('src/api/logout.php') ?>"
-           class="app-logout group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-200 hover:bg-rose-950/30 transition-colors">
+           class="app-logout group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-200 hover:bg-rose-950/30 transition-colors"
+           title="Cerrar sesión">
             <svg class="app-nav-icon w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             <span class="app-nav-text flex-1 truncate">Cerrar sesión</span>
-            
-            <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-rose-950 border border-rose-800/80 px-2.5 py-1 text-xs font-semibold text-rose-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
-                Cerrar sesión
-            </span>
         </a>
     </div>
 </aside>

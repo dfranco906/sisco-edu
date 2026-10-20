@@ -51,20 +51,14 @@
         // 2. Estado inicial colapsado / expandido en desktop
         if (sidebar) {
             const isCollapsedInitial = localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
-            const updateCollapseTooltip = (collapsed) => {
-                const tooltip = collapseBtn?.querySelector(".sidebar-tooltip");
-                if (tooltip) tooltip.textContent = collapsed ? "Expandir menú" : "Colapsar menú";
-            };
 
             if (isCollapsedInitial && window.innerWidth >= 768) {
                 sidebar.classList.add("is-collapsed");
                 collapseBtn?.setAttribute("aria-expanded", "false");
                 collapseBtn?.setAttribute("title", "Expandir menú");
-                updateCollapseTooltip(true);
             } else {
                 collapseBtn?.setAttribute("aria-expanded", "true");
                 collapseBtn?.setAttribute("title", "Colapsar menú");
-                updateCollapseTooltip(false);
             }
 
             // 3. Control de colapso / expansión
@@ -77,7 +71,6 @@
                 } catch (e) {}
                 collapseBtn.setAttribute("aria-expanded", String(!willCollapse));
                 collapseBtn.setAttribute("title", willCollapse ? "Expandir menú" : "Colapsar menú");
-                updateCollapseTooltip(willCollapse);
             });
 
             // Al hacer click en el logo compacto 'SE', expandir el sidebar
