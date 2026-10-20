@@ -20,6 +20,7 @@ $formCrear = [
 $apiActualizar = "src/api/Materia/actualizar_materia.php";
 $apiDesactivar = "src/api/Materia/desactivar_materia.php";
 $urlDesactivados = "mvc/views/materias/desactivadas.php";
+$urlVolver = "mvc/views/administracion/index.php";
 $idCampo = "id_materia";
 $camposEditar = ["nombre", "descripcion", "carga_horaria_semanal"];
 require_once __DIR__ . '/../partials/table_page.php';

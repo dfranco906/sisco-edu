@@ -44,7 +44,8 @@ $formCrear = [
 $apiActualizar = "src/api/Asignaciones/actualizar_asignacion.php";
 $apiDesactivar = "src/api/Asignaciones/desactivar_asignacion.php";
 $urlDesactivados = "mvc/views/asignaciones/desactivadas.php";
+$urlVolver = "mvc/views/administracion/index.php";
 $idCampo = "id_asignacion";
-$camposEditar = ["id_profesor", "id_materia", "aÃ±o_lectivo"];
+$camposEditar = ["id_profesor", "id_materia", "año_lectivo"];
 
 require_once __DIR__ . '/../partials/table_page.php';

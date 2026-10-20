@@ -21,7 +21,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <?php if (($campo['type'] ?? '') === 'select'): ?>
 
     <?php if (isset($campo['options'])): ?>
-        <select name="<?= $campo['name'] ?>" class="app-input w-full mb-4" required>
+        <select name="<?= $campo['name'] ?>" class="app-input w-full mb-4" <?= ($campo['required'] ?? true) ? 'required' : '' ?>>
             <option value="">Seleccione una opción</option>
             <?php foreach ($campo['options'] as $op): ?>
                 <option value="<?= $op['value'] ?>"><?= $op['label'] ?></option>
@@ -34,7 +34,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             data-value="<?= $campo['value'] ?>"
             data-label="<?= $campo['labelField'] ?>"
             class="app-input w-full mb-4"
-            required>
+            <?= ($campo['required'] ?? true) ? 'required' : '' ?>>
             <option value="">Cargando...</option>
         </select>
     <?php endif; ?>
@@ -44,7 +44,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         type="<?= $campo['type'] ?>"
         name="<?= $campo['name'] ?>"
         class="app-input w-full mb-4"
-        required
+        <?= ($campo['required'] ?? true) ? 'required' : '' ?>
     >
 <?php endif; ?>
             <?php endforeach; ?>

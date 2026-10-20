@@ -7,6 +7,9 @@ class Grado {
     public ?int $id_grado = null;
     public ?string $nombre = null;
     public ?int $id_aula = null;
+    public ?int $id_turno = null;
+    public ?int $id_nivel = null;
+    public ?int $id_bachillerato = null;
 
     public function __construct(PDO $db) {
         $this->conn = $db;
@@ -14,13 +17,16 @@ class Grado {
 
     public function crear(): bool {
         $stmt = $this->conn->prepare("
-            INSERT INTO grados(nombre, id_aula)
-            VALUES(:nombre, :id_aula)
+            INSERT INTO grados(nombre, id_aula, id_turno, id_nivel, id_bachillerato)
+            VALUES(:nombre, :id_aula, :id_turno, :id_nivel, :id_bachillerato)
         ");
 
         return $stmt->execute([
             ":nombre" => $this->nombre,
-            ":id_aula" => $this->id_aula
+            ":id_aula" => $this->id_aula,
+            ":id_turno" => $this->id_turno ?: null,
+            ":id_nivel" => $this->id_nivel ?: null,
+            ":id_bachillerato" => $this->id_bachillerato ?: null
         ]);
     }
 
@@ -31,11 +37,20 @@ class Grado {
                     g.id_grado,
                     g.nombre,
                     g.id_aula,
-                    a.nombre AS aula,
+                    COALESCE(a.nombre, 'Sin aula') AS aula,
+                    g.id_turno,
+                    COALESCE(t.nombre, 'Sin turno') AS turno,
+                    g.id_nivel,
+                    COALESCE(n.nombre, 'Sin nivel') AS nivel,
+                    g.id_bachillerato,
+                    COALESCE(b.codigo, 'N/A') AS bachillerato,
                     g.activo,
-                    CONCAT(g.nombre, ' - ', a.nombre) AS descripcion
+                    CONCAT(g.nombre, ' - ', COALESCE(a.nombre, 'Sin aula')) AS descripcion
                 FROM grados g
-                INNER JOIN aulas a ON g.id_aula = a.id_aula
+                LEFT JOIN aulas a ON g.id_aula = a.id_aula
+                LEFT JOIN turnos t ON g.id_turno = t.id_turno
+                LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
+                LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
                 INNER JOIN asignacion_docente ad ON ad.id_grado = g.id_grado
                 WHERE g.activo = 1 AND ad.id_profesor = :id_profesor AND ad.activo = 1
                 ORDER BY g.nombre ASC
@@ -49,13 +64,22 @@ class Grado {
                 g.id_grado,
                 g.nombre,
                 g.id_aula,
-                a.nombre AS aula,
+                COALESCE(a.nombre, 'Sin aula') AS aula,
+                g.id_turno,
+                COALESCE(t.nombre, 'Sin turno') AS turno,
+                g.id_nivel,
+                COALESCE(n.nombre, 'Sin nivel') AS nivel,
+                g.id_bachillerato,
+                COALESCE(b.codigo, 'N/A') AS bachillerato,
                 g.activo,
-                CONCAT(g.nombre, ' - ', a.nombre) AS descripcion
+                CONCAT(g.nombre, ' - ', COALESCE(a.nombre, 'Sin aula')) AS descripcion
             FROM grados g
-            INNER JOIN aulas a ON g.id_aula = a.id_aula
+            LEFT JOIN aulas a ON g.id_aula = a.id_aula
+            LEFT JOIN turnos t ON g.id_turno = t.id_turno
+            LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
+            LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
             WHERE g.activo = 1
-            ORDER BY g.nombre ASC
+            ORDER BY COALESCE(g.id_nivel, 99) ASC, g.nombre ASC
         ");
         $stmt->execute();
         return $stmt;
@@ -67,11 +91,20 @@ class Grado {
                 g.id_grado,
                 g.nombre,
                 g.id_aula,
-                a.nombre AS aula,
+                COALESCE(a.nombre, 'Sin aula') AS aula,
+                g.id_turno,
+                COALESCE(t.nombre, 'Sin turno') AS turno,
+                g.id_nivel,
+                COALESCE(n.nombre, 'Sin nivel') AS nivel,
+                g.id_bachillerato,
+                COALESCE(b.codigo, 'N/A') AS bachillerato,
                 g.activo,
-                CONCAT(g.nombre, ' - ', a.nombre) AS descripcion
+                CONCAT(g.nombre, ' - ', COALESCE(a.nombre, 'Sin aula')) AS descripcion
             FROM grados g
-            INNER JOIN aulas a ON g.id_aula = a.id_aula
+            LEFT JOIN aulas a ON g.id_aula = a.id_aula
+            LEFT JOIN turnos t ON g.id_turno = t.id_turno
+            LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
+            LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
             WHERE g.activo = 0
             ORDER BY g.nombre ASC
         ");
@@ -82,13 +115,20 @@ class Grado {
     public function actualizar(): bool {
         $stmt = $this->conn->prepare("
             UPDATE grados
-            SET nombre = :nombre, id_aula = :id_aula
+            SET nombre = :nombre,
+                id_aula = :id_aula,
+                id_turno = :id_turno,
+                id_nivel = :id_nivel,
+                id_bachillerato = :id_bachillerato
             WHERE id_grado = :id_grado
         ");
 
         return $stmt->execute([
             ":nombre" => $this->nombre,
             ":id_aula" => $this->id_aula,
+            ":id_turno" => $this->id_turno ?: null,
+            ":id_nivel" => $this->id_nivel ?: null,
+            ":id_bachillerato" => $this->id_bachillerato ?: null,
             ":id_grado" => $this->id_grado
         ]);
     }

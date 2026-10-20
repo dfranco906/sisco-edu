@@ -36,6 +36,7 @@ $formCrear = [
 $apiActualizar = "src/api/Usuario/actualizar_usuario.php";
 $apiDesactivar = "src/api/Usuario/desactivar_usuario.php";
 $urlDesactivados = "mvc/views/usuarios/desactivados.php";
+$urlVolver = "mvc/views/administracion/index.php";
 $idCampo = "id_usuario";
 $camposEditar = ["nombre", "apellido", "usuario", "email", "celular", "rol"];
 require_once __DIR__ . '/../partials/table_page.php';

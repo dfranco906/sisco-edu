@@ -2,13 +2,16 @@
 $titulo = "Grados desactivados";
 $api = "src/api/Grado/leer_grados_desactivados.php";
 
-$columnas = ["id_grado", "nombre", "aula", "activo"];
+$columnas = ["id_grado", "nombre", "aula", "turno", "nivel", "bachillerato", "activo"];
 
 $filtros = [
-    "buscar" => ["nombre", "aula"],
+    "buscar" => ["nombre", "aula", "turno", "nivel", "bachillerato"],
     "placeholder" => "Buscar grado desactivado...",
     "selects" => [
-        ["campo" => "aula", "label" => "Aula"]
+        ["campo" => "aula", "label" => "Aula"],
+        ["campo" => "turno", "label" => "Turno"],
+        ["campo" => "nivel", "label" => "Nivel"],
+        ["campo" => "bachillerato", "label" => "Bachillerato"]
     ]
 ];
 
@@ -18,4 +21,3 @@ $urlVolver = "mvc/views/grados/index.php";
 $idCampo = "id_grado";
 
 require_once __DIR__ . '/../partials/table_page.php';
-?>
