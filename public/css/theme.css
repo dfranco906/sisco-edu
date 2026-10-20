@@ -32,10 +32,91 @@ body {
     top: 0;
     z-index: 40;
     flex: 0 0 16rem;
+    width: 16rem;
     height: 100vh;
     background: linear-gradient(180deg, var(--color-sidebar) 0%, #111827 100%);
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 12px 0 30px rgba(15, 23, 42, 0.16);
+    transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                flex-basis 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                padding 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapse-btn {
+    cursor: pointer;
+}
+
+.sidebar-chevron {
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 768px) {
+    .app-sidebar.is-collapsed,
+    html.sidebar-init-collapsed .app-sidebar {
+        flex: 0 0 4.75rem;
+        width: 4.75rem;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-header,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-header {
+        justify-content: center;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-brand-text,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-brand-text {
+        display: none !important;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-brand-mini,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-brand-mini {
+        display: flex !important;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-profile-full,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-profile-full {
+        display: none !important;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-profile-mini,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-profile-mini {
+        display: flex !important;
+    }
+
+    .app-sidebar.is-collapsed .app-nav-text,
+    html.sidebar-init-collapsed .app-sidebar .app-nav-text {
+        display: none !important;
+    }
+
+    .app-sidebar.is-collapsed .app-nav-link,
+    html.sidebar-init-collapsed .app-sidebar .app-nav-link {
+        justify-content: center;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .app-sidebar.is-collapsed .app-logout,
+    html.sidebar-init-collapsed .app-sidebar .app-logout {
+        justify-content: center;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-chevron,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* Tooltips en modo colapsado */
+    .app-sidebar.is-collapsed .app-nav-link:hover .sidebar-tooltip,
+    .app-sidebar.is-collapsed .app-logout:hover .sidebar-tooltip,
+    html.sidebar-init-collapsed .app-sidebar .app-nav-link:hover .sidebar-tooltip,
+    html.sidebar-init-collapsed .app-sidebar .app-logout:hover .sidebar-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(4px);
+    }
 }
 
 .app-sidebar-nav {
@@ -102,10 +183,12 @@ body {
 }
 
 .app-nav-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     position: relative;
     border-radius: 12px;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 0.85rem;
     color: #CBD5E1;
     font-weight: 600;
     transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
@@ -116,6 +199,11 @@ body {
     color: #FFFFFF;
 }
 
+.app-nav-link:hover .app-nav-icon {
+    transform: scale(1.08);
+    transition: transform 160ms ease;
+}
+
 .app-nav-link.is-active {
     background: rgba(37, 99, 235, 0.28);
     color: #FFFFFF;
@@ -124,25 +212,38 @@ body {
 .app-nav-link.is-active::before {
     content: "";
     position: absolute;
-    left: -0.5rem;
-    top: 0.75rem;
-    bottom: 0.75rem;
+    left: -0.25rem;
+    top: 0.65rem;
+    bottom: 0.65rem;
     width: 4px;
     border-radius: 999px;
     background: #60A5FA;
 }
 
+.app-sidebar.is-collapsed .app-nav-link.is-active::before,
+html.sidebar-init-collapsed .app-sidebar .app-nav-link.is-active::before {
+    left: 4px;
+}
+
 .app-logout {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     color: #FCA5A5;
     font-weight: 700;
     border-radius: 12px;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 0.85rem;
     transition: background-color 160ms ease, color 160ms ease;
 }
 
 .app-logout:hover {
     background: rgba(239, 68, 68, 0.14);
     color: #FEE2E2;
+}
+
+.app-logout:hover .app-nav-icon {
+    transform: scale(1.08);
+    transition: transform 160ms ease;
 }
 
 .app-page-header,

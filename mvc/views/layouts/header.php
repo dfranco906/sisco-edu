@@ -18,7 +18,16 @@ if (!isset($_SESSION['id_usuario'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="<?= base_url('public/css/theme.css') ?>">
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('sisco_sidebar_collapsed') === 'true' && window.innerWidth >= 768) {
+                    document.documentElement.classList.add('sidebar-init-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="<?= base_url('public/css/theme.css?v=' . filemtime(__DIR__ . '/../../../public/css/theme.css')) ?>">
     <script>
         window.BASE_URL = "<?= base_url() ?>/";
         window.CONFIG_RED = {
