@@ -16,6 +16,11 @@ $fechaFiltro = $_GET['fecha'] ?? date('Y-m-d');
 
 $grados = $coordinadorService->obtenerGradosCoordinados($idUsuario, $rol, $fechaFiltro);
 $metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fechaFiltro, $grados);
+
+// Opciones únicas para filtros en cascada
+$turnosDisponibles = array_values(array_filter(array_unique(array_map(fn($g) => trim((string)($g['turno_nombre'] ?? $g['turno'] ?? '')), $grados))));
+$nivelesDisponibles = array_values(array_filter(array_unique(array_map(fn($g) => trim((string)($g['nivel_nombre'] ?? '')), $grados))));
+$bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn($g) => trim((string)($g['bachillerato_nombre'] ?? '')), $grados))));
 ?>
 
 <main class="flex-1 p-6 md:p-10 bg-slate-950 text-slate-100 min-h-screen">
@@ -94,15 +99,70 @@ $metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fec
         </div>
     </div>
 
-    <!-- Sección de Aulas / Grados Coordinados -->
-    <div class="mb-4 flex items-center justify-between">
-        <div>
-            <h3 class="text-lg font-bold text-white">Aulas y Grados Coordinados</h3>
-            <p class="text-xs text-slate-400">Selecciona un grado para gestionar materias, estudiantes y tutores</p>
+    <!-- Barra de Filtros en Cascada y Navegación Pedagógica -->
+    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80 mb-3">
+            <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
+                    Filtros de Navegación Pedagógica en Cascada
+                </h3>
+                <p class="text-xs text-slate-400">Elegí turno, ciclo formativo o bachillerato para localizar el aula al instante.</p>
+            </div>
+            <span id="label-conteo-aulas" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 text-indigo-300 border border-slate-700 shrink-0">
+                <?= count($grados) ?> aula(s)
+            </span>
         </div>
-        <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-            <?= count($grados) ?> aula(s)
-        </span>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <!-- 1. Turno -->
+            <div>
+                <label for="filtro-coord-turno" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    1. Turno
+                </label>
+                <select id="filtro-coord-turno" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <option value="">Todos los turnos</option>
+                    <?php foreach ($turnosDisponibles as $t): ?>
+                        <option value="<?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- 2. Ciclo / Nivel -->
+            <div>
+                <label for="filtro-coord-nivel" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    2. Ciclo / Nivel
+                </label>
+                <select id="filtro-coord-nivel" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <option value="">Todos los ciclos</option>
+                    <?php foreach ($nivelesDisponibles as $n): ?>
+                        <option value="<?= htmlspecialchars($n, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($n, ENT_QUOTES, 'UTF-8') ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- 3. Bachillerato -->
+            <div>
+                <label for="filtro-coord-bach" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    3. Bachillerato
+                </label>
+                <select id="filtro-coord-bach" class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <option value="">Todos / General</option>
+                    <?php foreach ($bachilleratosDisponibles as $b): ?>
+                        <option value="<?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($b, ENT_QUOTES, 'UTF-8') ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- 4. Buscador por texto -->
+            <div>
+                <label for="filtro-coord-busqueda" class="block font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    Buscar Aula o Curso
+                </label>
+                <input type="text" id="filtro-coord-busqueda" placeholder="Ej: 1° BTI, Sala 4..."
+                       class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+            </div>
+        </div>
     </div>
 
     <?php if (empty($grados)): ?>
@@ -111,7 +171,7 @@ $metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fec
             <p class="text-xs text-slate-500 mt-1">Solicita al Administrador la vinculación de tus grados correspondientes.</p>
         </div>
     <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div id="grid-grados-coordinacion" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <?php foreach ($grados as $g): ?>
                 <?php
                 $idGrado = (int)$g['id_grado'];
@@ -121,15 +181,37 @@ $metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fec
                 $hoyTard = (int)$g['metricas_hoy']['tardanzas'];
                 $hoyAus = (int)$g['metricas_hoy']['ausentes'];
                 $tasaHoy = ($totalAlumnos > 0) ? round((($hoyPres + $hoyTard) / $totalAlumnos) * 100) : 0;
+                $turnoStr = trim((string)($g['turno_nombre'] ?? $g['turno'] ?? ''));
+                $nivelStr = trim((string)($g['nivel_nombre'] ?? ''));
+                $bachStr = trim((string)($g['bachillerato_nombre'] ?? ''));
+                $nombreCompleto = strtolower($g['grado_nombre'] . ' ' . ($g['seccion'] ?? '') . ' ' . ($g['aula_nombre'] ?? '') . ' ' . $turnoStr . ' ' . $nivelStr . ' ' . $bachStr);
                 ?>
                 <a href="<?= base_url('mvc/views/coordinacion/aula_detalle.php?id_grado=' . $idGrado) ?>"
-                   class="group block p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/60 hover:bg-slate-850/80 transition-all duration-200 shadow-lg hover:shadow-indigo-500/5">
+                   class="card-grado group block p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/60 hover:bg-slate-850/80 transition-all duration-200 shadow-lg hover:shadow-indigo-500/5"
+                   data-turno="<?= htmlspecialchars($turnoStr, ENT_QUOTES, 'UTF-8') ?>"
+                   data-nivel="<?= htmlspecialchars($nivelStr, ENT_QUOTES, 'UTF-8') ?>"
+                   data-bachillerato="<?= htmlspecialchars($bachStr, ENT_QUOTES, 'UTF-8') ?>"
+                   data-texto="<?= htmlspecialchars($nombreCompleto, ENT_QUOTES, 'UTF-8') ?>">
                     <!-- Cabecera de la tarjeta -->
                     <div class="flex items-start justify-between gap-3 mb-4">
                         <div>
-                            <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-1">
-                                <?= htmlspecialchars($g['turno'] ?? 'Turno General', ENT_QUOTES, 'UTF-8') ?>
-                            </span>
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                <?php if (!empty($turnoStr)): ?>
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                        <?= htmlspecialchars($turnoStr, ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if (!empty($nivelStr)): ?>
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                        <?= htmlspecialchars($nivelStr, ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if (!empty($bachStr)): ?>
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        <?= htmlspecialchars($bachStr, ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                             <h4 class="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors">
                                 <?= htmlspecialchars($g['grado_nombre'], ENT_QUOTES, 'UTF-8') ?>
                                 <?php if (!empty($g['seccion'])): ?>
@@ -137,7 +219,7 @@ $metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fec
                                 <?php endif; ?>
                             </h4>
                         </div>
-                        <div class="text-right">
+                        <div class="text-right shrink-0">
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 text-xs font-medium text-slate-300 border border-slate-700/60">
                                 🚪 <?= htmlspecialchars($g['aula_nombre'] ?? 'Sin asignar', ENT_QUOTES, 'UTF-8') ?>
                             </span>
@@ -188,7 +270,70 @@ $metricas = $coordinadorService->obtenerMetricasGenerales($idUsuario, $rol, $fec
                 </a>
             <?php endforeach; ?>
         </div>
+
+        <div id="empty-grados-filtros" class="hidden p-12 text-center rounded-2xl bg-slate-900/50 border border-slate-800 my-6">
+            <span class="text-3xl block mb-2">🔍</span>
+            <p class="text-base font-semibold text-slate-300">No se encontraron aulas con los filtros seleccionados.</p>
+            <p class="text-xs text-slate-500 mt-1">Probá restablecer los filtros de turno, ciclo o bachillerato.</p>
+        </div>
     <?php endif; ?>
 </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const selTurno = document.getElementById("filtro-coord-turno");
+    const selNivel = document.getElementById("filtro-coord-nivel");
+    const selBach = document.getElementById("filtro-coord-bach");
+    const inputBusqueda = document.getElementById("filtro-coord-busqueda");
+    const labelConteo = document.getElementById("label-conteo-aulas");
+    const emptyBox = document.getElementById("empty-grados-filtros");
+    const cards = document.querySelectorAll(".card-grado");
+
+    function aplicarFiltros() {
+        const turnoVal = (selTurno ? selTurno.value : "").trim().toLowerCase();
+        const nivelVal = (selNivel ? selNivel.value : "").trim().toLowerCase();
+        const bachVal = (selBach ? selBach.value : "").trim().toLowerCase();
+        const queryVal = (inputBusqueda ? inputBusqueda.value : "").trim().toLowerCase();
+
+        let visibles = 0;
+
+        cards.forEach(card => {
+            const cTurno = (card.dataset.turno || "").toLowerCase();
+            const cNivel = (card.dataset.nivel || "").toLowerCase();
+            const cBach = (card.dataset.bachillerato || "").toLowerCase();
+            const cTexto = (card.dataset.texto || "").toLowerCase();
+
+            const matchTurno = !turnoVal || cTurno === turnoVal;
+            const matchNivel = !nivelVal || cNivel === nivelVal;
+            const matchBach = !bachVal || cBach === bachVal;
+            const matchQuery = !queryVal || cTexto.includes(queryVal);
+
+            if (matchTurno && matchNivel && matchBach && matchQuery) {
+                card.classList.remove("hidden");
+                visibles++;
+            } else {
+                card.classList.add("hidden");
+            }
+        });
+
+        if (labelConteo) {
+            labelConteo.textContent = `${visibles} de ${cards.length} aula(s)`;
+        }
+
+        if (emptyBox) {
+            if (visibles === 0 && cards.length > 0) {
+                emptyBox.classList.remove("hidden");
+            } else {
+                emptyBox.classList.add("hidden");
+            }
+        }
+    }
+
+    if (selTurno) selTurno.addEventListener("change", aplicarFiltros);
+    if (selNivel) selNivel.addEventListener("change", aplicarFiltros);
+    if (selBach) selBach.addEventListener("change", aplicarFiltros);
+    if (inputBusqueda) inputBusqueda.addEventListener("input", aplicarFiltros);
+});
+</script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

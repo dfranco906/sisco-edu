@@ -23,6 +23,9 @@ class Coordinador {
         $fecha = $fecha ?? date('Y-m-d');
 
         $sql = "SELECT g.id_grado, g.nombre AS grado_nombre, g.seccion, g.turno, g.anho_lectivo,
+                       g.id_turno, COALESCE(t.nombre, g.turno) AS turno_nombre,
+                       g.id_nivel, n.nombre AS nivel_nombre,
+                       g.id_bachillerato, b.nombre AS bachillerato_nombre,
                        a.id_aula, a.nombre AS aula_nombre, a.capacidad, a.codigo_sala, a.ubicacion,
                        COALESCE(e.total_estudiantes, 0) AS total_estudiantes,
                        COALESCE(m.total_materias, 0) AS total_materias,
@@ -31,6 +34,9 @@ class Coordinador {
                        COALESCE(ah.ausentes, 0) AS ausentes,
                        COALESCE(ah.justificados, 0) AS justificados
                 FROM grados g
+                LEFT JOIN turnos t ON g.id_turno = t.id_turno
+                LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
+                LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
                 LEFT JOIN aulas a ON g.id_aula = a.id_aula
                 LEFT JOIN (
                     SELECT id_grado, COUNT(*) AS total_estudiantes

@@ -64,14 +64,50 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
             </div>
         </div>
 
-        <!-- Buscador y Filtros -->
-        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="w-full sm:w-96 relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
-                <input id="input-buscar-plan" type="text" placeholder="Buscar por materia, curso o año..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <!-- Buscador y Filtros en Cascada -->
+        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-600 inline-block"></span>
+                        Filtros de Búsqueda y Navegación Curricular
+                    </h3>
+                    <p class="text-xs text-slate-500">Seleccioná turno, ciclo, bachillerato y grado para filtrar los planes anuales al instante.</p>
+                </div>
+                <div class="w-full sm:w-72 relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
+                    <input id="input-buscar-plan" type="text" placeholder="Buscar materia, docente o año..." class="w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
             </div>
-            <div class="text-xs text-slate-500 font-medium">
-                Selecciona un plan para ver y editar su desglose curricular detallado.
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div>
+                    <label for="filtro-plan-turno" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">1. Turno</label>
+                    <select id="filtro-plan-turno" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                        <option value="">Todos los turnos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="filtro-plan-nivel" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">2. Ciclo / Nivel</label>
+                    <select id="filtro-plan-nivel" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                        <option value="">Todos los ciclos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="filtro-plan-bach" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">3. Bachillerato</label>
+                    <select id="filtro-plan-bach" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                        <option value="">Todos / General</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="filtro-plan-grado" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">4. Grado / Curso</label>
+                    <select id="filtro-plan-grado" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                        <option value="">Todos los grados</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -528,6 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const totalTemas = planesCache.reduce((acc, p) => acc + parseInt(p.total_temas || 0), 0);
                     document.getElementById('stat-total-temas').textContent = totalTemas;
 
+                    inicializarFiltrosCascada(planesCache);
                     renderizarCatalogo(planesCache);
                 } else {
                     gridPlanes.innerHTML = `<div class="col-span-full p-8 text-center text-rose-500 font-semibold">${res.message}</div>`;
@@ -538,17 +575,75 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    const selPlanTurno = document.getElementById('filtro-plan-turno');
+    const selPlanNivel = document.getElementById('filtro-plan-nivel');
+    const selPlanBach = document.getElementById('filtro-plan-bach');
+    const selPlanGrado = document.getElementById('filtro-plan-grado');
+
+    function inicializarFiltrosCascada(planes) {
+        if (!selPlanTurno || !selPlanNivel || !selPlanBach || !selPlanGrado) return;
+
+        const turnos = [...new Set(planes.map(p => p.turno_nombre || p.turno || p.turno_fuente || '').filter(Boolean))].sort();
+        selPlanTurno.innerHTML = '<option value="">Todos los turnos</option>' +
+            turnos.map(t => `<option value="${t}">${t}</option>`).join('');
+
+        const niveles = [...new Set(planes.map(p => p.nivel_nombre || '').filter(Boolean))].sort();
+        selPlanNivel.innerHTML = '<option value="">Todos los ciclos</option>' +
+            niveles.map(n => `<option value="${n}">${n}</option>`).join('');
+
+        const bachilleratos = [...new Set(planes.map(p => p.bachillerato_nombre || '').filter(Boolean))].sort();
+        selPlanBach.innerHTML = '<option value="">Todos / General</option>' +
+            bachilleratos.map(b => `<option value="${b}">${b}</option>`).join('');
+
+        const grados = [...new Set(planes.map(p => p.grado_nombre || p.curso_fuente || '').filter(Boolean))].sort();
+        selPlanGrado.innerHTML = '<option value="">Todos los grados</option>' +
+            grados.map(g => `<option value="${g}">${g}</option>`).join('');
+    }
+
+    function aplicarFiltrosCatalogo() {
+        const turnoVal = (selPlanTurno ? selPlanTurno.value : '').toLowerCase().trim();
+        const nivelVal = (selPlanNivel ? selPlanNivel.value : '').toLowerCase().trim();
+        const bachVal = (selPlanBach ? selPlanBach.value : '').toLowerCase().trim();
+        const gradoVal = (selPlanGrado ? selPlanGrado.value : '').toLowerCase().trim();
+        const queryVal = (inputBuscar ? inputBuscar.value : '').toLowerCase().trim();
+
+        const filtrados = planesCache.filter(p => {
+            const pTurno = (p.turno_nombre || p.turno || p.turno_fuente || '').toLowerCase();
+            const pNivel = (p.nivel_nombre || '').toLowerCase();
+            const pBach = (p.bachillerato_nombre || '').toLowerCase();
+            const pGrado = (p.grado_nombre || p.curso_fuente || '').toLowerCase();
+            const pMateria = (p.materia_nombre || p.materia_fuente || '').toLowerCase();
+            const pProf = (p.profesor_nombre ? `${p.profesor_nombre} ${p.profesor_apellido}` : (p.profesor_fuente || '')).toLowerCase();
+            const pAnio = (p.anio || '').toString();
+
+            const matchTurno = !turnoVal || pTurno === turnoVal;
+            const matchNivel = !nivelVal || pNivel === nivelVal;
+            const matchBach = !bachVal || pBach === bachVal;
+            const matchGrado = !gradoVal || pGrado === gradoVal;
+            const matchQuery = !queryVal || pMateria.includes(queryVal) || pGrado.includes(queryVal) || pProf.includes(queryVal) || pAnio.includes(queryVal);
+
+            return matchTurno && matchNivel && matchBach && matchGrado && matchQuery;
+        });
+
+        renderizarCatalogo(filtrados);
+    }
+
+    if (selPlanTurno) selPlanTurno.addEventListener('change', aplicarFiltrosCatalogo);
+    if (selPlanNivel) selPlanNivel.addEventListener('change', aplicarFiltrosCatalogo);
+    if (selPlanBach) selPlanBach.addEventListener('change', aplicarFiltrosCatalogo);
+    if (selPlanGrado) selPlanGrado.addEventListener('change', aplicarFiltrosCatalogo);
+
     function renderizarCatalogo(planes) {
         if (!planes || planes.length === 0) {
             gridPlanes.innerHTML = `
                 <div class="col-span-full py-16 px-4 text-center bg-white rounded-2xl border border-slate-200">
                     <span class="text-4xl block mb-3">📋</span>
-                    <h3 class="text-base font-bold text-slate-800">No hay planes anuales registrados</h3>
+                    <h3 class="text-base font-bold text-slate-800">No hay planes anuales que coincidan</h3>
                     <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                        Aún no tienes planes anuales asignados o creados. Puedes crear tu primer plan anual pedagógico ahora.
+                        Verifica los filtros seleccionados o registra un nuevo plan curricular.
                     </p>
                     <button type="button" onclick="document.getElementById('btn-abrir-crear-plan').click()" class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors">
-                        ➕ Crear Mi Primer Plan Anual
+                        ➕ Crear Plan Anual
                     </button>
                 </div>
             `;
@@ -559,19 +654,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const materia = p.materia_nombre || p.materia_fuente || 'Materia';
             const curso = p.grado_nombre || p.curso_fuente || 'Curso General';
             const seccion = p.seccion ? ` · Sec. ${p.seccion}` : '';
-            const turno = p.turno_fuente || p.turno || 'MAÑANA';
+            const turno = p.turno_nombre || p.turno_fuente || p.turno || 'MAÑANA';
             const anio = p.anio || 2026;
             const profesor = p.profesor_nombre ? `${p.profesor_nombre} ${p.profesor_apellido}` : (p.profesor_fuente || 'Docente');
             const temas = parseInt(p.total_temas || 0);
             const carga = p.carga_horaria || 2;
+            const nivelBadge = p.nivel_nombre ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700">${p.nivel_nombre}</span>` : '';
+            const bachBadge = p.bachillerato_nombre ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">${p.bachillerato_nombre}</span>` : '';
 
             return `
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-between">
                     <div class="p-6">
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700">
-                                ${turno} · ${anio}
-                            </span>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60">
+                                    ${turno} · ${anio}
+                                </span>
+                                ${nivelBadge}
+                                ${bachBadge}
+                            </div>
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">
                                 ${carga} HC/sem (${carga * 40}m)
                             </span>
@@ -612,21 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Buscador interactivo
-    inputBuscar.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        if (!query) {
-            renderizarCatalogo(planesCache);
-            return;
-        }
-        const filtrados = planesCache.filter(p => {
-            const mat = (p.materia_nombre || p.materia_fuente || '').toLowerCase();
-            const cur = (p.grado_nombre || p.curso_fuente || '').toLowerCase();
-            const prof = (p.profesor_nombre || p.profesor_fuente || '').toLowerCase();
-            const anio = (p.anio || '').toString();
-            return mat.includes(query) || cur.includes(query) || prof.includes(query) || anio.includes(query);
-        });
-        renderizarCatalogo(filtrados);
-    });
+    inputBuscar.addEventListener('input', aplicarFiltrosCatalogo);
 
     // ==========================================
     // 2. VISTA DE DETALLE / LAZY LOADING PEDAGÓGICO

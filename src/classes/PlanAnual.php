@@ -38,12 +38,18 @@ class PlanAnual {
                        prof.nombre AS profesor_nombre, prof.apellido AS profesor_apellido,
                        m.nombre AS materia_nombre,
                        g.nombre AS grado_nombre, g.seccion, g.turno,
+                       g.id_turno, COALESCE(tu.nombre, g.turno) AS turno_nombre,
+                       g.id_nivel, ni.nombre AS nivel_nombre,
+                       g.id_bachillerato, ba.nombre AS bachillerato_nombre,
                        COALESCE(temas_count.total_temas, 0) AS total_temas
                 FROM {$this->table_name} p
                 LEFT JOIN asignacion_docente a ON a.id_asignacion = p.id_asignacion
                 LEFT JOIN profesores prof ON prof.id_profesor = a.id_profesor
                 LEFT JOIN materias m ON m.id_materia = a.id_materia
                 LEFT JOIN grados g ON g.id_grado = a.id_grado
+                LEFT JOIN turnos tu ON g.id_turno = tu.id_turno
+                LEFT JOIN niveles_academicos ni ON g.id_nivel = ni.id_nivel
+                LEFT JOIN bachilleratos ba ON g.id_bachillerato = ba.id_bachillerato
                 LEFT JOIN (
                     SELECT pu.id_plan, COUNT(pt.id_tema) AS total_temas
                     FROM plan_temas pt
@@ -602,10 +608,16 @@ class PlanAnual {
     public function obtenerAsignacionesDocente(?int $id_profesor = null): array {
         $sql = "SELECT ad.id_asignacion, ad.carga_horaria,
                        m.nombre AS materia_nombre,
-                       g.nombre AS grado_nombre, g.seccion, g.turno
+                       g.nombre AS grado_nombre, g.seccion, g.turno,
+                       COALESCE(tu.nombre, g.turno) AS turno_nombre,
+                       ni.nombre AS nivel_nombre,
+                       ba.nombre AS bachillerato_nombre
                 FROM asignacion_docente ad
                 JOIN materias m ON ad.id_materia = m.id_materia
                 LEFT JOIN grados g ON ad.id_grado = g.id_grado
+                LEFT JOIN turnos tu ON g.id_turno = tu.id_turno
+                LEFT JOIN niveles_academicos ni ON g.id_nivel = ni.id_nivel
+                LEFT JOIN bachilleratos ba ON g.id_bachillerato = ba.id_bachillerato
                 WHERE ad.activo = 1";
 
         $params = [];
