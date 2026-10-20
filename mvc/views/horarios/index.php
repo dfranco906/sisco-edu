@@ -302,15 +302,8 @@ $urlVolver = $esDocente ? base_url('mvc/views/dashboard.php') : base_url('mvc/vi
 
         <form id="form-crear-horario" data-api="<?= base_url('src/api/Horario/crear_horario.php') ?>">
             <div class="app-form-grid">
-                <label class="font-semibold sm:col-span-2">
-                    Asignación (Materia / Docente)
-                    <select name="id_asignacion" id="crear-id-asignacion" class="app-input mt-2 w-full" required>
-                        <option value="">Cargando asignaciones...</option>
-                    </select>
-                </label>
-
                 <label class="font-semibold">
-                    Grado
+                    Grado / Curso
                     <select name="id_grado" id="crear-id-grado" class="app-input mt-2 w-full" required>
                         <option value="">Cargando grados...</option>
                     </select>
@@ -321,6 +314,14 @@ $urlVolver = $esDocente ? base_url('mvc/views/dashboard.php') : base_url('mvc/vi
                     <input id="crear-id-aula" type="text" class="app-input app-input-readonly mt-2 w-full"
                            placeholder="Seleccione un grado" readonly aria-readonly="true">
                     <span class="app-help">Se obtiene automáticamente desde el grado.</span>
+                </label>
+
+                <label class="font-semibold sm:col-span-2">
+                    Materia y Docente Asignado
+                    <select name="id_asignacion" id="crear-id-asignacion" class="app-input mt-2 w-full" required>
+                        <option value="">Seleccione primero un grado</option>
+                    </select>
+                    <span class="app-help">Muestra exclusivamente las asignaciones docentes del grado seleccionado.</span>
                 </label>
 
                 <label class="font-semibold">
@@ -371,13 +372,8 @@ $urlVolver = $esDocente ? base_url('mvc/views/dashboard.php') : base_url('mvc/vi
         <form id="form-editar-horario" data-api="<?= base_url('src/api/Horario/actualizar_horario.php') ?>">
             <input type="hidden" name="id_horario" id="editar-id-horario">
             <div class="app-form-grid">
-                <label class="font-semibold sm:col-span-2">
-                    Asignación (Materia / Docente)
-                    <select name="id_asignacion" id="editar-id-asignacion" class="app-input mt-2 w-full" required></select>
-                </label>
-
                 <label class="font-semibold">
-                    Grado
+                    Grado / Curso
                     <select name="id_grado" id="editar-id-grado" class="app-input mt-2 w-full" required></select>
                 </label>
 
@@ -385,6 +381,12 @@ $urlVolver = $esDocente ? base_url('mvc/views/dashboard.php') : base_url('mvc/vi
                     Aula asignada
                     <input id="editar-id-aula" type="text" class="app-input app-input-readonly mt-2 w-full" readonly aria-readonly="true">
                     <span class="app-help">El aula se actualiza según el grado seleccionado.</span>
+                </label>
+
+                <label class="font-semibold sm:col-span-2">
+                    Materia y Docente Asignado
+                    <select name="id_asignacion" id="editar-id-asignacion" class="app-input mt-2 w-full" required></select>
+                    <span class="app-help">Muestra exclusivamente las asignaciones docentes del grado seleccionado.</span>
                 </label>
 
                 <label class="font-semibold">

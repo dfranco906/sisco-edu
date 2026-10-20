@@ -60,6 +60,6 @@ $apiDesactivar = "src/api/Grado/desactivar_grado.php";
 $urlDesactivados = "mvc/views/grados/desactivados.php";
 $urlVolver = "mvc/views/administracion/index.php";
 $idCampo = "id_grado";
-$camposEditar = ["nombre", "id_aula"];
+$camposEditar = ["nombre", "id_aula", "id_turno", "id_nivel", "id_bachillerato"];
 
 require_once __DIR__ . '/../partials/table_page.php';

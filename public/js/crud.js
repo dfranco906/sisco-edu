@@ -174,26 +174,95 @@ window.editarRegistro = function(item) {
     const campos = document.getElementById("campos-editar");
     const mensaje = document.getElementById("mensaje-editar");
 
-    mensaje.innerHTML = "";
+    if (!modal || !campos) return;
+
+    if (mensaje) mensaje.innerHTML = "";
     campos.innerHTML = "";
 
     const camposEditables = window.CAMPOS_EDITAR || [];
+    const formCampos = window.FORM_CAMPOS || [];
 
     camposEditables.forEach(campo => {
-        campos.innerHTML += `
-            <label class="block mb-2 font-semibold text-slate-800 dark:text-slate-200 capitalize">${campo.replace('_', ' ')}</label>
-            <input 
-                name="${campo}"
-                value="${item[campo] ?? ""}"
-                class="app-input w-full mb-4"
-                required
-            >
-        `;
+        const def = formCampos.find(f => f.name === campo);
+        const valorActual = item[campo] ?? "";
+        const label = def?.label || campo.replace(/_/g, ' ');
+
+        if (def && def.type === 'select') {
+            const required = (def.required !== false) ? 'required' : '';
+            if (def.options) {
+                const optsHtml = def.options.map(op => {
+                    const sel = String(op.value) === String(valorActual) ? 'selected' : '';
+                    return `<option value="${op.value}" ${sel}>${op.label}</option>`;
+                }).join('');
+                campos.innerHTML += `
+                    <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">${label}</label>
+                    <select name="${campo}" class="app-input w-full mb-3.5" ${required}>
+                        <option value="">Seleccione una opción</option>
+                        ${optsHtml}
+                    </select>
+                `;
+            } else if (def.api) {
+                campos.innerHTML += `
+                    <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">${label}</label>
+                    <select name="${campo}"
+                            data-api="${def.api}"
+                            data-value="${def.value}"
+                            data-label="${def.labelField}"
+                            data-selected-val="${valorActual}"
+                            class="app-input w-full mb-3.5 js-select-editar"
+                            ${required}>
+                        <option value="">Cargando opciones...</option>
+                    </select>
+                `;
+            }
+        } else {
+            const tipo = def?.type || 'text';
+            const required = (def?.required !== false) ? 'required' : '';
+            campos.innerHTML += `
+                <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">${label}</label>
+                <input type="${tipo}"
+                       name="${campo}"
+                       value="${valorActual}"
+                       class="app-input w-full mb-3.5"
+                       ${required}>
+            `;
+        }
+    });
+
+    const selectsEditar = campos.querySelectorAll('.js-select-editar');
+    selectsEditar.forEach(select => {
+        cargarSelectEditar(select);
     });
 
     modal.classList.remove("hidden");
     document.body.classList.add("modal-open");
 };
+
+async function cargarSelectEditar(select) {
+    const api = select.dataset.api;
+    const valueField = select.dataset.value;
+    const labelField = select.dataset.label;
+    const selectedVal = select.dataset.selectedVal;
+
+    try {
+        const url = api.startsWith('http') ? api : `${window.BASE_URL}/${api}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const lista = Array.isArray(data) ? data : (data.data || []);
+
+        let opciones = '<option value="">Seleccione una opción</option>';
+        lista.forEach(opt => {
+            const val = opt[valueField];
+            const lbl = opt[labelField] || val;
+            const isSelected = String(val) === String(selectedVal) ? 'selected' : '';
+            opciones += `<option value="${val}" ${isSelected}>${lbl}</option>`;
+        });
+        select.innerHTML = opciones;
+    } catch (err) {
+        console.error("Error cargando opciones de edición:", err);
+        select.innerHTML = '<option value="">Error al cargar opciones</option>';
+    }
+}
 
 async function ejecutarAccionRegistro(api, id, mensajeConfirmacion, tipoAccion = 'warning') {
     if (!api || !window.ID_CAMPO) {

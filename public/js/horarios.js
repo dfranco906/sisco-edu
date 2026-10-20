@@ -97,15 +97,37 @@
         }
     }
 
-    function cargarOpcionesFormularios() {
-        const opcionesAsignacion = [
-            '<option value="">Seleccione asignación</option>',
-            ...asignaciones.map((asig) => {
-                const label = `${asig.materia || "Materia"} - ${asig.profesor || "Docente"} (${asig.id_asignacion})`;
-                return `<option value="${escapar(asig.id_asignacion)}">${escapar(label)}</option>`;
-            })
-        ].join("");
+    function actualizarAsignacionesPorGrado(selectGrado, selectAsignacion, valorSeleccionado = null) {
+        if (!selectGrado || !selectAsignacion) return;
+        const idGrado = selectGrado.value;
 
+        if (!idGrado) {
+            selectAsignacion.innerHTML = '<option value="">Seleccione primero un grado</option>';
+            selectAsignacion.disabled = true;
+            return;
+        }
+
+        const filtradas = asignaciones.filter((a) => String(a.id_grado) === String(idGrado));
+
+        if (filtradas.length === 0) {
+            selectAsignacion.innerHTML = '<option value="">No hay materias asignadas a este grado</option>';
+            selectAsignacion.disabled = false;
+            return;
+        }
+
+        selectAsignacion.disabled = false;
+        let html = '<option value="">Seleccione materia y docente</option>';
+        filtradas.forEach((asig) => {
+            const carga = asig.carga_horaria ? ` (${asig.carga_horaria} hs)` : '';
+            const label = `${asig.materia || "Materia"} — Prof. ${asig.profesor || "Docente"}${carga}`;
+            const isSel = valorSeleccionado && String(asig.id_asignacion) === String(valorSeleccionado) ? 'selected' : '';
+            html += `<option value="${escapar(asig.id_asignacion)}" ${isSel}>${escapar(label)}</option>`;
+        });
+
+        selectAsignacion.innerHTML = html;
+    }
+
+    function cargarOpcionesFormularios() {
         const opcionesGrado = [
             '<option value="">Seleccione grado</option>',
             ...grados.map((g) => {
@@ -114,14 +136,10 @@
             })
         ].join("");
 
-        const crearAsig = $("#crear-id-asignacion");
         const crearGrado = $("#crear-id-grado");
-        const editarAsig = $("#editar-id-asignacion");
         const editarGrado = $("#editar-id-grado");
 
-        if (crearAsig) crearAsig.innerHTML = opcionesAsignacion;
         if (crearGrado) crearGrado.innerHTML = opcionesGrado;
-        if (editarAsig) editarAsig.innerHTML = opcionesAsignacion;
         if (editarGrado) editarGrado.innerHTML = opcionesGrado;
     }
 
@@ -705,11 +723,14 @@
         if (formulario) formulario.reset();
 
         const selectGrado = $("#crear-id-grado");
-        if (selectGrado && gradoSeleccionado) {
-            selectGrado.value = String(gradoSeleccionado.id_grado);
+        if (selectGrado) {
+            if (gradoSeleccionado) {
+                selectGrado.value = String(gradoSeleccionado.id_grado);
+            }
+            sincronizarAula(selectGrado, $("#crear-id-aula"), $("#guardar-horario"));
+            actualizarAsignacionesPorGrado(selectGrado, $("#crear-id-asignacion"));
         }
 
-        sincronizarAula(selectGrado, $("#crear-id-aula"), $("#guardar-horario"));
         mostrarMensaje($("#mensaje-crear-horario"), "");
         abrirModal("modal-crear-horario");
     }
@@ -729,8 +750,11 @@
         const editHoraFin = $("#editar-hora-fin");
 
         if (editIdHorario) editIdHorario.value = horario.id_horario;
-        if (editIdAsignacion) editIdAsignacion.value = horario.id_asignacion || "";
-        if (editIdGrado) editIdGrado.value = horario.id_grado || "";
+        if (editIdGrado) {
+            editIdGrado.value = horario.id_grado || "";
+            sincronizarAula(editIdGrado, $("#editar-id-aula"), $("#actualizar-horario"));
+            actualizarAsignacionesPorGrado(editIdGrado, editIdAsignacion, horario.id_asignacion);
+        }
         if (editDiaSemana) editDiaSemana.value = horario.dia_semana || "Lunes";
         if (editHoraInicio) editHoraInicio.value = horaCorta(horario.hora_inicio);
         if (editHoraFin) editHoraFin.value = horaCorta(horario.hora_fin);
@@ -738,7 +762,6 @@
         const mensaje = $("#mensaje-editar-horario");
         if (mensaje) mostrarMensaje(mensaje, "");
 
-        sincronizarAula($("#editar-id-grado"), $("#editar-id-aula"), $("#actualizar-horario"));
         abrirModal("modal-editar-horario");
     }
 
@@ -838,19 +861,21 @@
             });
         }
 
-        // Sincronización de aula en formularios
+        // Sincronización de aula y asignaciones en formularios
         const crearGrado = $("#crear-id-grado");
         if (crearGrado) {
-            crearGrado.addEventListener("change", () =>
-                sincronizarAula(crearGrado, $("#crear-id-aula"), $("#guardar-horario"))
-            );
+            crearGrado.addEventListener("change", () => {
+                sincronizarAula(crearGrado, $("#crear-id-aula"), $("#guardar-horario"));
+                actualizarAsignacionesPorGrado(crearGrado, $("#crear-id-asignacion"));
+            });
         }
 
         const editarGrado = $("#editar-id-grado");
         if (editarGrado) {
-            editarGrado.addEventListener("change", () =>
-                sincronizarAula(editarGrado, $("#editar-id-aula"), $("#actualizar-horario"))
-            );
+            editarGrado.addEventListener("change", () => {
+                sincronizarAula(editarGrado, $("#editar-id-aula"), $("#actualizar-horario"));
+                actualizarAsignacionesPorGrado(editarGrado, $("#editar-id-asignacion"));
+            });
         }
 
         // Alternador de vistas Grilla / Lista

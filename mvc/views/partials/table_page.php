@@ -145,6 +145,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     window.URL_DESACTIVADOS = "<?= isset($urlDesactivados) ? base_url($urlDesactivados) : '' ?>";
     window.ID_CAMPO = "<?= $idCampo ?? '' ?>";
     window.CAMPOS_EDITAR = <?= json_encode($camposEditar ?? []) ?>;
+    window.FORM_CAMPOS = <?= json_encode($formCrear['campos'] ?? []) ?>;
 </script>
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
 <script src="<?= base_url('public/js/crud.js') ?>"></script>
