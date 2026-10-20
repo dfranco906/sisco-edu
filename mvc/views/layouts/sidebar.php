@@ -166,18 +166,26 @@ $adminPaths = [
     <!-- Encabezado del Sidebar (Logo + Botones de Control) -->
     <div class="sidebar-header flex items-center justify-between gap-2 mb-5">
         <!-- Logo / Marca Expandida -->
-        <div class="sidebar-brand-text flex-1 min-w-0">
+        <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="sidebar-brand-text flex-1 min-w-0 block">
             <h1 class="app-logo text-xl font-black tracking-tight leading-none text-white truncate">SISCO-EDU</h1>
             <p class="text-[11px] text-slate-400 font-medium truncate mt-1">Gestión Académica & IoT</p>
-        </div>
+        </a>
 
-        <!-- Logo Compacto (Visible solo al colapsar) -->
-        <div class="sidebar-brand-mini hidden items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-black text-sm shadow-md shadow-blue-500/20" title="SISCO-EDU">
-            SE
-        </div>
+        <!-- Logo Compacto (Visible solo al colapsar, ocupando el mismo espacio que los iconos del menú) -->
+        <a href="<?= base_url('mvc/views/dashboard.php') ?>"
+           id="sidebar-brand-mini"
+           class="sidebar-brand-mini hidden group relative items-center justify-center w-full rounded-xl transition-all"
+           title="SISCO-EDU">
+            <span class="sidebar-logo-badge w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/25">
+                SE
+            </span>
+            <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
+                SISCO-EDU
+            </span>
+        </a>
 
-        <div class="flex items-center gap-1">
-            <!-- Botón Cambiar Tema (Header Sidebar) -->
+        <div class="sidebar-header-actions flex items-center gap-1">
+            <!-- Botón Cambiar Tema (Header Sidebar - Oculto al colapsar) -->
             <button type="button" data-action="toggle-theme"
                     class="sidebar-theme-toggle hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
                     title="Alternar Modo Oscuro / Claro" aria-label="Alternar tema claro y oscuro">
@@ -191,11 +199,14 @@ $adminPaths = [
 
             <!-- Botón Colapsar / Expandir (Solo Desktop) -->
             <button id="app-sidebar-collapse-btn" type="button"
-                    class="sidebar-collapse-btn hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+                    class="sidebar-collapse-btn hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors group relative"
                     title="Colapsar o expandir menú" aria-label="Colapsar o expandir menú lateral">
                 <svg class="sidebar-chevron w-4 h-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
+                <span class="sidebar-tooltip pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 z-50 hidden md:block whitespace-nowrap rounded-lg bg-slate-900 border border-slate-700/80 px-2.5 py-1 text-xs font-semibold text-slate-100 shadow-xl opacity-0 invisible transition-all duration-150" role="tooltip">
+                    Colapsar menú
+                </span>
             </button>
 
             <!-- Botón Cerrar (Solo Móvil) -->

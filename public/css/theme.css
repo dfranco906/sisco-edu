@@ -115,19 +115,76 @@ body {
         padding-right: 0.65rem;
     }
 
+    /* En modo colapsado, el header se organiza verticalmente centrado */
     .app-sidebar.is-collapsed .sidebar-header,
     html.sidebar-init-collapsed .app-sidebar .sidebar-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         justify-content: center;
+        gap: 0.45rem;
+        width: 100%;
+        margin-bottom: 1.25rem;
+        padding: 0;
     }
 
+    /* Ocultar texto del logo expandido */
     .app-sidebar.is-collapsed .sidebar-brand-text,
     html.sidebar-init-collapsed .app-sidebar .sidebar-brand-text {
         display: none !important;
     }
 
+    /* Ocultar icono de alternar modo oscuro en modo colapsado (tanto header como footer) */
+    .app-sidebar.is-collapsed .sidebar-theme-toggle,
+    .app-sidebar.is-collapsed .app-theme-btn,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-theme-toggle,
+    html.sidebar-init-collapsed .app-sidebar .app-theme-btn {
+        display: none !important;
+    }
+
+    /* Logo compacto SE con el mismo espacio y dimensiones que los demas iconos del menu */
     .app-sidebar.is-collapsed .sidebar-brand-mini,
     html.sidebar-init-collapsed .app-sidebar .sidebar-brand-mini {
         display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 2.65rem;
+        padding: 0.25rem;
+        border-radius: 12px;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-brand-mini .sidebar-logo-badge,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-brand-mini .sidebar-logo-badge {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.825rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+    }
+
+    /* Contenedor de acciones del header en modo colapsado */
+    .app-sidebar.is-collapsed .sidebar-header-actions,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-header-actions {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-collapse-btn,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-collapse-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 2rem;
+        border-radius: 10px;
     }
 
     .app-sidebar.is-collapsed .sidebar-profile-full,
@@ -167,8 +224,12 @@ body {
     /* Tooltips en modo colapsado */
     .app-sidebar.is-collapsed .app-nav-link:hover .sidebar-tooltip,
     .app-sidebar.is-collapsed .app-logout:hover .sidebar-tooltip,
+    .app-sidebar.is-collapsed .sidebar-brand-mini:hover .sidebar-tooltip,
+    .app-sidebar.is-collapsed .sidebar-collapse-btn:hover .sidebar-tooltip,
     html.sidebar-init-collapsed .app-sidebar .app-nav-link:hover .sidebar-tooltip,
-    html.sidebar-init-collapsed .app-sidebar .app-logout:hover .sidebar-tooltip {
+    html.sidebar-init-collapsed .app-sidebar .app-logout:hover .sidebar-tooltip,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-brand-mini:hover .sidebar-tooltip,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-collapse-btn:hover .sidebar-tooltip {
         opacity: 1;
         visibility: visible;
         transform: translateY(-50%) translateX(4px);
@@ -921,36 +982,7 @@ body.sidebar-open {
 }
 
 
-/* ==========================================================================
-   BOTÓN TOGGLE DE TEMA (CLARO / OSCURO) - SIEMPRE DISPONIBLE A LA VISTA
-   ========================================================================== */
-.app-theme-toggle {
-    position: fixed;
-    top: 0.85rem;
-    right: 0.85rem;
-    z-index: 55;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 0.8rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-card);
-    color: var(--color-text);
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-    cursor: pointer;
-    transition: transform 160ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
-}
-
-.app-theme-toggle:hover {
-    transform: scale(1.05);
-    border-color: var(--color-primary);
-}
-
-.app-theme-toggle:active {
-    transform: scale(0.95);
-}
+/* Iconos de Tema */
 
 .theme-icon-sun {
     display: none;
