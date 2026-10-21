@@ -1,4 +1,8 @@
 <?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../../src/config/app.php';
+
 $titulo = "Tutores y Familias";
 $api = "src/api/Tutor/leer_tutores.php";
 
