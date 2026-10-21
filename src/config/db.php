@@ -1,5 +1,6 @@
 <?php
 // src/config/db.php
+require_once __DIR__ . '/app.php';
 
 class Database {
     private static ?PDO $cachedConn = null;
@@ -58,6 +59,16 @@ class Database {
                 }
             }
             $this->conn = new PDO($dsn, $this->username, $this->password, $opciones);
+
+            // Sincronizar zona horaria institucional de sesión en la base de datos
+            $timezone = getenv('APP_TIMEZONE') ?: 'America/Asuncion';
+            if ($this->driver === 'pgsql') {
+                $this->conn->exec("SET timezone TO '{$timezone}';");
+            } else {
+                $offset = (new DateTime('now', new DateTimeZone($timezone)))->format('P');
+                $this->conn->exec("SET time_zone = '{$offset}';");
+            }
+
             self::$cachedConn = $this->conn;
         } catch (PDOException $exception) {
             error_log("Error de conexión BD ({$this->driver}): " . $exception->getMessage());

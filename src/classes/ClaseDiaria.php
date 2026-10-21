@@ -40,109 +40,83 @@ class ClaseDiaria {
     }
 
     /**
-     * Detecta o inicializa la clase activa en un aula/fecha/hora determinada
+     * Detecta o inicializa la clase activa en un grado/aula/fecha/hora determinada
      */
     public function obtenerOCrearClaseActiva(?int $id_aula = null, ?string $timestamp = null, ?int $id_profesor = null, ?int $id_grado = null): ?array {
+        // Regla estricta: si no se especifica ni grado, ni aula, ni profesor, no realizar consultas arbitrarias ni predeterminadas
+        if ($id_grado === null && $id_aula === null && $id_profesor === null) {
+            return null;
+        }
+
         $fechaHora = $timestamp ? new DateTime($timestamp) : new DateTime();
         $fecha = $fechaHora->format('Y-m-d');
         $hora = $fechaHora->format('H:i:s');
         $diaInfo = self::obtenerDiaEspanol((int)$fechaHora->format('w'));
 
-        // Si se especificó id_grado y no id_aula, resolver aula del grado
-        if ($id_grado !== null && $id_grado > 0 && !$id_aula) {
-            $stmtG = $this->conn->prepare("SELECT id_aula FROM grados WHERE id_grado = :id_grado AND activo = 1 LIMIT 1");
-            $stmtG->execute([':id_grado' => $id_grado]);
-            $id_aula = (int)$stmtG->fetchColumn() ?: null;
-        }
-
-        // Si no se proporcionó aula, resolver automáticamente
-        if (!$id_aula) {
-            if ($id_profesor !== null) {
-                // 1. Buscar aula según horario de hoy para el profesor
-                $sqlAulaHoy = "SELECT COALESCE(h.id_aula, g.id_aula) AS id_aula
-                               FROM horarios h
-                               JOIN asignacion_docente a ON a.id_asignacion = h.id_asignacion AND a.activo = 1
-                               LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
-                               WHERE a.id_profesor = :id_profesor
-                                 AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
-                                 AND h.activo = 1
-                               ORDER BY (CASE 
-                                            WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
-                                            ELSE 1
-                                         END), h.hora_inicio ASC
-                               LIMIT 1";
-                $stmtAH = $this->conn->prepare($sqlAulaHoy);
-                $stmtAH->execute([
-                    ':id_profesor' => $id_profesor,
-                    ':dia1' => $diaInfo['con_tilde'],
-                    ':dia2' => $diaInfo['sin_tilde'],
-                    ':hora' => $hora
-                ]);
-                $id_aula = (int)$stmtAH->fetchColumn();
-
-                // 2. Si hoy no tiene clases, tomar la primera aula asignada al profesor
-                if (!$id_aula) {
-                    $sqlAulaFall = "SELECT COALESCE(h.id_aula, g.id_aula) AS id_aula
-                                    FROM asignacion_docente a
-                                    LEFT JOIN grados g ON g.id_grado = a.id_grado
-                                    LEFT JOIN horarios h ON h.id_asignacion = a.id_asignacion
-                                    WHERE a.id_profesor = :id_profesor
-                                      AND a.activo = 1
-                                      AND COALESCE(h.id_aula, g.id_aula) IS NOT NULL
-                                    LIMIT 1";
-                    $stmtAF = $this->conn->prepare($sqlAulaFall);
-                    $stmtAF->execute([':id_profesor' => $id_profesor]);
-                    $id_aula = (int)$stmtAF->fetchColumn();
-                }
+        // Si es profesor y no se indicó grado ni aula, resolver grado y aula de hoy
+        if ($id_profesor !== null && !$id_grado && !$id_aula) {
+            $sqlProfHoy = "SELECT COALESCE(h.id_grado, a.id_grado) AS id_grado, COALESCE(h.id_aula, g.id_aula) AS id_aula
+                           FROM horarios h
+                           JOIN asignacion_docente a ON a.id_asignacion = h.id_asignacion AND a.activo = 1
+                           LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
+                           WHERE a.id_profesor = :id_profesor
+                             AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
+                             AND h.activo = 1
+                           ORDER BY (CASE 
+                                        WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
+                                        ELSE 1
+                                     END), h.hora_inicio ASC
+                           LIMIT 1";
+            $stmtPH = $this->conn->prepare($sqlProfHoy);
+            $stmtPH->execute([
+                ':id_profesor' => $id_profesor,
+                ':dia1' => $diaInfo['con_tilde'],
+                ':dia2' => $diaInfo['sin_tilde'],
+                ':hora' => $hora
+            ]);
+            $rowProf = $stmtPH->fetch(PDO::FETCH_ASSOC);
+            if ($rowProf) {
+                $id_grado = (int)$rowProf['id_grado'] ?: null;
+                $id_aula = (int)$rowProf['id_aula'] ?: null;
             } else {
-                $stmtA = $this->conn->query("
-                    SELECT COALESCE(
-                        (SELECT id_aula FROM horarios WHERE activo = 1 AND id_aula IS NOT NULL LIMIT 1),
-                        (SELECT id_aula FROM aulas WHERE activo = 1 ORDER BY id_aula ASC LIMIT 1),
-                        1
-                    )
-                ");
-                $id_aula = (int)$stmtA->fetchColumn();
+                return null;
             }
         }
 
-        if (!$id_aula) {
-            return null;
-        }
-
-        // 1. Buscar horario activo en el aula en este día y rango de horas (con 30 min de tolerancia antes/después)
+        // 1. Buscar horario activo correspondiente al día y hora para el grado o aula especificado
         $sqlHorario = "SELECT h.*, 
                               a.id_profesor, a.id_materia, a.id_grado, a.carga_horaria,
                               p.nombre AS profesor_nombre, p.apellido AS profesor_apellido, p.cedula_identidad AS profesor_ci,
                               p.user_id_global AS profesor_user_id,
                               m.nombre AS materia_nombre,
                               g.nombre AS grado_nombre,
-                              aul.nombre AS aula_nombre, aul.codigo AS aula_codigo
+                              aul.id_aula, aul.nombre AS aula_nombre, aul.codigo AS aula_codigo
                        FROM horarios h
                        JOIN asignacion_docente a ON a.id_asignacion = h.id_asignacion AND a.activo = 1
                        JOIN profesores p ON p.id_profesor = a.id_profesor
                        JOIN materias m ON m.id_materia = a.id_materia
                        LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
-                       LEFT JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula, :id_aula)
-                       WHERE (h.id_aula = :id_aula OR g.id_aula = :id_aula)
-                         AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
+                       LEFT JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula)
+                       WHERE (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
                          AND h.activo = 1";
 
         $paramsH = [
-            ':id_aula' => $id_aula,
             ':dia1' => $diaInfo['con_tilde'],
             ':dia2' => $diaInfo['sin_tilde'],
             ':hora' => $hora
         ];
 
-        if ($id_profesor !== null) {
-            $sqlHorario .= " AND a.id_profesor = :id_profesor";
-            $paramsH[':id_profesor'] = $id_profesor;
-        }
-
         if ($id_grado !== null && $id_grado > 0) {
             $sqlHorario .= " AND COALESCE(h.id_grado, a.id_grado) = :id_grado";
             $paramsH[':id_grado'] = $id_grado;
+        } elseif ($id_aula !== null && $id_aula > 0) {
+            $sqlHorario .= " AND (h.id_aula = :id_aula OR g.id_aula = :id_aula)";
+            $paramsH[':id_aula'] = $id_aula;
+        }
+
+        if ($id_profesor !== null) {
+            $sqlHorario .= " AND a.id_profesor = :id_profesor";
+            $paramsH[':id_profesor'] = $id_profesor;
         }
 
         $sqlHorario .= " ORDER BY (CASE 
@@ -155,45 +129,11 @@ class ClaseDiaria {
         $stmtH->execute($paramsH);
         $horario = $stmtH->fetch(PDO::FETCH_ASSOC);
 
-        // Si no hay horario hoy en esa aula, buscar cualquier horario de la materia o primer horario del aula
-        if (!$horario) {
-            $sqlCualquiera = "SELECT h.*, 
-                                     a.id_profesor, a.id_materia, a.id_grado, a.carga_horaria,
-                                     p.nombre AS profesor_nombre, p.apellido AS profesor_apellido, p.cedula_identidad AS profesor_ci,
-                                     p.user_id_global AS profesor_user_id,
-                                     m.nombre AS materia_nombre,
-                                     g.nombre AS grado_nombre,
-                                     aul.nombre AS aula_nombre, aul.codigo AS aula_codigo
-                              FROM horarios h
-                              JOIN asignacion_docente a ON a.id_asignacion = h.id_asignacion AND a.activo = 1
-                              JOIN profesores p ON p.id_profesor = a.id_profesor
-                              JOIN materias m ON m.id_materia = a.id_materia
-                              LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
-                              LEFT JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula, :id_aula)
-                              WHERE (h.id_aula = :id_aula OR g.id_aula = :id_aula)
-                                AND h.activo = 1";
-
-            $paramsC = [':id_aula' => $id_aula];
-            if ($id_profesor !== null) {
-                $sqlCualquiera .= " AND a.id_profesor = :id_profesor";
-                $paramsC[':id_profesor'] = $id_profesor;
-            }
-            if ($id_grado !== null && $id_grado > 0) {
-                $sqlCualquiera .= " AND COALESCE(h.id_grado, a.id_grado) = :id_grado";
-                $paramsC[':id_grado'] = $id_grado;
-            }
-            $sqlCualquiera .= " LIMIT 1";
-
-            $stmtC = $this->conn->prepare($sqlCualquiera);
-            $stmtC->execute($paramsC);
-            $horario = $stmtC->fetch(PDO::FETCH_ASSOC);
-        }
-
         if (!$horario) {
             return null;
         }
 
-        $id_asignacion = (int)$horario['id_asignacion'];
+                $id_asignacion = (int)$horario['id_asignacion'];
         $id_horario = (int)$horario['id_horario'];
 
         // 2. Obtener la lección del día según el plan anual del profesor

@@ -14,22 +14,45 @@ if ($rol === 'Profesor' && !empty($_SESSION['id_profesor'])) {
 }
 
 $id_clase = isset($_GET['id_clase']) && is_numeric($_GET['id_clase']) ? (int)$_GET['id_clase'] : null;
-$id_aula = isset($_GET['id_aula']) && is_numeric($_GET['id_aula']) ? (int)$_GET['id_aula'] : null;
 $id_grado = isset($_GET['id_grado']) && is_numeric($_GET['id_grado']) ? (int)$_GET['id_grado'] : null;
 $timestamp = trim($_GET['timestamp'] ?? date('Y-m-d H:i:s'));
+$solo_clase = isset($_GET['solo_clase']) && (string)$_GET['solo_clase'] === '1';
 
 try {
     $db = (new Database())->getConnection();
     $claseModel = new ClaseDiaria($db);
 
     $clase = null;
+
+    // Solo consultar o crear clase si se especificó explícitamente un id_clase, id_grado, o si es profesor con sesión
     if ($id_clase) {
         $clase = $claseModel->obtenerDetalleClase($id_clase, $id_profesor);
-    } else {
-        $clase = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp, $id_profesor, $id_grado);
+    } elseif ($id_grado || $id_profesor !== null) {
+        $clase = $claseModel->obtenerOCrearClaseActiva(null, $timestamp, $id_profesor, $id_grado);
     }
 
-    // Listas maestras para filtros en cascada
+    $servidorInfo = [
+        "fecha_actual" => date('Y-m-d'),
+        "hora_actual" => date('H:i:s'),
+        "timestamp" => $timestamp,
+        "dia_semana" => ClaseDiaria::obtenerDiaEspanol((int)date('w'))['con_tilde']
+    ];
+
+    // Si la petición es un refresco ligero (solo estado de la clase activa)
+    if ($solo_clase) {
+        http_response_code(200);
+        echo json_encode([
+            "status" => "success",
+            "message" => $clase ? "Detalle de clase en vivo obtenido" : "No hay clase activa en este momento para el curso seleccionado",
+            "data" => [
+                "clase" => $clase,
+                "servidor" => $servidorInfo
+            ]
+        ]);
+        exit;
+    }
+
+    // Carga de catálogo para los selectores en cascada
     $stmtTurnos = $db->query("SELECT id_turno, nombre FROM turnos WHERE activo = 1 ORDER BY id_turno ASC");
     $turnos = $stmtTurnos->fetchAll(PDO::FETCH_ASSOC);
 
@@ -39,22 +62,7 @@ try {
     $stmtBachi = $db->query("SELECT id_bachillerato, nombre, codigo FROM bachilleratos WHERE activo = 1 ORDER BY id_bachillerato ASC");
     $bachilleratos = $stmtBachi->fetchAll(PDO::FETCH_ASSOC);
 
-    // Aulas y Grados disponibles según el rol
     if ($id_profesor !== null) {
-        $stmtAulas = $db->prepare("
-            SELECT DISTINCT aul.id_aula, aul.nombre, aul.codigo, aul.ubicacion, g.nombre AS grado_nombre
-            FROM asignacion_docente ad
-            LEFT JOIN grados g ON g.id_grado = ad.id_grado
-            LEFT JOIN horarios h ON h.id_asignacion = ad.id_asignacion
-            JOIN aulas aul ON aul.id_aula = COALESCE(h.id_aula, g.id_aula)
-            WHERE ad.id_profesor = :id_profesor
-              AND ad.activo = 1
-              AND aul.activo = 1
-            ORDER BY aul.nombre ASC
-        ");
-        $stmtAulas->execute([':id_profesor' => $id_profesor]);
-        $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
-
         $stmtGrados = $db->prepare("
             SELECT DISTINCT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
                             aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
@@ -69,14 +77,6 @@ try {
         $stmtGrados->execute([':id_profesor' => $id_profesor]);
         $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
     } else {
-        $stmtAulas = $db->query("
-            SELECT id_aula, nombre, codigo, ubicacion, '' AS grado_nombre
-            FROM aulas
-            WHERE activo = 1
-            ORDER BY id_aula ASC
-        ");
-        $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
-
         $stmtGrados = $db->query("
             SELECT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
                    aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
@@ -91,20 +91,14 @@ try {
     http_response_code(200);
     echo json_encode([
         "status" => "success",
-        "message" => $clase ? "Detalle de clase en vivo obtenido" : "No hay clase activa en este momento para los parámetros seleccionados",
+        "message" => $clase ? "Detalle de clase en vivo obtenido" : "Seleccione un grado o curso para monitorear",
         "data" => [
             "clase" => $clase,
-            "aulas" => $aulas,
             "grados" => $grados,
             "turnos" => $turnos,
             "niveles" => $niveles,
             "bachilleratos" => $bachilleratos,
-            "servidor" => [
-                "fecha_actual" => date('Y-m-d'),
-                "hora_actual" => date('H:i:s'),
-                "timestamp" => $timestamp,
-                "dia_semana" => ClaseDiaria::obtenerDiaEspanol((int)date('w'))['con_tilde']
-            ]
+            "servidor" => $servidorInfo
         ]
     ]);
 } catch (Throwable $e) {

@@ -18,18 +18,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </p>
         </div>
 
-        <!-- Controles de Aula y Fecha -->
+        <!-- Controles de Estado y Hora Institucional -->
         <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
-                <span class="text-slate-400 font-semibold uppercase">Aula:</span>
-                <select id="select-aula" class="bg-transparent font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
-                    <option value="">Cargando aulas...</option>
-                </select>
-            </div>
-
             <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-mono text-slate-700 dark:text-slate-300">
                 <span>📅</span>
-                <span id="label-servidor-tiempo">-</span>
+                <span id="label-servidor-tiempo">Sincronizando hora...</span>
             </div>
 
             <button id="btn-toggle-auto" type="button" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5">
@@ -43,7 +36,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
         <div class="flex items-center justify-between gap-3 mb-3">
             <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                <span>🧭</span> Explorador y Monitoreo Jerárquico de Clases
+                <span>🧭</span> Explorador Jerárquico de Cursos
             </span>
             <span id="label-estado-filtro" class="text-[11px] text-slate-400 font-medium"></span>
         </div>
@@ -80,27 +73,42 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     4. Grado / Curso a Observar
                 </label>
                 <select id="filtro-grado" class="app-input w-full text-xs font-bold border-indigo-300 dark:border-indigo-500/50">
-                    <option value="">Seleccione grado o aula...</option>
+                    <option value="">Seleccione grado o curso...</option>
                 </select>
             </div>
         </div>
     </div>
 
-    <!-- Si no hay clase activa -->
-    <div id="no-clase-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6 hidden">
+    <!-- Estado Inicial: Seleccionar Grado o Curso (Prompt Limpio) -->
+    <div id="prompt-seleccion-grado" class="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 p-12 text-center my-6">
+        <div class="mx-auto w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-center text-3xl mb-4 shadow-sm">
+            📡
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Seleccionar grado o curso para monitorear</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1.5 leading-relaxed">
+            Utilice los filtros superiores para seleccionar el Turno, Ciclo y Grado a observar en tiempo real.
+        </p>
+        <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            Esperando selección de curso
+        </div>
+    </div>
+
+    <!-- Si no hay clase activa para el curso seleccionado -->
+    <div id="no-clase-banner" class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-6 mb-6 hidden">
         <div class="flex items-start gap-3">
             <span class="text-2xl">⚠️</span>
             <div>
-                <h3 class="font-bold text-amber-900 text-sm">No se detectó una clase en curso para esta aula</h3>
-                <p class="text-xs text-amber-800 mt-1 leading-relaxed">
-                    Verifique que el día de hoy coincida con los horarios programados del aula o seleccione otra aula en el selector superior.
+                <h3 class="font-bold text-amber-900 dark:text-amber-300 text-sm">No se detectó una clase en curso para este curso</h3>
+                <p id="no-clase-detalle" class="text-xs text-amber-800 dark:text-amber-400/90 mt-1 leading-relaxed">
+                    Verifique que el día y la hora actual correspondan al horario programado para este grado o seleccione otro curso en el explorador.
                 </p>
             </div>
         </div>
     </div>
 
     <!-- Contenedor Principal de la Clase Activa -->
-    <div id="clase-activa-container" class="space-y-6">
+    <div id="clase-activa-container" class="space-y-6 hidden">
 
         <!-- 1. Encabezado de la Clase y Docente -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -311,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_MARCAR = `${window.BASE_URL}src/api/Clases/marcar_asistencia.php`;
     const API_SIMULAR = `${window.BASE_URL}src/api/Clases/simular_marcacion.php`;
 
-    const selectAula = document.getElementById('select-aula');
     const labelTiempo = document.getElementById('label-servidor-tiempo');
     const btnToggleAuto = document.getElementById('btn-toggle-auto');
     const dotAuto = document.getElementById('dot-auto');
@@ -323,7 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroGrado = document.getElementById('filtro-grado');
     const labelEstadoFiltro = document.getElementById('label-estado-filtro');
 
+    const promptSeleccionGrado = document.getElementById('prompt-seleccion-grado');
     const noClaseBanner = document.getElementById('no-clase-banner');
+    const noClaseDetalle = document.getElementById('no-clase-detalle');
     const claseContainer = document.getElementById('clase-activa-container');
 
     const simularSelectEst = document.getElementById('simular-select-estudiante');
@@ -334,6 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentClaseData = null;
     let autoRefrescoActivo = true;
     let autoRefrescoTimer = null;
+    let isFetching = false;
+    let activeAbortController = null;
 
     let todosGrados = [];
     let turnosData = [];
@@ -341,39 +352,52 @@ document.addEventListener('DOMContentLoaded', () => {
     let bachilleratosData = [];
     let filtrosInicializados = false;
 
-    // 1. Inicializar y cargar estructura
+    // 1. Inicializar y cargar estructura de filtros
     function init() {
+        mostrarEstadoPrompt();
+
         fetch(API_PANEL)
             .then(r => r.json())
             .then(res => {
                 if (res.status === 'success' && res.data) {
-                    if (res.data.aulas && res.data.aulas.length > 0) {
-                        selectAula.innerHTML = res.data.aulas.map(a => `
-                            <option value="${a.id_aula}">${a.nombre} (${a.codigo || 'Aula ' + a.id_aula})</option>
-                        `).join('');
-                    }
-
                     todosGrados = res.data.grados || [];
                     turnosData = res.data.turnos || [];
                     nivelesData = res.data.niveles || [];
                     bachilleratosData = res.data.bachilleratos || [];
+
+                    if (res.data.servidor) {
+                        actualizarRelojServidor(res.data.servidor);
+                    }
 
                     if (!filtrosInicializados) {
                         poblarFiltrosCascada();
                         filtrosInicializados = true;
                     }
 
-                    if (res.data.clase && res.data.clase.id_aula) {
-                        selectAula.value = res.data.clase.id_aula;
+                    // Si es rol Profesor con clase activa detectada automáticamente
+                    if (res.data.clase) {
+                        if (res.data.clase.id_grado && filtroGrado) {
+                            filtroGrado.value = res.data.clase.id_grado;
+                        }
+                        renderizarPanel(res.data);
+                    } else {
+                        mostrarEstadoPrompt();
                     }
-                    if (res.data.clase && res.data.clase.id_grado && filtroGrado) {
-                        filtroGrado.value = res.data.clase.id_grado;
-                    }
-
-                    renderizarPanel(res.data);
                 }
             })
             .catch(e => console.error("Error en init panel en vivo:", e));
+    }
+
+    function actualizarRelojServidor(servidor) {
+        if (!labelTiempo || !servidor) return;
+        labelTiempo.textContent = `${servidor.dia_semana} ${servidor.fecha_actual} — ${servidor.hora_actual}`;
+    }
+
+    function mostrarEstadoPrompt() {
+        if (promptSeleccionGrado) promptSeleccionGrado.classList.remove('hidden');
+        if (noClaseBanner) noClaseBanner.classList.add('hidden');
+        if (claseContainer) claseContainer.classList.add('hidden');
+        currentClaseData = null;
     }
 
     // 2. Poblar opciones de los filtros en cascada
@@ -396,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarOpcionesGrados();
     }
 
-    // 3. Filtrar grados según la cascada
+    // 3. Filtrar grados según la cascada seleccionada
     function actualizarOpcionesGrados() {
         if (!filtroGrado) return;
 
@@ -420,6 +444,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (valorPrevio && filtrados.some(g => String(g.id_grado) === String(valorPrevio))) {
             filtroGrado.value = valorPrevio;
+        } else {
+            filtroGrado.value = '';
+            mostrarEstadoPrompt();
         }
 
         if (labelEstadoFiltro) {
@@ -427,58 +454,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (filtroTurno) filtroTurno.addEventListener('change', () => { actualizarOpcionesGrados(); refrescarPanel(); });
-    if (filtroNivel) filtroNivel.addEventListener('change', () => { actualizarOpcionesGrados(); refrescarPanel(); });
-    if (filtroBachillerato) filtroBachillerato.addEventListener('change', () => { actualizarOpcionesGrados(); refrescarPanel(); });
+    if (filtroTurno) filtroTurno.addEventListener('change', () => { actualizarOpcionesGrados(); });
+    if (filtroNivel) filtroNivel.addEventListener('change', () => { actualizarOpcionesGrados(); });
+    if (filtroBachillerato) filtroBachillerato.addEventListener('change', () => { actualizarOpcionesGrados(); });
     
     if (filtroGrado) {
         filtroGrado.addEventListener('change', () => {
             const idGrado = filtroGrado.value;
             if (idGrado) {
-                const gradoObj = todosGrados.find(g => String(g.id_grado) === String(idGrado));
-                if (gradoObj && gradoObj.id_aula) {
-                    selectAula.value = gradoObj.id_aula;
-                }
+                refrescarPanel(false);
+            } else {
+                mostrarEstadoPrompt();
             }
-            refrescarPanel(false);
         });
     }
 
-    selectAula.addEventListener('change', () => refrescarPanel(false));
-
-    // 4. Refrescar datos del panel
+    // 4. Refrescar datos del panel de forma ligera y protegida
     function refrescarPanel(silencioso = false) {
-        const idAula = selectAula ? selectAula.value : '';
         const idGrado = filtroGrado ? filtroGrado.value : '';
+        if (!idGrado) {
+            mostrarEstadoPrompt();
+            return;
+        }
 
-        const params = new URLSearchParams();
-        if (idGrado) params.append('id_grado', idGrado);
-        if (idAula) params.append('id_aula', idAula);
+        // Cancelar petición anterior si aún no terminó para evitar acumulación
+        if (isFetching && activeAbortController) {
+            activeAbortController.abort();
+        }
 
-        const url = `${API_PANEL}?${params.toString()}`;
+        activeAbortController = new AbortController();
+        isFetching = true;
 
-        fetch(url)
+        const url = `${API_PANEL}?id_grado=${encodeURIComponent(idGrado)}&solo_clase=1`;
+
+        fetch(url, { signal: activeAbortController.signal })
             .then(r => r.json())
             .then(res => {
                 if (res.status === 'success' && res.data) {
                     renderizarPanel(res.data);
                 }
             })
-            .catch(e => console.error("Error al refrescar panel:", e));
+            .catch(e => {
+                if (e.name !== 'AbortError') {
+                    console.error("Error al refrescar panel en vivo:", e);
+                }
+            })
+            .finally(() => {
+                isFetching = false;
+            });
     }
 
-    // 3. Renderizar vista completa
+    // 5. Renderizar vista completa
     function renderizarPanel(data) {
         if (data.servidor) {
-            labelTiempo.textContent = `${data.servidor.dia_semana} ${data.servidor.fecha_actual} — ${data.servidor.hora_actual}`;
+            actualizarRelojServidor(data.servidor);
         }
 
         const clase = data.clase;
         currentClaseData = clase;
 
+        if (promptSeleccionGrado) promptSeleccionGrado.classList.add('hidden');
+
         if (!clase) {
             noClaseBanner.classList.remove('hidden');
             claseContainer.classList.add('hidden');
+            if (noClaseDetalle && data.servidor) {
+                noClaseDetalle.textContent = `No se detectó clase en curso para este grado en el horario actual (${data.servidor.dia_semana} ${data.servidor.hora_actual}). Verifique los horarios programados del grado.`;
+            }
             return;
         }
 
@@ -642,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // Llenar selector del simulador con los estudiantes ausentes o todos
+        // Llenar selector del simulador con los estudiantes del curso
         const todos = [
             ...(clase.estudiantes_ausentes || []),
             ...(clase.estudiantes_presentes || [])
@@ -651,7 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
             todos.map(e => `<option value="${e.id_estudiante}">${e.nombre_completo} (CI: ${e.cedula_identidad})</option>`).join('');
     }
 
-    // 4. Simulador de Huella
+    // 6. Simulador de Huella
     btnDispararHuella.addEventListener('click', () => {
         const idEst = simularSelectEst.value;
         if (!idEst) {
@@ -731,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Promise.all(promises).then(() => refrescarPanel(true));
     });
 
-    // 5. Control de Auto-Refresco
+    // 7. Control de Auto-Refresco
     function toggleAuto() {
         autoRefrescoActivo = !autoRefrescoActivo;
         if (autoRefrescoActivo) {
@@ -750,7 +792,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function iniciarTimer() {
         detenerTimer();
         autoRefrescoTimer = setInterval(() => {
-            if (autoRefrescoActivo) refrescarPanel(true);
+            if (autoRefrescoActivo && !isFetching && filtroGrado && filtroGrado.value) {
+                refrescarPanel(true);
+            }
         }, 5000);
     }
 
