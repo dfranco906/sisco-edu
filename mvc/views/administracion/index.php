@@ -18,6 +18,7 @@ $totales = [
     'total_materias' => 0,
     'total_asignaciones' => 0,
     'total_usuarios' => 0,
+    'total_estudiantes' => 0,
     'total_tutores' => 0,
     'total_aulas' => 0
 ];
@@ -33,6 +34,7 @@ try {
             (SELECT COUNT(*) FROM materias WHERE activo = 1) AS total_materias,
             (SELECT COUNT(*) FROM asignacion_docente WHERE activo = 1) AS total_asignaciones,
             (SELECT COUNT(*) FROM usuarios WHERE activo = 1) AS total_usuarios,
+            (SELECT COUNT(*) FROM estudiantes WHERE activo = 1) AS total_estudiantes,
             (SELECT COUNT(*) FROM tutores WHERE activo = 1) AS total_tutores,
             (SELECT COUNT(*) FROM aulas WHERE activo = 1) AS total_aulas
     ");
@@ -272,11 +274,33 @@ try {
                     <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Control de cuentas, espacios físicos y configuración de conectividad</p>
                 </div>
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                    4 Módulos
+                    5 Módulos
                 </span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                <!-- Estudiantes -->
+                <a href="<?= base_url('mvc/views/estudiantes/index.php') ?>" class="app-card p-6 flex flex-col justify-between group hover:border-blue-300 hover:shadow-md transition duration-200">
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-105 transition-transform">
+                                <span class="text-2xl">🎓</span>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                                <?= (int)$totales['total_estudiantes'] ?> alumnos
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">Estudiantes y Matrículas</h3>
+                        <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                            Nómina general, filtro en cascada por curso, importación y exportación masiva a Excel.
+                        </p>
+                    </div>
+                    <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-600">
+                        <span>Gestionar estudiantes</span>
+                        <span class="group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </a>
 
                 <!-- Usuarios -->
                 <a href="<?= base_url('mvc/views/usuarios/index.php') ?>" class="app-card p-6 flex flex-col justify-between group hover:border-blue-300 hover:shadow-md transition duration-200">

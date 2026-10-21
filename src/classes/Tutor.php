@@ -320,6 +320,7 @@ class Tutor {
                        t.id_usuario, t.activo,
                        COUNT(DISTINCT et.id_estudiante) AS total_hijos,
                        STRING_AGG(DISTINCT CASE WHEN e.id_estudiante IS NOT NULL THEN CONCAT(e.nombre, ' ', e.apellido, ' (', COALESCE(g.nombre, 'Sin grado'), ')') ELSE NULL END, ', ') AS hijos_resumen,
+                       STRING_AGG(DISTINCT e.cedula_identidad, ', ') AS cedulas_hijos,
                        CONCAT(t.nombre, ' ', t.apellido, ' - CI: ', t.cedula_identidad) AS nombre_completo
                 FROM tutores t
                 LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
@@ -338,6 +339,7 @@ class Tutor {
                        t.id_usuario, t.activo,
                        COUNT(DISTINCT et.id_estudiante) AS total_hijos,
                        STRING_AGG(DISTINCT CASE WHEN e.id_estudiante IS NOT NULL THEN CONCAT(e.nombre, ' ', e.apellido, ' (', COALESCE(g.nombre, 'Sin grado'), ')') ELSE NULL END, ', ') AS hijos_resumen,
+                       STRING_AGG(DISTINCT e.cedula_identidad, ', ') AS cedulas_hijos,
                        CONCAT(t.nombre, ' ', t.apellido, ' - CI: ', t.cedula_identidad) AS nombre_completo
                 FROM tutores t
                 LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
@@ -568,5 +570,153 @@ class Tutor {
             error_log("Error en Tutor::vincularEstudiantesBatch: " . $e->getMessage());
             return ['status' => false, 'vinculados' => 0, 'errores' => [$e->getMessage()]];
         }
+    }
+
+    /**
+     * Importación masiva de tutores y vinculación automática con sus hijos.
+     * Soporta la columna 'cedulas_hijos' (cédulas separadas por comas o barras).
+     */
+    public function importarBatch(array $filas): array {
+        if (empty($filas)) {
+            return [
+                'status' => false,
+                'total_filas' => 0,
+                'tutores_creados' => 0,
+                'tutores_actualizados' => 0,
+                'vinculos_creados' => 0,
+                'errores' => ['El archivo no contiene filas de datos para procesar.']
+            ];
+        }
+
+        require_once __DIR__ . '/IdentidadHelper.php';
+
+        $stmtCheckTutor = $this->conn->prepare("
+            SELECT id_tutor, nombre, apellido
+            FROM tutores
+            WHERE cedula_identidad = :ci AND activo = 1
+            LIMIT 1
+        ");
+
+        $stmtUpdateTutor = $this->conn->prepare("
+            UPDATE tutores
+            SET nombre = :nombre,
+                apellido = :apellido,
+                celular = COALESCE(NULLIF(:celular, ''), celular),
+                email = COALESCE(NULLIF(:email, ''), email),
+                direccion = COALESCE(NULLIF(:direccion, ''), direccion)
+            WHERE id_tutor = :id
+        ");
+
+        $stmtInsertTutor = $this->conn->prepare("
+            INSERT INTO tutores (id_usuario, nombre, apellido, cedula_identidad, celular, email, direccion, activo, fecha_registro)
+            VALUES (:id_usuario, :nombre, :apellido, :cedula, :celular, :email, :direccion, 1, NOW())
+            RETURNING id_tutor
+        ");
+
+        $stmtBuscarEstudiante = $this->conn->prepare("
+            SELECT id_estudiante, nombre, apellido
+            FROM estudiantes
+            WHERE cedula_identidad = :ci AND activo = 1
+            LIMIT 1
+        ");
+
+        $creados = 0;
+        $actualizados = 0;
+        $vinculos = 0;
+        $errores = [];
+
+        foreach ($filas as $idx => $fila) {
+            $numFila = $idx + 2;
+
+            $cedula = trim((string)($fila['cedula_identidad'] ?? $fila['cedula'] ?? $fila['ci'] ?? ''));
+            $nombre = trim((string)($fila['nombre'] ?? $fila['nombres'] ?? ''));
+            $apellido = trim((string)($fila['apellido'] ?? $fila['apellidos'] ?? ''));
+            $celular = trim((string)($fila['celular'] ?? $fila['telefono'] ?? ''));
+            $email = trim((string)($fila['email'] ?? $fila['correo'] ?? ''));
+            $direccion = trim((string)($fila['direccion'] ?? ''));
+            $parentesco = trim((string)($fila['parentesco'] ?? 'Tutor Legal')) ?: 'Tutor Legal';
+            $cedulasHijosRaw = trim((string)($fila['cedulas_hijos'] ?? $fila['hijos'] ?? $fila['hijos_ci'] ?? ''));
+
+            if (empty($cedula)) {
+                $errores[] = "Fila #{$numFila}: Cédula de tutor vacía.";
+                continue;
+            }
+            if (empty($nombre) || empty($apellido)) {
+                $errores[] = "Fila #{$numFila} (CI: {$cedula}): Nombre y apellido del tutor son obligatorios.";
+                continue;
+            }
+
+            try {
+                $stmtCheckTutor->execute([':ci' => $cedula]);
+                $tutorExistente = $stmtCheckTutor->fetch(PDO::FETCH_ASSOC);
+
+                $idTutor = null;
+                if ($tutorExistente) {
+                    $idTutor = (int)$tutorExistente['id_tutor'];
+                    $stmtUpdateTutor->execute([
+                        ':nombre' => $nombre,
+                        ':apellido' => $apellido,
+                        ':celular' => $celular ?: null,
+                        ':email' => $email ?: null,
+                        ':direccion' => $direccion ?: null,
+                        ':id' => $idTutor
+                    ]);
+                    $actualizados++;
+                } else {
+                    $idUsuario = IdentidadHelper::asegurarUsuario(
+                        $this->conn,
+                        'Tutor',
+                        $cedula,
+                        $nombre,
+                        $apellido,
+                        $email ?: null,
+                        $celular ?: null
+                    );
+
+                    $stmtInsertTutor->execute([
+                        ':id_usuario' => $idUsuario,
+                        ':nombre' => $nombre,
+                        ':apellido' => $apellido,
+                        ':cedula' => $cedula,
+                        ':celular' => $celular ?: null,
+                        ':email' => $email ?: null,
+                        ':direccion' => $direccion ?: null
+                    ]);
+                    $idTutor = (int)$stmtInsertTutor->fetchColumn();
+                    $creados++;
+                }
+
+                // Procesar vinculación con hijos si se especificaron
+                if ($idTutor && !empty($cedulasHijosRaw)) {
+                    $listaCIs = preg_split('/[,;\/]+/', $cedulasHijosRaw);
+                    foreach ($listaCIs as $ciHijo) {
+                        $ciHijo = trim($ciHijo);
+                        if (empty($ciHijo)) continue;
+
+                        $stmtBuscarEstudiante->execute([':ci' => $ciHijo]);
+                        $estHijo = $stmtBuscarEstudiante->fetch(PDO::FETCH_ASSOC);
+
+                        if ($estHijo) {
+                            $this->vincularEstudiante($idTutor, (int)$estHijo['id_estudiante'], $parentesco, 1);
+                            $vinculos++;
+                        } else {
+                            $errores[] = "Fila #{$numFila} ({$nombre} {$apellido}): No se encontró al hijo con CI '{$ciHijo}' en la institución.";
+                        }
+                    }
+                }
+            } catch (Throwable $e) {
+                error_log("Error importando tutor fila #{$numFila}: " . $e->getMessage());
+                $errores[] = "Fila #{$numFila} (CI: {$cedula}): Error al registrar tutor en el sistema.";
+            }
+        }
+
+        return [
+            'status' => count($errores) === 0 || ($creados + $actualizados > 0),
+            'total_filas' => count($filas),
+            'tutores_creados' => $creados,
+            'tutores_actualizados' => $actualizados,
+            'vinculos_creados' => $vinculos,
+            'errores' => $errores
+        ];
     }
 }

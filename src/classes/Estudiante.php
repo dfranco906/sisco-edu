@@ -126,7 +126,27 @@ class Estudiante {
         ];
     }
 
-    public function leer(): PDOStatement {
+    public function leer(?int $id_grado = null, ?int $id_turno = null, ?int $id_nivel = null, ?int $id_bachillerato = null): PDOStatement {
+        $params = [];
+        $where = "WHERE e.activo = 1";
+
+        if ($id_grado !== null && $id_grado > 0) {
+            $where .= " AND e.id_grado = :id_grado";
+            $params[':id_grado'] = $id_grado;
+        }
+        if ($id_turno !== null && $id_turno > 0) {
+            $where .= " AND g.id_turno = :id_turno";
+            $params[':id_turno'] = $id_turno;
+        }
+        if ($id_nivel !== null && $id_nivel > 0) {
+            $where .= " AND g.id_nivel = :id_nivel";
+            $params[':id_nivel'] = $id_nivel;
+        }
+        if ($id_bachillerato !== null && $id_bachillerato > 0) {
+            $where .= " AND g.id_bachillerato = :id_bachillerato";
+            $params[':id_bachillerato'] = $id_bachillerato;
+        }
+
         $query = "SELECT 
                     e.id_estudiante,
                     e.nombre,
@@ -135,7 +155,14 @@ class Estudiante {
                     e.user_id_global,
                     e.id_grado,
                     g.nombre AS grado,
+                    g.id_turno,
+                    g.id_nivel,
+                    g.id_bachillerato,
                     COALESCE(m.total_materias, 0) AS materias_matriculadas,
+                    COALESCE(e.huella_registrada, 0) AS huella_registrada,
+                    e.huella_id,
+                    COUNT(DISTINCT et.id_tutor) AS total_tutores,
+                    STRING_AGG(DISTINCT CASE WHEN t.id_tutor IS NOT NULL THEN CONCAT(t.nombre, ' ', t.apellido, ' (', COALESCE(et.parentesco, 'Tutor'), ')') ELSE NULL END, ', ') AS tutores_resumen,
                     e.activo,
                     CONCAT(e.nombre, ' ', e.apellido, ' - CI: ', e.cedula_identidad) AS nombre_completo
                   FROM estudiantes e
@@ -146,11 +173,14 @@ class Estudiante {
                       WHERE activo = 1
                       GROUP BY id_estudiante
                   ) m ON e.id_estudiante = m.id_estudiante
-                  WHERE e.activo = 1
+                  LEFT JOIN estudiante_tutores et ON et.id_estudiante = e.id_estudiante AND et.activo = 1
+                  LEFT JOIN tutores t ON et.id_tutor = t.id_tutor AND t.activo = 1
+                  {$where}
+                  GROUP BY e.id_estudiante, e.nombre, e.apellido, e.cedula_identidad, e.user_id_global, e.id_grado, g.nombre, g.id_turno, g.id_nivel, g.id_bachillerato, m.total_materias, e.huella_registrada, e.huella_id, e.activo
                   ORDER BY g.nombre ASC, e.apellido ASC, e.nombre ASC";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt;
     }
 
@@ -297,5 +327,146 @@ class Estudiante {
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Importación masiva por lotes de estudiantes desde archivo CSV / tabular.
+     * Es idempotente: si la cédula ya existe, actualiza los datos y rematricula si cambia de grado.
+     */
+    public function importarBatch(array $filas, ?int $idGradoDefecto = null): array {
+        if (empty($filas)) {
+            return [
+                'status' => false,
+                'total_filas' => 0,
+                'creados' => 0,
+                'actualizados' => 0,
+                'errores' => ['El archivo no contiene filas de datos para procesar.']
+            ];
+        }
+
+        require_once __DIR__ . '/IdentidadHelper.php';
+
+        // Mapeo en memoria de nombres de grados para resolución rápida
+        $stmtGrados = $this->conn->query("SELECT id_grado, nombre FROM grados WHERE activo = 1");
+        $mapaGrados = [];
+        while ($g = $stmtGrados->fetch(PDO::FETCH_ASSOC)) {
+            $mapaGrados[mb_strtolower(trim((string)$g['nombre']))] = (int)$g['id_grado'];
+        }
+
+        $stmtCheck = $this->conn->prepare("
+            SELECT id_estudiante, id_grado, user_id_global
+            FROM estudiantes
+            WHERE cedula_identidad = :ci AND activo = 1
+            LIMIT 1
+        ");
+
+        $stmtUpdate = $this->conn->prepare("
+            UPDATE estudiantes
+            SET nombre = :nombre,
+                apellido = :apellido,
+                id_grado = COALESCE(:id_grado, id_grado)
+            WHERE id_estudiante = :id
+        ");
+
+        $stmtInsert = $this->conn->prepare("
+            INSERT INTO estudiantes (nombre, apellido, cedula_identidad, id_grado, user_id_global, id_usuario, activo)
+            VALUES (:nombre, :apellido, :cedula, :id_grado, :user_id_global, :id_usuario, 1)
+            RETURNING id_estudiante
+        ");
+
+        $creados = 0;
+        $actualizados = 0;
+        $errores = [];
+
+        foreach ($filas as $idx => $fila) {
+            $numFila = $idx + 2; // Considerando cabecera en fila 1
+
+            $cedula = trim((string)($fila['cedula_identidad'] ?? $fila['cedula'] ?? $fila['ci'] ?? ''));
+            $nombre = trim((string)($fila['nombre'] ?? $fila['nombres'] ?? ''));
+            $apellido = trim((string)($fila['apellido'] ?? $fila['apellidos'] ?? ''));
+            $gradoInput = trim((string)($fila['grado'] ?? $fila['curso'] ?? ''));
+
+            if (empty($cedula)) {
+                $errores[] = "Fila #{$numFila}: Cédula de identidad ausente o vacía.";
+                continue;
+            }
+            if (empty($nombre) || empty($apellido)) {
+                $errores[] = "Fila #{$numFila} (CI: {$cedula}): Nombre y apellido son requeridos.";
+                continue;
+            }
+
+            // Resolver grado
+            $idGrado = $idGradoDefecto;
+            if (!empty($gradoInput)) {
+                $key = mb_strtolower($gradoInput);
+                if (isset($mapaGrados[$key])) {
+                    $idGrado = $mapaGrados[$key];
+                } else {
+                    // Búsqueda parcial si no coincide exactamente
+                    foreach ($mapaGrados as $gNombre => $gId) {
+                        if (str_contains($gNombre, $key) || str_contains($key, $gNombre)) {
+                            $idGrado = $gId;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            try {
+                $stmtCheck->execute([':ci' => $cedula]);
+                $existente = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+                if ($existente) {
+                    $idEst = (int)$existente['id_estudiante'];
+                    $stmtUpdate->execute([
+                        ':nombre' => $nombre,
+                        ':apellido' => $apellido,
+                        ':id_grado' => $idGrado,
+                        ':id' => $idEst
+                    ]);
+
+                    if ($idGrado && $idGrado !== (int)$existente['id_grado']) {
+                        $this->matricularEnMateriasDeGrado($idEst, $idGrado);
+                    }
+                    $actualizados++;
+                } else {
+                    $idUsuario = IdentidadHelper::asegurarUsuario(
+                        $this->conn,
+                        'Estudiante',
+                        $cedula,
+                        $nombre,
+                        $apellido
+                    );
+
+                    $userIdGlobal = 'EST_' . preg_replace('/\D/', '', $cedula) . '_' . substr(uniqid(), -4);
+
+                    $stmtInsert->execute([
+                        ':nombre' => $nombre,
+                        ':apellido' => $apellido,
+                        ':cedula' => $cedula,
+                        ':id_grado' => $idGrado,
+                        ':user_id_global' => $userIdGlobal,
+                        ':id_usuario' => $idUsuario
+                    ]);
+                    $idNuevo = (int)$stmtInsert->fetchColumn();
+
+                    if ($idNuevo && $idGrado) {
+                        $this->matricularEnMateriasDeGrado($idNuevo, $idGrado);
+                    }
+                    $creados++;
+                }
+            } catch (Throwable $e) {
+                error_log("Error importando fila #{$numFila} (CI: {$cedula}): " . $e->getMessage());
+                $errores[] = "Fila #{$numFila} (CI: {$cedula}): Error al registrar en base de datos.";
+            }
+        }
+
+        return [
+            'status' => count($errores) === 0 || ($creados + $actualizados > 0),
+            'total_filas' => count($filas),
+            'creados' => $creados,
+            'actualizados' => $actualizados,
+            'errores' => $errores
+        ];
     }
 }
