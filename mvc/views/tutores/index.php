@@ -109,13 +109,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     async function cargarOpciones() {
         try {
-            const resT = await fetch(window.BASE_URL + "/src/api/Tutor/leer_tutores.php");
+            const resT = await fetch(window.BASE_URL.replace(/\/+$/, "") + "/src/api/Tutor/leer_tutores.php");
             const dataT = await resT.json();
             const tutores = dataT.data || [];
             selTutor.innerHTML = \'<option value="">Seleccione un tutor...</option>\' +
                 tutores.map(t => `<option value="${t.id_tutor}">${t.nombre} ${t.apellido} (CI: ${t.cedula_identidad})</option>`).join("");
 
-            const resE = await fetch(window.BASE_URL + "/src/api/Estudiante/leer_estudiantes.php");
+            const resE = await fetch(window.BASE_URL.replace(/\/+$/, "") + "/src/api/Estudiante/leer_estudiantes.php");
             const dataE = await resE.json();
             const estudiantes = dataE.data || [];
             selEstudiante.innerHTML = \'<option value="">Seleccione un estudiante...</option>\' +
@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 e.preventDefault();
                 const formData = new FormData(formVincular);
                 try {
-                    const res = await fetch(window.BASE_URL + "/src/api/Tutor/vincular_hijo.php", {
+                    const res = await fetch(window.BASE_URL.replace(/\/+$/, "") + "/src/api/Tutor/vincular_hijo.php", {
                         method: "POST",
                         body: formData
                     });

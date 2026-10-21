@@ -14,10 +14,13 @@ try {
     $db = (new Database())->getConnection();
     $tutor = new Tutor($db);
 
-    $idTutor = (int)($_POST['id_tutor'] ?? 0);
-    $idEstudiante = (int)($_POST['id_estudiante'] ?? 0);
-    $parentesco = trim((string)($_POST['parentesco'] ?? 'Tutor/a'));
-    $esPrincipal = !empty($_POST['es_principal']) ? 1 : 0;
+    $jsonRaw = file_get_contents('php://input');
+    $jsonData = json_decode($jsonRaw, true) ?? [];
+
+    $idTutor = (int)($_POST['id_tutor'] ?? $jsonData['id_tutor'] ?? 0);
+    $idEstudiante = (int)($_POST['id_estudiante'] ?? $jsonData['id_estudiante'] ?? 0);
+    $parentesco = trim((string)($_POST['parentesco'] ?? $jsonData['parentesco'] ?? 'Tutor/a'));
+    $esPrincipal = (!empty($_POST['es_principal']) || !empty($jsonData['es_principal'])) ? 1 : 0;
 
     if ($idTutor <= 0 || $idEstudiante <= 0) {
         http_response_code(400);
@@ -27,11 +30,13 @@ try {
 
     $ok = $tutor->vincularEstudiante($idTutor, $idEstudiante, $parentesco, $esPrincipal);
 
+    http_response_code($ok ? 200 : 422);
     echo json_encode([
         "status" => $ok ? "success" : "error",
         "message" => $ok ? "Estudiante vinculado exitosamente al tutor." : "No se pudo vincular al estudiante."
     ]);
 } catch (Throwable $e) {
+    error_log("Error en Tutor/vincular_hijo: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error interno: " . $e->getMessage()]);
+    echo json_encode(["status" => "error", "message" => "Error interno al vincular estudiante"]);
 }
