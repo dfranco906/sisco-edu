@@ -319,9 +319,12 @@ class Tutor {
         $sql = "SELECT t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion,
                        t.id_usuario, t.activo,
                        COUNT(DISTINCT et.id_estudiante) AS total_hijos,
+                       STRING_AGG(DISTINCT CASE WHEN e.id_estudiante IS NOT NULL THEN CONCAT(e.nombre, ' ', e.apellido, ' (', COALESCE(g.nombre, 'Sin grado'), ')') ELSE NULL END, ', ') AS hijos_resumen,
                        CONCAT(t.nombre, ' ', t.apellido, ' - CI: ', t.cedula_identidad) AS nombre_completo
                 FROM tutores t
                 LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
+                LEFT JOIN estudiantes e ON et.id_estudiante = e.id_estudiante AND e.activo = 1
+                LEFT JOIN grados g ON e.id_grado = g.id_grado
                 WHERE t.activo = 1
                 GROUP BY t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion, t.id_usuario, t.activo
                 ORDER BY t.apellido ASC, t.nombre ASC";
@@ -334,9 +337,12 @@ class Tutor {
         $sql = "SELECT t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion,
                        t.id_usuario, t.activo,
                        COUNT(DISTINCT et.id_estudiante) AS total_hijos,
+                       STRING_AGG(DISTINCT CASE WHEN e.id_estudiante IS NOT NULL THEN CONCAT(e.nombre, ' ', e.apellido, ' (', COALESCE(g.nombre, 'Sin grado'), ')') ELSE NULL END, ', ') AS hijos_resumen,
                        CONCAT(t.nombre, ' ', t.apellido, ' - CI: ', t.cedula_identidad) AS nombre_completo
                 FROM tutores t
                 LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
+                LEFT JOIN estudiantes e ON et.id_estudiante = e.id_estudiante AND e.activo = 1
+                LEFT JOIN grados g ON e.id_grado = g.id_grado
                 WHERE t.activo = 0
                 GROUP BY t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email, t.direccion, t.id_usuario, t.activo
                 ORDER BY t.apellido ASC, t.nombre ASC";
@@ -464,5 +470,103 @@ class Tutor {
         ");
         $stmt->execute([':id_tutor' => $id_tutor]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Búsqueda predictiva de tutores por nombre, apellido, CI o celular
+     * Retorna también el resumen de hijos vinculados y el conteo.
+     */
+    public function buscar(string $q = '', int $limit = 20): array {
+        $limit = max(1, min(50, $limit));
+        $params = [];
+        $where = "WHERE t.activo = 1";
+
+        $q = trim($q);
+        if ($q !== '') {
+            $where .= " AND (t.nombre ILIKE :q OR t.apellido ILIKE :q OR t.cedula_identidad ILIKE :q OR t.celular ILIKE :q)";
+            $params[':q'] = "%{$q}%";
+        }
+
+        $sql = "SELECT t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email,
+                       COUNT(DISTINCT et.id_estudiante) AS total_hijos,
+                       STRING_AGG(DISTINCT CASE WHEN e.id_estudiante IS NOT NULL THEN CONCAT(e.nombre, ' ', e.apellido, ' (', COALESCE(g.nombre, 'Sin grado'), ')') ELSE NULL END, ', ') AS hijos_resumen
+                FROM tutores t
+                LEFT JOIN estudiante_tutores et ON et.id_tutor = t.id_tutor AND et.activo = 1
+                LEFT JOIN estudiantes e ON et.id_estudiante = e.id_estudiante AND e.activo = 1
+                LEFT JOIN grados g ON e.id_grado = g.id_grado
+                $where
+                GROUP BY t.id_tutor, t.nombre, t.apellido, t.cedula_identidad, t.celular, t.email
+                ORDER BY t.apellido ASC, t.nombre ASC
+                LIMIT {$limit}";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Vinculación atómica en lote de múltiples estudiantes a un tutor (soporte para hermanos/familias)
+     */
+    public function vincularEstudiantesBatch(int $id_tutor, array $estudiantes): array {
+        if ($id_tutor <= 0 || empty($estudiantes)) {
+            return ['status' => false, 'vinculados' => 0, 'errores' => ['Parámetros inválidos']];
+        }
+
+        $stmtCheck = $this->conn->prepare("
+            SELECT id_estudiante_tutor
+            FROM estudiante_tutores
+            WHERE id_tutor = :id_tutor AND id_estudiante = :id_estudiante
+            LIMIT 1
+        ");
+
+        $stmtUp = $this->conn->prepare("
+            UPDATE estudiante_tutores
+            SET parentesco = :parentesco,
+                es_principal = :es_principal,
+                activo = 1
+            WHERE id_estudiante_tutor = :id
+        ");
+
+        $stmtIns = $this->conn->prepare("
+            INSERT INTO estudiante_tutores (id_estudiante, id_tutor, parentesco, es_principal, activo, fecha_asignacion)
+            VALUES (:id_estudiante, :id_tutor, :parentesco, :es_principal, 1, NOW())
+        ");
+
+        $vinculados = 0;
+        $this->conn->beginTransaction();
+        try {
+            foreach ($estudiantes as $item) {
+                $idEstudiante = (int)($item['id_estudiante'] ?? 0);
+                if ($idEstudiante <= 0) continue;
+
+                $parentesco = trim((string)($item['parentesco'] ?? 'Tutor Legal')) ?: 'Tutor Legal';
+                $esPrincipal = !empty($item['es_principal']) ? 1 : 0;
+
+                $stmtCheck->execute([':id_tutor' => $id_tutor, ':id_estudiante' => $idEstudiante]);
+                $existe = $stmtCheck->fetchColumn();
+
+                if ($existe) {
+                    $stmtUp->execute([
+                        ':parentesco' => $parentesco,
+                        ':es_principal' => $esPrincipal,
+                        ':id' => $existe
+                    ]);
+                } else {
+                    $stmtIns->execute([
+                        ':id_estudiante' => $idEstudiante,
+                        ':id_tutor' => $id_tutor,
+                        ':parentesco' => $parentesco,
+                        ':es_principal' => $esPrincipal
+                    ]);
+                }
+                $vinculados++;
+            }
+            $this->conn->commit();
+            return ['status' => true, 'vinculados' => $vinculados, 'errores' => []];
+        } catch (Throwable $e) {
+            $this->conn->rollBack();
+            error_log("Error en Tutor::vincularEstudiantesBatch: " . $e->getMessage());
+            return ['status' => false, 'vinculados' => 0, 'errores' => [$e->getMessage()]];
+        }
     }
 }

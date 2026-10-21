@@ -50,8 +50,17 @@ function opcionesFiltro(datos, filtro) {
     });
 }
 
-function contenidoCelda(columna, valor) {
+function contenidoCelda(columna, valor, item = null) {
     const texto = String(valor ?? "");
+
+    if (columna === "total_hijos") {
+        const cant = parseInt(valor || 0);
+        if (cant > 0) {
+            const tooltip = item && item.hijos_resumen ? ` title="${escaparHtml(item.hijos_resumen)}"` : '';
+            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs cursor-help"${tooltip}>👨‍👩‍👦 ${cant} hijo(s)</span>`;
+        }
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 font-medium text-xs">Sin hijos</span>`;
+    }
 
     if (columna === "estado" && texto !== "") {
         const estado = texto.toUpperCase();
@@ -80,6 +89,23 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
     let datosOriginales = [];
     let valorPestanaActiva = "";
+
+    window.abrirVincularTutorDesdeTabla = function(idTutor) {
+        const item = datosOriginales.find(d => String(d.id_tutor) === String(idTutor));
+        if (item && window.GestorFamilias) {
+            GestorFamilias.abrir({
+                tutorInicial: {
+                    id_tutor: item.id_tutor,
+                    nombre: item.nombre,
+                    apellido: item.apellido,
+                    cedula_identidad: item.cedula_identidad,
+                    celular: item.celular || "",
+                    total_hijos: item.total_hijos || 0,
+                    hijos_resumen: item.hijos_resumen || ""
+                }
+            });
+        }
+    };
 
     tbody.innerHTML = `<tr><td colspan="${columnas.length + 1}" class="p-4 text-center">Cargando datos...</td></tr>`;
 
@@ -110,11 +136,16 @@ async function cargarTabla(api, columnas, filtros = {}) {
             let fila = `<tr class="border-b hover:bg-gray-50">`;
 
             columnas.forEach(col => {
-                fila += `<td class="p-3">${contenidoCelda(col, item[col])}</td>`;
+                fila += `<td class="p-3">${contenidoCelda(col, item[col], item)}</td>`;
             });
 
             fila += `
     <td class="p-3"><div class="table-actions">
+        ${item.id_tutor ? `
+        <button type="button" onclick="abrirVincularTutorDesdeTabla(${item.id_tutor})"
+                class="btn btn-secondary btn-sm inline-flex items-center gap-1 font-semibold" title="Vincular estudiantes o hermanos a este tutor">
+            👨‍👩‍👦 + Hijos
+        </button>` : ""}
         ${window.API_ACTUALIZAR && idRegistro ? `
         <button onclick='editarRegistro(${JSON.stringify(item)})'
         class="btn btn-edit">

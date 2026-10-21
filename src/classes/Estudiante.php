@@ -261,4 +261,41 @@ class Estudiante {
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([":id" => $this->id_estudiante]);
     }
+
+    /**
+     * Búsqueda predictiva de estudiantes con datos de curso y resumen de tutores vinculados.
+     */
+    public function buscar(string $q = '', ?int $id_grado = null, int $limit = 20): array {
+        $limit = max(1, min(50, $limit));
+        $params = [];
+        $where = "WHERE e.activo = 1";
+
+        $q = trim($q);
+        if ($q !== '') {
+            $where .= " AND (e.nombre ILIKE :q OR e.apellido ILIKE :q OR e.cedula_identidad ILIKE :q)";
+            $params[':q'] = "%{$q}%";
+        }
+
+        if ($id_grado !== null && $id_grado > 0) {
+            $where .= " AND e.id_grado = :id_grado";
+            $params[':id_grado'] = $id_grado;
+        }
+
+        $sql = "SELECT e.id_estudiante, e.nombre, e.apellido, e.cedula_identidad, e.id_grado,
+                       g.nombre AS grado_nombre, g.seccion, g.turno,
+                       COUNT(DISTINCT et.id_tutor) AS total_tutores,
+                       STRING_AGG(DISTINCT CASE WHEN t.id_tutor IS NOT NULL THEN CONCAT(t.nombre, ' ', t.apellido, ' (', COALESCE(et.parentesco, 'Tutor'), ')') ELSE NULL END, ', ') AS tutores_resumen
+                FROM estudiantes e
+                LEFT JOIN grados g ON e.id_grado = g.id_grado
+                LEFT JOIN estudiante_tutores et ON et.id_estudiante = e.id_estudiante AND et.activo = 1
+                LEFT JOIN tutores t ON et.id_tutor = t.id_tutor AND t.activo = 1
+                $where
+                GROUP BY e.id_estudiante, e.nombre, e.apellido, e.cedula_identidad, e.id_grado, g.nombre, g.seccion, g.turno
+                ORDER BY g.nombre ASC, e.apellido ASC, e.nombre ASC
+                LIMIT {$limit}";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

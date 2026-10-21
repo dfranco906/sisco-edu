@@ -253,7 +253,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                                         <div class="flex items-center gap-2">
                                             <span class="text-slate-400 text-[11px]">Sin tutor vinculado</span>
                                             <button type="button" 
-                                                    onclick="abrirModalVincular(<?= (int)$e['id_estudiante'] ?>, '<?= htmlspecialchars(addslashes($e['apellido'] . ', ' . $e['nombre']), ENT_QUOTES) ?>')"
+                                                    onclick="abrirModalVincular(<?= (int)$e['id_estudiante'] ?>, '<?= htmlspecialchars(addslashes($e['nombre']), ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($e['apellido']), ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($e['cedula_identidad']), ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($aula['nombre'] ?? 'Curso'), ENT_QUOTES) ?>')"
                                                     class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] hover:bg-indigo-100 dark:hover:bg-indigo-800/40 transition">
                                                 + Vincular
                                             </button>
@@ -278,7 +278,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                                                 </div>
                                             <?php endforeach; ?>
                                             <button type="button" 
-                                                    onclick="abrirModalVincular(<?= (int)$e['id_estudiante'] ?>, '<?= htmlspecialchars(addslashes($e['apellido'] . ', ' . $e['nombre']), ENT_QUOTES) ?>')"
+                                                    onclick="abrirModalVincular(<?= (int)$e['id_estudiante'] ?>, '<?= htmlspecialchars(addslashes($e['nombre']), ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($e['apellido']), ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($e['cedula_identidad']), ENT_QUOTES) ?>', '<?= htmlspecialchars(addslashes($aula['nombre'] ?? 'Curso'), ENT_QUOTES) ?>')"
                                                     class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline block mt-0.5 font-medium">
                                                 + Agregar otro tutor
                                             </button>
@@ -306,7 +306,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">Directorio de Tutores y Familiares</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Contactos principales para comunicaciones escolares y seguimiento</p>
             </div>
-            <button type="button" onclick="abrirModalVincular()" class="btn btn-primary text-xs flex items-center gap-1.5 self-start sm:self-auto">
+            <button type="button" onclick="GestorFamilias.abrir()" class="btn btn-primary text-xs flex items-center gap-1.5 self-start sm:self-auto">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 + Vincular Estudiante a Tutor
             </button>
@@ -319,7 +319,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </div>
                 <p class="text-slate-700 dark:text-slate-300 font-semibold">No hay tutores vinculados a los estudiantes de este grado todavía.</p>
                 <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Vinculá tutores a los alumnos para habilitar su seguimiento académico, expedientes y notificaciones familiares.</p>
-                <button type="button" onclick="abrirModalVincular()" class="btn btn-primary text-xs mt-4">
+                <button type="button" onclick="GestorFamilias.abrir()" class="btn btn-primary text-xs mt-4">
                     + Vincular Primer Tutor Ahora
                 </button>
             </div>
@@ -339,7 +339,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                             </div>
 
                             <!-- Vínculo con Hijos -->
-                            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 mb-3 text-xs space-y-1">
+                            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 mb-2 text-xs space-y-1">
                                 <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Hijo(s) a cargo:</span>
                                 <?php foreach ($tut['hijos'] as $h): ?>
                                     <div class="flex items-center justify-between text-slate-800 dark:text-slate-200">
@@ -348,6 +348,12 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                                     </div>
                                 <?php endforeach; ?>
                             </div>
+
+                            <button type="button" 
+                                    onclick="GestorFamilias.abrir({ tutorInicial: { id_tutor: <?= (int)$tut['id_tutor'] ?>, nombre: '<?= htmlspecialchars(addslashes($tut['nombre']), ENT_QUOTES) ?>', apellido: '<?= htmlspecialchars(addslashes($tut['apellido']), ENT_QUOTES) ?>', cedula_identidad: '<?= htmlspecialchars(addslashes($tut['cedula_identidad']), ENT_QUOTES) ?>', celular: '<?= htmlspecialchars(addslashes($tut['celular'] ?? ''), ENT_QUOTES) ?>' } })" 
+                                    class="w-full text-center py-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold mb-3">
+                                + Vincular otro hijo / hermano
+                            </button>
                         </div>
 
                         <!-- Contacto directo -->
@@ -372,89 +378,9 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         <?php endif; ?>
     </section>
-    <!-- Modal Vincular Tutor a Estudiante -->
-    <div id="modal-vincular-tutor" class="app-modal hidden">
-        <div class="app-modal-dialog max-w-lg">
-            <div class="flex items-start justify-between gap-4 mb-5">
-                <div>
-                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Vincular Tutor a Estudiante</h3>
-                    <p class="text-sm mt-1 text-slate-500 dark:text-slate-400">Relacioná a un estudiante con su responsable familiar para el seguimiento académico.</p>
-                </div>
-                <button type="button" onclick="cerrarModalVincular()" class="app-modal-close" aria-label="Cerrar">×</button>
-            </div>
 
-            <form id="form-vincular-tutor" class="space-y-4">
-                <div>
-                    <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        1. Estudiante del Curso
-                    </label>
-                    <select id="vincular-sel-estudiante" name="id_estudiante" class="app-input w-full text-xs font-semibold" required>
-                        <option value="">Seleccione estudiante...</option>
-                        <?php foreach ($estudiantes as $est): ?>
-                            <option value="<?= $est['id_estudiante'] ?>">
-                                <?= htmlspecialchars($est['apellido'] . ', ' . $est['nombre'] . ' (CI: ' . $est['cedula_identidad'] . ')', ENT_QUOTES, 'UTF-8') ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            2. Tutor / Responsable Familiar
-                        </label>
-                        <button type="button" id="btn-toggle-nuevo-tutor" onclick="toggleFormNuevoTutor()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold">
-                            + ¿No figura? Crear Nuevo Tutor
-                        </button>
-                    </div>
-                    <select id="vincular-sel-tutor" name="id_tutor" class="app-input w-full text-xs" required>
-                        <option value="">Cargando catálogo de tutores...</option>
-                    </select>
-                </div>
-
-                <!-- Formulario Colapsable para Crear Nuevo Tutor al Vuelo -->
-                <div id="box-nuevo-tutor" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3 hidden">
-                    <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">Registrar Nuevo Tutor</span>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <input type="text" id="nuevo-tutor-nombre" placeholder="Nombre *" class="app-input">
-                        <input type="text" id="nuevo-tutor-apellido" placeholder="Apellido *" class="app-input">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <input type="text" id="nuevo-tutor-ci" placeholder="Cédula de Identidad *" class="app-input">
-                        <input type="text" id="nuevo-tutor-celular" placeholder="Celular / WhatsApp" class="app-input">
-                    </div>
-                    <button type="button" onclick="guardarNuevoTutorRapido()" id="btn-guardar-nuevo-tutor" class="btn btn-secondary text-xs w-full">
-                        Guardar y Seleccionar Tutor
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Parentesco</label>
-                        <select id="vincular-sel-parentesco" name="parentesco" class="app-input w-full text-xs">
-                            <option value="Madre">Madre</option>
-                            <option value="Padre">Padre</option>
-                            <option value="Tutor Legal" selected>Tutor Legal</option>
-                            <option value="Encargado/a">Encargado/a</option>
-                            <option value="Abuelo/a">Abuelo/a</option>
-                            <option value="Tío/a">Tío/a</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center pt-6">
-                        <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-700 dark:text-slate-300">
-                            <input type="checkbox" name="es_principal" value="1" checked class="rounded border-slate-300 text-indigo-600 focus:ring-0">
-                            <span>Tutor Principal de contacto</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="app-modal-actions pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <button type="button" onclick="cerrarModalVincular()" class="btn btn-muted">Cancelar</button>
-                    <button type="submit" id="btn-submit-vincular" class="btn btn-success">Guardar Vínculo</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Modal Gestor Inteligente de Familias y Vínculos -->
+    <?php require_once __DIR__ . '/../tutores/modal_vincular_familia.php'; ?>
 </main>
 
 <script>
@@ -481,141 +407,6 @@ function cambiarPestana(targetId) {
         activeBtn.classList.add('border-indigo-600', 'text-indigo-600', 'dark:border-indigo-500', 'dark:text-indigo-400', 'font-bold');
     }
 }
-
-let tutoresCatalogoCargado = false;
-
-async function cargarCatalogoTutores(idSeleccionar = null) {
-    const selTutor = document.getElementById('vincular-sel-tutor');
-    if (!selTutor) return;
-
-    try {
-        const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Tutor/leer_tutores.php';
-        const res = await fetch(url);
-        const json = await res.json();
-        const tutores = json.data || [];
-
-        selTutor.innerHTML = '<option value="">Seleccione un tutor registrado...</option>' +
-            tutores.map(t => `<option value="${t.id_tutor}">${t.nombre} ${t.apellido} (CI: ${t.cedula_identidad})</option>`).join('');
-
-        if (idSeleccionar) {
-            selTutor.value = String(idSeleccionar);
-        }
-        tutoresCatalogoCargado = true;
-    } catch (e) {
-        console.error("Error al cargar catálogo de tutores:", e);
-        selTutor.innerHTML = '<option value="">Error al cargar tutores</option>';
-    }
-}
-
-function abrirModalVincular(idEstudiante = null, nombreEstudiante = '') {
-    const modal = document.getElementById('modal-vincular-tutor');
-    const selEst = document.getElementById('vincular-sel-estudiante');
-    const boxNuevo = document.getElementById('box-nuevo-tutor');
-
-    if (!modal) return;
-
-    if (boxNuevo) boxNuevo.classList.add('hidden');
-
-    if (selEst && idEstudiante) {
-        selEst.value = String(idEstudiante);
-    }
-
-    modal.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-
-    if (!tutoresCatalogoCargado) {
-        cargarCatalogoTutores();
-    }
-}
-
-function cerrarModalVincular() {
-    const modal = document.getElementById('modal-vincular-tutor');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.classList.remove('modal-open');
-    }
-}
-
-function toggleFormNuevoTutor() {
-    const box = document.getElementById('box-nuevo-tutor');
-    if (box) {
-        box.classList.toggle('hidden');
-    }
-}
-
-async function guardarNuevoTutorRapido() {
-    const nombre = document.getElementById('nuevo-tutor-nombre').value.trim();
-    const apellido = document.getElementById('nuevo-tutor-apellido').value.trim();
-    const ci = document.getElementById('nuevo-tutor-ci').value.trim();
-    const celular = document.getElementById('nuevo-tutor-celular').value.trim();
-
-    if (!nombre || !apellido || !ci) {
-        window.Toast ? Toast.warning("Nombre, apellido y cédula son obligatorios") : alert("Complete los campos obligatorios");
-        return;
-    }
-
-    const btn = document.getElementById('btn-guardar-nuevo-tutor');
-    if (btn) btn.disabled = true;
-
-    try {
-        const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Tutor/crear_tutor.php';
-        const formData = new FormData();
-        formData.append('nombre', nombre);
-        formData.append('apellido', apellido);
-        formData.append('cedula_identidad', ci);
-        formData.append('celular', celular);
-
-        const res = await fetch(url, { method: 'POST', body: formData });
-        const json = await res.json();
-
-        if (json.status === 'success' && json.data && json.data.id_tutor) {
-            if (window.Toast) Toast.success("Tutor registrado correctamente");
-            document.getElementById('box-nuevo-tutor').classList.add('hidden');
-            await cargarCatalogoTutores(json.data.id_tutor);
-        } else {
-            if (window.Toast) Toast.error(json.message || "Error al crear tutor");
-            else alert(json.message);
-        }
-    } catch (e) {
-        console.error(e);
-        if (window.Toast) Toast.error("Error al registrar nuevo tutor");
-    } finally {
-        if (btn) btn.disabled = false;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const formVincular = document.getElementById('form-vincular-tutor');
-    if (formVincular) {
-        formVincular.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(formVincular);
-
-            const btnSubmit = document.getElementById('btn-submit-vincular');
-            if (btnSubmit) btnSubmit.disabled = true;
-
-            try {
-                const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Tutor/vincular_hijo.php';
-                const res = await fetch(url, { method: 'POST', body: formData });
-                const json = await res.json();
-
-                if (json.status === 'success') {
-                    if (window.Toast) Toast.success(json.message);
-                    cerrarModalVincular();
-                    setTimeout(() => location.reload(), 600);
-                } else {
-                    if (window.Toast) Toast.error(json.message || "Error al vincular");
-                    else alert(json.message);
-                }
-            } catch (err) {
-                console.error(err);
-                if (window.Toast) Toast.error("Error de comunicación con el servidor");
-            } finally {
-                if (btnSubmit) btnSubmit.disabled = false;
-            }
-        });
-    }
-});
 
 async function desvincularTutor(idTutor, idEstudiante, nombreTutor, nombreEstudiante) {
     const msg = `¿Desea desvincular a "${nombreTutor}" como tutor de "${nombreEstudiante}"?`;
