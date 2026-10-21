@@ -4,8 +4,6 @@ verificarRol(['SuperAdmin', 'Administrador', 'Coordinador', 'Tutor']);
 
 require_once __DIR__ . '/../../../src/config/db.php';
 require_once __DIR__ . '/../../../src/classes/Tutor.php';
-require_once __DIR__ . '/../layouts/header.php';
-require_once __DIR__ . '/../layouts/sidebar.php';
 
 $idEstudiante = (int)($_GET['id_estudiante'] ?? 0);
 $idUsuario = (int)$_SESSION['id_usuario'];
@@ -46,6 +44,9 @@ $est = $expediente['estudiante'];
 $materias = $expediente['materias'];
 $historial = $expediente['historial_asistencias'];
 $tutores = $expediente['tutores'];
+
+require_once __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../layouts/sidebar.php';
 
 // Totales de asistencia
 $totalPres = 0;

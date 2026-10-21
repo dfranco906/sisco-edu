@@ -1,15 +1,13 @@
 <?php
 require_once __DIR__ . '/../../../src/config/app.php';
+require_once __DIR__ . '/../../../src/middleware/auth.php';
+
+// RBAC: Solo SuperAdmin, Administrador y Administracion tienen acceso
+verificarRol(['SuperAdmin', 'Administrador', 'Administracion']);
+
 require_once __DIR__ . '/../../../src/config/db.php';
 require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
-
-// RBAC: Solo SuperAdmin, Administrador y Administracion tienen acceso
-$rolUsuario = strtolower($_SESSION['rol'] ?? '');
-if (!in_array($rolUsuario, ['superadmin', 'administrador', 'administracion'], true)) {
-    header("Location: " . base_url('mvc/views/dashboard.php'));
-    exit();
-}
 
 // Carga optimizada de contadores en una sola consulta
 $totales = [

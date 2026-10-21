@@ -82,7 +82,25 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </button>
                 <?php endif; ?>
 
-                <a href="<?= base_url($urlVolver ?? 'mvc/views/dashboard.php') ?>"
+                <?php
+                $rolSesion = $_SESSION['rol'] ?? '';
+                $esAdmin = in_array(strtolower($rolSesion), ['superadmin', 'administrador', 'administracion'], true);
+
+                if (!empty($_GET['ref'])) {
+                    $destinoVolver = $_GET['ref'];
+                } elseif (!$esAdmin && ($urlVolver ?? '') === 'mvc/views/administracion/index.php') {
+                    $destinoVolver = match ($rolSesion) {
+                        'Coordinador' => 'mvc/views/coordinacion/index.php',
+                        'Profesor' => 'mvc/views/profesores/mi_panel.php',
+                        'Estudiante' => 'mvc/views/estudiantes/mi_panel.php',
+                        'Tutor' => 'mvc/views/tutores/mi_panel.php',
+                        default => 'mvc/views/dashboard.php'
+                    };
+                } else {
+                    $destinoVolver = $urlVolver ?? 'mvc/views/dashboard.php';
+                }
+                ?>
+                <a href="<?= base_url($destinoVolver) ?>"
                    class="btn btn-primary">
                     Volver
                 </a>

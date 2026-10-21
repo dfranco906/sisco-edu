@@ -4,8 +4,6 @@ verificarRol(['SuperAdmin', 'Administrador', 'Coordinador']);
 
 require_once __DIR__ . '/../../../src/config/db.php';
 require_once __DIR__ . '/../../../src/classes/Coordinador.php';
-require_once __DIR__ . '/../layouts/header.php';
-require_once __DIR__ . '/../layouts/sidebar.php';
 
 $idGrado = (int)($_GET['id_grado'] ?? 0);
 
@@ -27,6 +25,9 @@ $grado = $detalle['grado'];
 $materias = $detalle['materias'];
 $estudiantes = $detalle['estudiantes'];
 $tutores = $detalle['tutores'];
+
+require_once __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 
 <main class="app-main flex-1 p-4 sm:p-6 lg:p-10">
@@ -206,7 +207,7 @@ $tutores = $detalle['tutores'];
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">Nómina de Estudiantes</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Alumnos matriculados activamente en este grado</p>
             </div>
-            <a href="<?= base_url('mvc/views/estudiantes/index.php') ?>" class="btn btn-primary text-xs">
+            <a href="<?= base_url('mvc/views/estudiantes/index.php?ref=' . urlencode('mvc/views/coordinacion/aula_detalle.php?id_grado=' . $idGrado)) ?>" class="btn btn-primary text-xs">
                 + Matricular / Gestionar
             </a>
         </div>

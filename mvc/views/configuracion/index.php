@@ -1,14 +1,12 @@
 <?php
-require_once __DIR__ . '/../layouts/header.php';
-require_once __DIR__ . '/../layouts/sidebar.php';
 require_once __DIR__ . '/../../../src/config/app.php';
+require_once __DIR__ . '/../../../src/middleware/auth.php';
 
 // RBAC: Solo SuperAdmin y Administración pueden acceder a la configuración del sistema
-$rolUsuario = strtolower($_SESSION['rol'] ?? '');
-if (!in_array($rolUsuario, ['superadmin', 'administracion', 'administrador'], true)) {
-    header("Location: " . base_url('mvc/views/dashboard.php'));
-    exit();
-}
+verificarRol(['SuperAdmin', 'Administracion', 'Administrador']);
+
+require_once __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 
 <main class="flex-1 p-6 md:p-10">

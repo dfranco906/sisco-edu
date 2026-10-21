@@ -5,7 +5,17 @@ require_once __DIR__ . '/../../../src/config/app.php';
 
 $rol = $_SESSION['rol'] ?? '';
 $esDocente = ($rol === 'Profesor');
-$urlVolver = $esDocente ? base_url('mvc/views/dashboard.php') : base_url('mvc/views/administracion/index.php');
+$esAdmin = in_array(strtolower($rol), ['superadmin', 'administrador', 'administracion'], true);
+
+if (!empty($_GET['ref'])) {
+    $urlVolver = base_url($_GET['ref']);
+} elseif ($esAdmin) {
+    $urlVolver = base_url('mvc/views/administracion/index.php');
+} elseif ($rol === 'Coordinador') {
+    $urlVolver = base_url('mvc/views/coordinacion/index.php');
+} else {
+    $urlVolver = base_url('mvc/views/dashboard.php');
+}
 ?>
 
 <main class="app-main flex-1 p-4 sm:p-6 lg:p-10">
