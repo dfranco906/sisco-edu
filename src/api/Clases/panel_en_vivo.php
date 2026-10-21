@@ -15,6 +15,7 @@ if ($rol === 'Profesor' && !empty($_SESSION['id_profesor'])) {
 
 $id_clase = isset($_GET['id_clase']) && is_numeric($_GET['id_clase']) ? (int)$_GET['id_clase'] : null;
 $id_aula = isset($_GET['id_aula']) && is_numeric($_GET['id_aula']) ? (int)$_GET['id_aula'] : null;
+$id_grado = isset($_GET['id_grado']) && is_numeric($_GET['id_grado']) ? (int)$_GET['id_grado'] : null;
 $timestamp = trim($_GET['timestamp'] ?? date('Y-m-d H:i:s'));
 
 try {
@@ -25,8 +26,18 @@ try {
     if ($id_clase) {
         $clase = $claseModel->obtenerDetalleClase($id_clase, $id_profesor);
     } else {
-        $clase = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp, $id_profesor);
+        $clase = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp, $id_profesor, $id_grado);
     }
+
+    // Listas maestras para filtros en cascada
+    $stmtTurnos = $db->query("SELECT id_turno, nombre FROM turnos WHERE activo = 1 ORDER BY id_turno ASC");
+    $turnos = $stmtTurnos->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmtNiveles = $db->query("SELECT id_nivel, nombre FROM niveles_academicos WHERE activo = 1 ORDER BY id_nivel ASC");
+    $niveles = $stmtNiveles->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmtBachi = $db->query("SELECT id_bachillerato, nombre, codigo FROM bachilleratos WHERE activo = 1 ORDER BY id_bachillerato ASC");
+    $bachilleratos = $stmtBachi->fetchAll(PDO::FETCH_ASSOC);
 
     // Aulas y Grados disponibles según el rol
     if ($id_profesor !== null) {
@@ -45,9 +56,11 @@ try {
         $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
 
         $stmtGrados = $db->prepare("
-            SELECT DISTINCT g.id_grado, g.nombre, g.id_aula
+            SELECT DISTINCT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
+                            aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
             FROM asignacion_docente ad
             JOIN grados g ON g.id_grado = ad.id_grado
+            LEFT JOIN aulas aul ON aul.id_aula = g.id_aula
             WHERE ad.id_profesor = :id_profesor
               AND ad.activo = 1
               AND g.activo = 1
@@ -65,10 +78,12 @@ try {
         $aulas = $stmtAulas->fetchAll(PDO::FETCH_ASSOC);
 
         $stmtGrados = $db->query("
-            SELECT id_grado, nombre, id_aula
-            FROM grados
-            WHERE activo = 1
-            ORDER BY id_grado ASC
+            SELECT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
+                   aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
+            FROM grados g
+            LEFT JOIN aulas aul ON aul.id_aula = g.id_aula
+            WHERE g.activo = 1
+            ORDER BY g.nombre ASC
         ");
         $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -81,6 +96,9 @@ try {
             "clase" => $clase,
             "aulas" => $aulas,
             "grados" => $grados,
+            "turnos" => $turnos,
+            "niveles" => $niveles,
+            "bachilleratos" => $bachilleratos,
             "servidor" => [
                 "fecha_actual" => date('Y-m-d'),
                 "hora_actual" => date('H:i:s'),

@@ -79,6 +79,10 @@ try {
         "id_aula" => $resultado ? $grado['id_aula'] : null
     ]);
 } catch (Throwable $e) {
+    error_log("Error al crear horario: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error interno al crear el horario."]);
+    echo json_encode([
+        "status" => "error",
+        "message" => "Error interno al crear el horario: " . $e->getMessage()
+    ]);
 }

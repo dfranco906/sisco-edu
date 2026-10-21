@@ -100,7 +100,6 @@ switch ($rolActual) {
             ['Profesores', 'mvc/views/profesores/index.php', 'profesores'],
             ['Estudiantes', 'mvc/views/estudiantes/index.php', 'estudiantes'],
             ['Horarios', 'mvc/views/horarios/index.php', 'horarios'],
-            ['Asist. Profesores', 'mvc/views/asistencias_profesores/index.php', 'asist_profesores'],
             ['Administración', 'mvc/views/administracion/index.php', 'administracion'],
         ];
         break;
@@ -113,7 +112,6 @@ switch ($rolActual) {
             ['Profesores', 'mvc/views/profesores/index.php', 'profesores'],
             ['Estudiantes', 'mvc/views/estudiantes/index.php', 'estudiantes'],
             ['Horarios', 'mvc/views/horarios/index.php', 'horarios'],
-            ['Asist. Profesores', 'mvc/views/asistencias_profesores/index.php', 'asist_profesores'],
         ];
         break;
 

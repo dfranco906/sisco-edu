@@ -42,11 +42,18 @@ class ClaseDiaria {
     /**
      * Detecta o inicializa la clase activa en un aula/fecha/hora determinada
      */
-    public function obtenerOCrearClaseActiva(?int $id_aula = null, ?string $timestamp = null, ?int $id_profesor = null): ?array {
+    public function obtenerOCrearClaseActiva(?int $id_aula = null, ?string $timestamp = null, ?int $id_profesor = null, ?int $id_grado = null): ?array {
         $fechaHora = $timestamp ? new DateTime($timestamp) : new DateTime();
         $fecha = $fechaHora->format('Y-m-d');
         $hora = $fechaHora->format('H:i:s');
         $diaInfo = self::obtenerDiaEspanol((int)$fechaHora->format('w'));
+
+        // Si se especificó id_grado y no id_aula, resolver aula del grado
+        if ($id_grado !== null && $id_grado > 0 && !$id_aula) {
+            $stmtG = $this->conn->prepare("SELECT id_aula FROM grados WHERE id_grado = :id_grado AND activo = 1 LIMIT 1");
+            $stmtG->execute([':id_grado' => $id_grado]);
+            $id_aula = (int)$stmtG->fetchColumn() ?: null;
+        }
 
         // Si no se proporcionó aula, resolver automáticamente
         if (!$id_aula) {
@@ -133,6 +140,11 @@ class ClaseDiaria {
             $paramsH[':id_profesor'] = $id_profesor;
         }
 
+        if ($id_grado !== null && $id_grado > 0) {
+            $sqlHorario .= " AND COALESCE(h.id_grado, a.id_grado) = :id_grado";
+            $paramsH[':id_grado'] = $id_grado;
+        }
+
         $sqlHorario .= " ORDER BY (CASE 
                                      WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
                                      ELSE 1
@@ -165,6 +177,10 @@ class ClaseDiaria {
             if ($id_profesor !== null) {
                 $sqlCualquiera .= " AND a.id_profesor = :id_profesor";
                 $paramsC[':id_profesor'] = $id_profesor;
+            }
+            if ($id_grado !== null && $id_grado > 0) {
+                $sqlCualquiera .= " AND COALESCE(h.id_grado, a.id_grado) = :id_grado";
+                $paramsC[':id_grado'] = $id_grado;
             }
             $sqlCualquiera .= " LIMIT 1";
 

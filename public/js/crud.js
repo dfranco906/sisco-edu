@@ -182,10 +182,12 @@ window.editarRegistro = function(item) {
     const camposEditables = window.CAMPOS_EDITAR || [];
     const formCampos = window.FORM_CAMPOS || [];
 
-    camposEditables.forEach(campo => {
-        const def = formCampos.find(f => f.name === campo);
+    camposEditables.forEach(campoItem => {
+        const isObj = typeof campoItem === 'object' && campoItem !== null;
+        const campo = isObj ? campoItem.name : campoItem;
+        const def = isObj ? campoItem : formCampos.find(f => f.name === campo);
         const valorActual = item[campo] ?? "";
-        const label = def?.label || campo.replace(/_/g, ' ');
+        const label = def?.label || (typeof campo === 'string' ? campo.replace(/_/g, ' ') : '');
 
         if (def && def.type === 'select') {
             const required = (def.required !== false) ? 'required' : '';

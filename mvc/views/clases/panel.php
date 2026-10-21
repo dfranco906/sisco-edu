@@ -39,6 +39,53 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
     </div>
 
+    <!-- Filtros Jerárquicos en Cascada: Turno -> Ciclo/Nivel -> Bachillerato -> Grado/Curso -->
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <span>🧭</span> Explorador y Monitoreo Jerárquico de Clases
+            </span>
+            <span id="label-estado-filtro" class="text-[11px] text-slate-400 font-medium"></span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div>
+                <label for="filtro-turno" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                    1. Turno
+                </label>
+                <select id="filtro-turno" class="app-input w-full text-xs font-semibold">
+                    <option value="">Todos los turnos</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="filtro-nivel" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                    2. Ciclo / Nivel
+                </label>
+                <select id="filtro-nivel" class="app-input w-full text-xs font-semibold">
+                    <option value="">Todos los ciclos</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="filtro-bachillerato" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                    3. Bachillerato
+                </label>
+                <select id="filtro-bachillerato" class="app-input w-full text-xs font-semibold">
+                    <option value="">Todos / No aplica</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="filtro-grado" class="block text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1.5">
+                    4. Grado / Curso a Observar
+                </label>
+                <select id="filtro-grado" class="app-input w-full text-xs font-bold border-indigo-300 dark:border-indigo-500/50">
+                    <option value="">Seleccione grado o aula...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
     <!-- Si no hay clase activa -->
     <div id="no-clase-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6 hidden">
         <div class="flex items-start gap-3">
@@ -270,6 +317,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const dotAuto = document.getElementById('dot-auto');
     const textAuto = document.getElementById('text-auto');
 
+    const filtroTurno = document.getElementById('filtro-turno');
+    const filtroNivel = document.getElementById('filtro-nivel');
+    const filtroBachillerato = document.getElementById('filtro-bachillerato');
+    const filtroGrado = document.getElementById('filtro-grado');
+    const labelEstadoFiltro = document.getElementById('label-estado-filtro');
+
     const noClaseBanner = document.getElementById('no-clase-banner');
     const claseContainer = document.getElementById('clase-activa-container');
 
@@ -282,7 +335,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let autoRefrescoActivo = true;
     let autoRefrescoTimer = null;
 
-    // 1. Cargar Aulas e inicializar
+    let todosGrados = [];
+    let turnosData = [];
+    let nivelesData = [];
+    let bachilleratosData = [];
+    let filtrosInicializados = false;
+
+    // 1. Inicializar y cargar estructura
     function init() {
         fetch(API_PANEL)
             .then(r => r.json())
@@ -293,31 +352,120 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="${a.id_aula}">${a.nombre} (${a.codigo || 'Aula ' + a.id_aula})</option>
                         `).join('');
                     }
+
+                    todosGrados = res.data.grados || [];
+                    turnosData = res.data.turnos || [];
+                    nivelesData = res.data.niveles || [];
+                    bachilleratosData = res.data.bachilleratos || [];
+
+                    if (!filtrosInicializados) {
+                        poblarFiltrosCascada();
+                        filtrosInicializados = true;
+                    }
+
                     if (res.data.clase && res.data.clase.id_aula) {
                         selectAula.value = res.data.clase.id_aula;
                     }
+                    if (res.data.clase && res.data.clase.id_grado && filtroGrado) {
+                        filtroGrado.value = res.data.clase.id_grado;
+                    }
+
                     renderizarPanel(res.data);
                 }
             })
-            .catch(e => console.error(e));
+            .catch(e => console.error("Error en init panel en vivo:", e));
     }
 
-    // 2. Refrescar datos del panel
+    // 2. Poblar opciones de los filtros en cascada
+    function poblarFiltrosCascada() {
+        if (filtroTurno && turnosData.length > 0) {
+            filtroTurno.innerHTML = '<option value="">Todos los turnos</option>' +
+                turnosData.map(t => `<option value="${t.id_turno}">${t.nombre}</option>`).join('');
+        }
+
+        if (filtroNivel && nivelesData.length > 0) {
+            filtroNivel.innerHTML = '<option value="">Todos los ciclos</option>' +
+                nivelesData.map(n => `<option value="${n.id_nivel}">${n.nombre}</option>`).join('');
+        }
+
+        if (filtroBachillerato && bachilleratosData.length > 0) {
+            filtroBachillerato.innerHTML = '<option value="">Todos / No aplica</option>' +
+                bachilleratosData.map(b => `<option value="${b.id_bachillerato}">${b.codigo ? b.codigo + ' - ' : ''}${b.nombre}</option>`).join('');
+        }
+
+        actualizarOpcionesGrados();
+    }
+
+    // 3. Filtrar grados según la cascada
+    function actualizarOpcionesGrados() {
+        if (!filtroGrado) return;
+
+        const turnoSel = filtroTurno ? filtroTurno.value : '';
+        const nivelSel = filtroNivel ? filtroNivel.value : '';
+        const bachiSel = filtroBachillerato ? filtroBachillerato.value : '';
+
+        const filtrados = todosGrados.filter(g => {
+            if (turnoSel !== '' && String(g.id_turno) !== String(turnoSel)) return false;
+            if (nivelSel !== '' && String(g.id_nivel) !== String(nivelSel)) return false;
+            if (bachiSel !== '' && String(g.id_bachillerato) !== String(bachiSel)) return false;
+            return true;
+        });
+
+        const valorPrevio = filtroGrado.value;
+        filtroGrado.innerHTML = '<option value="">Seleccione grado o curso...</option>' +
+            filtrados.map(g => {
+                const aulaInfo = g.aula_nombre ? ` [${g.aula_nombre}]` : '';
+                return `<option value="${g.id_grado}">${g.nombre}${g.seccion ? ' - Secc. ' + g.seccion : ''}${aulaInfo}</option>`;
+            }).join('');
+
+        if (valorPrevio && filtrados.some(g => String(g.id_grado) === String(valorPrevio))) {
+            filtroGrado.value = valorPrevio;
+        }
+
+        if (labelEstadoFiltro) {
+            labelEstadoFiltro.textContent = `${filtrados.length} curso(s) disponible(s)`;
+        }
+    }
+
+    if (filtroTurno) filtroTurno.addEventListener('change', () => { actualizarOpcionesGrados(); refrescarPanel(); });
+    if (filtroNivel) filtroNivel.addEventListener('change', () => { actualizarOpcionesGrados(); refrescarPanel(); });
+    if (filtroBachillerato) filtroBachillerato.addEventListener('change', () => { actualizarOpcionesGrados(); refrescarPanel(); });
+    
+    if (filtroGrado) {
+        filtroGrado.addEventListener('change', () => {
+            const idGrado = filtroGrado.value;
+            if (idGrado) {
+                const gradoObj = todosGrados.find(g => String(g.id_grado) === String(idGrado));
+                if (gradoObj && gradoObj.id_aula) {
+                    selectAula.value = gradoObj.id_aula;
+                }
+            }
+            refrescarPanel(false);
+        });
+    }
+
+    selectAula.addEventListener('change', () => refrescarPanel(false));
+
+    // 4. Refrescar datos del panel
     function refrescarPanel(silencioso = false) {
-        const idAula = selectAula.value;
-        const url = `${API_PANEL}?id_aula=${idAula}`;
+        const idAula = selectAula ? selectAula.value : '';
+        const idGrado = filtroGrado ? filtroGrado.value : '';
+
+        const params = new URLSearchParams();
+        if (idGrado) params.append('id_grado', idGrado);
+        if (idAula) params.append('id_aula', idAula);
+
+        const url = `${API_PANEL}?${params.toString()}`;
 
         fetch(url)
             .then(r => r.json())
             .then(res => {
-                if (res.status === 'success') {
+                if (res.status === 'success' && res.data) {
                     renderizarPanel(res.data);
                 }
             })
             .catch(e => console.error("Error al refrescar panel:", e));
     }
-
-    selectAula.addEventListener('change', () => refrescarPanel(false));
 
     // 3. Renderizar vista completa
     function renderizarPanel(data) {

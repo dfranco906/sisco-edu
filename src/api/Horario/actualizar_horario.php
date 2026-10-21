@@ -80,6 +80,10 @@ try {
         "id_aula" => $resultado ? $grado['id_aula'] : null
     ]);
 } catch (Throwable $e) {
+    error_log("Error al actualizar horario: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error interno al actualizar el horario."]);
+    echo json_encode([
+        "status" => "error",
+        "message" => "Error interno al actualizar el horario: " . $e->getMessage()
+    ]);
 }
