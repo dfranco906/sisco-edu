@@ -25,8 +25,8 @@
         <!-- Descarga de Plantilla e Instrucciones -->
         <div class="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div class="space-y-1">
-                <p class="font-bold text-purple-900 dark:text-purple-300">¿No tenés el formato correcto?</p>
-                <p class="text-slate-600 dark:text-slate-400">Descargá la plantilla modelo lista para abrir y editar en Excel.</p>
+                <p class="font-bold text-purple-900 dark:text-purple-300">¿Docentes con múltiples materias o cursos?</p>
+                <p class="text-slate-600 dark:text-slate-400">Podés poner una fila por cada materia/curso, o listar materias separadas por comas en la misma celda. El sistema no duplicará al docente.</p>
             </div>
             <a href="<?= base_url('src/api/Profesor/plantilla_profesores.php') ?>" class="btn btn-secondary text-xs py-1.5 px-3 inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto font-semibold">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>

@@ -263,12 +263,9 @@ class Profesor {
 
         $mapaMaterias = [];
         try {
-            $stmtM = $this->conn->query("SELECT id_materia, nombre, codigo FROM materias WHERE activo = 1");
+            $stmtM = $this->conn->query("SELECT id_materia, nombre FROM materias WHERE activo = 1");
             while ($row = $stmtM->fetch(PDO::FETCH_ASSOC)) {
                 $mapaMaterias[mb_strtolower(trim((string)$row['nombre']))] = (int)$row['id_materia'];
-                if (!empty($row['codigo'])) {
-                    $mapaMaterias[mb_strtolower(trim((string)$row['codigo']))] = (int)$row['id_materia'];
-                }
             }
         } catch (Throwable $e) {
             error_log("Error cargando materias para importación: " . $e->getMessage());
@@ -282,6 +279,8 @@ class Profesor {
         
         $stmtCheckAsig = $this->conn->prepare("SELECT id_asignacion FROM asignacion_docente WHERE id_profesor = :prof AND id_grado = :grado AND id_materia = :materia AND activo = 1 LIMIT 1");
         $stmtInsertAsig = $this->conn->prepare("INSERT INTO asignacion_docente (id_profesor, id_materia, id_grado, carga_horaria, anio_lectivo, activo) VALUES (:prof, :materia, :grado, 2, EXTRACT(YEAR FROM CURRENT_DATE), 1)");
+
+        $profesoresContabilizados = [];
 
         foreach ($filas as $idx => $fila) {
             $numFila = $idx + 2; // Considerando cabecera en fila 1
@@ -328,7 +327,10 @@ class Profesor {
                         ]);
                     }
 
-                    $actualizados++;
+                    if (!isset($profesoresContabilizados[$cedula])) {
+                        $actualizados++;
+                        $profesoresContabilizados[$cedula] = true;
+                    }
                 } else {
                     $idUsuario = IdentidadHelper::asegurarUsuario(
                         $this->conn,
@@ -356,53 +358,80 @@ class Profesor {
                         ':id_usuario' => $idUsuario
                     ]);
                     $idProfesor = (int)$stmtInsertProf->fetchColumn();
-                    $creados++;
+
+                    if (!isset($profesoresContabilizados[$cedula])) {
+                        $creados++;
+                        $profesoresContabilizados[$cedula] = true;
+                    }
                 }
 
-                // Resolver posible asignación de materia / grado
-                $idGrado = $idGradoDefecto;
+                // Resolver posible lista de grados (permite varios separados por comas o barras)
+                $gradosList = [];
                 if (!empty($gradoInput)) {
-                    $keyG = mb_strtolower($gradoInput);
-                    if (isset($mapaGrados[$keyG])) {
-                        $idGrado = $mapaGrados[$keyG];
-                    } else {
-                        foreach ($mapaGrados as $nomG => $idG) {
-                            if (str_contains($nomG, $keyG) || str_contains($keyG, $nomG)) {
-                                $idGrado = $idG;
-                                break;
+                    $tokensG = preg_split('/[,;\/|]+/', $gradoInput);
+                    foreach ($tokensG as $tokG) {
+                        $tokTrimG = trim((string)$tokG);
+                        if (empty($tokTrimG)) continue;
+                        $keyG = mb_strtolower($tokTrimG);
+                        if (isset($mapaGrados[$keyG])) {
+                            $gradosList[] = $mapaGrados[$keyG];
+                        } else {
+                            foreach ($mapaGrados as $nomG => $idG) {
+                                if (str_contains($nomG, $keyG) || str_contains($keyG, $nomG)) {
+                                    $gradosList[] = $idG;
+                                    break;
+                                }
                             }
                         }
                     }
+                } elseif ($idGradoDefecto) {
+                    $gradosList[] = $idGradoDefecto;
                 }
 
-                $idMateria = $idMateriaDefecto;
+                // Resolver posible lista de materias (permite varias separadas por comas o barras)
+                $materiasList = [];
                 if (!empty($materiaInput)) {
-                    $keyM = mb_strtolower($materiaInput);
-                    if (isset($mapaMaterias[$keyM])) {
-                        $idMateria = $mapaMaterias[$keyM];
-                    } else {
-                        foreach ($mapaMaterias as $nomM => $idM) {
-                            if (str_contains($nomM, $keyM) || str_contains($keyM, $nomM)) {
-                                $idMateria = $idM;
-                                break;
+                    $tokensM = preg_split('/[,;\/|]+/', $materiaInput);
+                    foreach ($tokensM as $tokM) {
+                        $tokTrimM = trim((string)$tokM);
+                        if (empty($tokTrimM)) continue;
+                        $keyM = mb_strtolower($tokTrimM);
+                        if (isset($mapaMaterias[$keyM])) {
+                            $materiasList[] = $mapaMaterias[$keyM];
+                        } else {
+                            foreach ($mapaMaterias as $nomM => $idM) {
+                                if (str_contains($nomM, $keyM) || str_contains($keyM, $nomM)) {
+                                    $materiasList[] = $idM;
+                                    break;
+                                }
                             }
                         }
                     }
+                } elseif ($idMateriaDefecto) {
+                    $materiasList[] = $idMateriaDefecto;
                 }
 
-                if ($idProfesor && $idGrado && $idMateria) {
-                    $stmtCheckAsig->execute([
-                        ':prof' => $idProfesor,
-                        ':grado' => $idGrado,
-                        ':materia' => $idMateria
-                    ]);
-                    if (!$stmtCheckAsig->fetchColumn()) {
-                        $stmtInsertAsig->execute([
-                            ':prof' => $idProfesor,
-                            ':materia' => $idMateria,
-                            ':grado' => $idGrado
-                        ]);
-                        $asignaciones++;
+                // Vincular asignaciones docentes evitando duplicados
+                if ($idProfesor && !empty($gradosList) && !empty($materiasList)) {
+                    $gradosListUniq = array_unique($gradosList);
+                    $materiasListUniq = array_unique($materiasList);
+
+                    foreach ($gradosListUniq as $idG) {
+                        foreach ($materiasListUniq as $idM) {
+                            $stmtCheckAsig->execute([
+                                ':prof' => $idProfesor,
+                                ':grado' => $idG,
+                                ':materia' => $idM
+                            ]);
+                            if (!$stmtCheckAsig->fetchColumn()) {
+                                $stmtInsertAsig->execute([
+                                    ':prof' => $idProfesor,
+                                    ':materia' => $idM,
+                                    ':grado' => $idG
+                                ]);
+                                $asignaciones++;
+                            }
+                        }
                     }
                 }
             } catch (Throwable $e) {

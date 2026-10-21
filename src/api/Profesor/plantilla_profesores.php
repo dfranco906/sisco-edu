@@ -23,8 +23,13 @@ fputcsv($output, [
 ], ';');
 
 // Filas de ejemplo instructivas
+// Opción A: Una fila por cada materia o curso que dicta el profesor (Formato relacional estándar)
 fputcsv($output, ['6767676', 'Danilo', 'Franco', 'danilofranco906@gmail.com', '0995684004', '3° BTI', 'LABORATORIO PROGRAMACION'], ';');
-fputcsv($output, ['323289', 'Paola', 'Lezcano', 'paola.lezcano@profesor.sisco.edu', '0981123456', '3° BTI', 'MATEMATICA'], ';');
+fputcsv($output, ['6767676', 'Danilo', 'Franco', 'danilofranco906@gmail.com', '0995684004', '3° BTI', 'ADMINISTRACION FINANCIERA'], ';');
+fputcsv($output, ['6767676', 'Danilo', 'Franco', 'danilofranco906@gmail.com', '0995684004', '2° BTI', 'LABORATORIO SOFTWARE'], ';');
+
+// Opción B: Varias materias separadas por comas en la misma celda para un curso
+fputcsv($output, ['323289', 'Paola', 'Lezcano', 'paola.lezcano@profesor.sisco.edu', '0981123456', '3° BTI', 'MATEMATICA, MATEMATICA APLICADA'], ';');
 fputcsv($output, ['6015000', 'Raul', 'Alonso', 'raul.alonso@profesor.sisco.edu', '0981987654', '1° BTI', 'GABINETE LABORATORIO'], ';');
 
 fclose($output);
