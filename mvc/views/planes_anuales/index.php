@@ -665,51 +665,62 @@ document.addEventListener('DOMContentLoaded', () => {
             const materia = p.materia_nombre || p.materia_fuente || 'Materia sin definir';
             const curso = p.grado_nombre || p.curso_fuente || 'Curso no especificado';
             const profesor = p.profesor_nombre ? `${p.profesor_nombre} ${p.profesor_apellido}` : (p.profesor_fuente || 'Docente asignado');
+            const turnoRaw = p.turno_nombre || p.turno_fuente || p.turno || 'Sin turno';
+            const turno = turnoRaw.charAt(0).toUpperCase() + turnoRaw.slice(1).toLowerCase();
             const temas = parseInt(p.total_temas || 0);
 
             return `
                 <div class="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm hover:shadow-xl hover:border-indigo-300 transition-all p-6 sm:p-7 flex flex-col justify-between space-y-6">
                     <div class="space-y-4">
-                        <!-- 1. Nombre de la Materia -->
+                        <!-- Nombre de la Materia -->
                         <h3 class="text-xl sm:text-2xl font-black text-slate-900 leading-snug hover:text-indigo-600 transition-colors cursor-pointer" onclick="window.abrirPlanDetalle(${p.id_plan})" title="Clic para abrir el plan">
                             ${escapeHtml(materia)}
                         </h3>
 
-                        <!-- 2. Curso y 3. Profesor -->
-                        <div class="space-y-2.5 pt-3 border-t border-slate-100">
-                            <div class="flex items-center gap-2.5 text-base sm:text-lg font-bold text-indigo-700">
+                        <!-- Grilla 2x2: Grado/Curso (1:1), Turno (1:2), Profesor (2:1), Cantidad de contenidos (2:2) -->
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3.5 pt-3 border-t border-slate-100 text-base">
+                            <!-- 1:1 Grado / Curso -->
+                            <div class="flex items-center gap-2.5 font-bold text-indigo-700 min-w-0">
                                 <span class="text-xl shrink-0" aria-hidden="true">🎓</span>
-                                <span class="truncate">${escapeHtml(curso)}</span>
+                                <span class="truncate" title="${escapeHtml(curso)}">${escapeHtml(curso)}</span>
                             </div>
-                            <div class="flex items-center gap-2.5 text-base font-semibold text-slate-700">
-                                <span class="text-xl shrink-0" aria-hidden="true">👨‍🏫</span>
-                                <span class="truncate">${escapeHtml(profesor)}</span>
-                            </div>
-                        </div>
 
-                        <!-- 4. Cantidad de Contenidos -->
-                        <div class="pt-1">
-                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-50/90 border border-indigo-100 text-indigo-950 text-base font-bold">
-                                <span class="text-xl" aria-hidden="true">📚</span>
-                                <span>${temas} ${temas === 1 ? 'contenido' : 'contenidos'}</span>
+                            <!-- 1:2 Turno -->
+                            <div class="flex items-center gap-2.5 font-semibold text-slate-700 min-w-0">
+                                <span class="text-xl shrink-0" aria-hidden="true">⏰</span>
+                                <span class="truncate" title="${escapeHtml(turno)}">${escapeHtml(turno)}</span>
+                            </div>
+
+                            <!-- 2:1 Profesor -->
+                            <div class="flex items-center gap-2.5 font-semibold text-slate-700 min-w-0">
+                                <span class="text-xl shrink-0" aria-hidden="true">👨‍🏫</span>
+                                <span class="truncate" title="${escapeHtml(profesor)}">${escapeHtml(profesor)}</span>
+                            </div>
+
+                            <!-- 2:2 Cantidad de Contenidos -->
+                            <div class="flex items-center gap-2.5 font-bold text-slate-800 min-w-0">
+                                <span class="text-xl shrink-0" aria-hidden="true">📚</span>
+                                <span class="truncate">${temas} ${temas === 1 ? 'lección' : 'lecciones'}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 5. Botones de Acción en la Parte Inferior -->
-                    <div class="pt-5 border-t border-slate-100 flex flex-wrap items-center gap-2.5">
-                        <button type="button" onclick="window.abrirPlanDetalle(${p.id_plan})" class="flex-1 min-w-[140px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-base font-bold rounded-2xl shadow-sm transition-all hover:shadow-md text-center inline-flex items-center justify-center gap-2 cursor-pointer">
+                    <!-- Botones de Acción: Abrir plan al 100% de ancho, Editar y Eliminar al 50% debajo -->
+                    <div class="pt-5 border-t border-slate-100 flex flex-col gap-2.5">
+                        <button type="button" onclick="window.abrirPlanDetalle(${p.id_plan})" class="w-full py-3 px-5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-base font-bold rounded-2xl shadow-sm transition-all hover:shadow-md text-center inline-flex items-center justify-center gap-2 cursor-pointer">
                             <span>📖</span>
                             <span>Abrir plan</span>
                         </button>
-                        <button type="button" onclick="window.abrirEditarPlanHeader(${p.id_plan})" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-300/80 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Editar encabezado del plan">
-                            <span>✏️</span>
-                            <span>Editar</span>
-                        </button>
-                        <button type="button" onclick="window.confirmarEliminarPlan(${p.id_plan})" class="py-3 px-4 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Eliminar plan anual">
-                            <span>🗑️</span>
-                            <span>Eliminar</span>
-                        </button>
+                        <div class="grid grid-cols-2 gap-2.5 w-full">
+                            <button type="button" onclick="window.abrirEditarPlanHeader(${p.id_plan})" class="w-full py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-300/80 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Editar encabezado del plan">
+                                <span>✏️</span>
+                                <span>Editar</span>
+                            </button>
+                            <button type="button" onclick="window.confirmarEliminarPlan(${p.id_plan})" class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Eliminar plan anual">
+                                <span>🗑️</span>
+                                <span>Eliminar</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
