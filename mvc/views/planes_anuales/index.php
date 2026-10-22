@@ -17,94 +17,94 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
         <!-- Encabezado de la Sección -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
+                <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
                     <?= $esProfesor ? 'Mis Planes Anuales Pedagógicos' : 'Gestión de Planes Anuales' ?>
                 </h1>
-                <p class="text-sm text-slate-500 mt-1">
+                <p class="text-base text-slate-600 mt-1">
                     Estructura curricular oficial MEC Paraguay · 1 Hora Cátedra (HC) = 40 minutos.
                 </p>
             </div>
 
             <div class="flex items-center gap-3">
-                <button id="btn-abrir-crear-plan" type="button" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-indigo-100 transition-all hover:shadow-md">
-                    <span>➕</span>
+                <button id="btn-abrir-crear-plan" type="button" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-base font-bold shadow-sm shadow-indigo-100 transition-all hover:shadow-md cursor-pointer">
+                    <span class="text-lg">➕</span>
                     <span>Crear Nuevo Plan Anual</span>
                 </button>
             </div>
         </div>
 
         <!-- Barra de Estadísticas Rápidas -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+            <div class="bg-white rounded-2xl border-2 border-slate-200 p-5 flex items-center gap-4 shadow-xs">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl font-bold shrink-0">
                     📚
                 </div>
                 <div>
-                    <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Total de Planes</span>
-                    <p id="stat-total-planes" class="text-xl font-bold text-slate-800">0</p>
+                    <span class="text-sm uppercase tracking-wider text-slate-500 font-bold">Total de Planes</span>
+                    <p id="stat-total-planes" class="text-2xl sm:text-3xl font-black text-slate-900">0</p>
                 </div>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+            <div class="bg-white rounded-2xl border-2 border-slate-200 p-5 flex items-center gap-4 shadow-xs">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-bold shrink-0">
                     📝
                 </div>
                 <div>
-                    <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Lecciones Planificadas</span>
-                    <p id="stat-total-temas" class="text-xl font-bold text-slate-800">0</p>
+                    <span class="text-sm uppercase tracking-wider text-slate-500 font-bold">Lecciones Planificadas</span>
+                    <p id="stat-total-temas" class="text-2xl sm:text-3xl font-black text-slate-900">0</p>
                 </div>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+            <div class="bg-white rounded-2xl border-2 border-slate-200 p-5 flex items-center gap-4 shadow-xs">
+                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl font-bold shrink-0">
                     ⏱️
                 </div>
                 <div>
-                    <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Unidad de Tiempo</span>
-                    <p class="text-sm font-bold text-slate-800 mt-1">40 min / Hora Cátedra</p>
+                    <span class="text-sm uppercase tracking-wider text-slate-500 font-bold">Unidad de Tiempo</span>
+                    <p class="text-base font-bold text-slate-800 mt-1">40 min / Hora Cátedra</p>
                 </div>
             </div>
         </div>
 
         <!-- Buscador y Filtros en Cascada -->
-        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-8 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
-                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-indigo-600 inline-block"></span>
+                    <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block"></span>
                         Filtros de Búsqueda y Navegación Curricular
                     </h3>
-                    <p class="text-xs text-slate-500">Seleccioná turno, ciclo, bachillerato y grado para filtrar los planes anuales al instante.</p>
+                    <p class="text-sm text-slate-500 mt-0.5">Seleccioná turno, ciclo, bachillerato y grado para filtrar los planes anuales al instante.</p>
                 </div>
-                <div class="w-full sm:w-72 relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
-                    <input id="input-buscar-plan" type="text" placeholder="Buscar materia, docente o año..." class="w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="w-full sm:w-80 relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-base">🔍</span>
+                    <input id="input-buscar-plan" type="text" placeholder="Buscar materia, docente o año..." class="w-full pl-10 pr-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600 font-medium">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <label for="filtro-plan-turno" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">1. Turno</label>
-                    <select id="filtro-plan-turno" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <label for="filtro-plan-turno" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">1. Turno</label>
+                    <select id="filtro-plan-turno" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
                         <option value="">Todos los turnos</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="filtro-plan-nivel" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">2. Ciclo / Nivel</label>
-                    <select id="filtro-plan-nivel" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <label for="filtro-plan-nivel" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">2. Ciclo / Nivel</label>
+                    <select id="filtro-plan-nivel" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
                         <option value="">Todos los ciclos</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="filtro-plan-bach" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">3. Bachillerato</label>
-                    <select id="filtro-plan-bach" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <label for="filtro-plan-bach" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">3. Bachillerato</label>
+                    <select id="filtro-plan-bach" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
                         <option value="">Todos / General</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="filtro-plan-grado" class="block font-semibold uppercase tracking-wider text-slate-500 mb-1">4. Grado / Curso</label>
-                    <select id="filtro-plan-grado" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 font-medium">
+                    <label for="filtro-plan-grado" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">4. Grado / Curso</label>
+                    <select id="filtro-plan-grado" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
                         <option value="">Todos los grados</option>
                     </select>
                 </div>
@@ -112,10 +112,10 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
         </div>
 
         <!-- Grid de Tarjetas de Planes -->
-        <div id="grid-planes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="grid-planes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div class="col-span-full py-16 text-center text-slate-400">
-                <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-3"></div>
-                <p class="text-sm font-medium">Cargando catálogo de planes anuales...</p>
+                <div class="animate-spin inline-block w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full mb-3"></div>
+                <p class="text-base font-semibold">Cargando catálogo de planes anuales...</p>
             </div>
         </div>
     </section>
@@ -409,6 +409,16 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- LÓGICA JAVASCRIPT: MASTER-DETAIL LAZY LOADING Y CRUD     -->
 <!-- ======================================================== -->
 <script>
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Endpoints
     const API_LISTAR = `${window.BASE_URL}src/api/PlanesAnuales/listar.php`;
@@ -636,14 +646,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarCatalogo(planes) {
         if (!planes || planes.length === 0) {
             gridPlanes.innerHTML = `
-                <div class="col-span-full py-16 px-4 text-center bg-white rounded-2xl border border-slate-200">
-                    <span class="text-4xl block mb-3">📋</span>
-                    <h3 class="text-base font-bold text-slate-800">No hay planes anuales que coincidan</h3>
-                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                        Verifica los filtros seleccionados o registra un nuevo plan curricular.
+                <div class="col-span-full py-16 px-6 text-center bg-white rounded-3xl border-2 border-slate-200 shadow-sm">
+                    <span class="text-5xl block mb-4">📋</span>
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800">No hay planes anuales que coincidan con la búsqueda</h3>
+                    <p class="text-base text-slate-500 mt-2 max-w-md mx-auto">
+                        Verificá los filtros seleccionados o registrá un nuevo plan curricular para tu materia.
                     </p>
-                    <button type="button" onclick="document.getElementById('btn-abrir-crear-plan').click()" class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors">
-                        ➕ Crear Plan Anual
+                    <button type="button" onclick="document.getElementById('btn-abrir-crear-plan').click()" class="mt-6 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-base font-bold shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2 cursor-pointer">
+                        <span>➕</span>
+                        <span>Crear Plan Anual</span>
                     </button>
                 </div>
             `;
@@ -651,60 +662,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         gridPlanes.innerHTML = planes.map(p => {
-            const materia = p.materia_nombre || p.materia_fuente || 'Materia';
-            const curso = p.grado_nombre || p.curso_fuente || 'Curso General';
-            const seccion = p.seccion ? ` · Sec. ${p.seccion}` : '';
-            const turno = p.turno_nombre || p.turno_fuente || p.turno || 'MAÑANA';
-            const anio = p.anio || 2026;
-            const profesor = p.profesor_nombre ? `${p.profesor_nombre} ${p.profesor_apellido}` : (p.profesor_fuente || 'Docente');
+            const materia = p.materia_nombre || p.materia_fuente || 'Materia sin definir';
+            const curso = p.grado_nombre || p.curso_fuente || 'Curso no especificado';
+            const profesor = p.profesor_nombre ? `${p.profesor_nombre} ${p.profesor_apellido}` : (p.profesor_fuente || 'Docente asignado');
             const temas = parseInt(p.total_temas || 0);
-            const carga = p.carga_horaria || 2;
-            const nivelBadge = p.nivel_nombre ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700">${p.nivel_nombre}</span>` : '';
-            const bachBadge = p.bachillerato_nombre ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">${p.bachillerato_nombre}</span>` : '';
 
             return `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-between">
-                    <div class="p-6">
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                            <div class="flex flex-wrap items-center gap-1.5">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60">
-                                    ${turno} · ${anio}
-                                </span>
-                                ${nivelBadge}
-                                ${bachBadge}
+                <div class="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm hover:shadow-xl hover:border-indigo-300 transition-all p-6 sm:p-7 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <!-- 1. Nombre de la Materia -->
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 leading-snug hover:text-indigo-600 transition-colors cursor-pointer" onclick="window.abrirPlanDetalle(${p.id_plan})" title="Clic para abrir el plan">
+                            ${escapeHtml(materia)}
+                        </h3>
+
+                        <!-- 2. Curso y 3. Profesor -->
+                        <div class="space-y-2.5 pt-3 border-t border-slate-100">
+                            <div class="flex items-center gap-2.5 text-base sm:text-lg font-bold text-indigo-700">
+                                <span class="text-xl shrink-0" aria-hidden="true">🎓</span>
+                                <span class="truncate">${escapeHtml(curso)}</span>
                             </div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">
-                                ${carga} HC/sem (${carga * 40}m)
-                            </span>
+                            <div class="flex items-center gap-2.5 text-base font-semibold text-slate-700">
+                                <span class="text-xl shrink-0" aria-hidden="true">👨‍🏫</span>
+                                <span class="truncate">${escapeHtml(profesor)}</span>
+                            </div>
                         </div>
 
-                        <h3 class="text-base font-bold text-slate-800 leading-snug hover:text-indigo-600 transition-colors cursor-pointer" onclick="window.abrirPlanDetalle(${p.id_plan})">
-                            ${materia}
-                        </h3>
-                        <p class="text-xs font-semibold text-indigo-700 mt-1">
-                            ${curso}${seccion}
-                        </p>
-                        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                            <span>👨‍🏫</span> ${profesor}
-                        </p>
-
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                            <span class="text-slate-500 font-medium">Contenido:</span>
-                            <span class="font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-                                📝 ${temas} lección${temas === 1 ? '' : 'es'}
-                            </span>
+                        <!-- 4. Cantidad de Contenidos -->
+                        <div class="pt-1">
+                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-50/90 border border-indigo-100 text-indigo-950 text-base font-bold">
+                                <span class="text-xl" aria-hidden="true">📚</span>
+                                <span>${temas} ${temas === 1 ? 'contenido' : 'contenidos'}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="px-6 py-3.5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button type="button" onclick="window.abrirPlanDetalle(${p.id_plan})" class="flex-1 py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors text-center">
-                            📖 Abrir Plan
+                    <!-- 5. Botones de Acción en la Parte Inferior -->
+                    <div class="pt-5 border-t border-slate-100 flex flex-wrap items-center gap-2.5">
+                        <button type="button" onclick="window.abrirPlanDetalle(${p.id_plan})" class="flex-1 min-w-[140px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-base font-bold rounded-2xl shadow-sm transition-all hover:shadow-md text-center inline-flex items-center justify-center gap-2 cursor-pointer">
+                            <span>📖</span>
+                            <span>Abrir plan</span>
                         </button>
-                        <button type="button" onclick="window.abrirEditarPlanHeader(${p.id_plan})" title="Editar Encabezado" class="p-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-lg text-xs transition-colors">
-                            ✏️
+                        <button type="button" onclick="window.abrirEditarPlanHeader(${p.id_plan})" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-300/80 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Editar encabezado del plan">
+                            <span>✏️</span>
+                            <span>Editar</span>
                         </button>
-                        <button type="button" onclick="window.confirmarEliminarPlan(${p.id_plan})" title="Eliminar Plan" class="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors">
-                            🗑️
+                        <button type="button" onclick="window.confirmarEliminarPlan(${p.id_plan})" class="py-3 px-4 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Eliminar plan anual">
+                            <span>🗑️</span>
+                            <span>Eliminar</span>
                         </button>
                     </div>
                 </div>
