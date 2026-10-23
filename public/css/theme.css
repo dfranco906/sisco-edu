@@ -43,24 +43,18 @@
 }
 
 /* ==========================================================================
-   Escala Tipográfica y de Elementos Global (11pt / 13pt / 15pt)
+   Escala Tipográfica y de Elementos Global (11pt / 12pt / 13pt)
    ========================================================================== */
 html[data-font-size="11pt"] {
     font-size: 11pt !important; /* ~14.67px base - Modo Compacto */
 }
 
+html[data-font-size="12pt"] {
+    font-size: 12pt !important; /* 16px base - Modo Estándar Regular */
+}
+
 html[data-font-size="13pt"] {
-    font-size: 13pt !important; /* ~17.33px base - Modo Estándar Equilibrado */
-}
-
-html[data-font-size="15pt"] {
-    font-size: 15pt !important; /* ~20px base - Modo Grande Accesible */
-}
-
-@media (max-width: 640px) {
-    html[data-font-size="15pt"] {
-        font-size: 14pt !important; /* Suavizado en móviles pequeños para asegurar fluidez responsiva */
-    }
+    font-size: 13pt !important; /* ~17.33px base - Modo Grande y Claro */
 }
 
 .btn-font-scale {

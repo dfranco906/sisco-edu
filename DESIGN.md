@@ -56,13 +56,13 @@
 
 ---
 
-## 📐 4. Escala Tipográfica Dinámica y Selector de Densidad (11pt / 13pt / 15pt)
+## 📐 4. Escala Tipográfica Dinámica y Selector de Densidad (11pt / 12pt / 13pt)
 
 Para dar libertad a los usuarios de elegir entre mayor densidad de información en pantalla o lectura descansada y accesible, el sistema cuenta con un selector de escala tipográfica ubicado en la barra lateral:
 
 * **Modo Compacto (`11pt` / ~14.67 px base):** Diseñado para usuarios que prefieren ver la mayor cantidad de registros y columnas a la vez sin necesidad de desplazarse, optimizando la densidad en pantallas estándar.
-* **Modo Estándar (`13pt` / ~17.33 px base — Por Defecto):** Tamaño equilibrado que cumple con la regla de accesibilidad para lectura cómoda y descanso visual.
-* **Modo Grande / Accesible (`15pt` / ~20 px base):** Pensado para directivos, docentes o adultos mayores con presbicia o visión reducida que utilicen gafas y requieran elementos grandes y claros.
+* **Modo Estándar (`12pt` / 16 px base — Por Defecto):** Tamaño regular y equilibrado del estándar web para trabajo continuo.
+* **Modo Grande (`13pt` / ~17.33 px base):** Pensado para directivos, docentes o personal que requiera mayor tamaño de letra y descanso visual.
 
 ### Proporciones de Elementos según la Escala Dinámica:
 * **Títulos de Página:** `text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight` (escala proporcionalmente según rem).

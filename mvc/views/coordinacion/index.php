@@ -236,68 +236,41 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                          data-texto="<?= htmlspecialchars($nombreCompleto, ENT_QUOTES, 'UTF-8') ?>">
                         
                         <div>
-                            <!-- Cabecera de la tarjeta -->
-                            <div class="flex items-start justify-between gap-3 mb-4">
-                                <div>
-                                    <div class="flex flex-wrap items-center gap-2 mb-2">
-                                        <?php if (!empty($turnoStr)): ?>
-                                            <span class="inline-block px-3 py-1 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-amber-100 text-amber-900 border border-amber-200">
-                                                <?= htmlspecialchars($turnoStr, ENT_QUOTES, 'UTF-8') ?>
-                                            </span>
-                                        <?php endif; ?>
-                                        <?php if (!empty($nivelStr)): ?>
-                                            <span class="inline-block px-3 py-1 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-indigo-100 text-indigo-900 border border-indigo-200">
-                                                <?= htmlspecialchars($nivelStr, ENT_QUOTES, 'UTF-8') ?>
-                                            </span>
-                                        <?php endif; ?>
-                                        <?php if (!empty($bachStr)): ?>
-                                            <span class="inline-block px-3 py-1 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-200">
-                                                <?= htmlspecialchars($bachStr, ENT_QUOTES, 'UTF-8') ?>
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <h3 class="text-2xl font-extrabold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                                        <?= htmlspecialchars($g['grado_nombre'], ENT_QUOTES, 'UTF-8') ?>
-                                        <?php if (!empty($g['seccion'])): ?>
-                                            <span class="text-lg text-slate-600 font-semibold block sm:inline">Secc. <?= htmlspecialchars($g['seccion'], ENT_QUOTES, 'UTF-8') ?></span>
-                                        <?php endif; ?>
-                                    </h3>
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-sm font-bold text-slate-800 border border-slate-200">
-                                        🚪 <?= htmlspecialchars($g['aula_nombre'] ?? 'Sin aula', ENT_QUOTES, 'UTF-8') ?>
-                                    </span>
-                                    <?php if (!empty($g['capacidad'])): ?>
-                                        <p class="text-xs text-slate-500 mt-1 font-medium">Cap: <?= (int)$g['capacidad'] ?> alumnos</p>
+                            <!-- 1. El Curso (Título Limpio y Destacado) -->
+                            <div class="mb-4">
+                                <h3 class="text-2xl font-extrabold text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug">
+                                    <?= htmlspecialchars($g['grado_nombre'], ENT_QUOTES, 'UTF-8') ?>
+                                    <?php if (!empty($g['seccion'])): ?>
+                                        <span class="text-lg text-slate-600 font-semibold block sm:inline">Secc. <?= htmlspecialchars($g['seccion'], ENT_QUOTES, 'UTF-8') ?></span>
                                     <?php endif; ?>
-                                </div>
+                                </h3>
                             </div>
 
-                            <!-- Datos cuantitativos -->
-                            <div class="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-5">
+                            <!-- 2. Cantidad de Alumnos y Cantidad de Materias -->
+                            <div class="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-4">
                                 <div class="flex items-center gap-2.5">
                                     <span class="text-2xl">👥</span>
                                     <div>
-                                        <p class="text-xs text-slate-500 font-semibold uppercase">Alumnos</p>
+                                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Alumnos</p>
                                         <p class="text-xl font-black text-slate-900"><?= $totalAlumnos ?></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2.5">
                                     <span class="text-2xl">📚</span>
                                     <div>
-                                        <p class="text-xs text-slate-500 font-semibold uppercase">Materias</p>
+                                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Materias</p>
                                         <p class="text-xl font-black text-slate-900"><?= $totalMaterias ?></p>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Barra de Asistencia de Hoy -->
-                            <div class="space-y-2 mb-6">
+                            <!-- 3. Asistencias del Día -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-5 space-y-2">
                                 <div class="flex justify-between items-center text-sm font-bold">
                                     <span class="text-slate-700">Asistencia de hoy:</span>
                                     <span class="text-base font-extrabold text-emerald-700"><?= $tasaHoy ?>%</span>
                                 </div>
-                                <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
+                                <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
                                     <?php
                                     $pctPres = ($totalAlumnos > 0) ? ($hoyPres / $totalAlumnos) * 100 : 0;
                                     $pctTard = ($totalAlumnos > 0) ? ($hoyTard / $totalAlumnos) * 100 : 0;
@@ -305,7 +278,7 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                                     <div style="width: <?= $pctPres ?>%" class="h-full bg-emerald-500" title="Presentes"></div>
                                     <div style="width: <?= $pctTard ?>%" class="h-full bg-amber-500" title="Tardanzas"></div>
                                 </div>
-                                <div class="flex flex-wrap justify-between gap-1 text-xs sm:text-sm font-bold text-slate-700 pt-1">
+                                <div class="flex flex-wrap justify-between gap-1 text-xs sm:text-sm font-bold text-slate-700 pt-0.5">
                                     <span class="text-emerald-700">🟢 <?= $hoyPres ?> pres.</span>
                                     <span class="text-amber-700">🟡 <?= $hoyTard ?> tard.</span>
                                     <span class="text-rose-700">🔴 <?= $hoyAus ?> aus.</span>
@@ -313,11 +286,11 @@ $bachilleratosDisponibles = array_values(array_filter(array_unique(array_map(fn(
                             </div>
                         </div>
 
-                        <!-- Botón de Acción Principal -->
+                        <!-- 4. Botón de Acción Principal -->
                         <div class="pt-3 border-t border-slate-200">
                             <a href="<?= base_url('mvc/views/coordinacion/aula_detalle.php?id_grado=' . $idGrado) ?>"
-                               class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-indigo-50/90 hover:bg-indigo-600 text-indigo-700 hover:text-white flex items-center justify-between text-base font-bold transition">
-                                <span>Ver Aula (Materias, Alumnos, Familias)</span>
+                               class="w-full min-h-[48px] py-2.5 px-4 rounded-xl bg-indigo-50/90 hover:bg-indigo-600 text-indigo-700 hover:text-white flex items-center justify-between text-base font-bold transition shadow-2xs">
+                                <span>Ver Aula (materias, alumnos, familias)</span>
                                 <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
                             </a>
                         </div>

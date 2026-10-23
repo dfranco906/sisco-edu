@@ -269,7 +269,7 @@ $adminPaths = [
             <span class="app-nav-text flex-1 truncate text-left">Modo Claro / Oscuro</span>
         </button>
 
-        <!-- Selector Triple de Tamaño de Elementos / Tipografía (11pt | 13pt | 15pt) -->
+        <!-- Selector Triple de Tamaño de Elementos / Tipografía (11pt | 12pt | 13pt) -->
         <div class="sidebar-font-scale-container px-2 py-2 rounded-xl bg-slate-900/70 border border-slate-800" role="group" aria-label="Selector de escala de texto">
             <div class="flex items-center justify-between px-1.5 pb-1.5 app-nav-text">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
@@ -278,7 +278,7 @@ $adminPaths = [
                     </svg>
                     <span>Tamaño de vista</span>
                 </span>
-                <span id="label-current-font-size" class="text-xs font-black text-blue-400">13pt</span>
+                <span id="label-current-font-size" class="text-xs font-black text-blue-400">12pt</span>
             </div>
 
             <!-- Segmented Control Triple para Modo Expandido y Móvil -->
@@ -291,18 +291,18 @@ $adminPaths = [
                     11pt
                 </button>
                 <button type="button"
-                        data-font-size="13pt"
+                        data-font-size="12pt"
                         class="btn-font-scale flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
-                        title="Tamaño 13pt - Vista Estándar Equilibrada"
-                        aria-label="Tamaño estándar 13 puntos">
-                    13pt
+                        title="Tamaño 12pt - Vista Estándar Equilibrada"
+                        aria-label="Tamaño estándar 12 puntos">
+                    12pt
                 </button>
                 <button type="button"
-                        data-font-size="15pt"
+                        data-font-size="13pt"
                         class="btn-font-scale flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
-                        title="Tamaño 15pt - Vista Grande Accesible para lectura descansada"
-                        aria-label="Tamaño grande accesible 15 puntos">
-                    15pt
+                        title="Tamaño 13pt - Vista Grande y Clara para lectura descansada"
+                        aria-label="Tamaño grande 13 puntos">
+                    13pt
                 </button>
             </div>
 
@@ -310,10 +310,10 @@ $adminPaths = [
             <button type="button"
                     id="btn-font-scale-cycle"
                     class="sidebar-font-scale-mini hidden w-full py-2 px-1 text-center font-extrabold text-xs text-blue-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer"
-                    title="Alternar tamaño de vista (11pt / 13pt / 15pt)"
+                    title="Alternar tamaño de vista (11pt / 12pt / 13pt)"
                     aria-label="Alternar escala de vista">
                 <span class="block text-[10px] text-slate-400 font-semibold leading-none">Aa</span>
-                <span id="mini-font-size-badge" class="block text-xs font-black mt-0.5 leading-none">13</span>
+                <span id="mini-font-size-badge" class="block text-xs font-black mt-0.5 leading-none">12</span>
             </button>
         </div>
 

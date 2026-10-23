@@ -11,7 +11,7 @@
         const THEME_STORAGE_KEY = "sisco_theme";
         const SIDEBAR_STORAGE_KEY = "sisco_sidebar_collapsed";
         const FONT_SIZE_STORAGE_KEY = "sisco_font_size";
-        const VALID_FONT_SIZES = ["11pt", "13pt", "15pt"];
+        const VALID_FONT_SIZES = ["11pt", "12pt", "13pt"];
 
         // 1. Control unificado de Tema (Claro / Oscuro)
         const getCurrentTheme = () => document.documentElement.getAttribute("data-theme") || "light";
@@ -50,7 +50,7 @@
             });
         });
 
-        // 2. Control de Escala Tipográfica y de Elementos (11pt | 13pt | 15pt)
+        // 2. Control de Escala Tipográfica y de Elementos (11pt | 12pt | 13pt)
         const getCurrentFontSize = () => {
             const attr = document.documentElement.getAttribute("data-font-size");
             if (VALID_FONT_SIZES.includes(attr)) return attr;
@@ -58,12 +58,12 @@
                 const stored = localStorage.getItem(FONT_SIZE_STORAGE_KEY);
                 if (VALID_FONT_SIZES.includes(stored)) return stored;
             } catch (e) {}
-            return "13pt";
+            return "12pt";
         };
 
         const applyFontSize = (size, notify = false) => {
             if (!VALID_FONT_SIZES.includes(size)) {
-                size = "13pt";
+                size = "12pt";
             }
             document.documentElement.setAttribute("data-font-size", size);
             try {
@@ -98,9 +98,9 @@
             if (notify && window.Toast) {
                 const descripcion = size === "11pt"
                     ? "Compacta (11pt) — Mayor densidad de elementos"
-                    : (size === "15pt"
-                        ? "Grande / Accesible (15pt) — Lectura descansada"
-                        : "Estándar (13pt) — Vista equilibrada");
+                    : (size === "13pt"
+                        ? "Grande (13pt) — Lectura descansada y clara"
+                        : "Estándar (12pt) — Tamaño regular equilibrado");
                 window.Toast.info(descripcion, "Escala Visual", 2200);
             }
         };

@@ -33,7 +33,10 @@ if (!isset($_SESSION['id_usuario'])) {
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
-                const savedFontSize = localStorage.getItem('sisco_font_size') || '13pt';
+                let savedFontSize = localStorage.getItem('sisco_font_size') || '12pt';
+                if (!['11pt', '12pt', '13pt'].includes(savedFontSize)) {
+                    savedFontSize = '12pt';
+                }
                 document.documentElement.setAttribute('data-font-size', savedFontSize);
                 if (localStorage.getItem('sisco_sidebar_collapsed') === 'true' && window.innerWidth >= 768) {
                     document.documentElement.classList.add('sidebar-init-collapsed');
