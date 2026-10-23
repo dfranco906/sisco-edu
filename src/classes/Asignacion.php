@@ -73,7 +73,7 @@ class Asignacion {
         return $ok;
     }
 
-    public function leer(?int $id_profesor = null): PDOStatement {
+    public function leer(?int $id_profesor = null, ?int $anho = null, ?int $id_nivel = null): PDOStatement {
         $query = "SELECT
                     ad.id_asignacion,
                     ad.id_profesor,
@@ -81,11 +81,17 @@ class Asignacion {
                     ad.id_grado,
                     COALESCE(ad.carga_horaria, 0) AS carga_horaria,
                     CONCAT(p.nombre, ' ', p.apellido) AS profesor,
+                    p.nombre AS profesor_nombre,
+                    p.apellido AS profesor_apellido,
                     p.cedula_identidad AS profesor_ci,
                     m.nombre AS materia,
                     COALESCE(g.nombre, 'Sin Grado') AS grado,
                     g.seccion,
                     COALESCE(t.nombre, 'Sin Turno') AS turno,
+                    COALESCE(n.id_nivel, 0) AS id_nivel,
+                    COALESCE(n.nombre, 'Sin Ciclo / Nivel') AS nivel_nombre,
+                    COALESCE(n.codigo, 'SC') AS nivel_codigo,
+                    COALESCE(b.nombre, '') AS bachillerato_nombre,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS anho_lectivo,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS \"año_lectivo\",
                     CONCAT(COALESCE(g.nombre, 'Sin Grado'), ' - ', m.nombre, ' (', p.nombre, ' ', p.apellido, ')') AS descripcion
@@ -94,15 +100,25 @@ class Asignacion {
                   LEFT JOIN materias m ON ad.id_materia = m.id_materia
                   LEFT JOIN grados g ON ad.id_grado = g.id_grado
                   LEFT JOIN turnos t ON g.id_turno = t.id_turno
+                  LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
+                  LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
                   WHERE ad.activo = 1";
 
         $params = [];
         if ($id_profesor !== null) {
-            $query .= " AND ad.id_profesor = :id_profesor ORDER BY g.nombre ASC, m.nombre ASC";
+            $query .= " AND ad.id_profesor = :id_profesor";
             $params[':id_profesor'] = $id_profesor;
-        } else {
-            $query .= " ORDER BY g.nombre ASC, m.nombre ASC, ad.id_asignacion DESC";
         }
+        if ($anho !== null && $anho > 0) {
+            $query .= " AND (ad.anho_lectivo = :anho OR ad.anio_lectivo = :anho)";
+            $params[':anho'] = $anho;
+        }
+        if ($id_nivel !== null && $id_nivel > 0) {
+            $query .= " AND g.id_nivel = :id_nivel";
+            $params[':id_nivel'] = $id_nivel;
+        }
+
+        $query .= " ORDER BY p.nombre ASC, p.apellido ASC, n.id_nivel ASC, g.nombre ASC, m.nombre ASC, ad.id_asignacion DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute($params);
@@ -117,11 +133,17 @@ class Asignacion {
                     ad.id_grado,
                     COALESCE(ad.carga_horaria, 0) AS carga_horaria,
                     CONCAT(p.nombre, ' ', p.apellido) AS profesor,
+                    p.nombre AS profesor_nombre,
+                    p.apellido AS profesor_apellido,
                     p.cedula_identidad AS profesor_ci,
                     m.nombre AS materia,
                     COALESCE(g.nombre, 'Sin Grado') AS grado,
                     g.seccion,
                     COALESCE(t.nombre, 'Sin Turno') AS turno,
+                    COALESCE(n.id_nivel, 0) AS id_nivel,
+                    COALESCE(n.nombre, 'Sin Ciclo / Nivel') AS nivel_nombre,
+                    COALESCE(n.codigo, 'SC') AS nivel_codigo,
+                    COALESCE(b.nombre, '') AS bachillerato_nombre,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS anho_lectivo,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS \"año_lectivo\",
                     ad.activo,
@@ -131,8 +153,10 @@ class Asignacion {
                   LEFT JOIN materias m ON ad.id_materia = m.id_materia
                   LEFT JOIN grados g ON ad.id_grado = g.id_grado
                   LEFT JOIN turnos t ON g.id_turno = t.id_turno
+                  LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
+                  LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
                   WHERE ad.activo = 0
-                  ORDER BY ad.id_asignacion DESC";
+                  ORDER BY p.nombre ASC, p.apellido ASC, ad.id_asignacion DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();

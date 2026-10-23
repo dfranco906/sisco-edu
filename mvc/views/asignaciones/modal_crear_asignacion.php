@@ -159,15 +159,15 @@ async function obtenerCatalogosAsignacion() {
 // Compatibilidad
 window.cargarCatalogosAsignacion = obtenerCatalogosAsignacion;
 
-async function abrirModalCrearAsignacion() {
+async function abrirModalCrearAsignacion(defaults = {}) {
     const modal = document.getElementById('modal-crear-asignacion');
     const form = document.getElementById('form-crear-asignacion');
     if (form) {
         form.reset();
         const inputAnio = document.getElementById('crear-asig-anio');
-        if (inputAnio) inputAnio.value = new Date().getFullYear();
+        if (inputAnio) inputAnio.value = defaults.año_lectivo || defaults.anho_lectivo || new Date().getFullYear();
         const inputCarga = document.getElementById('crear-asig-carga');
-        if (inputCarga) inputCarga.value = 4;
+        if (inputCarga) inputCarga.value = defaults.carga_horaria || 4;
     }
 
     if (modal) {
@@ -189,6 +189,7 @@ async function abrirModalCrearAsignacion() {
             optsG += `<option value="${g.id_grado}">${desc}</option>`;
         });
         selectGrado.innerHTML = optsG;
+        if (defaults.id_grado) selectGrado.value = defaults.id_grado;
     }
 
     if (selectMateria) {
@@ -197,6 +198,7 @@ async function abrirModalCrearAsignacion() {
             optsM += `<option value="${m.id_materia}">${m.nombre}</option>`;
         });
         selectMateria.innerHTML = optsM;
+        if (defaults.id_materia) selectMateria.value = defaults.id_materia;
     }
 
     if (selectProfesor) {
@@ -207,9 +209,16 @@ async function abrirModalCrearAsignacion() {
             optsP += `<option value="${p.id_profesor}">${nom}${ci}</option>`;
         });
         selectProfesor.innerHTML = optsP;
+        if (defaults.id_profesor) selectProfesor.value = defaults.id_profesor;
     }
 
-    setTimeout(() => selectGrado?.focus(), 80);
+    setTimeout(() => {
+        if (defaults.id_profesor && selectMateria) {
+            selectMateria.focus();
+        } else {
+            selectGrado?.focus();
+        }
+    }, 80);
 }
 
 function cerrarModalCrearAsignacion() {
