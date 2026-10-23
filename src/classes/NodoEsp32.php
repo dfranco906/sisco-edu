@@ -62,18 +62,24 @@ class NodoEsp32 {
      * Devuelve las aulas activas que no tienen un nodo asignado actualmente.
      */
     public function obtenerAulasDisponibles(?int $excluirIdNodo = null): array {
-        $sql = "SELECT a.id_aula, a.nombre, COALESCE(a.codigo, a.codigo_sala) AS codigo,
-                       COALESCE(a.codigo, a.codigo_sala) AS codigo_sala,
-                       COALESCE(a.bloque, 'Bloque A') AS bloque, a.piso, a.ubicacion
+        $sql = "SELECT 
+                    a.id_aula, 
+                    a.nombre, 
+                    COALESCE(a.codigo, a.codigo_sala) AS codigo,
+                    COALESCE(a.codigo, a.codigo_sala) AS codigo_sala,
+                    COALESCE(a.bloque, 'Bloque A') AS bloque, 
+                    a.piso, 
+                    a.ubicacion,
+                    n.id_nodo AS nodo_asignado_id,
+                    n.lora_id AS nodo_lora_id,
+                    n.room_id AS nodo_room_id
                 FROM aulas a
+                LEFT JOIN {$this->table_name} n ON n.id_aula = a.id_aula AND n.activo = 1" .
+                ($excluirIdNodo ? " AND n.id_nodo != :excluir" : "") . "
                 WHERE a.activo = 1
-                  AND a.id_aula NOT IN (
-                      SELECT n.id_aula 
-                      FROM {$this->table_name} n 
-                      WHERE n.activo = 1 AND n.id_aula IS NOT NULL" . 
-                      ($excluirIdNodo ? " AND n.id_nodo != :excluir" : "") . "
-                  )
-                ORDER BY a.bloque ASC, a.piso ASC, a.nombre ASC";
+                ORDER BY 
+                    CASE WHEN n.id_nodo IS NULL THEN 0 ELSE 1 END ASC,
+                    a.bloque ASC, a.piso ASC, a.nombre ASC";
 
         $stmt = $this->conn->prepare($sql);
         if ($excluirIdNodo) {
@@ -115,23 +121,21 @@ class NodoEsp32 {
             return ['success' => false, 'message' => "El LoRa ID {$lora_id} ya está asignado a otro nodo en la Red {$lora_red_id}."];
         }
 
-        // Validar unicidad de id_aula
+        // Si el aula ya estaba asignada a otro nodo diferente, desvincularla para permitir reasignación transparente
         if ($id_aula) {
-            $sqlCheckAula = "SELECT id_nodo FROM {$this->table_name} 
-                             WHERE id_aula = :id_aula AND activo = 1" .
-                             ($id_nodo ? " AND id_nodo != :id_nodo" : "") . " LIMIT 1";
-            $stmtAula = $this->conn->prepare($sqlCheckAula);
-            $paramsAula = [':id_aula' => $id_aula];
-            if ($id_nodo) $paramsAula[':id_nodo'] = $id_nodo;
-            $stmtAula->execute($paramsAula);
-            if ($stmtAula->fetchColumn()) {
-                return ['success' => false, 'message' => 'El aula seleccionada ya cuenta con un nodo IoT activo.'];
-            }
+            $sqlDesvincular = "UPDATE {$this->table_name} 
+                               SET id_aula = NULL 
+                               WHERE id_aula = :id_aula AND activo = 1" .
+                               ($id_nodo ? " AND id_nodo != :id_nodo" : "");
+            $stmtDesv = $this->conn->prepare($sqlDesvincular);
+            $paramsDesv = [':id_aula' => $id_aula];
+            if ($id_nodo) $paramsDesv[':id_nodo'] = $id_nodo;
+            $stmtDesv->execute($paramsDesv);
         }
 
-        // Si no viene room_id, obtenerlo de aulas
+        // Si no viene room_id, obtenerlo de aulas garantizando el código oficial
         if (empty($room_id) && $id_aula) {
-            $stmtCode = $this->conn->prepare("SELECT codigo_sala FROM aulas WHERE id_aula = :id");
+            $stmtCode = $this->conn->prepare("SELECT COALESCE(codigo, codigo_sala) FROM aulas WHERE id_aula = :id");
             $stmtCode->execute([':id' => $id_aula]);
             $room_id = (string)$stmtCode->fetchColumn();
         }

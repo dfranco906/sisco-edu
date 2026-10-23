@@ -349,11 +349,20 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                         <label for="modal_id_aula" class="font-semibold text-xs text-slate-700">
                             Aula Física a Vincular *
                         </label>
-                        <span id="texto-aulas-disponibles-count" class="text-[11px] text-slate-400">0 disponibles</span>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1 text-[11px] text-slate-500 cursor-pointer">
+                                <input type="checkbox" id="filtro_solo_libres" onchange="filtrarAulasDisponiblesModal()" class="rounded border-slate-300 text-indigo-600">
+                                Solo libres
+                            </label>
+                            <span id="texto-aulas-disponibles-count" class="text-[11px] text-slate-400">0 disponibles</span>
+                        </div>
                     </div>
                     <select id="modal_id_aula" class="app-input w-full text-sm font-medium" required onchange="alCambiarAulaModal(this)">
                         <option value="">-- Selecciona el aula --</option>
                     </select>
+                    <div id="aviso-aula-asignada" class="hidden mt-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-center gap-1.5">
+                        <span>⚠️</span> <span id="aviso-aula-texto"></span>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -657,32 +666,21 @@ function filtrarAulasDisponiblesModal() {
     const selBloque = document.getElementById('filtro_modal_bloque');
     const selPiso = document.getElementById('filtro_modal_piso');
     const inputBuscar = document.getElementById('filtro_modal_buscar');
+    const chkSoloLibres = document.getElementById('filtro_solo_libres');
     const selectAula = document.getElementById('modal_id_aula');
     const contador = document.getElementById('texto-aulas-disponibles-count');
 
     const fBloque = selBloque ? selBloque.value : '';
     const fPiso = selPiso ? selPiso.value : '';
     const fBuscar = inputBuscar ? inputBuscar.value.toLowerCase().trim() : '';
+    const fSoloLibres = chkSoloLibres ? chkSoloLibres.checked : false;
 
     let lista = [...aulasDisponiblesCache];
 
-    // Si estamos editando, incluir el aula actualmente asignada
-    if (nodoEditandoActual && nodoEditandoActual.id_aula) {
-        const yaEsta = lista.some(a => a.id_aula == nodoEditandoActual.id_aula);
-        if (!yaEsta) {
-            lista.unshift({
-                id_aula: nodoEditandoActual.id_aula,
-                nombre: nodoEditandoActual.nombre_aula || `Aula ${nodoEditandoActual.id_aula}`,
-                codigo: nodoEditandoActual.room_id || nodoEditandoActual.codigo_sala || '',
-                codigo_sala: nodoEditandoActual.room_id || nodoEditandoActual.codigo_sala || '',
-                bloque: nodoEditandoActual.bloque || 'Bloque A',
-                piso: nodoEditandoActual.piso || '',
-                esActual: true
-            });
-        }
-    }
-
     const filtradas = lista.filter(a => {
+        if (fSoloLibres && a.nodo_asignado_id && (!nodoEditandoActual || nodoEditandoActual.id_nodo != a.nodo_asignado_id)) {
+            return false;
+        }
         if (fBloque && a.bloque !== fBloque) return false;
         if (fPiso && a.piso !== fPiso) return false;
         if (fBuscar) {
@@ -698,7 +696,7 @@ function filtrarAulasDisponiblesModal() {
     });
 
     if (contador) {
-        contador.textContent = `${filtradas.length} aulas disponibles`;
+        contador.textContent = `${filtradas.length} aulas encontradas`;
     }
 
     const valorSeleccionadoPrevio = selectAula.value;
@@ -707,6 +705,8 @@ function filtrarAulasDisponiblesModal() {
     if (!filtradas.length) {
         selectAula.innerHTML = '<option value="">Sin aulas para estos filtros</option>';
         document.getElementById('modal_room_id').value = '';
+        const aviso = document.getElementById('aviso-aula-asignada');
+        if (aviso) aviso.classList.add('hidden');
         return;
     }
 
@@ -715,20 +715,28 @@ function filtrarAulasDisponiblesModal() {
         opt.value = a.id_aula;
         const cod = a.codigo || a.codigo_sala || '';
         opt.dataset.codigo = cod;
-        opt.textContent = `[${cod || 'S/C'}] ${a.nombre} — ${a.bloque || ''} ${a.piso ? `(${a.piso})` : ''} ${a.esActual ? '★ Actual' : ''}`;
+        opt.dataset.asignado = a.nodo_asignado_id || '';
+        opt.dataset.loraId = a.nodo_lora_id || '';
+
+        let estadoTexto = '';
+        if (a.nodo_asignado_id) {
+            if (nodoEditandoActual && nodoEditandoActual.id_nodo == a.nodo_asignado_id) {
+                estadoTexto = ' ★ Vinculada a este nodo';
+            } else {
+                estadoTexto = ` (⚠️ En uso: Nodo LoRa #${a.nodo_lora_id || a.nodo_asignado_id})`;
+            }
+        } else {
+            estadoTexto = ' [Disponible]';
+        }
+
+        opt.textContent = `[${cod || 'S/C'}] ${a.nombre} — ${a.bloque || ''} ${a.piso ? `(${a.piso})` : ''}${estadoTexto}`;
         if (String(a.id_aula) === String(valorSeleccionadoPrevio)) {
             opt.selected = true;
         }
         selectAula.appendChild(opt);
     });
 
-    // Si solo hay un resultado con el filtro, seleccionarlo automáticamente
-    if (filtradas.length === 1 && fBuscar.length >= 2) {
-        selectAula.selectedIndex = 1;
-        alCambiarAulaModal(selectAula);
-    } else {
-        alCambiarAulaModal(selectAula);
-    }
+    alCambiarAulaModal(selectAula);
 }
 
 function abrirModalNuevoNodo() {
@@ -742,9 +750,11 @@ function abrirModalNuevoNodo() {
     const selBloque = document.getElementById('filtro_modal_bloque');
     const selPiso = document.getElementById('filtro_modal_piso');
     const inputBuscar = document.getElementById('filtro_modal_buscar');
+    const chkSoloLibres = document.getElementById('filtro_solo_libres');
     if (selBloque) selBloque.value = '';
     if (selPiso) selPiso.value = '';
     if (inputBuscar) inputBuscar.value = '';
+    if (chkSoloLibres) chkSoloLibres.checked = false;
 
     actualizarFiltrosModalCampus();
     filtrarAulasDisponiblesModal();
@@ -766,9 +776,11 @@ function abrirModalEditarNodo(idNodo) {
     const selBloque = document.getElementById('filtro_modal_bloque');
     const selPiso = document.getElementById('filtro_modal_piso');
     const inputBuscar = document.getElementById('filtro_modal_buscar');
+    const chkSoloLibres = document.getElementById('filtro_solo_libres');
     if (selBloque) selBloque.value = '';
     if (selPiso) selPiso.value = '';
     if (inputBuscar) inputBuscar.value = '';
+    if (chkSoloLibres) chkSoloLibres.checked = false;
 
     actualizarFiltrosModalCampus();
     filtrarAulasDisponiblesModal();
@@ -783,14 +795,27 @@ function abrirModalEditarNodo(idNodo) {
 function alCambiarAulaModal(selectElem) {
     const opt = selectElem.selectedOptions[0];
     const inputRoom = document.getElementById('modal_room_id');
+    const aviso = document.getElementById('aviso-aula-asignada');
+    const avisoTexto = document.getElementById('aviso-aula-texto');
+
     if (opt && opt.dataset && opt.dataset.codigo) {
         inputRoom.value = opt.dataset.codigo;
         inputRoom.classList.add('bg-emerald-50');
         setTimeout(() => inputRoom.classList.remove('bg-emerald-50'), 400);
-    } else if (!opt || !opt.value) {
+
+        if (opt.dataset.asignado && (!nodoEditandoActual || nodoEditandoActual.id_nodo != opt.dataset.asignado)) {
+            if (aviso && avisoTexto) {
+                avisoTexto.textContent = `Esta aula ya estaba vinculada al Nodo LoRa #${opt.dataset.loraId || opt.dataset.asignado}. Al guardar este formulario, se reasignará automáticamente a este nodo.`;
+                aviso.classList.remove('hidden');
+            }
+        } else {
+            if (aviso) aviso.classList.add('hidden');
+        }
+    } else {
         if (!nodoEditandoActual) {
             inputRoom.value = '';
         }
+        if (aviso) aviso.classList.add('hidden');
     }
 }
 

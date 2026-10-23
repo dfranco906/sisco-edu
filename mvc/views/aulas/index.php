@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../../src/config/app.php';
+
 $titulo = "Aulas";
 $api = "src/api/Aula/leer_aulas.php";
 $columnas = ["id_aula", "nombre", "codigo", "bloque", "piso", "ubicacion", "activo"];
@@ -53,12 +55,13 @@ $idCampo = "id_aula";
 $camposEditar = ["nombre", "bloque", "piso", "codigo", "ubicacion"];
 
 $toolbarExtraHtml = '
-<button type="button" onclick="abrirModalCampus()" class="btn btn-secondary flex items-center gap-1.5 text-sm font-semibold">
+<button type="button" id="btn-configurar-campus" onclick="window.abrirModalCampus()" class="btn btn-secondary flex items-center gap-1.5 text-sm font-semibold">
     <span>🏢</span> Configurar Bloques y Pisos
 </button>
 ';
 
-$modalExtraHtml = '
+ob_start();
+?>
 <!-- MODAL CONFIGURACIÓN DE ESTRUCTURA EDILICIA (BLOQUES Y PISOS) -->
 <div id="modal-campus" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 relative">
@@ -71,7 +74,7 @@ $modalExtraHtml = '
                     Define los edificios y niveles de la institución para la asignación y generación automática de códigos de aula.
                 </p>
             </div>
-            <button type="button" onclick="cerrarModalCampus()" class="text-gray-400 hover:text-gray-600 font-bold text-xl leading-none">&times;</button>
+            <button type="button" onclick="window.cerrarModalCampus()" class="text-gray-400 hover:text-gray-600 font-bold text-xl leading-none">&times;</button>
         </div>
 
         <div id="mensaje-campus" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold"></div>
@@ -93,7 +96,7 @@ $modalExtraHtml = '
                 <div class="flex items-center gap-2">
                     <input type="text" id="nuevo_bloque_nombre" placeholder="Nombre (ej. Bloque C o Ciencias)" class="app-input flex-1 text-xs">
                     <input type="text" id="nuevo_bloque_id" placeholder="Prefijo (ej. C)" maxlength="4" class="app-input w-24 text-xs uppercase font-mono">
-                    <button type="button" onclick="agregarBloque()" class="btn btn-primary text-xs py-2 px-3 whitespace-nowrap">
+                    <button type="button" onclick="window.agregarBloque()" class="btn btn-primary text-xs py-2 px-3 whitespace-nowrap">
                         + Agregar Bloque
                     </button>
                 </div>
@@ -126,7 +129,7 @@ $modalExtraHtml = '
                             <input type="checkbox" id="gen_incluir_ss" class="rounded border-slate-300 text-indigo-600">
                             Incluir Subsuelo (SS)
                         </label>
-                        <button type="button" onclick="generarPisosRapido()" class="btn btn-secondary text-xs py-1 px-2.5">
+                        <button type="button" onclick="window.generarPisosRapido()" class="btn btn-secondary text-xs py-1 px-2.5">
                             Generar Estructura
                         </button>
                     </div>
@@ -139,7 +142,7 @@ $modalExtraHtml = '
                 <div class="flex items-center gap-2">
                     <input type="text" id="nuevo_piso_nombre" placeholder="Nombre (ej. Terraza o 4° Piso)" class="app-input flex-1 text-xs">
                     <input type="text" id="nuevo_piso_id" placeholder="Prefijo (ej. P4)" maxlength="4" class="app-input w-24 text-xs uppercase font-mono">
-                    <button type="button" onclick="agregarPiso()" class="btn btn-primary text-xs py-2 px-3 whitespace-nowrap">
+                    <button type="button" onclick="window.agregarPiso()" class="btn btn-primary text-xs py-2 px-3 whitespace-nowrap">
                         + Agregar Piso
                     </button>
                 </div>
@@ -147,10 +150,10 @@ $modalExtraHtml = '
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-4 mt-5 border-t border-gray-100">
-            <button type="button" onclick="cerrarModalCampus()" class="btn btn-secondary text-xs py-2 px-4">
+            <button type="button" onclick="window.cerrarModalCampus()" class="btn btn-secondary text-xs py-2 px-4">
                 Cancelar
             </button>
-            <button type="button" id="btn-guardar-campus" onclick="guardarEstructuraCampus()" class="btn btn-success text-xs py-2 px-4 flex items-center gap-1.5 font-bold">
+            <button type="button" id="btn-guardar-campus" onclick="window.guardarEstructuraCampus()" class="btn btn-success text-xs py-2 px-4 flex items-center gap-1.5 font-bold">
                 <span>💾</span> Guardar Estructura
             </button>
         </div>
@@ -158,272 +161,297 @@ $modalExtraHtml = '
 </div>
 
 <script>
-// Estado en memoria de bloques y pisos para el modal
-let campusBloquesActuales = [];
-let campusPisosActuales = [];
+(function() {
+    let campusBloquesActuales = [];
+    let campusPisosActuales = [];
 
-const API_ESTRUCTURA_OBTENER = "<?= base_url("src/api/Aula/obtener_estructura_campus.php") ?>";
-const API_ESTRUCTURA_GUARDAR = "<?= base_url("src/api/Aula/guardar_estructura_campus.php") ?>";
-const API_GENERAR_CODIGO = "<?= base_url("src/api/Aula/generar_codigo_aula.php") ?>";
+    const API_ESTRUCTURA_OBTENER = "<?= base_url('src/api/Aula/obtener_estructura_campus.php') ?>";
+    const API_ESTRUCTURA_GUARDAR = "<?= base_url('src/api/Aula/guardar_estructura_campus.php') ?>";
+    const API_GENERAR_CODIGO = "<?= base_url('src/api/Aula/generar_codigo_aula.php') ?>";
 
-async function cargarEstructuraCampus() {
-    try {
-        const resp = await fetch(API_ESTRUCTURA_OBTENER);
-        const res = await resp.json();
-        if (res.status === "success" && res.data) {
-            campusBloquesActuales = res.data.bloques || [];
-            campusPisosActuales = res.data.pisos || [];
-            actualizarSelectsFormulario();
+    async function cargarEstructuraCampus() {
+        try {
+            const resp = await fetch(API_ESTRUCTURA_OBTENER);
+            const res = await resp.json();
+            if (res.status === "success" && res.data) {
+                campusBloquesActuales = res.data.bloques || [];
+                campusPisosActuales = res.data.pisos || [];
+                actualizarSelectsFormulario();
+                renderizarListasCampus();
+            }
+        } catch (e) {
+            console.error("Error al cargar estructura del campus:", e);
+        }
+    }
+
+    function renderizarListasCampus() {
+        const contBloques = document.getElementById("lista-bloques");
+        const contPisos = document.getElementById("lista-pisos");
+        if (!contBloques || !contPisos) return;
+
+        const countB = document.getElementById("contador-bloques");
+        const countP = document.getElementById("contador-pisos");
+        if (countB) countB.textContent = `${campusBloquesActuales.length} bloques`;
+        if (countP) countP.textContent = `${campusPisosActuales.length} pisos`;
+
+        if (!campusBloquesActuales.length) {
+            contBloques.innerHTML = '<span class="text-xs text-rose-500">Sin bloques definidos. Agrega al menos uno.</span>';
+        } else {
+            contBloques.innerHTML = campusBloquesActuales.map((b, i) => `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    <span>${b.nombre}</span>
+                    <span class="font-mono text-[10px] text-indigo-500 uppercase">(${b.id || b.nombre})</span>
+                    <button type="button" onclick="window.eliminarBloque(${i})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none" title="Eliminar">&times;</button>
+                </span>
+            `).join("");
+        }
+
+        if (!campusPisosActuales.length) {
+            contPisos.innerHTML = '<span class="text-xs text-rose-500">Sin pisos definidos. Agrega al menos uno.</span>';
+        } else {
+            contPisos.innerHTML = campusPisosActuales.map((p, i) => `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span>${p.nombre}</span>
+                    <span class="font-mono text-[10px] text-emerald-600 uppercase">(${p.id || p.nombre})</span>
+                    <button type="button" onclick="window.eliminarPiso(${i})" class="text-emerald-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none" title="Eliminar">&times;</button>
+                </span>
+            `).join("");
+        }
+    }
+
+    window.agregarBloque = function() {
+        const inputNom = document.getElementById("nuevo_bloque_nombre");
+        const inputId = document.getElementById("nuevo_bloque_id");
+        if (!inputNom) return;
+        const nombre = inputNom.value.trim();
+        if (!nombre) return;
+        const id = (inputId ? inputId.value.trim().toUpperCase() : "") || nombre.replace(/[^A-Za-z0-9]/g, "").substring(0, 3).toUpperCase();
+
+        campusBloquesActuales.push({ id, nombre });
+        inputNom.value = "";
+        if (inputId) inputId.value = "";
+        renderizarListasCampus();
+    };
+
+    window.eliminarBloque = function(idx) {
+        if (campusBloquesActuales.length <= 1) {
+            alert("Debe existir al menos un bloque.");
+            return;
+        }
+        campusBloquesActuales.splice(idx, 1);
+        renderizarListasCampus();
+    };
+
+    window.agregarPiso = function() {
+        const inputNom = document.getElementById("nuevo_piso_nombre");
+        const inputId = document.getElementById("nuevo_piso_id");
+        if (!inputNom) return;
+        const nombre = inputNom.value.trim();
+        if (!nombre) return;
+        const match = nombre.match(/\d+/);
+        const id = (inputId ? inputId.value.trim().toUpperCase() : "") || (match ? "P" + match[0] : "P");
+
+        campusPisosActuales.push({ id, nombre, numero: campusPisosActuales.length });
+        inputNom.value = "";
+        if (inputId) inputId.value = "";
+        renderizarListasCampus();
+    };
+
+    window.eliminarPiso = function(idx) {
+        if (campusPisosActuales.length <= 1) {
+            alert("Debe existir al menos un piso.");
+            return;
+        }
+        campusPisosActuales.splice(idx, 1);
+        renderizarListasCampus();
+    };
+
+    window.generarPisosRapido = function() {
+        const cantElem = document.getElementById("gen_cantidad_pisos");
+        const cant = cantElem ? (parseInt(cantElem.value, 10) || 1) : 1;
+        const incPb = document.getElementById("gen_incluir_pb") ? document.getElementById("gen_incluir_pb").checked : true;
+        const incSs = document.getElementById("gen_incluir_ss") ? document.getElementById("gen_incluir_ss").checked : false;
+
+        const lista = [];
+        if (incSs) {
+            lista.push({ id: "SS", nombre: "Subsuelo", numero: -1 });
+        }
+        if (incPb) {
+            lista.push({ id: "PB", nombre: "Planta Baja", numero: 0 });
+        }
+        for (let i = 1; i <= cant; i++) {
+            lista.push({ id: `P${i}`, nombre: `${i}° Piso`, numero: i });
+        }
+
+        campusPisosActuales = lista;
+        renderizarListasCampus();
+    };
+
+    window.abrirModalCampus = function() {
+        const modal = document.getElementById("modal-campus");
+        if (modal) {
+            modal.classList.remove("hidden");
+            document.body.classList.add("modal-open");
             renderizarListasCampus();
         }
-    } catch (e) {
-        console.error("Error al cargar estructura del campus:", e);
-    }
-}
+    };
 
-function renderizarListasCampus() {
-    const contBloques = document.getElementById("lista-bloques");
-    const contPisos = document.getElementById("lista-pisos");
-    if (!contBloques || !contPisos) return;
-
-    document.getElementById("contador-bloques").textContent = `${campusBloquesActuales.length} bloques`;
-    document.getElementById("contador-pisos").textContent = `${campusPisosActuales.length} pisos`;
-
-    if (!campusBloquesActuales.length) {
-        contBloques.innerHTML = `<span class="text-xs text-rose-500">Sin bloques definidos. Agrega al menos uno.</span>`;
-    } else {
-        contBloques.innerHTML = campusBloquesActuales.map((b, i) => `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                <span>${b.nombre}</span>
-                <span class="font-mono text-[10px] text-indigo-500 uppercase">(${b.id || b.nombre})</span>
-                <button type="button" onclick="eliminarBloque(${i})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none" title="Eliminar">&times;</button>
-            </span>
-        `).join("");
-    }
-
-    if (!campusPisosActuales.length) {
-        contPisos.innerHTML = `<span class="text-xs text-rose-500">Sin pisos definidos. Agrega al menos uno.</span>`;
-    } else {
-        contPisos.innerHTML = campusPisosActuales.map((p, i) => `
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span>${p.nombre}</span>
-                <span class="font-mono text-[10px] text-emerald-600 uppercase">(${p.id || p.nombre})</span>
-                <button type="button" onclick="eliminarPiso(${i})" class="text-emerald-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none" title="Eliminar">&times;</button>
-            </span>
-        `).join("");
-    }
-}
-
-function agregarBloque() {
-    const inputNom = document.getElementById("nuevo_bloque_nombre");
-    const inputId = document.getElementById("nuevo_bloque_id");
-    const nombre = inputNom.value.trim();
-    if (!nombre) return;
-    const id = inputId.value.trim().toUpperCase() || nombre.replace(/[^A-Za-z0-9]/g, "").substring(0, 3).toUpperCase();
-
-    campusBloquesActuales.push({ id, nombre });
-    inputNom.value = "";
-    inputId.value = "";
-    renderizarListasCampus();
-}
-
-function eliminarBloque(idx) {
-    if (campusBloquesActuales.length <= 1) {
-        alert("Debe existir al menos un bloque.");
-        return;
-    }
-    campusBloquesActuales.splice(idx, 1);
-    renderizarListasCampus();
-}
-
-function agregarPiso() {
-    const inputNom = document.getElementById("nuevo_piso_nombre");
-    const inputId = document.getElementById("nuevo_piso_id");
-    const nombre = inputNom.value.trim();
-    if (!nombre) return;
-    const id = inputId.value.trim().toUpperCase() || (nombre.match(/\\d+/) ? "P" + nombre.match(/\\d+/)[0] : "P");
-
-    campusPisosActuales.push({ id, nombre, numero: campusPisosActuales.length });
-    inputNom.value = "";
-    inputId.value = "";
-    renderizarListasCampus();
-}
-
-function eliminarPiso(idx) {
-    if (campusPisosActuales.length <= 1) {
-        alert("Debe existir al menos un piso.");
-        return;
-    }
-    campusPisosActuales.splice(idx, 1);
-    renderizarListasCampus();
-}
-
-function generarPisosRapido() {
-    const cant = parseInt(document.getElementById("gen_cantidad_pisos").value, 10) || 1;
-    const incPb = document.getElementById("gen_incluir_pb").checked;
-    const incSs = document.getElementById("gen_incluir_ss").checked;
-
-    const lista = [];
-    if (incSs) {
-        lista.push({ id: "SS", nombre: "Subsuelo", numero: -1 });
-    }
-    if (incPb) {
-        lista.push({ id: "PB", nombre: "Planta Baja", numero: 0 });
-    }
-    for (let i = 1; i <= cant; i++) {
-        lista.push({ id: `P${i}`, nombre: `${i}° Piso`, numero: i });
-    }
-
-    campusPisosActuales = lista;
-    renderizarListasCampus();
-}
-
-function abrirModalCampus() {
-    document.getElementById("modal-campus").classList.remove("hidden");
-    document.body.classList.add("modal-open");
-    renderizarListasCampus();
-}
-
-function cerrarModalCampus() {
-    document.getElementById("modal-campus").classList.add("hidden");
-    document.body.classList.remove("modal-open");
-    document.getElementById("mensaje-campus").className = "hidden";
-}
-
-async function guardarEstructuraCampus() {
-    const btn = document.getElementById("btn-guardar-campus");
-    const msg = document.getElementById("mensaje-campus");
-    btn.disabled = true;
-
-    try {
-        const resp = await fetch(API_ESTRUCTURA_GUARDAR, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                bloques: campusBloquesActuales,
-                pisos: campusPisosActuales
-            })
-        });
-        const res = await resp.json();
-
-        msg.classList.remove("hidden");
-        if (res.status === "success") {
-            msg.className = "mb-4 p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block";
-            msg.innerHTML = `✅ ${res.message || "Estructura actualizada correctamente."}`;
-            actualizarSelectsFormulario();
-            setTimeout(() => {
-                cerrarModalCampus();
-            }, 1200);
-        } else {
-            msg.className = "mb-4 p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block";
-            msg.innerHTML = `❌ ${res.message || "Error al guardar estructura."}`;
+    window.cerrarModalCampus = function() {
+        const modal = document.getElementById("modal-campus");
+        if (modal) {
+            modal.classList.add("hidden");
+            document.body.classList.remove("modal-open");
         }
-    } catch (e) {
-        msg.classList.remove("hidden");
-        msg.className = "mb-4 p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block";
-        msg.innerHTML = `❌ Error de red: ${e.message}`;
-    } finally {
-        btn.disabled = false;
-    }
-}
+        const msg = document.getElementById("mensaje-campus");
+        if (msg) msg.className = "hidden";
+    };
 
-function actualizarSelectsFormulario() {
-    const selectsBloque = document.querySelectorAll("select[name=\'bloque\']");
-    const selectsPiso = document.querySelectorAll("select[name=\'piso\']");
+    window.guardarEstructuraCampus = async function() {
+        const btn = document.getElementById("btn-guardar-campus");
+        const msg = document.getElementById("mensaje-campus");
+        if (btn) btn.disabled = true;
 
-    selectsBloque.forEach(s => {
-        const valActual = s.value;
-        s.innerHTML = \'<option value="">Seleccione bloque</option>\' + campusBloquesActuales.map(b => `
-            <option value="${b.nombre}" ${b.nombre === valActual ? "selected" : ""}>${b.nombre}</option>
-        `).join("");
-        if (!valActual && campusBloquesActuales.length) {
-            s.value = campusBloquesActuales[0].nombre;
-        }
-    });
-
-    selectsPiso.forEach(s => {
-        const valActual = s.value;
-        s.innerHTML = \'<option value="">Seleccione piso</option>\' + campusPisosActuales.map(p => `
-            <option value="${p.nombre}" ${p.nombre === valActual ? "selected" : ""}>${p.nombre}</option>
-        `).join("");
-        if (!valActual && campusPisosActuales.length) {
-            s.value = campusPisosActuales[0].nombre;
-        }
-    });
-}
-
-async function autogenerarCodigoForm(formElement) {
-    if (!formElement) return;
-    const selectBloque = formElement.querySelector("select[name=\'bloque\']");
-    const selectPiso = formElement.querySelector("select[name=\'piso\']");
-    const inputCodigo = formElement.querySelector("input[name=\'codigo\']");
-    const inputId = formElement.querySelector("input[name=\'id_aula\']");
-
-    if (!selectBloque || !selectPiso || !inputCodigo) return;
-
-    const b = selectBloque.value || "Bloque A";
-    const p = selectPiso.value || "Planta Baja";
-    const id = inputId ? inputId.value : "";
-
-    try {
-        const url = `${API_GENERAR_CODIGO}?bloque=${encodeURIComponent(b)}&piso=${encodeURIComponent(p)}&id_aula=${id}`;
-        const resp = await fetch(url);
-        const res = await resp.json();
-        if (res.status === "success" && res.data && res.data.codigo) {
-            inputCodigo.value = res.data.codigo;
-            inputCodigo.classList.add("bg-indigo-50/60");
-            setTimeout(() => inputCodigo.classList.remove("bg-indigo-50/60"), 600);
-        }
-    } catch (e) {
-        console.error("Error autogenerando código de aula:", e);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    cargarEstructuraCampus();
-
-    // Conectar eventos en el formulario de creación
-    const formCrear = document.getElementById("form-crear");
-    if (formCrear) {
-        const selBloque = formCrear.querySelector("select[name=\'bloque\']");
-        const selPiso = formCrear.querySelector("select[name=\'piso\']");
-        if (selBloque) selBloque.addEventListener("change", () => autogenerarCodigoForm(formCrear));
-        if (selPiso) selPiso.addEventListener("change", () => autogenerarCodigoForm(formCrear));
-
-        const btnAbrirCrear = document.getElementById("btn-crear");
-        if (btnAbrirCrear) {
-            btnAbrirCrear.addEventListener("click", () => {
-                setTimeout(() => {
-                    actualizarSelectsFormulario();
-                    autogenerarCodigoForm(formCrear);
-                }, 100);
+        try {
+            const resp = await fetch(API_ESTRUCTURA_GUARDAR, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    bloques: campusBloquesActuales,
+                    pisos: campusPisosActuales
+                })
             });
-        }
-    }
+            const res = await resp.json();
 
-    // Observar cuando se cargan campos en el modal de edición para sincronizar selects de campus
-    const contenedorEditar = document.getElementById("campos-editar");
-    if (contenedorEditar) {
-        const observer = new MutationObserver(() => {
-            actualizarSelectsFormulario();
-            const formEditar = document.getElementById("form-editar");
-            if (formEditar) {
-                const selB = formEditar.querySelector("select[name=\'bloque\']");
-                const selP = formEditar.querySelector("select[name=\'piso\']");
-                if (selB && !selB.dataset.listenerAttached) {
-                    selB.dataset.listenerAttached = "true";
-                    selB.addEventListener("change", () => autogenerarCodigoForm(formEditar));
-                }
-                if (selP && !selP.dataset.listenerAttached) {
-                    selP.dataset.listenerAttached = "true";
-                    selP.addEventListener("change", () => autogenerarCodigoForm(formEditar));
+            if (msg) {
+                msg.classList.remove("hidden");
+                if (res.status === "success") {
+                    msg.className = "mb-4 p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block";
+                    msg.innerHTML = `✅ ${res.message || "Estructura actualizada correctamente."}`;
+                    actualizarSelectsFormulario();
+                    setTimeout(() => {
+                        window.cerrarModalCampus();
+                    }, 1200);
+                } else {
+                    msg.className = "mb-4 p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block";
+                    msg.innerHTML = `❌ ${res.message || "Error al guardar estructura."}`;
                 }
             }
+        } catch (e) {
+            if (msg) {
+                msg.classList.remove("hidden");
+                msg.className = "mb-4 p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block";
+                msg.innerHTML = `❌ Error de red: ${e.message}`;
+            }
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    };
+
+    function actualizarSelectsFormulario() {
+        const selectsBloque = document.querySelectorAll("select[name='bloque']");
+        const selectsPiso = document.querySelectorAll("select[name='piso']");
+
+        selectsBloque.forEach(s => {
+            const valActual = s.value;
+            s.innerHTML = '<option value="">Seleccione bloque</option>' + campusBloquesActuales.map(b => `
+                <option value="${b.nombre}" ${b.nombre === valActual ? "selected" : ""}>${b.nombre}</option>
+            `).join("");
+            if (!valActual && campusBloquesActuales.length) {
+                s.value = campusBloquesActuales[0].nombre;
+            }
         });
-        observer.observe(contenedorEditar, { childList: true, subtree: true });
+
+        selectsPiso.forEach(s => {
+            const valActual = s.value;
+            s.innerHTML = '<option value="">Seleccione piso</option>' + campusPisosActuales.map(p => `
+                <option value="${p.nombre}" ${p.nombre === valActual ? "selected" : ""}>${p.nombre}</option>
+            `).join("");
+            if (!valActual && campusPisosActuales.length) {
+                s.value = campusPisosActuales[0].nombre;
+            }
+        });
     }
-});
+
+    async function autogenerarCodigoForm(formElement) {
+        if (!formElement) return;
+        const selectBloque = formElement.querySelector("select[name='bloque']");
+        const selectPiso = formElement.querySelector("select[name='piso']");
+        const inputCodigo = formElement.querySelector("input[name='codigo']");
+        const inputId = formElement.querySelector("input[name='id_aula']");
+
+        if (!selectBloque || !selectPiso || !inputCodigo) return;
+
+        const b = selectBloque.value || "Bloque A";
+        const p = selectPiso.value || "Planta Baja";
+        const id = inputId ? inputId.value : "";
+
+        try {
+            const url = `${API_GENERAR_CODIGO}?bloque=${encodeURIComponent(b)}&piso=${encodeURIComponent(p)}&id_aula=${id}`;
+            const resp = await fetch(url);
+            const res = await resp.json();
+            if (res.status === "success" && res.data && res.data.codigo) {
+                inputCodigo.value = res.data.codigo;
+                inputCodigo.classList.add("bg-indigo-50");
+                setTimeout(() => inputCodigo.classList.remove("bg-indigo-50"), 400);
+            }
+        } catch (e) {
+            console.error("Error autogenerando código de aula:", e);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarEstructuraCampus();
+
+        // Conectar botón de toolbar si no tiene onclick
+        const btnToolbar = document.getElementById("btn-configurar-campus");
+        if (btnToolbar) {
+            btnToolbar.onclick = window.abrirModalCampus;
+        }
+
+        // Conectar eventos en el formulario de creación
+        const formCrear = document.getElementById("form-crear");
+        if (formCrear) {
+            const selBloque = formCrear.querySelector("select[name='bloque']");
+            const selPiso = formCrear.querySelector("select[name='piso']");
+            if (selBloque) selBloque.addEventListener("change", () => autogenerarCodigoForm(formCrear));
+            if (selPiso) selPiso.addEventListener("change", () => autogenerarCodigoForm(formCrear));
+
+            const btnAbrirCrear = document.getElementById("btn-crear");
+            if (btnAbrirCrear) {
+                btnAbrirCrear.addEventListener("click", () => {
+                    setTimeout(() => {
+                        actualizarSelectsFormulario();
+                        autogenerarCodigoForm(formCrear);
+                    }, 100);
+                });
+            }
+        }
+
+        // Observar cuando se cargan campos en el modal de edición
+        const contenedorEditar = document.getElementById("campos-editar");
+        if (contenedorEditar) {
+            const observer = new MutationObserver(() => {
+                actualizarSelectsFormulario();
+                const formEditar = document.getElementById("form-editar");
+                if (formEditar) {
+                    const selB = formEditar.querySelector("select[name='bloque']");
+                    const selP = formEditar.querySelector("select[name='piso']");
+                    if (selB && !selB.dataset.listenerAttached) {
+                        selB.dataset.listenerAttached = "true";
+                        selB.addEventListener("change", () => autogenerarCodigoForm(formEditar));
+                    }
+                    if (selP && !selP.dataset.listenerAttached) {
+                        selP.dataset.listenerAttached = "true";
+                        selP.addEventListener("change", () => autogenerarCodigoForm(formEditar));
+                    }
+                }
+            });
+            observer.observe(contenedorEditar, { childList: true, subtree: true });
+        }
+    });
+})();
 </script>
-';
+<?php
+$modalExtraHtml = ob_get_clean();
 
 require_once __DIR__ . '/../partials/table_page.php';
