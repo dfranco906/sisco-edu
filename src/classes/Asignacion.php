@@ -81,8 +81,11 @@ class Asignacion {
                     ad.id_grado,
                     COALESCE(ad.carga_horaria, 0) AS carga_horaria,
                     CONCAT(p.nombre, ' ', p.apellido) AS profesor,
+                    p.cedula_identidad AS profesor_ci,
                     m.nombre AS materia,
                     COALESCE(g.nombre, 'Sin Grado') AS grado,
+                    g.seccion,
+                    COALESCE(t.nombre, 'Sin Turno') AS turno,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS anho_lectivo,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS \"año_lectivo\",
                     CONCAT(COALESCE(g.nombre, 'Sin Grado'), ' - ', m.nombre, ' (', p.nombre, ' ', p.apellido, ')') AS descripcion
@@ -90,6 +93,7 @@ class Asignacion {
                   LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
                   LEFT JOIN materias m ON ad.id_materia = m.id_materia
                   LEFT JOIN grados g ON ad.id_grado = g.id_grado
+                  LEFT JOIN turnos t ON g.id_turno = t.id_turno
                   WHERE ad.activo = 1";
 
         $params = [];
@@ -113,8 +117,11 @@ class Asignacion {
                     ad.id_grado,
                     COALESCE(ad.carga_horaria, 0) AS carga_horaria,
                     CONCAT(p.nombre, ' ', p.apellido) AS profesor,
+                    p.cedula_identidad AS profesor_ci,
                     m.nombre AS materia,
                     COALESCE(g.nombre, 'Sin Grado') AS grado,
+                    g.seccion,
+                    COALESCE(t.nombre, 'Sin Turno') AS turno,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS anho_lectivo,
                     COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS \"año_lectivo\",
                     ad.activo,
@@ -123,12 +130,83 @@ class Asignacion {
                   LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
                   LEFT JOIN materias m ON ad.id_materia = m.id_materia
                   LEFT JOIN grados g ON ad.id_grado = g.id_grado
+                  LEFT JOIN turnos t ON g.id_turno = t.id_turno
                   WHERE ad.activo = 0
                   ORDER BY ad.id_asignacion DESC";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
+    }
+
+    public function obtenerDetalle(int $id_asignacion): ?array {
+        $stmt = $this->conn->prepare("
+            SELECT
+                ad.id_asignacion,
+                ad.id_profesor,
+                ad.id_materia,
+                ad.id_grado,
+                COALESCE(ad.carga_horaria, 0) AS carga_horaria,
+                COALESCE(ad.anho_lectivo, ad.anio_lectivo, 2026) AS anho_lectivo,
+                p.nombre AS profesor_nombre,
+                p.apellido AS profesor_apellido,
+                p.cedula_identidad AS profesor_ci,
+                m.nombre AS materia_nombre,
+                m.descripcion AS materia_descripcion,
+                g.nombre AS grado_nombre,
+                g.seccion,
+                COALESCE(a.nombre, 'Sin aula fija') AS aula_nombre,
+                COALESCE(t.nombre, 'Sin turno') AS turno_nombre
+            FROM {$this->table_name} ad
+            LEFT JOIN profesores p ON ad.id_profesor = p.id_profesor
+            LEFT JOIN materias m ON ad.id_materia = m.id_materia
+            LEFT JOIN grados g ON ad.id_grado = g.id_grado
+            LEFT JOIN aulas a ON g.id_aula = a.id_aula
+            LEFT JOIN turnos t ON g.id_turno = t.id_turno
+            WHERE ad.id_asignacion = :id
+        ");
+        $stmt->execute([':id' => $id_asignacion]);
+        $det = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$det) {
+            return null;
+        }
+
+        // Horarios asignados en la semana
+        $stmtH = $this->conn->prepare("
+            SELECT h.id_horario, h.dia_semana, h.hora_inicio, h.hora_fin, COALESCE(a.nombre, 'Aula asignada') AS aula
+            FROM horarios h
+            LEFT JOIN aulas a ON h.id_aula = a.id_aula
+            WHERE h.id_asignacion = :id AND h.activo = 1
+            ORDER BY CASE 
+                WHEN h.dia_semana ILIKE 'lunes' THEN 1
+                WHEN h.dia_semana ILIKE 'martes' THEN 2
+                WHEN h.dia_semana ILIKE 'miercoles' OR h.dia_semana ILIKE 'miércoles' THEN 3
+                WHEN h.dia_semana ILIKE 'jueves' THEN 4
+                WHEN h.dia_semana ILIKE 'viernes' THEN 5
+                WHEN h.dia_semana ILIKE 'sabado' OR h.dia_semana ILIKE 'sábado' THEN 6
+                ELSE 7 END, h.hora_inicio ASC
+        ");
+        $stmtH->execute([':id' => $id_asignacion]);
+        $det['horarios'] = $stmtH->fetchAll(PDO::FETCH_ASSOC);
+
+        // Conteo de estudiantes matriculados en esta materia/grado
+        $stmtCant = $this->conn->prepare("
+            SELECT COUNT(*) FROM matriculas WHERE id_asignacion = :id AND activo = 1
+        ");
+        $stmtCant->execute([':id' => $id_asignacion]);
+        $det['total_alumnos'] = (int)$stmtCant->fetchColumn();
+
+        // Plan Anual Curricular
+        $stmtPlan = $this->conn->prepare("
+            SELECT id_plan, estado
+            FROM planes_anuales
+            WHERE id_asignacion = :id AND activo = 1
+            LIMIT 1
+        ");
+        $stmtPlan->execute([':id' => $id_asignacion]);
+        $det['plan_anual'] = $stmtPlan->fetch(PDO::FETCH_ASSOC) ?: null;
+
+        return $det;
     }
 
     public function actualizar(): bool {
