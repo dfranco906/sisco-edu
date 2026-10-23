@@ -319,15 +319,41 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             <form id="form-nodo" onsubmit="event.preventDefault(); guardarNodo();">
                 <input type="hidden" id="modal_id_nodo" value="">
 
-                <!-- Aula -->
+                <!-- PANEL DE FILTROS INTUITIVOS PARA INSTITUCIONES CON MUCHAS AULAS -->
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl mb-4 space-y-2.5">
+                    <div class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🔍</span> Filtros Rápidos de Aula
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Bloque / Edificio</label>
+                            <select id="filtro_modal_bloque" onchange="filtrarAulasDisponiblesModal()" class="app-input w-full text-xs py-1.5 px-2">
+                                <option value="">Todos los bloques</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Piso / Nivel</label>
+                            <select id="filtro_modal_piso" onchange="filtrarAulasDisponiblesModal()" class="app-input w-full text-xs py-1.5 px-2">
+                                <option value="">Todos los pisos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="text" id="filtro_modal_buscar" oninput="filtrarAulasDisponiblesModal()" placeholder="Buscar aula por nombre o código (ej. BTI, A-P1, 7MO)..." class="app-input w-full text-xs py-1.5 px-2.5">
+                    </div>
+                </div>
+
+                <!-- Aula Física a Vincular -->
                 <div class="mb-4">
-                    <label for="modal_id_aula" class="font-semibold text-xs text-slate-700 block mb-1">
-                        Aula Física a Vincular *
-                    </label>
-                    <select id="modal_id_aula" class="app-input w-full text-sm" required onchange="alCambiarAulaModal(this)">
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="modal_id_aula" class="font-semibold text-xs text-slate-700">
+                            Aula Física a Vincular *
+                        </label>
+                        <span id="texto-aulas-disponibles-count" class="text-[11px] text-slate-400">0 disponibles</span>
+                    </div>
+                    <select id="modal_id_aula" class="app-input w-full text-sm font-medium" required onchange="alCambiarAulaModal(this)">
                         <option value="">-- Selecciona el aula --</option>
                     </select>
-                    <p class="text-[11px] text-slate-500 mt-1">Solo se muestran aulas activas que no tengan otro nodo asignado.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -350,24 +376,29 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     </div>
                 </div>
 
-                <!-- Código RF del Aula -->
+                <!-- Código RF del Aula (Autocompletado) -->
                 <div class="mb-4">
-                    <label for="modal_room_id" class="font-semibold text-xs text-slate-700 block mb-1">
-                        Código RF de Aula (Filtro Antena y OLED) *
-                    </label>
-                    <input type="text" id="modal_room_id" class="app-input w-full font-mono text-sm" placeholder="ej. 3_RO_BTI" required>
-                    <p class="text-[11px] text-slate-500 mt-1">Identificador que el nodo usa para filtrar tramas de RF y mostrar en pantalla.</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="modal_room_id" class="font-semibold text-xs text-slate-700">
+                            Código RF de Aula (Filtro Antena y OLED) *
+                        </label>
+                        <span id="badge-auto-rf" class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold border border-emerald-200">
+                            ⚡ Autocompletado del Aula
+                        </span>
+                    </div>
+                    <input type="text" id="modal_room_id" class="app-input w-full font-mono text-sm font-bold text-indigo-700 bg-slate-50" placeholder="ej. A-P1-01" required readonly>
+                    <p class="text-[11px] text-slate-500 mt-1">Heredado del aula para garantizar sincronización perfecta entre base de datos y antena.</p>
                 </div>
 
                 <div class="p-3 bg-blue-50 border border-blue-200/80 rounded-xl text-[11px] text-blue-800 mb-5 leading-relaxed">
-                    ℹ️ <strong>Importante:</strong> Al guardar este nodo, el Gateway lo incluirá automáticamente en las sincronizaciones biométricas sin necesidad de flashear nuevo código.
+                    ℹ️ <strong>Importante:</strong> Al guardar este nodo, el Gateway lo incluirá automáticamente en las sincronizaciones biométricas y la antena filtrará paquetes usando este código de aula exacto.
                 </div>
 
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
                     <button type="button" onclick="cerrarModalNodo()" class="btn btn-secondary text-xs py-2 px-3">
                         Cancelar
                     </button>
-                    <button type="submit" id="btn-guardar-nodo" class="btn btn-primary text-xs py-2 px-4 flex items-center gap-1.5">
+                    <button type="submit" id="btn-guardar-nodo" class="btn btn-primary text-xs py-2 px-4 flex items-center gap-1.5 font-bold">
                         <span>💾</span> Guardar Nodo
                     </button>
                 </div>
@@ -536,6 +567,7 @@ async function cargarNodosLora() {
             aulasDisponiblesCache = res.data.aulas_disponibles || [];
             siguienteLoraIdSugerido = res.data.siguiente_lora_id || 101;
             renderizarTablaNodos(listaNodosCache);
+            actualizarFiltrosModalCampus();
         } else {
             tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-rose-500 text-xs">${res.message || 'Error al cargar nodos'}</td></tr>`;
         }
@@ -589,22 +621,133 @@ function renderizarTablaNodos(nodos) {
     `).join('');
 }
 
+let nodoEditandoActual = null;
+
+function actualizarFiltrosModalCampus() {
+    const selBloque = document.getElementById('filtro_modal_bloque');
+    const selPiso = document.getElementById('filtro_modal_piso');
+    if (!selBloque || !selPiso) return;
+
+    const bloquesSet = new Set();
+    const pisosSet = new Set();
+
+    aulasDisponiblesCache.forEach(a => {
+        if (a.bloque) bloquesSet.add(a.bloque);
+        if (a.piso) pisosSet.add(a.piso);
+    });
+
+    listaNodosCache.forEach(n => {
+        if (n.bloque) bloquesSet.add(n.bloque);
+        if (n.piso) pisosSet.add(n.piso);
+    });
+
+    const bloqueActual = selBloque.value;
+    const pisoActual = selPiso.value;
+
+    selBloque.innerHTML = '<option value="">Todos los bloques</option>' + Array.from(bloquesSet).sort().map(b => `
+        <option value="${b}" ${b === bloqueActual ? 'selected' : ''}>${b}</option>
+    `).join('');
+
+    selPiso.innerHTML = '<option value="">Todos los pisos</option>' + Array.from(pisosSet).sort().map(p => `
+        <option value="${p}" ${p === pisoActual ? 'selected' : ''}>${p}</option>
+    `).join('');
+}
+
+function filtrarAulasDisponiblesModal() {
+    const selBloque = document.getElementById('filtro_modal_bloque');
+    const selPiso = document.getElementById('filtro_modal_piso');
+    const inputBuscar = document.getElementById('filtro_modal_buscar');
+    const selectAula = document.getElementById('modal_id_aula');
+    const contador = document.getElementById('texto-aulas-disponibles-count');
+
+    const fBloque = selBloque ? selBloque.value : '';
+    const fPiso = selPiso ? selPiso.value : '';
+    const fBuscar = inputBuscar ? inputBuscar.value.toLowerCase().trim() : '';
+
+    let lista = [...aulasDisponiblesCache];
+
+    // Si estamos editando, incluir el aula actualmente asignada
+    if (nodoEditandoActual && nodoEditandoActual.id_aula) {
+        const yaEsta = lista.some(a => a.id_aula == nodoEditandoActual.id_aula);
+        if (!yaEsta) {
+            lista.unshift({
+                id_aula: nodoEditandoActual.id_aula,
+                nombre: nodoEditandoActual.nombre_aula || `Aula ${nodoEditandoActual.id_aula}`,
+                codigo: nodoEditandoActual.room_id || nodoEditandoActual.codigo_sala || '',
+                codigo_sala: nodoEditandoActual.room_id || nodoEditandoActual.codigo_sala || '',
+                bloque: nodoEditandoActual.bloque || 'Bloque A',
+                piso: nodoEditandoActual.piso || '',
+                esActual: true
+            });
+        }
+    }
+
+    const filtradas = lista.filter(a => {
+        if (fBloque && a.bloque !== fBloque) return false;
+        if (fPiso && a.piso !== fPiso) return false;
+        if (fBuscar) {
+            const nom = (a.nombre || '').toLowerCase();
+            const cod = (a.codigo || a.codigo_sala || '').toLowerCase();
+            const bloq = (a.bloque || '').toLowerCase();
+            const pis = (a.piso || '').toLowerCase();
+            if (!nom.includes(fBuscar) && !cod.includes(fBuscar) && !bloq.includes(fBuscar) && !pis.includes(fBuscar)) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    if (contador) {
+        contador.textContent = `${filtradas.length} aulas disponibles`;
+    }
+
+    const valorSeleccionadoPrevio = selectAula.value;
+    selectAula.innerHTML = '<option value="">-- Selecciona el aula física --</option>';
+
+    if (!filtradas.length) {
+        selectAula.innerHTML = '<option value="">Sin aulas para estos filtros</option>';
+        document.getElementById('modal_room_id').value = '';
+        return;
+    }
+
+    filtradas.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id_aula;
+        const cod = a.codigo || a.codigo_sala || '';
+        opt.dataset.codigo = cod;
+        opt.textContent = `[${cod || 'S/C'}] ${a.nombre} — ${a.bloque || ''} ${a.piso ? `(${a.piso})` : ''} ${a.esActual ? '★ Actual' : ''}`;
+        if (String(a.id_aula) === String(valorSeleccionadoPrevio)) {
+            opt.selected = true;
+        }
+        selectAula.appendChild(opt);
+    });
+
+    // Si solo hay un resultado con el filtro, seleccionarlo automáticamente
+    if (filtradas.length === 1 && fBuscar.length >= 2) {
+        selectAula.selectedIndex = 1;
+        alCambiarAulaModal(selectAula);
+    } else {
+        alCambiarAulaModal(selectAula);
+    }
+}
+
 function abrirModalNuevoNodo() {
+    nodoEditandoActual = null;
     document.getElementById('modal-nodo-titulo').innerHTML = '<span>📡</span> Añadir Nodo de Aula LoRa';
     document.getElementById('modal_id_nodo').value = '';
     document.getElementById('modal_lora_red_id').value = '18';
     document.getElementById('modal_lora_id').value = siguienteLoraIdSugerido;
     document.getElementById('modal_room_id').value = '';
 
-    const select = document.getElementById('modal_id_aula');
-    select.innerHTML = '<option value="">-- Selecciona el aula física --</option>';
-    aulasDisponiblesCache.forEach(a => {
-        const opt = document.createElement('option');
-        opt.value = a.id_aula;
-        opt.dataset.codigo = a.codigo_sala || a.codigo || '';
-        opt.textContent = `${a.nombre} (${a.codigo_sala || a.codigo}) - ${a.piso || a.ubicacion || ''}`;
-        select.appendChild(opt);
-    });
+    const selBloque = document.getElementById('filtro_modal_bloque');
+    const selPiso = document.getElementById('filtro_modal_piso');
+    const inputBuscar = document.getElementById('filtro_modal_buscar');
+    if (selBloque) selBloque.value = '';
+    if (selPiso) selPiso.value = '';
+    if (inputBuscar) inputBuscar.value = '';
+
+    actualizarFiltrosModalCampus();
+    filtrarAulasDisponiblesModal();
 
     document.getElementById('modal-nodo').classList.remove('hidden');
 }
@@ -613,38 +756,41 @@ function abrirModalEditarNodo(idNodo) {
     const nodo = listaNodosCache.find(n => n.id_nodo == idNodo);
     if (!nodo) return;
 
+    nodoEditandoActual = nodo;
     document.getElementById('modal-nodo-titulo').innerHTML = '<span>✏️</span> Editar Nodo de Aula LoRa';
     document.getElementById('modal_id_nodo').value = nodo.id_nodo;
     document.getElementById('modal_lora_red_id').value = nodo.lora_red_id || 18;
     document.getElementById('modal_lora_id').value = nodo.lora_id;
     document.getElementById('modal_room_id').value = nodo.room_id || '';
 
-    const select = document.getElementById('modal_id_aula');
-    select.innerHTML = '';
-    const optActual = document.createElement('option');
-    optActual.value = nodo.id_aula;
-    optActual.dataset.codigo = nodo.room_id || nodo.codigo_sala || '';
-    optActual.textContent = `${nodo.nombre_aula || 'Aula ' + nodo.id_aula} (Actual)`;
-    optActual.selected = true;
-    select.appendChild(optActual);
+    const selBloque = document.getElementById('filtro_modal_bloque');
+    const selPiso = document.getElementById('filtro_modal_piso');
+    const inputBuscar = document.getElementById('filtro_modal_buscar');
+    if (selBloque) selBloque.value = '';
+    if (selPiso) selPiso.value = '';
+    if (inputBuscar) inputBuscar.value = '';
 
-    aulasDisponiblesCache.forEach(a => {
-        if (a.id_aula != nodo.id_aula) {
-            const opt = document.createElement('option');
-            opt.value = a.id_aula;
-            opt.dataset.codigo = a.codigo_sala || a.codigo || '';
-            opt.textContent = `${a.nombre} (${a.codigo_sala || a.codigo})`;
-            select.appendChild(opt);
-        }
-    });
+    actualizarFiltrosModalCampus();
+    filtrarAulasDisponiblesModal();
+
+    const select = document.getElementById('modal_id_aula');
+    select.value = nodo.id_aula;
+    alCambiarAulaModal(select);
 
     document.getElementById('modal-nodo').classList.remove('hidden');
 }
 
 function alCambiarAulaModal(selectElem) {
     const opt = selectElem.selectedOptions[0];
-    if (opt && opt.dataset.codigo) {
-        document.getElementById('modal_room_id').value = opt.dataset.codigo;
+    const inputRoom = document.getElementById('modal_room_id');
+    if (opt && opt.dataset && opt.dataset.codigo) {
+        inputRoom.value = opt.dataset.codigo;
+        inputRoom.classList.add('bg-emerald-50');
+        setTimeout(() => inputRoom.classList.remove('bg-emerald-50'), 400);
+    } else if (!opt || !opt.value) {
+        if (!nodoEditandoActual) {
+            inputRoom.value = '';
+        }
     }
 }
 

@@ -16,7 +16,8 @@ class NodoEsp32 {
         $sql = "SELECT n.id_nodo, n.node_id, n.id_aula, n.tipo, n.estado,
                        n.lora_id, n.lora_red_id, n.room_id, n.ultimo_heartbeat,
                        n.activo, n.fecha_creacion,
-                       a.nombre AS nombre_aula, a.codigo_sala, a.ubicacion, a.piso
+                       a.nombre AS nombre_aula, COALESCE(a.codigo, a.codigo_sala) AS codigo_sala,
+                       COALESCE(a.bloque, 'Bloque A') AS bloque, a.ubicacion, a.piso
                 FROM {$this->table_name} n
                 LEFT JOIN aulas a ON a.id_aula = n.id_aula
                 WHERE n.activo = 1
@@ -61,7 +62,9 @@ class NodoEsp32 {
      * Devuelve las aulas activas que no tienen un nodo asignado actualmente.
      */
     public function obtenerAulasDisponibles(?int $excluirIdNodo = null): array {
-        $sql = "SELECT a.id_aula, a.nombre, a.codigo_sala, a.piso, a.ubicacion
+        $sql = "SELECT a.id_aula, a.nombre, COALESCE(a.codigo, a.codigo_sala) AS codigo,
+                       COALESCE(a.codigo, a.codigo_sala) AS codigo_sala,
+                       COALESCE(a.bloque, 'Bloque A') AS bloque, a.piso, a.ubicacion
                 FROM aulas a
                 WHERE a.activo = 1
                   AND a.id_aula NOT IN (
@@ -70,7 +73,7 @@ class NodoEsp32 {
                       WHERE n.activo = 1 AND n.id_aula IS NOT NULL" . 
                       ($excluirIdNodo ? " AND n.id_nodo != :excluir" : "") . "
                   )
-                ORDER BY a.nombre ASC";
+                ORDER BY a.bloque ASC, a.piso ASC, a.nombre ASC";
 
         $stmt = $this->conn->prepare($sql);
         if ($excluirIdNodo) {
