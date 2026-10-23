@@ -169,12 +169,8 @@ async function abrirModalDetalleAsignacion(idAsignacion) {
         const json = await res.json();
 
         if (json.status !== 'success' || !json.data) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al consultar',
-                text: json.message || 'No se pudo obtener el detalle de la asignación docente.',
-                confirmButtonColor: '#2563eb'
-            });
+            if (window.Toast) Toast.error(json.message || 'No se pudo obtener el detalle de la asignación docente.', 'Aviso');
+            else alert(json.message || 'No se pudo obtener el detalle de la asignación docente.');
             cerrarModalDetalleAsignacion();
             return;
         }
@@ -184,7 +180,7 @@ async function abrirModalDetalleAsignacion(idAsignacion) {
 
         // Inyectar datos principales
         document.getElementById('det-asig-materia').textContent = data.materia_nombre || 'Materia';
-        document.getElementById('det-asig-profesor').textContent = (data.profesor_nombre || '') + ' ' + (data.profesor_apellido || '');
+        document.getElementById('det-asig-profesor').textContent = ((data.profesor_nombre || '') + ' ' + (data.profesor_apellido || '')).trim() || 'Docente no asignado';
         document.getElementById('det-asig-profesor-ci').textContent = data.profesor_ci ? `C.I. ${data.profesor_ci}` : 'Sin cédula registrada';
         
         const cursoTxt = (data.grado_nombre || 'Curso') + (data.seccion ? ' "' + data.seccion + '"' : '') + (data.turno_nombre ? ' (' + data.turno_nombre + ')' : '');
@@ -205,7 +201,7 @@ async function abrirModalDetalleAsignacion(idAsignacion) {
 
             if (est.includes('aprob')) {
                 badgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
-            } else if (est.includes('revis') || est.includes('proceso')) {
+            } else if (est.includes('revis') || est.includes('proceso') || est.includes('borrador')) {
                 badgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
             } else if (est.includes('pend')) {
                 badgeClass = 'bg-rose-100 text-rose-900 border-rose-300';
@@ -262,12 +258,8 @@ async function abrirModalDetalleAsignacion(idAsignacion) {
 
     } catch (e) {
         console.error("Error al consultar asignación:", e);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de red',
-            text: 'No se pudo conectar con el servidor para obtener los datos de la cátedra.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.error('No se pudo conectar con el servidor para obtener los datos de la cátedra.', 'Error de red');
+        else alert('No se pudo conectar con el servidor para obtener los datos de la cátedra.');
         cerrarModalDetalleAsignacion();
     }
 }

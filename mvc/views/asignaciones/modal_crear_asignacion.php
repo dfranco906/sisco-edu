@@ -107,74 +107,59 @@
 </div>
 
 <script>
-let catalogosAsignacionCargados = false;
+// Manejador centralizado y deduplicado de catálogos para asignaciones
+window.catalogoAsignacionesCache = null;
+window.catalogoAsignacionesPromise = null;
 
-async function cargarCatalogosAsignacion() {
-    if (catalogosAsignacionCargados) return;
-
-    const base = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '');
-
-    try {
-        const [resGrados, resMaterias, resProfes] = await Promise.all([
-            fetch(base + '/src/api/Grado/leer_grados.php').then(r => r.json()),
-            fetch(base + '/src/api/Materia/leer_materias.php').then(r => r.json()),
-            fetch(base + '/src/api/Profesor/leer_profesores.php').then(r => r.json())
-        ]);
-
-        const selectGrado = document.getElementById('crear-asig-grado');
-        const selectMateria = document.getElementById('crear-asig-materia');
-        const selectProfesor = document.getElementById('crear-asig-profesor');
-
-        const editGrado = document.getElementById('editar-asig-grado');
-        const editMateria = document.getElementById('editar-asig-materia');
-        const editProfesor = document.getElementById('editar-asig-profesor');
-
-        const filterGrado = document.getElementById('filtro-curso-asignacion');
-
-        // Cargar Grados
-        if (resGrados && Array.isArray(resGrados.data)) {
-            const optsG = resGrados.data.map(g => {
-                const desc = g.descripcion || `${g.nombre} ${g.seccion || ''} (${g.turno || ''})`.trim();
-                return `<option value="${g.id_grado}">${desc}</option>`;
-            }).join('');
-
-            if (selectGrado) selectGrado.innerHTML = '<option value="">Seleccione el curso o grado...</option>' + optsG;
-            if (editGrado) editGrado.innerHTML = '<option value="">Seleccione el curso o grado...</option>' + optsG;
-            if (filterGrado) {
-                filterGrado.innerHTML = '<option value="">Todos los cursos</option>' + resGrados.data.map(g => {
-                    const desc = g.nombre + (g.seccion ? ' ' + g.seccion : '');
-                    return `<option value="${desc.toLowerCase()}">${desc}</option>`;
-                }).join('');
-            }
-        }
-
-        // Cargar Materias
-        if (resMaterias && Array.isArray(resMaterias.data)) {
-            const optsM = resMaterias.data.map(m => `<option value="${m.id_materia}">${m.nombre}</option>`).join('');
-            if (selectMateria) selectMateria.innerHTML = '<option value="">Seleccione la materia curricular...</option>' + optsM;
-            if (editMateria) editMateria.innerHTML = '<option value="">Seleccione la materia curricular...</option>' + optsM;
-        }
-
-        // Cargar Profesores
-        if (resProfes && Array.isArray(resProfes.data)) {
-            const optsP = resProfes.data.map(p => {
-                const nom = p.nombre_completo || `${p.nombre} ${p.apellido}`;
-                const ci = p.cedula_identidad ? ` (C.I. ${p.cedula_identidad})` : '';
-                return `<option value="${p.id_profesor}">${nom}${ci}</option>`;
-            }).join('');
-            if (selectProfesor) selectProfesor.innerHTML = '<option value="">Seleccione el docente...</option>' + optsP;
-            if (editProfesor) editProfesor.innerHTML = '<option value="">Seleccione el docente...</option>' + optsP;
-        }
-
-        catalogosAsignacionCargados = true;
-    } catch (e) {
-        console.error("Error cargando catálogos de asignación:", e);
+async function obtenerCatalogosAsignacion() {
+    if (window.catalogoAsignacionesCache) {
+        return window.catalogoAsignacionesCache;
     }
+    if (!window.catalogoAsignacionesPromise) {
+        window.catalogoAsignacionesPromise = (async () => {
+            const base = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '');
+            try {
+                const [resGrados, resMaterias, resProfes] = await Promise.all([
+                    fetch(base + '/src/api/Grado/leer_grados.php').then(r => r.json()).catch(() => ({ data: [] })),
+                    fetch(base + '/src/api/Materia/leer_materias.php').then(r => r.json()).catch(() => ({ data: [] })),
+                    fetch(base + '/src/api/Profesor/leer_profesores.php').then(r => r.json()).catch(() => ({ data: [] }))
+                ]);
+
+                window.catalogoAsignacionesCache = {
+                    grados: Array.isArray(resGrados.data) ? resGrados.data : [],
+                    materias: Array.isArray(resMaterias.data) ? resMaterias.data : [],
+                    profesores: Array.isArray(resProfes.data) ? resProfes.data : []
+                };
+
+                // Actualizar filtro de cursos en la tabla principal si existe
+                const filterGrado = document.getElementById('filtro-curso-asignacion');
+                if (filterGrado && filterGrado.options.length <= 1) {
+                    const currentVal = filterGrado.value;
+                    let optsFilter = '<option value="">Todos los cursos</option>';
+                    window.catalogoAsignacionesCache.grados.forEach(g => {
+                        const desc = g.nombre + (g.seccion ? ' ' + g.seccion : '');
+                        optsFilter += `<option value="${desc.toLowerCase()}">${desc}</option>`;
+                    });
+                    filterGrado.innerHTML = optsFilter;
+                    if (currentVal) filterGrado.value = currentVal;
+                }
+
+                return window.catalogoAsignacionesCache;
+            } catch (e) {
+                console.error("Error al cargar catálogos de asignaciones:", e);
+                return { grados: [], materias: [], profesores: [] };
+            } finally {
+                window.catalogoAsignacionesPromise = null;
+            }
+        })();
+    }
+    return window.catalogoAsignacionesPromise;
 }
 
-async function abrirModalCrearAsignacion() {
-    await cargarCatalogosAsignacion();
+// Compatibilidad
+window.cargarCatalogosAsignacion = obtenerCatalogosAsignacion;
 
+async function abrirModalCrearAsignacion() {
     const modal = document.getElementById('modal-crear-asignacion');
     const form = document.getElementById('form-crear-asignacion');
     if (form) {
@@ -188,8 +173,43 @@ async function abrirModalCrearAsignacion() {
     if (modal) {
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
-        setTimeout(() => document.getElementById('crear-asig-grado')?.focus(), 100);
     }
+
+    // Cargar opciones en los selects
+    const catalogos = await obtenerCatalogosAsignacion();
+
+    const selectGrado = document.getElementById('crear-asig-grado');
+    const selectMateria = document.getElementById('crear-asig-materia');
+    const selectProfesor = document.getElementById('crear-asig-profesor');
+
+    if (selectGrado) {
+        let optsG = '<option value="">Seleccione el curso o grado...</option>';
+        catalogos.grados.forEach(g => {
+            const desc = g.descripcion || `${g.nombre} ${g.seccion || ''} (${g.turno || ''})`.trim();
+            optsG += `<option value="${g.id_grado}">${desc}</option>`;
+        });
+        selectGrado.innerHTML = optsG;
+    }
+
+    if (selectMateria) {
+        let optsM = '<option value="">Seleccione la materia curricular...</option>';
+        catalogos.materias.forEach(m => {
+            optsM += `<option value="${m.id_materia}">${m.nombre}</option>`;
+        });
+        selectMateria.innerHTML = optsM;
+    }
+
+    if (selectProfesor) {
+        let optsP = '<option value="">Seleccione el docente...</option>';
+        catalogos.profesores.forEach(p => {
+            const nom = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+            const ci = p.cedula_identidad ? ` (C.I. ${p.cedula_identidad})` : '';
+            optsP += `<option value="${p.id_profesor}">${nom}${ci}</option>`;
+        });
+        selectProfesor.innerHTML = optsP;
+    }
+
+    setTimeout(() => selectGrado?.focus(), 80);
 }
 
 function cerrarModalCrearAsignacion() {
@@ -212,12 +232,8 @@ async function guardarNuevaAsignacion() {
     const anio = document.getElementById('crear-asig-anio')?.value;
 
     if (!idGrado || !idMateria || !idProfesor || !carga || !anio) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos requeridos',
-            text: 'Por favor complete el curso, la materia, el docente y la carga horaria.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.warning('Por favor complete el curso, la materia, el docente y la carga horaria.', 'Campos requeridos');
+        else alert('Por favor complete el curso, la materia, el docente y la carga horaria.');
         return;
     }
 
@@ -250,30 +266,20 @@ async function guardarNuevaAsignacion() {
 
         if (json.status === 'success') {
             cerrarModalCrearAsignacion();
-            Swal.fire({
-                icon: 'success',
-                title: '¡Asignación Creada!',
-                text: json.message || 'La asignación docente fue guardada con éxito.',
-                timer: 2200,
-                showConfirmButton: false
-            });
-            cargarAsignaciones();
+            if (window.Toast) Toast.success(json.message || 'La asignación docente fue guardada con éxito.', '¡Asignación Creada!');
+            else alert(json.message || 'La asignación docente fue guardada con éxito.');
+
+            if (typeof cargarAsignaciones === 'function') {
+                cargarAsignaciones();
+            }
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'No se pudo guardar',
-                text: json.message || 'Ocurrió un error al registrar la asignación docente.',
-                confirmButtonColor: '#2563eb'
-            });
+            if (window.Toast) Toast.error(json.message || 'Ocurrió un error al registrar la asignación docente.', 'No se pudo guardar');
+            else alert(json.message || 'Ocurrió un error al registrar la asignación docente.');
         }
     } catch (e) {
         console.error("Error al registrar asignación:", e);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de red',
-            text: 'No se pudo conectar con el servidor para registrar la asignación.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.error('No se pudo conectar con el servidor para registrar la asignación.', 'Error de red');
+        else alert('No se pudo conectar con el servidor para registrar la asignación.');
     } finally {
         if (btnSubmit) {
             btnSubmit.disabled = false;

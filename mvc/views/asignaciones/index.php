@@ -218,7 +218,9 @@ async function cargarAsignaciones() {
         filtrarAsignaciones();
 
         // Cargar catálogo de grados para el select de filtro si no se cargó
-        cargarCatalogosAsignacion();
+        if (typeof obtenerCatalogosAsignacion === 'function') {
+            obtenerCatalogosAsignacion();
+        }
 
     } catch (e) {
         console.error("Error cargando asignaciones:", e);
@@ -366,7 +368,7 @@ function filtrarAsignaciones() {
                         </button>
 
                         <!-- Editar -->
-                        <button type="button" onclick="abrirModalEditarAsignacion(${asigJson})"
+                        <button type="button" onclick="abrirModalEditarAsignacionPorId(${a.id_asignacion})"
                                 class="min-h-[44px] px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 text-base font-bold rounded-xl border border-amber-200 shadow-2xs transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400"
                                 title="Modificar asignación docente">
                             <span>✏️</span>
@@ -374,7 +376,7 @@ function filtrarAsignaciones() {
                         </button>
 
                         <!-- Desactivar -->
-                        <button type="button" onclick="desactivarAsignacion(${a.id_asignacion}, '${profNombre} - ${matNombre}')"
+                        <button type="button" onclick="desactivarAsignacion(${a.id_asignacion}, '${profNombre.replace(/'/g, "\\'")} - ${matNombre.replace(/'/g, "\\'")}')"
                                 class="min-h-[44px] px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 text-base font-bold rounded-xl border border-rose-200 shadow-2xs transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-rose-400"
                                 title="Desactivar asignación docente">
                             <span>🗑️</span>
@@ -385,6 +387,16 @@ function filtrarAsignaciones() {
             </tr>
         `;
     }).join('');
+}
+
+function abrirModalEditarAsignacionPorId(idAsignacion) {
+    const item = listaAsignacionesGlobal.find(x => Number(x.id_asignacion) === Number(idAsignacion));
+    if (item && typeof abrirModalEditarAsignacion === 'function') {
+        abrirModalEditarAsignacion(item);
+    } else {
+        if (window.Toast) Toast.warning('No se encontraron los datos de la asignación seleccionada.');
+        else alert('No se encontraron los datos de la asignación seleccionada.');
+    }
 }
 
 function limpiarBusquedaAsignacion() {
@@ -400,18 +412,20 @@ function limpiarBusquedaAsignacion() {
 }
 
 async function desactivarAsignacion(id, descripcion) {
-    const result = await Swal.fire({
-        title: '¿Desactivar asignación docente?',
-        html: `Estás a punto de dar de baja la asignación de:<br><strong class="text-slate-900 font-bold text-lg mt-1 block">${descripcion}</strong><br><span class="text-sm text-slate-600">Podrás reactivarla en cualquier momento desde la sección de asignaciones inactivas.</span>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e11d48',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sí, desactivar',
-        cancelButtonText: 'Cancelar'
-    });
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: '¿Desactivar asignación docente?',
+            message: `¿Desea dar de baja la cátedra de "${descripcion}"? Podrá reactivarla luego desde la sección de asignaciones inactivas.`,
+            confirmText: 'Sí, desactivar',
+            cancelText: 'Cancelar',
+            type: 'danger'
+        });
+    } else {
+        confirmado = confirm(`¿Estás seguro de desactivar la asignación de ${descripcion}?`);
+    }
 
-    if (!result.isConfirmed) return;
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -426,30 +440,17 @@ async function desactivarAsignacion(id, descripcion) {
         const json = await res.json();
 
         if (json.status === 'success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Asignación desactivada',
-                text: json.message || 'La cátedra fue dada de baja correctamente.',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            if (window.Toast) Toast.success(json.message || 'La cátedra fue dada de baja correctamente.', 'Asignación desactivada');
+            else alert(json.message || 'La cátedra fue dada de baja correctamente.');
             cargarAsignaciones();
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al desactivar',
-                text: json.message || 'No se pudo desactivar la asignación.',
-                confirmButtonColor: '#2563eb'
-            });
+            if (window.Toast) Toast.error(json.message || 'No se pudo desactivar la asignación.', 'Error al desactivar');
+            else alert(json.message || 'No se pudo desactivar la asignación.');
         }
     } catch (e) {
         console.error("Error desactivando asignación:", e);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de red',
-            text: 'Ocurrió un problema de comunicación con el servidor.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.error('Ocurrió un problema de comunicación con el servidor.', 'Error de red');
+        else alert('Ocurrió un problema de comunicación con el servidor.');
     }
 }
 </script>

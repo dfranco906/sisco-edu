@@ -48,6 +48,7 @@
                             class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
                         <option value="">Seleccione la materia curricular...</option>
                     </select>
+                    <p class="text-sm text-slate-500 mt-1">Podés seleccionar cualquiera de las materias disponibles en la malla.</p>
                 </div>
 
                 <!-- Profesor Responsable -->
@@ -101,26 +102,73 @@
 async function abrirModalEditarAsignacion(item) {
     if (!item) return;
 
-    await cargarCatalogosAsignacion();
-
     const modal = document.getElementById('modal-editar-asignacion');
     const inputId = document.getElementById('editar-asig-id');
-    const selectGrado = document.getElementById('editar-asig-grado');
-    const selectMateria = document.getElementById('editar-asig-materia');
-    const selectProfesor = document.getElementById('editar-asig-profesor');
     const inputCarga = document.getElementById('editar-asig-carga');
     const inputAnio = document.getElementById('editar-asig-anio');
 
     if (inputId) inputId.value = item.id_asignacion || '';
-    if (selectGrado) selectGrado.value = item.id_grado || '';
-    if (selectMateria) selectMateria.value = item.id_materia || '';
-    if (selectProfesor) selectProfesor.value = item.id_profesor || '';
     if (inputCarga) inputCarga.value = item.carga_horaria || 4;
     if (inputAnio) inputAnio.value = item.anho_lectivo || item['año_lectivo'] || new Date().getFullYear();
 
     if (modal) {
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
+    }
+
+    // Cargar catálogos sin condiciones de carrera
+    const catalogos = await obtenerCatalogosAsignacion();
+
+    const selectGrado = document.getElementById('editar-asig-grado');
+    const selectMateria = document.getElementById('editar-asig-materia');
+    const selectProfesor = document.getElementById('editar-asig-profesor');
+
+    // 1. Poblar Grados
+    if (selectGrado) {
+        let optsG = '<option value="">Seleccione el curso o grado...</option>';
+        catalogos.grados.forEach(g => {
+            const desc = g.descripcion || `${g.nombre} ${g.seccion || ''} (${g.turno || ''})`.trim();
+            const isSel = (Number(item.id_grado) === Number(g.id_grado));
+            optsG += `<option value="${g.id_grado}" ${isSel ? 'selected' : ''}>${desc}</option>`;
+        });
+        selectGrado.innerHTML = optsG;
+        selectGrado.value = item.id_grado || '';
+    }
+
+    // 2. Poblar Materias (Asegurando que la materia actual esté seleccionada y que todas sean elegibles)
+    if (selectMateria) {
+        let optsM = '<option value="">Seleccione la materia curricular...</option>';
+        let materiaEncontrada = false;
+        const idMatObjetivo = Number(item.id_materia);
+
+        catalogos.materias.forEach(m => {
+            const idM = Number(m.id_materia);
+            const isSel = (idMatObjetivo > 0 && idMatObjetivo === idM);
+            if (isSel) materiaEncontrada = true;
+            optsM += `<option value="${m.id_materia}" ${isSel ? 'selected' : ''}>${m.nombre}</option>`;
+        });
+
+        // Si la materia asignada no vino en la lista activa, preservarla como opción
+        if (idMatObjetivo > 0 && !materiaEncontrada) {
+            const nombreMat = item.materia_nombre || item.materia || `Materia #${idMatObjetivo}`;
+            optsM += `<option value="${idMatObjetivo}" selected>${nombreMat} (Actual)</option>`;
+        }
+
+        selectMateria.innerHTML = optsM;
+        selectMateria.value = item.id_materia || '';
+    }
+
+    // 3. Poblar Profesores
+    if (selectProfesor) {
+        let optsP = '<option value="">Seleccione el docente...</option>';
+        catalogos.profesores.forEach(p => {
+            const nom = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+            const ci = p.cedula_identidad ? ` (C.I. ${p.cedula_identidad})` : '';
+            const isSel = (Number(item.id_profesor) === Number(p.id_profesor));
+            optsP += `<option value="${p.id_profesor}" ${isSel ? 'selected' : ''}>${nom}${ci}</option>`;
+        });
+        selectProfesor.innerHTML = optsP;
+        selectProfesor.value = item.id_profesor || '';
     }
 }
 
@@ -145,12 +193,8 @@ async function guardarEdicionAsignacion() {
     const anio = document.getElementById('editar-asig-anio')?.value;
 
     if (!id || !idGrado || !idMateria || !idProfesor || !carga || !anio) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Campos requeridos',
-            text: 'Por favor complete todos los datos de la asignación docente.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.warning('Por favor complete todos los datos obligatorios de la cátedra.', 'Campos requeridos');
+        else alert('Por favor complete todos los datos obligatorios de la cátedra.');
         return;
     }
 
@@ -184,30 +228,20 @@ async function guardarEdicionAsignacion() {
 
         if (json.status === 'success') {
             cerrarModalEditarAsignacion();
-            Swal.fire({
-                icon: 'success',
-                title: '¡Asignación Actualizada!',
-                text: json.message || 'Los cambios se guardaron correctamente.',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            cargarAsignaciones();
+            if (window.Toast) Toast.success(json.message || 'Los cambios se guardaron correctamente.', '¡Asignación Actualizada!');
+            else alert(json.message || 'Los cambios se guardaron correctamente.');
+
+            if (typeof cargarAsignaciones === 'function') {
+                cargarAsignaciones();
+            }
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al actualizar',
-                text: json.message || 'No se pudieron guardar los cambios en la asignación docente.',
-                confirmButtonColor: '#2563eb'
-            });
+            if (window.Toast) Toast.error(json.message || 'No se pudieron guardar los cambios en la cátedra.', 'Error al actualizar');
+            else alert(json.message || 'No se pudieron guardar los cambios en la cátedra.');
         }
     } catch (e) {
         console.error("Error al actualizar asignación:", e);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de conexión',
-            text: 'Ocurrió un problema de red al intentar actualizar la asignación docente.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.error('Ocurrió un problema de red al intentar actualizar la asignación docente.', 'Error de conexión');
+        else alert('Ocurrió un problema de red al intentar actualizar la asignación docente.');
     } finally {
         if (btnSubmit) {
             btnSubmit.disabled = false;

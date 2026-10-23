@@ -285,18 +285,20 @@ function limpiarBusquedaDesactivadas() {
 }
 
 async function restaurarAsignacion(id, descripcion) {
-    const result = await Swal.fire({
-        title: '¿Restaurar asignación docente?',
-        html: `La cátedra:<br><strong class="text-slate-900 font-bold text-lg mt-1 block">${descripcion}</strong><br><span class="text-sm text-slate-600">Volverá a estar activa y visible en el panel de asignaciones.</span>`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#059669',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sí, restaurar',
-        cancelButtonText: 'Cancelar'
-    });
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: '¿Restaurar asignación docente?',
+            message: `La cátedra "${descripcion}" volverá a estar activa y visible en el panel de asignaciones.`,
+            confirmText: 'Sí, restaurar',
+            cancelText: 'Cancelar',
+            type: 'primary'
+        });
+    } else {
+        confirmado = confirm(`¿Restaurar la asignación de ${descripcion}?`);
+    }
 
-    if (!result.isConfirmed) return;
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -311,46 +313,35 @@ async function restaurarAsignacion(id, descripcion) {
         const json = await res.json();
 
         if (json.status === 'success') {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Asignación Restaurada!',
-                text: json.message || 'La cátedra se restauró con éxito.',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            if (window.Toast) Toast.success(json.message || 'La cátedra se restauró con éxito.', '¡Asignación Restaurada!');
+            else alert(json.message || 'La cátedra se restauró con éxito.');
             cargarAsignacionesDesactivadas();
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'No se pudo restaurar',
-                text: json.message || 'Ocurrió un error al restaurar la asignación.',
-                confirmButtonColor: '#2563eb'
-            });
+            if (window.Toast) Toast.error(json.message || 'Ocurrió un error al restaurar la asignación.', 'No se pudo restaurar');
+            else alert(json.message || 'Ocurrió un error al restaurar la asignación.');
         }
     } catch (e) {
         console.error("Error restaurando asignación:", e);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de red',
-            text: 'Ocurrió un problema de comunicación con el servidor.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.error('Ocurrió un problema de comunicación con el servidor.', 'Error de red');
+        else alert('Ocurrió un problema de comunicación con el servidor.');
     }
 }
 
 async function eliminarAsignacionDefinitivamente(id, descripcion) {
-    const result = await Swal.fire({
-        title: '¿Eliminar DEFINITIVAMENTE?',
-        html: `Esta acción es <strong>IRREVERSIBLE</strong>.<br>Se borrará la cátedra de:<br><strong class="text-rose-700 font-bold text-lg mt-1 block">${descripcion}</strong><br><span class="text-sm text-slate-600">No podrá eliminarse si tiene bloques de horario programados.</span>`,
-        icon: 'error',
-        showCancelButton: true,
-        confirmButtonColor: '#e11d48',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Sí, eliminar para siempre',
-        cancelButtonText: 'Cancelar'
-    });
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: '¿Eliminar DEFINITIVAMENTE?',
+            message: `Esta acción es IRREVERSIBLE. Se borrará la cátedra de "${descripcion}". No podrá eliminarse si tiene bloques de horario programados.`,
+            confirmText: 'Sí, eliminar para siempre',
+            cancelText: 'Cancelar',
+            type: 'danger'
+        });
+    } else {
+        confirmado = confirm(`¿Estás SEGURO de eliminar DEFINITIVAMENTE la asignación de ${descripcion}?`);
+    }
 
-    if (!result.isConfirmed) return;
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -365,30 +356,17 @@ async function eliminarAsignacionDefinitivamente(id, descripcion) {
         const json = await res.json();
 
         if (json.status === 'success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Eliminada con éxito',
-                text: json.message || 'El registro fue borrado definitivamente.',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            if (window.Toast) Toast.success(json.message || 'El registro fue borrado definitivamente.', 'Eliminada con éxito');
+            else alert(json.message || 'El registro fue borrado definitivamente.');
             cargarAsignacionesDesactivadas();
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'No se pudo eliminar',
-                text: json.message || 'La asignación no pudo ser eliminada.',
-                confirmButtonColor: '#2563eb'
-            });
+            if (window.Toast) Toast.error(json.message || 'La asignación no pudo ser eliminada.', 'No se pudo eliminar');
+            else alert(json.message || 'La asignación no pudo ser eliminada.');
         }
     } catch (e) {
         console.error("Error al eliminar asignación:", e);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de red',
-            text: 'Ocurrió un problema de comunicación con el servidor.',
-            confirmButtonColor: '#2563eb'
-        });
+        if (window.Toast) Toast.error('Ocurrió un problema de comunicación con el servidor.', 'Error de red');
+        else alert('Ocurrió un problema de comunicación con el servidor.');
     }
 }
 </script>

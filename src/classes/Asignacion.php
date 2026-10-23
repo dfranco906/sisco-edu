@@ -172,39 +172,54 @@ class Asignacion {
         }
 
         // Horarios asignados en la semana
-        $stmtH = $this->conn->prepare("
-            SELECT h.id_horario, h.dia_semana, h.hora_inicio, h.hora_fin, COALESCE(a.nombre, 'Aula asignada') AS aula
-            FROM horarios h
-            LEFT JOIN aulas a ON h.id_aula = a.id_aula
-            WHERE h.id_asignacion = :id AND h.activo = 1
-            ORDER BY CASE 
-                WHEN h.dia_semana ILIKE 'lunes' THEN 1
-                WHEN h.dia_semana ILIKE 'martes' THEN 2
-                WHEN h.dia_semana ILIKE 'miercoles' OR h.dia_semana ILIKE 'miércoles' THEN 3
-                WHEN h.dia_semana ILIKE 'jueves' THEN 4
-                WHEN h.dia_semana ILIKE 'viernes' THEN 5
-                WHEN h.dia_semana ILIKE 'sabado' OR h.dia_semana ILIKE 'sábado' THEN 6
-                ELSE 7 END, h.hora_inicio ASC
-        ");
-        $stmtH->execute([':id' => $id_asignacion]);
-        $det['horarios'] = $stmtH->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmtH = $this->conn->prepare("
+                SELECT h.id_horario, h.dia_semana, h.hora_inicio, h.hora_fin, COALESCE(a.nombre, 'Aula asignada') AS aula
+                FROM horarios h
+                LEFT JOIN aulas a ON h.id_aula = a.id_aula
+                WHERE h.id_asignacion = :id AND h.activo = 1
+                ORDER BY CASE 
+                    WHEN h.dia_semana ILIKE 'lunes' THEN 1
+                    WHEN h.dia_semana ILIKE 'martes' THEN 2
+                    WHEN h.dia_semana ILIKE 'miercoles' OR h.dia_semana ILIKE 'miércoles' THEN 3
+                    WHEN h.dia_semana ILIKE 'jueves' THEN 4
+                    WHEN h.dia_semana ILIKE 'viernes' THEN 5
+                    WHEN h.dia_semana ILIKE 'sabado' OR h.dia_semana ILIKE 'sábado' THEN 6
+                    ELSE 7 END, h.hora_inicio ASC
+            ");
+            $stmtH->execute([':id' => $id_asignacion]);
+            $det['horarios'] = $stmtH->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $eH) {
+            error_log("Error consultando horarios en obtenerDetalle: " . $eH->getMessage());
+            $det['horarios'] = [];
+        }
 
         // Conteo de estudiantes matriculados en esta materia/grado
-        $stmtCant = $this->conn->prepare("
-            SELECT COUNT(*) FROM matriculas WHERE id_asignacion = :id AND activo = 1
-        ");
-        $stmtCant->execute([':id' => $id_asignacion]);
-        $det['total_alumnos'] = (int)$stmtCant->fetchColumn();
+        try {
+            $stmtCant = $this->conn->prepare("
+                SELECT COUNT(*) FROM matriculas WHERE id_asignacion = :id AND activo = 1
+            ");
+            $stmtCant->execute([':id' => $id_asignacion]);
+            $det['total_alumnos'] = (int)$stmtCant->fetchColumn();
+        } catch (Throwable $eM) {
+            error_log("Error consultando matriculas en obtenerDetalle: " . $eM->getMessage());
+            $det['total_alumnos'] = 0;
+        }
 
-        // Plan Anual Curricular
-        $stmtPlan = $this->conn->prepare("
-            SELECT id_plan, estado
-            FROM planes_anuales
-            WHERE id_asignacion = :id AND activo = 1
-            LIMIT 1
-        ");
-        $stmtPlan->execute([':id' => $id_asignacion]);
-        $det['plan_anual'] = $stmtPlan->fetch(PDO::FETCH_ASSOC) ?: null;
+        // Plan Anual Curricular (Nota: la tabla planes_anuales no posee columna 'activo')
+        try {
+            $stmtPlan = $this->conn->prepare("
+                SELECT id_plan, estado
+                FROM planes_anuales
+                WHERE id_asignacion = :id
+                LIMIT 1
+            ");
+            $stmtPlan->execute([':id' => $id_asignacion]);
+            $det['plan_anual'] = $stmtPlan->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (Throwable $eP) {
+            error_log("Error consultando plan anual en obtenerDetalle: " . $eP->getMessage());
+            $det['plan_anual'] = null;
+        }
 
         return $det;
     }
