@@ -42,4 +42,8 @@ return [
     // 'DB_USER'              => 'postgres.tu_project_ref',
     // 'DB_PASS'              => 'TU_PASSWORD_DE_SUPABASE',
     // 'DB_SSL'               => true,
+
+    // --- Supabase Realtime (WebSockets) ---
+    // 'SUPABASE_URL'         => 'https://tu_project_ref.supabase.co',
+    // 'SUPABASE_ANON_KEY'    => 'tu_anon_public_key',
 ];

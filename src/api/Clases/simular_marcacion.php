@@ -57,14 +57,49 @@ try {
     $id = (int)$persona[$idCol];
     $fecha = substr($timestamp, 0, 10);
     $hora = substr($timestamp, 11, 8);
+    $nodoOrigen = 'SIMULADOR_AULA_' . $id_aula;
 
     $claseModel = new ClaseDiaria($db);
     $claseActiva = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp);
+    $idHorario = $claseActiva ? (int)($claseActiva['id_horario'] ?? null) : null;
 
     if ($tipo === 'estudiante') {
-        $claseModel->registrarAsistenciaEstudiante($id, $fecha, $hora, $estado);
+        $resAsistencia = $claseModel->registrarAsistenciaEstudiante(
+            $id,
+            $fecha,
+            $hora,
+            $estado,
+            'BIOMETRICO',
+            $nodoOrigen,
+            $idHorario,
+            false // forzar_actualizacion = false (verificar y proteger contra duplicados)
+        );
     } else {
-        $claseModel->registrarAsistenciaProfesor($id, $fecha, $hora, $estado);
+        $resAsistencia = $claseModel->registrarAsistenciaProfesor(
+            $id,
+            $fecha,
+            $hora,
+            $estado,
+            'BIOMETRICO',
+            $nodoOrigen,
+            $idHorario,
+            false
+        );
+    }
+
+    $esDuplicado = !empty($resAsistencia['duplicado']);
+
+    // Registrar evento de auditoría únicamente si no es marcación redundante
+    if (!$esDuplicado) {
+        require_once __DIR__ . '/../../classes/EventoAsistencia.php';
+        $evento = new EventoAsistencia($db);
+        $evento->user_id_global = $persona['user_id_global'];
+        $evento->id_aula = $id_aula;
+        $evento->estado = $resAsistencia['estado'] ?? $estado;
+        $evento->timestamp_evento = $timestamp;
+        $evento->origen_node_id = $nodoOrigen;
+        $evento->sincronizado = 1;
+        $evento->crear();
     }
 
     $detalleClase = $claseActiva ? $claseModel->obtenerDetalleClase((int)$claseActiva['id_clase']) : null;
@@ -72,15 +107,20 @@ try {
     http_response_code(200);
     echo json_encode([
         "status" => "success",
-        "message" => "Huella simulada y asistencia registrada para " . $persona['nombre'] . ' ' . $persona['apellido'],
+        "duplicado" => $esDuplicado,
+        "message" => $resAsistencia['mensaje'] ?? ($esDuplicado
+            ? "Control anti-duplicación activo: asistencia ya registrada para {$persona['nombre']} {$persona['apellido']}"
+            : "Huella simulada y asistencia registrada para {$persona['nombre']} {$persona['apellido']}"),
         "data" => [
             "persona" => [
                 "tipo" => $tipo,
                 "nombre_completo" => $persona['nombre'] . ' ' . $persona['apellido'],
                 "ci" => $persona['cedula_identidad'],
                 "user_id_global" => $persona['user_id_global'],
-                "hora_marcacion" => $hora
+                "hora_marcacion" => $resAsistencia['hora'] ?? $hora,
+                "estado" => $resAsistencia['estado'] ?? $estado
             ],
+            "resultado" => $resAsistencia,
             "clase" => $detalleClase
         ]
     ]);

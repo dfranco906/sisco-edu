@@ -15,6 +15,7 @@ try {
     $estado = $_POST['estado'] ?? 'PRESENTE';
 
     if (!$id_estudiante) {
+        http_response_code(400);
         echo json_encode(["status" => "error", "message" => "Seleccione un estudiante"]);
         exit;
     }
@@ -24,7 +25,17 @@ try {
     $estudiante = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$estudiante || empty($estudiante["huella_id"])) {
+        http_response_code(422);
         echo json_encode(["status" => "error", "message" => "Este estudiante no tiene huella registrada"]);
+        exit;
+    }
+
+    // Control estricto anti-duplicación por día
+    $stmtCheck = $db->prepare("SELECT id_asistencia_estudiante FROM asistencias_estudiantes WHERE id_estudiante = :id AND fecha = :fecha AND activo = 1 LIMIT 1");
+    $stmtCheck->execute([':id' => $id_estudiante, ':fecha' => $fecha]);
+    if ($stmtCheck->fetchColumn()) {
+        http_response_code(409);
+        echo json_encode(["status" => "error", "message" => "El estudiante ya cuenta con asistencia registrada en esta fecha"]);
         exit;
     }
 
@@ -37,12 +48,14 @@ try {
 
     $resultado = $a->crear();
 
+    http_response_code($resultado ? 200 : 500);
     echo json_encode([
         "status" => $resultado ? "success" : "error",
         "message" => $resultado ? "Asistencia creada correctamente" : "Error al crear asistencia"
     ]);
 
 } catch (Throwable $e) {
+    http_response_code(500);
     echo json_encode([
         "status" => "error",
         "message" => "Error interno",

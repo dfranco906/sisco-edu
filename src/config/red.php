@@ -74,3 +74,15 @@ if (!defined('LORA_ID_GATEWAY')) {
     $loraGw = getenv('LORA_ID_GATEWAY') ?: ($localConfig['LORA_ID_GATEWAY'] ?? ($dbConfig['lora_id_gateway'] ?? '100'));
     define('LORA_ID_GATEWAY', (int)$loraGw);
 }
+
+
+// 9. Configuración Supabase Realtime (WebSockets)
+if (!defined('SUPABASE_URL')) {
+    $sbUrl = getenv('SUPABASE_URL') ?: ($localConfig['SUPABASE_URL'] ?? ($dbConfig['supabase_url'] ?? 'https://eiwhpbwzaelyuwxmpdss.supabase.co'));
+    define('SUPABASE_URL', rtrim($sbUrl, '/'));
+}
+
+if (!defined('SUPABASE_ANON_KEY')) {
+    $sbKey = getenv('SUPABASE_ANON_KEY') ?: ($localConfig['SUPABASE_ANON_KEY'] ?? ($dbConfig['supabase_anon_key'] ?? ''));
+    define('SUPABASE_ANON_KEY', trim($sbKey));
+}

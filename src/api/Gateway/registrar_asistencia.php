@@ -44,30 +44,54 @@ try {
 
     $userId = $persona['user_id_global'];
     $nombreCompleto = trim($persona['nombre'] . ' ' . $persona['apellido']);
-
-    // 2. Registrar evento crudo de auditoría biométrica
-    $evento = new EventoAsistencia($db);
-    $evento->user_id_global = $userId;
-    $evento->id_aula = $id_aula;
-    $evento->estado = $estado;
-    $evento->timestamp_evento = $timestamp;
-    $evento->origen_node_id = 'GATEWAY_ESP32';
-    $evento->sincronizado = 1;
-    $evento->crear();
-
-    // 3. Detección automática de la clase activa en el aula y lección del día
-    $claseModel = new ClaseDiaria($db);
-    $claseActiva = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp);
-
     $fechaActual = substr($timestamp, 0, 10);
     $horaActual = substr($timestamp, 11, 8);
+    $nodoOrigen = 'NODO_AULA_' . $id_aula;
 
+    // 2. Detección automática de la clase activa en el aula y lección del día
+    $claseModel = new ClaseDiaria($db);
+    $claseActiva = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp);
+    $idHorario = $claseActiva ? (int)($claseActiva['id_horario'] ?? null) : null;
+
+    // 3. Registro de asistencia con control estricto anti-duplicación por día
     if ($tipo === 'estudiante') {
         $id_estudiante = (int)$persona['id_estudiante'];
-        $claseModel->registrarAsistenciaEstudiante($id_estudiante, $fechaActual, $horaActual, $estado);
+        $resAsistencia = $claseModel->registrarAsistenciaEstudiante(
+            $id_estudiante,
+            $fechaActual,
+            $horaActual,
+            $estado,
+            'BIOMETRICO',
+            $nodoOrigen,
+            $idHorario,
+            false // forzar_actualizacion = false (estricta prevención de doble escritura)
+        );
     } else {
         $id_profesor = (int)$persona['id_profesor'];
-        $claseModel->registrarAsistenciaProfesor($id_profesor, $fechaActual, $horaActual, $estado);
+        $resAsistencia = $claseModel->registrarAsistenciaProfesor(
+            $id_profesor,
+            $fechaActual,
+            $horaActual,
+            $estado,
+            'BIOMETRICO',
+            $nodoOrigen,
+            $idHorario,
+            false // forzar_actualizacion = false
+        );
+    }
+
+    $esDuplicado = !empty($resAsistencia['duplicado']);
+
+    // 4. Registrar evento crudo de auditoría biométrica únicamente si no es marcación duplicada inmediata
+    if (!$esDuplicado) {
+        $evento = new EventoAsistencia($db);
+        $evento->user_id_global = $userId;
+        $evento->id_aula = $id_aula;
+        $evento->estado = $resAsistencia['estado'] ?? $estado;
+        $evento->timestamp_evento = $timestamp;
+        $evento->origen_node_id = 'GATEWAY_ESP32';
+        $evento->sincronizado = 1;
+        $evento->crear();
     }
 
     // Refrescar estado de la clase activa si existe
@@ -76,15 +100,18 @@ try {
     http_response_code(200);
     echo json_encode([
         "status" => "success",
-        "message" => "Asistencia biométrica registrada correctamente",
+        "duplicado" => $esDuplicado,
+        "message" => $resAsistencia['mensaje'] ?? "Asistencia biométrica procesada correctamente",
         "data" => [
             "persona" => [
                 "tipo" => $tipo,
                 "nombre_completo" => $nombreCompleto,
                 "cedula" => $ci,
                 "user_id_global" => $userId,
-                "hora_marcacion" => $horaActual
+                "hora_marcacion" => $resAsistencia['hora'] ?? $horaActual,
+                "estado" => $resAsistencia['estado'] ?? $estado
             ],
+            "resultado" => $resAsistencia,
             "clase_detectada" => $detalleClase ? [
                 "id_clase" => $detalleClase['id_clase'],
                 "materia" => $detalleClase['materia_nombre'],

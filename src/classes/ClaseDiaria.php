@@ -294,26 +294,30 @@ class ClaseDiaria {
         $stmtProfAsist = $this->conn->prepare("
             SELECT * FROM asistencias_profesores
             WHERE id_profesor = :profesor AND fecha = :fecha AND activo = 1
-            ORDER BY hora ASC
+            ORDER BY COALESCE(hora_marcacion, hora) ASC
             LIMIT 1
         ");
         $stmtProfAsist->execute([':profesor' => $id_profesor_actual, ':fecha' => $fecha]);
         $asistProfesor = $stmtProfAsist->fetch(PDO::FETCH_ASSOC);
 
         $clase['profesor_asistencia'] = [
-            'presente' => (bool)$asistProfesor,
-            'hora' => $asistProfesor['hora'] ?? null,
-            'estado' => $asistProfesor['estado'] ?? 'AUSENTE'
+            'presente' => (bool)$asistProfesor && ($asistProfesor['estado'] ?? '') !== 'AUSENTE',
+            'hora' => $asistProfesor['hora_marcacion'] ?? ($asistProfesor['hora'] ?? null),
+            'estado' => $asistProfesor['estado'] ?? 'AUSENTE',
+            'tipo_registro' => $asistProfesor['tipo_registro'] ?? null,
+            'nodo_origen' => $asistProfesor['nodo_origen'] ?? null
         ];
 
         // 4. Lista de todos los Estudiantes del grado y cruce con asistencias
         $stmtEst = $this->conn->prepare("
             SELECT e.id_estudiante, e.nombre, e.apellido, e.cedula_identidad,
-                   e.user_id_global,
+                   e.user_id_global, e.huella_id,
                    CONCAT(e.nombre, ' ', e.apellido) AS nombre_completo,
-                   ae.hora AS hora_marcacion,
+                   COALESCE(ae.hora_marcacion, ae.hora) AS hora_marcacion,
                    COALESCE(ae.estado, 'AUSENTE') AS estado_asistencia,
-                   (CASE WHEN ae.id_estudiante IS NOT NULL THEN 1 ELSE 0 END) AS presente
+                   ae.tipo_registro,
+                   ae.nodo_origen,
+                   (CASE WHEN ae.id_asistencia_estudiante IS NOT NULL AND ae.estado != 'AUSENTE' THEN 1 ELSE 0 END) AS presente
             FROM estudiantes e
             LEFT JOIN asistencias_estudiantes ae 
                    ON ae.id_estudiante = e.id_estudiante 
@@ -373,76 +377,285 @@ class ClaseDiaria {
     }
 
     /**
-     * Registra o actualiza la asistencia de un estudiante para la clase
+     * Registra o actualiza la asistencia de un estudiante con control estricto anti-duplicación por día.
+     * Si ya marcó asistencia hoy, NO genera doble escritura en la base de datos y preserva su hora original.
+     *
+     * @return array [
+     *     'exito' => bool,
+     *     'duplicado' => bool,
+     *     'actualizado' => bool,
+     *     'id' => int|null,
+     *     'hora' => string,
+     *     'estado' => string,
+     *     'mensaje' => string
+     * ]
      */
-    public function registrarAsistenciaEstudiante(int $id_estudiante, string $fecha, string $hora, string $estado = 'PRESENTE'): bool {
+    public function registrarAsistenciaEstudiante(
+        int $id_estudiante,
+        string $fecha,
+        string $hora,
+        string $estado = 'PRESENTE',
+        string $tipo_registro = 'BIOMETRICO',
+        ?string $nodo_origen = null,
+        ?int $id_horario = null,
+        bool $forzar_actualizacion = false
+    ): array {
+        // Guard clause: Validación inicial de parámetros
+        if ($id_estudiante <= 0 || empty($fecha)) {
+            return [
+                'exito' => false,
+                'duplicado' => false,
+                'actualizado' => false,
+                'id' => null,
+                'hora' => $hora,
+                'estado' => $estado,
+                'mensaje' => 'Identificador de estudiante o fecha no válida'
+            ];
+        }
+
+        // 1. Control estricto anti-duplicación: consultar marcación activa previa del día
         $stmtCheck = $this->conn->prepare("
-            SELECT id_asistencia_estudiante FROM asistencias_estudiantes 
+            SELECT id_asistencia_estudiante, hora, hora_marcacion, estado, tipo_registro, nodo_origen
+            FROM asistencias_estudiantes 
             WHERE id_estudiante = :id AND fecha = :fecha AND activo = 1
             LIMIT 1
         ");
         $stmtCheck->execute([':id' => $id_estudiante, ':fecha' => $fecha]);
-        $idExistente = $stmtCheck->fetchColumn();
+        $existente = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-        if ($idExistente) {
+        if ($existente) {
+            $horaRegistrada = $existente['hora_marcacion'] ?: ($existente['hora'] ?: $hora);
+            $idAsistencia = (int)$existente['id_asistencia_estudiante'];
+
+            // Si la asistencia previa fue registrada mediante huella dactilar física, es INMUTABLE ante modificaciones forzadas
+            if ($forzar_actualizacion && $existente['tipo_registro'] === 'BIOMETRICO' && $existente['estado'] !== 'AUSENTE') {
+                return [
+                    'exito' => false,
+                    'duplicado' => true,
+                    'actualizado' => false,
+                    'id' => $idAsistencia,
+                    'hora' => $horaRegistrada,
+                    'estado' => $existente['estado'],
+                    'mensaje' => "La asistencia del estudiante fue registrada por huella dactilar y es inmutable. No se permite modificación."
+                ];
+            }
+
+            // Si es una marcación biométrica o ya posee el mismo estado,
+            // CERO DOBLE ESCRITURA: se protege la hora de llegada y no se modifica la BD
+            if (!$forzar_actualizacion || $existente['estado'] === $estado) {
+                return [
+                    'exito' => true,
+                    'duplicado' => true,
+                    'actualizado' => false,
+                    'id' => $idAsistencia,
+                    'hora' => $horaRegistrada,
+                    'estado' => $existente['estado'],
+                    'mensaje' => "El estudiante ya cuenta con asistencia registrada hoy a las {$horaRegistrada} ({$existente['estado']}). No se generó duplicación."
+                ];
+            }
+
+            // Si es una acción manual explícita (e.g. Docente o Coordinador justifica o rectifica estado)
             $stmtUpd = $this->conn->prepare("
                 UPDATE asistencias_estudiantes
-                SET hora = :hora, estado = :estado, fecha_registro = CURRENT_TIMESTAMP
+                SET estado = :estado,
+                    tipo_registro = :tipo_registro,
+                    nodo_origen = COALESCE(:nodo_origen, nodo_origen),
+                    fecha_registro = CURRENT_TIMESTAMP
                 WHERE id_asistencia_estudiante = :id
             ");
-            return $stmtUpd->execute([
-                ':hora' => $hora,
+            $updOk = $stmtUpd->execute([
                 ':estado' => $estado,
-                ':id' => $idExistente
+                ':tipo_registro' => $tipo_registro,
+                ':nodo_origen' => $nodo_origen,
+                ':id' => $idAsistencia
             ]);
+
+            return [
+                'exito' => $updOk,
+                'duplicado' => false,
+                'actualizado' => true,
+                'id' => $idAsistencia,
+                'hora' => $horaRegistrada,
+                'estado' => $estado,
+                'mensaje' => "Asistencia del estudiante rectificada a {$estado}."
+            ];
         }
 
+        // 2. Obtener huella_id del estudiante para enlace biométrico
+        $stmtH = $this->conn->prepare("SELECT huella_id FROM estudiantes WHERE id_estudiante = :id LIMIT 1");
+        $stmtH->execute([':id' => $id_estudiante]);
+        $huellaId = (int)$stmtH->fetchColumn() ?: 0;
+
+        // 3. Inserción protegida de asistencia del estudiante
         $stmtIns = $this->conn->prepare("
-            INSERT INTO asistencias_estudiantes (id_estudiante, huella_id, fecha, hora, estado, activo)
-            VALUES (:id, 0, :fecha, :hora, :estado, 1)
+            INSERT INTO asistencias_estudiantes (
+                id_estudiante, id_horario, huella_id, fecha, hora, hora_marcacion, estado, tipo_registro, nodo_origen, activo, fecha_registro
+            ) VALUES (
+                :id, :id_horario, :huella_id, :fecha, :hora, :hora_marcacion, :estado, :tipo_registro, :nodo_origen, 1, CURRENT_TIMESTAMP
+            )
         ");
-        return $stmtIns->execute([
+
+        $insertOk = $stmtIns->execute([
             ':id' => $id_estudiante,
+            ':id_horario' => $id_horario,
+            ':huella_id' => $huellaId,
             ':fecha' => $fecha,
             ':hora' => $hora,
-            ':estado' => $estado
+            ':hora_marcacion' => $hora,
+            ':estado' => $estado,
+            ':tipo_registro' => $tipo_registro,
+            ':nodo_origen' => $nodo_origen
         ]);
+
+        $nuevoId = (int)$this->conn->lastInsertId();
+
+        return [
+            'exito' => $insertOk,
+            'duplicado' => false,
+            'actualizado' => false,
+            'id' => $nuevoId,
+            'hora' => $hora,
+            'estado' => $estado,
+            'mensaje' => "Asistencia registrada exitosamente a las {$hora}."
+        ];
     }
 
     /**
-     * Registra la asistencia del profesor para la clase
+     * Registra o actualiza la asistencia del profesor con control estricto anti-duplicación por día.
+     *
+     * @return array [
+     *     'exito' => bool,
+     *     'duplicado' => bool,
+     *     'actualizado' => bool,
+     *     'id' => int|null,
+     *     'hora' => string,
+     *     'estado' => string,
+     *     'mensaje' => string
+     * ]
      */
-    public function registrarAsistenciaProfesor(int $id_profesor, string $fecha, string $hora, string $estado = 'PRESENTE'): bool {
+    public function registrarAsistenciaProfesor(
+        int $id_profesor,
+        string $fecha,
+        string $hora,
+        string $estado = 'PRESENTE',
+        string $tipo_registro = 'BIOMETRICO',
+        ?string $nodo_origen = null,
+        ?int $id_horario = null,
+        bool $forzar_actualizacion = false
+    ): array {
+        if ($id_profesor <= 0 || empty($fecha)) {
+            return [
+                'exito' => false,
+                'duplicado' => false,
+                'actualizado' => false,
+                'id' => null,
+                'hora' => $hora,
+                'estado' => $estado,
+                'mensaje' => 'Identificador de profesor o fecha no válida'
+            ];
+        }
+
+        // 1. Control estricto anti-duplicación: verificar marcación activa del día
         $stmtCheck = $this->conn->prepare("
-            SELECT id_asistencia_profesor FROM asistencias_profesores 
+            SELECT id_asistencia_profesor, hora, hora_marcacion, estado, tipo_registro, nodo_origen
+            FROM asistencias_profesores 
             WHERE id_profesor = :id AND fecha = :fecha AND activo = 1
             LIMIT 1
         ");
         $stmtCheck->execute([':id' => $id_profesor, ':fecha' => $fecha]);
-        $idExistente = $stmtCheck->fetchColumn();
+        $existente = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-        if ($idExistente) {
+        if ($existente) {
+            $horaRegistrada = $existente['hora_marcacion'] ?: ($existente['hora'] ?: $hora);
+            $idAsistencia = (int)$existente['id_asistencia_profesor'];
+
+            // Si la asistencia previa fue registrada mediante huella dactilar física, es INMUTABLE ante modificaciones forzadas
+            if ($forzar_actualizacion && $existente['tipo_registro'] === 'BIOMETRICO' && $existente['estado'] !== 'AUSENTE') {
+                return [
+                    'exito' => false,
+                    'duplicado' => true,
+                    'actualizado' => false,
+                    'id' => $idAsistencia,
+                    'hora' => $horaRegistrada,
+                    'estado' => $existente['estado'],
+                    'mensaje' => "La asistencia del profesor fue registrada por huella dactilar y es inmutable. No se permite modificación."
+                ];
+            }
+
+            if (!$forzar_actualizacion || $existente['estado'] === $estado) {
+                return [
+                    'exito' => true,
+                    'duplicado' => true,
+                    'actualizado' => false,
+                    'id' => $idAsistencia,
+                    'hora' => $horaRegistrada,
+                    'estado' => $existente['estado'],
+                    'mensaje' => "El profesor ya cuenta con asistencia registrada hoy a las {$horaRegistrada} ({$existente['estado']}). No se generó duplicación."
+                ];
+            }
+
             $stmtUpd = $this->conn->prepare("
                 UPDATE asistencias_profesores
-                SET hora = :hora, estado = :estado, fecha_registro = CURRENT_TIMESTAMP
+                SET estado = :estado,
+                    tipo_registro = :tipo_registro,
+                    nodo_origen = COALESCE(:nodo_origen, nodo_origen),
+                    fecha_registro = CURRENT_TIMESTAMP
                 WHERE id_asistencia_profesor = :id
             ");
-            return $stmtUpd->execute([
-                ':hora' => $hora,
+            $updOk = $stmtUpd->execute([
                 ':estado' => $estado,
-                ':id' => $idExistente
+                ':tipo_registro' => $tipo_registro,
+                ':nodo_origen' => $nodo_origen,
+                ':id' => $idAsistencia
             ]);
+
+            return [
+                'exito' => $updOk,
+                'duplicado' => false,
+                'actualizado' => true,
+                'id' => $idAsistencia,
+                'hora' => $horaRegistrada,
+                'estado' => $estado,
+                'mensaje' => "Asistencia del profesor rectificada a {$estado}."
+            ];
         }
 
+        // 2. Huella del profesor
+        $stmtH = $this->conn->prepare("SELECT huella_id FROM profesores WHERE id_profesor = :id LIMIT 1");
+        $stmtH->execute([':id' => $id_profesor]);
+        $huellaId = (int)$stmtH->fetchColumn() ?: 0;
+
+        // 3. Inserción protegida de asistencia del profesor
         $stmtIns = $this->conn->prepare("
-            INSERT INTO asistencias_profesores (id_profesor, huella_id, fecha, hora, estado, activo)
-            VALUES (:id, 0, :fecha, :hora, :estado, 1)
+            INSERT INTO asistencias_profesores (
+                id_profesor, id_horario, huella_id, fecha, hora, hora_marcacion, estado, tipo_registro, nodo_origen, activo, fecha_registro
+            ) VALUES (
+                :id, :id_horario, :huella_id, :fecha, :hora, :hora_marcacion, :estado, :tipo_registro, :nodo_origen, 1, CURRENT_TIMESTAMP
+            )
         ");
-        return $stmtIns->execute([
+
+        $insertOk = $stmtIns->execute([
             ':id' => $id_profesor,
+            ':id_horario' => $id_horario,
+            ':huella_id' => $huellaId,
             ':fecha' => $fecha,
             ':hora' => $hora,
-            ':estado' => $estado
+            ':hora_marcacion' => $hora,
+            ':estado' => $estado,
+            ':tipo_registro' => $tipo_registro,
+            ':nodo_origen' => $nodo_origen
         ]);
+
+        $nuevoId = (int)$this->conn->lastInsertId();
+
+        return [
+            'exito' => $insertOk,
+            'duplicado' => false,
+            'actualizado' => false,
+            'id' => $nuevoId,
+            'hora' => $hora,
+            'estado' => $estado,
+            'mensaje' => "Asistencia del docente registrada exitosamente a las {$hora}."
+        ];
     }
 }

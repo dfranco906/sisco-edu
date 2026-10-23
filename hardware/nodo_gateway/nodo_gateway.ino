@@ -27,7 +27,18 @@ const char *headerKeys[] = {"X-GATEWAY-KEY"};
 
 struct DispositivoAula { int idAula; int loraId; };
 // Mantener esta tabla alineada con aulas.id_aula y las direcciones RYLR998.
-DispositivoAula tablaAulas[] = {{18, 101}, {15, 102}, {16, 103}};
+DispositivoAula tablaAulas[] = {
+  {18, 101}, // Aula de pruebas laboratorio (AULA_A)
+  {22, 102}, // 7° Grado
+  {23, 103}, // 8° Grado
+  {24, 104}, // 9° Grado
+  {25, 105}, // 1° Curso BCB
+  {26, 106}, // 2° Curso BCB
+  {27, 107}, // 3° Curso BCB
+  {28, 108}, // 1° Curso BTI
+  {29, 109}, // 2° Curso BTI
+  {30, 110}  // 3° Curso BTI
+};
 const size_t CANTIDAD_AULAS = sizeof(tablaAulas) / sizeof(tablaAulas[0]);
 
 void atenderMensajesLoRa();
