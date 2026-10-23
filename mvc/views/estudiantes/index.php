@@ -8,82 +8,87 @@ require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 
-<main class="app-main flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 text-base">
 
-    <!-- Encabezado Principal y Barra de Acciones -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+    <!-- Encabezado Principal y Barra de Acciones Accesibles -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
         <div>
-            <div class="flex items-center gap-2.5">
-                <span class="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xl font-bold">
+            <div class="flex items-center gap-3">
+                <span class="p-2.5 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-2xl font-bold shrink-0 border border-blue-200 dark:border-blue-800">
                     🎓
                 </span>
                 <div>
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                         Gestión de Estudiantes
                     </h2>
-                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                        Matriculación, nómina por curso con filtro en cascada, importación y exportación masiva.
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-1">
+                        Matriculación escolar, nómina por curso, vinculación familiar y control biométrico.
                     </p>
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-            <button type="button" onclick="abrirModalCrearEstudiante()" class="btn btn-success text-xs font-bold py-2 px-3.5 inline-flex items-center gap-1.5 shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <button type="button" onclick="abrirModalCrearEstudiante()" class="btn btn-success text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2 shadow-sm" title="Registrar un nuevo estudiante">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 <span>+ Nuevo Estudiante</span>
             </button>
 
-            <button type="button" onclick="abrirModalImportarEstudiantes(document.getElementById('filtro-grado')?.value)" class="btn btn-secondary text-xs font-semibold py-2 px-3 inline-flex items-center gap-1.5" title="Importar estudiantes desde archivo CSV / Excel">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                <span>📥 Importar</span>
+            <button type="button" onclick="abrirModalImportarEstudiantes(document.getElementById('filtro-grado')?.value)" class="btn btn-secondary text-base font-semibold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2" title="Importar estudiantes desde archivo CSV / Excel">
+                <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <span>Importar</span>
             </button>
 
-            <button type="button" onclick="exportarNominaActual()" class="btn btn-secondary text-xs font-semibold py-2 px-3 inline-flex items-center gap-1.5" title="Exportar nómina a CSV / Excel">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <span>📤 Exportar</span>
+            <button type="button" onclick="exportarNominaActual()" class="btn btn-secondary text-base font-semibold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2" title="Exportar nómina a CSV / Excel">
+                <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>Exportar</span>
             </button>
 
-            <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="btn btn-primary text-xs py-2 px-3">
+            <a href="<?= base_url('mvc/views/estudiantes/desactivados.php') ?>" class="btn btn-secondary text-base font-semibold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2" title="Consultar o restaurar estudiantes dados de baja">
+                <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <span>Desactivados</span>
+            </a>
+
+            <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="btn btn-primary text-base font-semibold py-2.5 px-4 min-h-[44px]">
                 Volver
             </a>
         </div>
     </div>
 
-    <!-- Filtros en cascada: Turno -> Nivel -> Bachillerato -> Grado/Curso -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+    <!-- Filtros en cascada: Turno -> Nivel -> Bachillerato -> Grado/Curso (Tipografía Grande) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-            <label for="filtro-turno" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <label for="filtro-turno" class="block text-sm sm:text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 1. Turno
             </label>
-            <select id="filtro-turno" class="app-input w-full text-xs font-semibold">
+            <select id="filtro-turno" class="app-input w-full text-base font-semibold py-2.5 px-3 rounded-xl min-h-[46px]">
                 <option value="">Todos los turnos</option>
             </select>
         </div>
 
         <div>
-            <label for="filtro-nivel" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <label for="filtro-nivel" class="block text-sm sm:text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 2. Ciclo / Nivel
             </label>
-            <select id="filtro-nivel" class="app-input w-full text-xs font-semibold">
+            <select id="filtro-nivel" class="app-input w-full text-base font-semibold py-2.5 px-3 rounded-xl min-h-[46px]">
                 <option value="">Todos los ciclos</option>
             </select>
         </div>
 
         <div>
-            <label for="filtro-bachillerato" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <label for="filtro-bachillerato" class="block text-sm sm:text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 3. Bachillerato
             </label>
-            <select id="filtro-bachillerato" class="app-input w-full text-xs font-semibold">
+            <select id="filtro-bachillerato" class="app-input w-full text-base font-semibold py-2.5 px-3 rounded-xl min-h-[46px]">
                 <option value="">Todos / Sin bachillerato</option>
             </select>
         </div>
 
         <div>
-            <label for="filtro-grado" class="block text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1.5">
+            <label for="filtro-grado" class="block text-sm sm:text-base font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-300 mb-2">
                 4. Grado o Curso *
             </label>
-            <select id="filtro-grado" class="app-input w-full text-xs font-bold border-blue-400 dark:border-blue-500 focus:border-blue-600">
+            <select id="filtro-grado" class="app-input w-full text-base font-bold py-2.5 px-3 rounded-xl min-h-[46px] border-blue-400 dark:border-blue-500 focus:border-blue-600">
                 <option value="">Seleccione grado o curso...</option>
                 <option value="TODOS">-- Ver todos los cursos --</option>
             </select>
@@ -91,177 +96,92 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     </div>
 
     <!-- Tira de Metadatos del Grado Seleccionado -->
-    <div id="info-grado-seleccionado" class="hidden p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 flex flex-wrap items-center justify-between gap-4 text-xs">
-        <div class="flex flex-wrap items-center gap-4">
-            <span class="font-bold text-blue-800 dark:text-blue-300 text-sm flex items-center gap-1.5">
-                <span id="meta-grado-nombre" class="font-extrabold text-base">3° BTI</span>
+    <div id="info-grado-seleccionado" class="hidden p-5 rounded-3xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex flex-wrap items-center justify-between gap-4 text-base">
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="font-bold text-blue-900 dark:text-blue-200 text-lg flex items-center gap-2">
+                <span id="meta-grado-nombre" class="font-extrabold text-xl text-blue-900 dark:text-blue-100">3° BTI</span>
             </span>
             <span class="text-slate-300 dark:text-slate-700">•</span>
-            <span class="text-slate-600 dark:text-slate-300">Aula: <strong id="meta-grado-aula" class="text-slate-800 dark:text-slate-100 font-bold">-</strong></span>
+            <span class="text-slate-700 dark:text-slate-300 font-medium">Aula: <strong id="meta-grado-aula" class="text-slate-900 dark:text-white font-bold">-</strong></span>
             <span class="text-slate-300 dark:text-slate-700">•</span>
-            <span class="text-slate-600 dark:text-slate-300">Turno: <strong id="meta-grado-turno" class="text-slate-800 dark:text-slate-100 font-bold">-</strong></span>
+            <span class="text-slate-700 dark:text-slate-300 font-medium">Turno: <strong id="meta-grado-turno" class="text-slate-900 dark:text-white font-bold">-</strong></span>
         </div>
 
-        <div class="flex items-center gap-3">
-            <div class="px-3 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-blue-200 dark:border-blue-800 font-semibold text-slate-700 dark:text-slate-300">
-                Matriculados: <span id="meta-total-estudiantes" class="font-bold text-blue-600 dark:text-blue-400">0</span>
+        <div class="flex items-center gap-3 flex-wrap">
+            <div class="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-800 font-semibold text-slate-800 dark:text-slate-200 text-base">
+                Matriculados: <span id="meta-total-estudiantes" class="font-extrabold text-blue-700 dark:text-blue-300">0</span>
             </div>
-            <div class="px-3 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-blue-200 dark:border-blue-800 font-semibold text-slate-700 dark:text-slate-300">
-                Con Huella: <span id="meta-total-huellas" class="font-bold text-emerald-600 dark:text-emerald-400">0</span>
+            <div class="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-800 font-semibold text-slate-800 dark:text-slate-200 text-base">
+                Con Huella: <span id="meta-total-huellas" class="font-extrabold text-emerald-600 dark:text-emerald-400">0</span>
             </div>
-            <div class="px-3 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-blue-200 dark:border-blue-800 font-semibold text-slate-700 dark:text-slate-300">
-                Con Tutor: <span id="meta-total-tutores" class="font-bold text-indigo-600 dark:text-indigo-400">0</span>
+            <div class="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-800 font-semibold text-slate-800 dark:text-slate-200 text-base">
+                Con Tutor: <span id="meta-total-tutores" class="font-extrabold text-indigo-600 dark:text-indigo-400">0</span>
             </div>
         </div>
     </div>
 
     <!-- Estado Inicial / Prompt de Selección (cuando NO se ha elegido curso) -->
-    <div id="prompt-seleccion-grado" class="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <div class="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto text-2xl">
+    <div id="prompt-seleccion-grado" class="p-10 sm:p-14 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center mx-auto text-3xl font-bold border border-blue-200 dark:border-blue-800">
             🔍
         </div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">
+        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
             Seleccioná un grado o curso para consultar la nómina
         </h3>
-        <p class="text-xs text-slate-500 max-w-md mx-auto">
-            Para garantizar la máxima velocidad del sistema, filtrá por turno, ciclo o bachillerato en los selectores superiores para consultar el curso deseado.
+        <p class="text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+            Filtrá por turno, ciclo o bachillerato en los selectores superiores para consultar la nómina completa de alumnos matriculados.
         </p>
-        <button type="button" onclick="cargarEstudiantes('TODOS')" class="btn btn-secondary text-xs py-2 px-4 font-semibold inline-flex items-center gap-1.5 mt-2">
-            <span>Ver todos los estudiantes del colegio</span>
-        </button>
+        <div class="pt-2">
+            <button type="button" onclick="cargarEstudiantes('TODOS')" class="btn btn-secondary text-base py-3 px-6 font-bold inline-flex items-center gap-2 min-h-[46px] shadow-sm">
+                <span>Ver todos los estudiantes del colegio</span>
+            </button>
+        </div>
     </div>
 
-    <!-- Contenedor Principal de la Tabla de Estudiantes -->
+    <!-- Contenedor Principal de la Tabla / Lista de Estudiantes -->
     <div id="contenedor-tabla-estudiantes" class="hidden space-y-4">
         
-        <!-- Barra de búsqueda local y conteo -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <!-- Barra de búsqueda local y conteo accesible -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="relative flex-1 max-w-md">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </span>
-                <input type="text" id="busqueda-estudiantes-filtro" placeholder="Filtrar por nombre, apellido o CI en esta nómina..."
-                       class="app-input w-full pl-9 pr-4 text-xs">
+                <input type="text" id="busqueda-estudiantes-filtro" placeholder="Buscar por nombre, apellido o cédula..."
+                       class="app-input w-full pl-11 pr-4 py-3 text-base rounded-2xl min-h-[46px]">
             </div>
 
-            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Mostrando <span id="contador-filtrados" class="font-bold text-slate-800 dark:text-slate-100">0</span> de <span id="contador-total" class="font-bold">0</span> alumnos
+            <div class="text-base text-slate-700 dark:text-slate-300 font-semibold">
+                Mostrando <span id="contador-filtrados" class="font-extrabold text-blue-700 dark:text-blue-300">0</span> de <span id="contador-total" class="font-extrabold text-slate-900 dark:text-white">0</span> alumnos
             </div>
         </div>
 
-        <!-- Tabla -->
-        <div class="app-table-wrap rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-            <table class="min-w-full text-xs">
-                <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider">
-                    <tr>
-                        <th class="p-3.5 text-left">CI</th>
-                        <th class="p-3.5 text-left">Estudiante</th>
-                        <th class="p-3.5 text-left">Grado / Curso</th>
-                        <th class="p-3.5 text-center">Materias</th>
-                        <th class="p-3.5 text-left">Huella Biométrica</th>
-                        <th class="p-3.5 text-left">Tutores / Familia</th>
-                        <th class="p-3.5 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-estudiantes-body" class="divide-y divide-slate-100 dark:divide-slate-800">
-                    <!-- Filas dinámicas -->
-                </tbody>
-            </table>
+        <!-- Tabla Rediseñada: Fuentes Grandes (>= 16px / 12 pt) y Revelación Progresiva -->
+        <div class="app-table-wrap rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-base">
+                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 text-sm sm:text-base font-bold uppercase tracking-wider">
+                        <tr>
+                            <th class="py-4 px-5 text-left">Estudiante & Cédula</th>
+                            <th class="py-4 px-5 text-left">Curso & Matrícula</th>
+                            <th class="py-4 px-5 text-left">Estado Biométrico</th>
+                            <th class="py-4 px-5 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-estudiantes-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Filas dinámicas -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
 
-    <!-- Modal Crear Estudiante -->
-    <div id="modal-crear-estudiante" class="app-modal hidden" role="dialog" aria-modal="true">
-        <div class="app-modal-dialog max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
-            <div class="flex items-start justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Registrar Nuevo Estudiante</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Crea la ficha del alumno y matricula automáticamente en sus materias.</p>
-                </div>
-                <button type="button" onclick="cerrarModalCrearEstudiante()" class="app-modal-close text-xl font-bold">×</button>
-            </div>
-
-            <form id="form-crear-estudiante" class="space-y-3 text-xs">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Nombre *</label>
-                        <input type="text" name="nombre" class="app-input w-full text-xs" required>
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Apellido *</label>
-                        <input type="text" name="apellido" class="app-input w-full text-xs" required>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Cédula de Identidad *</label>
-                    <input type="text" name="cedula_identidad" placeholder="Ej: 6306661" class="app-input w-full text-xs font-mono" required>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Servirá como usuario y contraseña inicial para el acceso del alumno.</p>
-                </div>
-
-                <div>
-                    <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Grado / Curso *</label>
-                    <select name="id_grado" id="modal-crear-grado-select" class="app-input w-full text-xs font-semibold" required>
-                        <option value="">Seleccione grado o curso...</option>
-                    </select>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <button type="button" onclick="cerrarModalCrearEstudiante()" class="btn btn-muted text-xs py-2 px-4">Cancelar</button>
-                    <button type="submit" id="btn-submit-crear-est" class="btn btn-success text-xs py-2 px-5 font-bold">Guardar Estudiante</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Editar Estudiante -->
-    <div id="modal-editar-estudiante" class="app-modal hidden" role="dialog" aria-modal="true">
-        <div class="app-modal-dialog max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 space-y-4">
-            <div class="flex items-start justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Editar Datos del Estudiante</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Actualizá los datos de filiación o cambiá el grado asignado.</p>
-                </div>
-                <button type="button" onclick="cerrarModalEditarEstudiante()" class="app-modal-close text-xl font-bold">×</button>
-            </div>
-
-            <form id="form-editar-estudiante" class="space-y-3 text-xs">
-                <input type="hidden" name="id_estudiante" id="edit-id-estudiante">
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Nombre *</label>
-                        <input type="text" name="nombre" id="edit-nombre" class="app-input w-full text-xs" required>
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Apellido *</label>
-                        <input type="text" name="apellido" id="edit-apellido" class="app-input w-full text-xs" required>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Cédula de Identidad *</label>
-                    <input type="text" name="cedula_identidad" id="edit-cedula" class="app-input w-full text-xs font-mono" required>
-                </div>
-
-                <div>
-                    <label class="block mb-1 font-semibold text-slate-700 dark:text-slate-300">Grado / Curso</label>
-                    <select name="id_grado" id="edit-grado" class="app-input w-full text-xs font-semibold">
-                        <option value="">Seleccione grado o curso...</option>
-                    </select>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Al cambiar de curso, se actualizarán las matrículas correspondientes.</p>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <button type="button" onclick="cerrarModalEditarEstudiante()" class="btn btn-muted text-xs py-2 px-4">Cancelar</button>
-                    <button type="submit" id="btn-submit-editar-est" class="btn btn-primary text-xs py-2 px-5 font-bold">Actualizar Datos</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modales Importar y Gestor de Familias -->
+    <!-- Modales Modulares Incluidos -->
+    <?php require_once __DIR__ . '/modal_detalle_estudiante.php'; ?>
+    <?php require_once __DIR__ . '/modal_biometria_estudiante.php'; ?>
+    <?php require_once __DIR__ . '/modal_crear_estudiante.php'; ?>
+    <?php require_once __DIR__ . '/modal_editar_estudiante.php'; ?>
     <?php require_once __DIR__ . '/modal_importar_estudiantes.php'; ?>
     <?php require_once __DIR__ . '/../tutores/modal_vincular_familia.php'; ?>
 
@@ -272,9 +192,26 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 <script>
 let catalogoGrados = [];
 let estudiantesCargados = [];
+let estudianteSeleccionadoActivo = null;
 
 function getBaseUrl() {
     return (window.BASE_URL || '').replace(/\/+$/, '');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function obtenerIniciales(nombre, apellido) {
+    const n = (nombre || '').trim().charAt(0).toUpperCase();
+    const a = (apellido || '').trim().charAt(0).toUpperCase();
+    return (n + a) || 'ES';
 }
 
 // 1. Cargar catálogo de grados para alimentar los filtros en cascada
@@ -415,12 +352,12 @@ async function cargarEstudiantes(idGrado) {
     if (tableContainer) tableContainer.classList.remove('hidden');
 
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">Cargando nómina de estudiantes...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-base text-slate-500 font-semibold">Cargando nómina de estudiantes...</td></tr>';
     }
 
     // Actualizar metadatos del encabezado
     if (idGrado === 'TODOS') {
-        document.getElementById('meta-grado-nombre').textContent = 'Todos los Cursos';
+        document.getElementById('meta-grado-nombre').textContent = 'Todos los Cursos del Colegio';
         document.getElementById('meta-grado-aula').textContent = 'Todas las aulas';
         document.getElementById('meta-grado-turno').textContent = 'Todos los turnos';
     } else {
@@ -433,8 +370,20 @@ async function cargarEstudiantes(idGrado) {
     }
 
     try {
-        const param = idGrado === 'TODOS' ? '' : `?id_grado=${idGrado}`;
-        const res = await fetch(`${getBaseUrl()}/src/api/Estudiante/leer_estudiantes.php${param}`);
+        let params = [];
+        if (idGrado !== 'TODOS') {
+            params.push(`id_grado=${encodeURIComponent(idGrado)}`);
+        } else {
+            const fTurno = document.getElementById('filtro-turno')?.value;
+            const fNivel = document.getElementById('filtro-nivel')?.value;
+            const fBachi = document.getElementById('filtro-bachillerato')?.value;
+            if (fTurno) params.push(`id_turno=${encodeURIComponent(fTurno)}`);
+            if (fNivel) params.push(`id_nivel=${encodeURIComponent(fNivel)}`);
+            if (fBachi) params.push(`id_bachillerato=${encodeURIComponent(fBachi)}`);
+        }
+
+        const qs = params.length > 0 ? `?${params.join('&')}` : '';
+        const res = await fetch(`${getBaseUrl()}/src/api/Estudiante/leer_estudiantes.php${qs}`);
         const json = await res.json();
         estudiantesCargados = json.data || [];
 
@@ -450,7 +399,9 @@ async function cargarEstudiantes(idGrado) {
         renderizarTablaEstudiantes(estudiantesCargados);
     } catch (e) {
         console.error("Error al cargar estudiantes:", e);
-        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-rose-500 font-medium">Error al cargar la nómina de estudiantes</td></tr>';
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-base text-rose-600 font-bold">Error al cargar la nómina de estudiantes.</td></tr>';
+        }
     }
 }
 
@@ -461,6 +412,7 @@ function mostrarPromptVacio() {
     estudiantesCargados = [];
 }
 
+// 3. Renderizar Tabla de Estudiantes (Rediseñada para Máxima Legibilidad)
 function renderizarTablaEstudiantes(lista) {
     const tbody = document.getElementById('tabla-estudiantes-body');
     const cntFiltrados = document.getElementById('contador-filtrados');
@@ -472,7 +424,14 @@ function renderizarTablaEstudiantes(lista) {
     if (!tbody) return;
 
     if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">No se encontraron estudiantes para mostrar</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="p-10 text-center text-slate-500">
+                    <p class="font-extrabold text-lg text-slate-800 dark:text-slate-200">No se encontraron estudiantes</p>
+                    <p class="text-base mt-1">Pruebe ajustando los filtros superiores o registre un nuevo estudiante.</p>
+                </td>
+            </tr>
+        `;
         return;
     }
 
@@ -480,74 +439,91 @@ function renderizarTablaEstudiantes(lista) {
         const tieneHuella = parseInt(est.huella_registrada || 0) > 0 || parseInt(est.huella_id || 0) > 0;
         const totalTut = parseInt(est.total_tutores || 0);
 
-        let badgeTutores = '';
-        if (totalTut > 0) {
-            badgeTutores = `
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px] truncate max-w-[230px]" title="${est.tutores_resumen || ''}">
-                        👤 ${est.tutores_resumen || totalTut + ' tutor(es)'}
-                    </span>
-                    <button type="button" onclick="abrirModalVincular(${est.id_estudiante}, '${escaparJs(est.nombre)}', '${escaparJs(est.apellido)}', '${est.cedula_identidad}', '${escaparJs(est.grado || '')}')"
-                            class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold">
-                        + Otro
-                    </button>
-                </div>`;
-        } else {
-            badgeTutores = `
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-400 text-[11px]">Sin tutor</span>
-                    <button type="button" onclick="abrirModalVincular(${est.id_estudiante}, '${escaparJs(est.nombre)}', '${escaparJs(est.apellido)}', '${est.cedula_identidad}', '${escaparJs(est.grado || '')}')"
-                            class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] hover:bg-indigo-100 transition">
-                        + Vincular
-                    </button>
-                </div>`;
-        }
+        // Badge Biométrico de Alto Contraste (>= 15px)
+        const huellaBadge = tieneHuella
+            ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                <span>Huella Vinculada</span>
+               </span>`
+            : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span>Sin registrar</span>
+               </span>`;
 
+        const iniciales = obtenerIniciales(est.nombre, est.apellido);
         const jsonEst = JSON.stringify(est).replace(/"/g, '&quot;');
 
         return `
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                <td class="p-3 font-mono font-bold text-slate-700 dark:text-slate-200">${est.cedula_identidad}</td>
-                <td class="p-3">
-                    <span class="font-bold text-slate-900 dark:text-white text-xs">${est.apellido}, ${est.nombre}</span>
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                <!-- Columna 1: Estudiante & Cédula -->
+                <td class="py-4 px-5">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 flex items-center justify-center font-black text-lg border border-blue-200 dark:border-blue-800 shrink-0">
+                            ${iniciales}
+                        </div>
+                        <div>
+                            <div class="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
+                                ${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}
+                            </div>
+                            <div class="text-base text-slate-700 dark:text-slate-300 font-mono mt-0.5">
+                                CI: <strong class="text-blue-700 dark:text-blue-300 font-bold">${escapeHtml(est.cedula_identidad)}</strong>
+                            </div>
+                        </div>
+                    </div>
                 </td>
-                <td class="p-3">
-                    <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
-                        ${est.grado || 'Sin curso'}
-                    </span>
+
+                <!-- Columna 2: Curso & Matrícula -->
+                <td class="py-4 px-5">
+                    <div class="space-y-1">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100/80 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-sm sm:text-base">
+                            🏫 ${escapeHtml(est.grado || 'Sin curso asignado')}
+                        </span>
+                        <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                            ${est.materias_matriculadas || 0} materias matriculadas
+                        </div>
+                    </div>
                 </td>
-                <td class="p-3 text-center">
-                    <span class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-[10px]">
-                        ${est.materias_matriculadas || 0} mat.
-                    </span>
-                </td>
-                <td class="p-3">
-                    ${tieneHuella 
-                        ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200 dark:border-emerald-500/20">✓ Huella Activa</span>`
-                        : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px] font-medium border border-amber-200 dark:border-amber-500/20">⚠ Sin huella</span>`
-                    }
-                </td>
-                <td class="p-3">
-                    ${badgeTutores}
-                </td>
-                <td class="p-3 text-right">
-                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                        <button type="button" onclick="abrirModalEditarEstudiante(${jsonEst})"
-                                class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold text-[11px] text-slate-700 dark:text-slate-200 transition">
-                            Editar
+
+                <!-- Columna 3: Estado Biométrico -->
+                <td class="py-4 px-5">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${huellaBadge}
+                        <button type="button" onclick="abrirModalBiometriaEstudiante(${est.id_estudiante})"
+                                class="btn btn-secondary text-sm font-bold py-1.5 px-3 min-h-[38px] inline-flex items-center gap-1.5"
+                                title="Gestionar registro biométrico en el sensor ESP32">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.99 7.132"></path></svg>
+                            <span>Biometría</span>
                         </button>
+                    </div>
+                </td>
+
+                <!-- Columna 4: Acciones Principales con Objetivos Táctiles Grandes -->
+                <td class="py-4 px-5 text-right whitespace-nowrap">
+                    <div class="inline-flex items-center gap-2 justify-end">
+                        <button type="button" onclick="abrirModalDetalleEstudiante(${est.id_estudiante})"
+                                class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
+                                title="Ver ficha integral, tutores y expediente">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <span>Ver Ficha</span>
+                        </button>
+
+                        <button type="button" onclick="abrirModalEditarEstudiante(${jsonEst})"
+                                class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
+                                title="Editar datos del estudiante">
+                            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            <span>Editar</span>
+                        </button>
+
                         <a href="${getBaseUrl()}/mvc/views/tutores/expediente_estudiante.php?id_estudiante=${est.id_estudiante}"
-                           class="px-2 py-1 rounded bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px] transition">
-                            Expediente
+                           class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
+                           title="Consultar historial de faltas, calificaciones y citaciones">
+                            <span>Expediente</span>
                         </a>
-                        ${est.user_id_global ? `
-                        <button type="button" onclick="descargarYGuardarTemplate('${est.user_id_global}', 'estudiante')"
-                                class="px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 font-semibold text-[11px] transition" title="Registrar huella biométrica">
-                            Huella
-                        </button>` : ''}
+
                         <button type="button" onclick="desactivarEstudiante(${est.id_estudiante}, '${escaparJs(est.nombre)} ${escaparJs(est.apellido)}')"
-                                class="px-2 py-1 rounded hover:bg-rose-50 text-rose-600 text-[11px] font-medium transition" title="Desactivar estudiante">
-                            ✕
+                                class="btn btn-danger text-base font-semibold py-2.5 px-3 min-h-[44px] inline-flex items-center justify-center"
+                                title="Desactivar estudiante">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
                 </td>
@@ -561,32 +537,249 @@ function escaparJs(str) {
     return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-// 3. Exportación dinámica
-function exportarNominaActual() {
-    const fGrado = document.getElementById('filtro-grado');
-    const fTurno = document.getElementById('filtro-turno');
-    const fNivel = document.getElementById('filtro-nivel');
-    const fBachi = document.getElementById('filtro-bachillerato');
+// 4. Búsqueda local predictiva
+document.addEventListener('DOMContentLoaded', () => {
+    cargarEstructuraCascada();
 
-    const params = new URLSearchParams();
-    if (fGrado && fGrado.value && fGrado.value !== 'TODOS') params.append('id_grado', fGrado.value);
-    if (fTurno && fTurno.value) params.append('id_turno', fTurno.value);
-    if (fNivel && fNivel.value) params.append('id_nivel', fNivel.value);
-    if (fBachi && fBachi.value) params.append('id_bachillerato', fBachi.value);
+    const inputBusqueda = document.getElementById('busqueda-estudiantes-filtro');
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('input', (e) => {
+            const q = (e.target.value || '').trim().toLowerCase();
+            if (!q) {
+                renderizarTablaEstudiantes(estudiantesCargados);
+                return;
+            }
 
-    const qs = params.toString() ? `?${params.toString()}` : '';
-    window.location.href = `${getBaseUrl()}/src/api/Estudiante/exportar_estudiantes.php${qs}`;
+            const filtrados = estudiantesCargados.filter(est => {
+                const nom = (est.nombre || '').toLowerCase();
+                const ape = (est.apellido || '').toLowerCase();
+                const ci = (est.cedula_identidad || '').toLowerCase();
+                const gra = (est.grado || '').toLowerCase();
+                const tut = (est.tutores_resumen || '').toLowerCase();
+                return nom.includes(q) || ape.includes(q) || ci.includes(q) || gra.includes(q) || tut.includes(q);
+            });
+
+            renderizarTablaEstudiantes(filtrados);
+        });
+    }
+
+    // Configurar Formulario Crear Estudiante
+    const formCrear = document.getElementById('form-crear-estudiante');
+    if (formCrear) {
+        formCrear.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-crear-est');
+            if (btn) btn.disabled = true;
+
+            try {
+                const formData = new FormData(formCrear);
+                const res = await fetch(`${getBaseUrl()}/src/api/Estudiante/crear_estudiante.php`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+
+                if (!res.ok || json.status !== 'success') {
+                    throw new Error(json.message || "Error al registrar estudiante.");
+                }
+
+                cerrarModalCrearEstudiante();
+                formCrear.reset();
+
+                const selG = document.getElementById('filtro-grado');
+                const val = selG ? selG.value : 'TODOS';
+                cargarEstudiantes(val || 'TODOS');
+            } catch (err) {
+                alert("Error al registrar estudiante: " + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
+    }
+
+    // Configurar Formulario Editar Estudiante
+    const formEditar = document.getElementById('form-editar-estudiante');
+    if (formEditar) {
+        formEditar.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-editar-est');
+            if (btn) btn.disabled = true;
+
+            try {
+                const formData = new FormData(formEditar);
+                const res = await fetch(`${getBaseUrl()}/src/api/Estudiante/actualizar_estudiante.php`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+
+                if (!res.ok || json.status !== 'success') {
+                    throw new Error(json.message || "Error al actualizar estudiante.");
+                }
+
+                cerrarModalEditarEstudiante();
+
+                const selG = document.getElementById('filtro-grado');
+                const val = selG ? selG.value : 'TODOS';
+                cargarEstudiantes(val || 'TODOS');
+            } catch (err) {
+                alert("Error al actualizar estudiante: " + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        });
+    }
+});
+
+// ==========================================
+// CONTROLADORES DE SUBMODALES
+// ==========================================
+
+// Submodal 1: Ficha Integral del Estudiante
+function abrirModalDetalleEstudiante(idEstudiante) {
+    const est = estudiantesCargados.find(e => parseInt(e.id_estudiante) === parseInt(idEstudiante));
+    if (!est) return;
+
+    estudianteSeleccionadoActivo = est;
+    const modal = document.getElementById('modal-detalle-estudiante');
+    if (!modal) return;
+
+    // Encabezado
+    document.getElementById('mde-nombre-estudiante').textContent = `${est.nombre} ${est.apellido}`;
+    document.getElementById('mde-cedula-estudiante').textContent = est.cedula_identidad || 'Sin CI';
+    document.getElementById('mde-avatar').textContent = obtenerIniciales(est.nombre, est.apellido);
+    document.getElementById('mde-user-id-global').textContent = est.user_id_global || 'Pendiente de asignación';
+
+    // Situación Académica
+    document.getElementById('mde-grado-texto').textContent = est.grado || 'Sin curso asignado';
+    document.getElementById('mde-materias-texto').textContent = `${est.materias_matriculadas || 0} asignaturas activas`;
+
+    // Estado biométrico
+    const tieneHuella = (parseInt(est.huella_registrada || 0) > 0) || (parseInt(est.huella_id || 0) > 0);
+    const badgeHuella = document.getElementById('mde-badge-huella-resumen');
+    if (badgeHuella) {
+        badgeHuella.innerHTML = tieneHuella
+            ? '<span class="text-emerald-700 dark:text-emerald-300 font-bold">✓ Huella Registrada en Base de Datos</span>'
+            : '<span class="text-amber-700 dark:text-amber-400 font-bold">⚠️ Pendiente de Captura en Sensor</span>';
+    }
+
+    // Tutores
+    const contTutores = document.getElementById('mde-tutores-texto');
+    if (contTutores) {
+        if (est.tutores_resumen && est.tutores_resumen.trim()) {
+            contTutores.innerHTML = `<span class="font-bold text-indigo-900 dark:text-indigo-200">👨‍👩‍👧 Responsables registrados:</span><br>${escapeHtml(est.tutores_resumen)}`;
+        } else {
+            contTutores.textContent = 'Este alumno no cuenta con tutores o familiares vinculados aún.';
+        }
+    }
+
+    // Botón Vincular Tutor
+    const btnVincular = document.getElementById('mde-btn-vincular-tutor');
+    if (btnVincular) {
+        btnVincular.onclick = () => {
+            cerrarModalDetalleEstudiante();
+            abrirModalVincular(est.id_estudiante, est.nombre, est.apellido, est.cedula_identidad, est.grado || '');
+        };
+    }
+
+    // Botón Expediente
+    const linkExp = document.getElementById('mde-link-expediente');
+    if (linkExp) {
+        linkExp.href = `${getBaseUrl()}/mvc/views/tutores/expediente_estudiante.php?id_estudiante=${est.id_estudiante}`;
+    }
+
+    // Botón Editar
+    const btnEditar = document.getElementById('mde-btn-editar-desde-ficha');
+    if (btnEditar) {
+        btnEditar.onclick = () => {
+            cerrarModalDetalleEstudiante();
+            abrirModalEditarEstudiante(est);
+        };
+    }
+
+    // Botón Biometría
+    const btnBio = document.getElementById('mde-btn-abrir-biometria');
+    if (btnBio) {
+        btnBio.onclick = () => {
+            cerrarModalDetalleEstudiante();
+            abrirModalBiometriaEstudiante(est.id_estudiante);
+        };
+    }
+
+    modal.classList.remove('hidden');
 }
 
-// Función callback para recargar la nómina actual tras importar
-window.recargarListaEstudiantesActual = function() {
-    const fGrado = document.getElementById('filtro-grado');
-    if (fGrado && fGrado.value) {
-        cargarEstudiantes(fGrado.value);
-    }
-};
+function cerrarModalDetalleEstudiante() {
+    const modal = document.getElementById('modal-detalle-estudiante');
+    if (modal) modal.classList.add('hidden');
+}
 
-// 4. Modales Crear y Editar Estudiante
+// Submodal 2: Asistente de Huella Biométrica Estudiantil
+function abrirModalBiometriaEstudiante(idEstudiante) {
+    const est = estudiantesCargados.find(e => parseInt(e.id_estudiante) === parseInt(idEstudiante));
+    if (!est) return;
+
+    estudianteSeleccionadoActivo = est;
+    const modal = document.getElementById('modal-biometria-estudiante');
+    if (!modal) return;
+
+    document.getElementById('mbe-nombre-estudiante').textContent = `${est.nombre} ${est.apellido}`;
+    document.getElementById('mbe-cedula-estudiante').textContent = est.cedula_identidad || 'Sin CI';
+    document.getElementById('mbe-grado-estudiante').textContent = est.grado || 'Sin curso';
+
+    // IP del registrador desde configuración centralizada
+    const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "";
+    const ipElem = document.getElementById('mbe-ip-nodo');
+    if (ipElem) ipElem.textContent = ipESP32 || 'Configurado en el servidor';
+
+    const tieneHuella = (parseInt(est.huella_registrada || 0) > 0) || (parseInt(est.huella_id || 0) > 0);
+    const badgeWrap = document.getElementById('mbe-badge-estado');
+    if (badgeWrap) {
+        badgeWrap.className = tieneHuella
+            ? 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+            : 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
+        badgeWrap.innerHTML = tieneHuella ? '✓ Huella Registrada' : '⚠️ Sin Huella Registrada';
+    }
+
+    // Limpiar feedback anterior
+    const feedbackBox = document.getElementById('mbe-feedback-box');
+    if (feedbackBox) feedbackBox.classList.add('hidden');
+
+    const btnCaptura = document.getElementById('mbe-btn-iniciar-captura');
+    if (btnCaptura) {
+        btnCaptura.disabled = false;
+        btnCaptura.onclick = async () => {
+            btnCaptura.disabled = true;
+            if (feedbackBox) {
+                feedbackBox.className = 'p-4 rounded-2xl border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-center space-y-2 block';
+                feedbackBox.classList.remove('hidden');
+                document.getElementById('mbe-feedback-spinner').classList.remove('hidden');
+                document.getElementById('mbe-feedback-msg').textContent = 'Conectando con sensor registrador y esperando huella...';
+            }
+
+            try {
+                await descargarYGuardarTemplate(est.user_id_global, 'estudiante');
+            } catch (err) {
+                if (feedbackBox) {
+                    feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
+                    document.getElementById('mbe-feedback-spinner').classList.add('hidden');
+                    document.getElementById('mbe-feedback-msg').textContent = 'Error: ' + err.message;
+                }
+            } finally {
+                btnCaptura.disabled = false;
+            }
+        };
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function cerrarModalBiometriaEstudiante() {
+    const modal = document.getElementById('modal-biometria-estudiante');
+    if (modal) modal.classList.add('hidden');
+}
+
+// Modales Crear y Editar Estudiante
 function abrirModalCrearEstudiante() {
     const modal = document.getElementById('modal-crear-estudiante');
     const form = document.getElementById('form-crear-estudiante');
@@ -601,15 +794,11 @@ function abrirModalCrearEstudiante() {
     }
 
     modal.classList.remove('hidden');
-    document.body.classList.add('modal-open');
 }
 
 function cerrarModalCrearEstudiante() {
     const modal = document.getElementById('modal-crear-estudiante');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.classList.remove('modal-open');
-    }
+    if (modal) modal.classList.add('hidden');
 }
 
 function abrirModalEditarEstudiante(est) {
@@ -623,15 +812,11 @@ function abrirModalEditarEstudiante(est) {
     document.getElementById('edit-grado').value = est.id_grado || '';
 
     modal.classList.remove('hidden');
-    document.body.classList.add('modal-open');
 }
 
 function cerrarModalEditarEstudiante() {
     const modal = document.getElementById('modal-editar-estudiante');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.classList.remove('modal-open');
-    }
+    if (modal) modal.classList.add('hidden');
 }
 
 async function desactivarEstudiante(idEstudiante, nombreCompleto) {
@@ -648,113 +833,42 @@ async function desactivarEstudiante(idEstudiante, nombreCompleto) {
         const json = await res.json();
 
         if (json.status === 'success') {
-            if (window.Toast) Toast.success("Estudiante dado de baja correctamente");
-            window.recargarListaEstudiantesActual();
+            const fGrado = document.getElementById('filtro-grado');
+            const val = fGrado ? fGrado.value : 'TODOS';
+            cargarEstudiantes(val || 'TODOS');
         } else {
-            if (window.Toast) Toast.error(json.message || "Error al desactivar estudiante");
+            alert(json.message || "Error al dar de baja");
         }
-    } catch (e) {
-        console.error(e);
-        if (window.Toast) Toast.error("Error al procesar la baja del estudiante");
+    } catch (err) {
+        console.error("Error al desactivar estudiante:", err);
+        alert("Error de red al desactivar estudiante");
     }
 }
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', () => {
-    cargarEstructuraCascada();
+// 5. Exportación dinámica
+function exportarNominaActual() {
+    const fGrado = document.getElementById('filtro-grado')?.value || '';
+    const fTurno = document.getElementById('filtro-turno')?.value || '';
+    const fNivel = document.getElementById('filtro-nivel')?.value || '';
+    const fBachi = document.getElementById('filtro-bachillerato')?.value || '';
 
-    // Filtro de búsqueda en tiempo real dentro de la lista actual
-    const inputFiltro = document.getElementById('busqueda-estudiantes-filtro');
-    if (inputFiltro) {
-        inputFiltro.addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            if (!q) {
-                renderizarTablaEstudiantes(estudiantesCargados);
-                return;
-            }
-            const filtrados = estudiantesCargados.filter(est => 
-                (est.nombre && est.nombre.toLowerCase().includes(q)) ||
-                (est.apellido && est.apellido.toLowerCase().includes(q)) ||
-                (est.cedula_identidad && est.cedula_identidad.includes(q)) ||
-                (est.grado && est.grado.toLowerCase().includes(q))
-            );
-            renderizarTablaEstudiantes(filtrados);
-        });
+    let params = [];
+    if (fGrado && fGrado !== 'TODOS') params.push(`id_grado=${encodeURIComponent(fGrado)}`);
+    if (fTurno) params.push(`id_turno=${encodeURIComponent(fTurno)}`);
+    if (fNivel) params.push(`id_nivel=${encodeURIComponent(fNivel)}`);
+    if (fBachi) params.push(`id_bachillerato=${encodeURIComponent(fBachi)}`);
+
+    const qs = params.length > 0 ? `?${params.join('&')}` : '';
+    window.location.href = `${getBaseUrl()}/src/api/Estudiante/exportar_estudiantes.php${qs}`;
+}
+
+window.recargarListaEstudiantesActual = function() {
+    const fGrado = document.getElementById('filtro-grado');
+    const val = fGrado ? fGrado.value : 'TODOS';
+    if (val) {
+        cargarEstudiantes(val);
     }
-
-    // Submit Crear Estudiante
-    const formCrear = document.getElementById('form-crear-estudiante');
-    if (formCrear) {
-        formCrear.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-crear-est');
-            if (btn) btn.disabled = true;
-
-            try {
-                const formData = new FormData(formCrear);
-                const res = await fetch(`${getBaseUrl()}/src/api/Estudiante/crear_estudiante.php`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const json = await res.json();
-
-                if (json.status === 'success') {
-                    if (window.Toast) Toast.success(json.message || "Estudiante registrado correctamente");
-                    cerrarModalCrearEstudiante();
-                    const selG = document.getElementById('filtro-grado');
-                    const gradoCreado = formData.get('id_grado');
-                    if (selG && gradoCreado) {
-                        selG.value = String(gradoCreado);
-                        cargarEstudiantes(gradoCreado);
-                    } else {
-                        window.recargarListaEstudiantesActual();
-                    }
-                } else {
-                    if (window.Toast) Toast.error(json.message || "Error al crear estudiante");
-                    else alert(json.message);
-                }
-            } catch (err) {
-                console.error(err);
-                if (window.Toast) Toast.error("Error de comunicación al registrar estudiante");
-            } finally {
-                if (btn) btn.disabled = false;
-            }
-        });
-    }
-
-    // Submit Editar Estudiante
-    const formEditar = document.getElementById('form-editar-estudiante');
-    if (formEditar) {
-        formEditar.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-editar-est');
-            if (btn) btn.disabled = true;
-
-            try {
-                const formData = new FormData(formEditar);
-                const res = await fetch(`${getBaseUrl()}/src/api/Estudiante/actualizar_estudiante.php`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const json = await res.json();
-
-                if (json.status === 'success') {
-                    if (window.Toast) Toast.success(json.message || "Estudiante actualizado correctamente");
-                    cerrarModalEditarEstudiante();
-                    window.recargarListaEstudiantesActual();
-                } else {
-                    if (window.Toast) Toast.error(json.message || "Error al actualizar");
-                    else alert(json.message);
-                }
-            } catch (err) {
-                console.error(err);
-                if (window.Toast) Toast.error("Error al actualizar estudiante");
-            } finally {
-                if (btn) btn.disabled = false;
-            }
-        });
-    }
-});
+};
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
