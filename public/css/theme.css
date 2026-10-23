@@ -42,6 +42,38 @@
     --color-page-header-to: #0F172A;
 }
 
+/* ==========================================================================
+   Escala Tipográfica y de Elementos Global (11pt / 13pt / 15pt)
+   ========================================================================== */
+html[data-font-size="11pt"] {
+    font-size: 11pt !important; /* ~14.67px base - Modo Compacto */
+}
+
+html[data-font-size="13pt"] {
+    font-size: 13pt !important; /* ~17.33px base - Modo Estándar Equilibrado */
+}
+
+html[data-font-size="15pt"] {
+    font-size: 15pt !important; /* ~20px base - Modo Grande Accesible */
+}
+
+@media (max-width: 640px) {
+    html[data-font-size="15pt"] {
+        font-size: 14pt !important; /* Suavizado en móviles pequeños para asegurar fluidez responsiva */
+    }
+}
+
+.btn-font-scale {
+    transition: all 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.btn-font-scale.is-active {
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.45);
+}
+
 /* Scrollbars Universales Modernos y Delicados */
 * {
     scrollbar-width: thin;
@@ -138,12 +170,38 @@ body {
         display: none !important;
     }
 
-    /* Ocultar icono de alternar modo oscuro en modo colapsado (tanto header como footer) */
-    .app-sidebar.is-collapsed .sidebar-theme-toggle,
+    /* Mostrar y centrar botón de tema en modo colapsado */
     .app-sidebar.is-collapsed .app-theme-btn,
-    html.sidebar-init-collapsed .app-sidebar .sidebar-theme-toggle,
     html.sidebar-init-collapsed .app-sidebar .app-theme-btn {
+        display: flex !important;
+        justify-content: center;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        height: 2.65rem;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    /* Ocultar selector expandido y mostrar botón mini de escala en modo colapsado */
+    .app-sidebar.is-collapsed .sidebar-font-scale-control,
+    .app-sidebar.is-collapsed .sidebar-font-scale-container .app-nav-text,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-font-scale-control,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-font-scale-container .app-nav-text {
         display: none !important;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-font-scale-container,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-font-scale-container {
+        padding: 0.2rem !important;
+        background: transparent !important;
+        border-color: transparent !important;
+    }
+
+    .app-sidebar.is-collapsed .sidebar-font-scale-mini,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-font-scale-mini {
+        display: block !important;
     }
 
     /* Logo compacto SE con el mismo espacio y dimensiones que los demas iconos del menu */

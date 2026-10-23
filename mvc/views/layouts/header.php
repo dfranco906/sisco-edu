@@ -33,6 +33,8 @@ if (!isset($_SESSION['id_usuario'])) {
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
+                const savedFontSize = localStorage.getItem('sisco_font_size') || '13pt';
+                document.documentElement.setAttribute('data-font-size', savedFontSize);
                 if (localStorage.getItem('sisco_sidebar_collapsed') === 'true' && window.innerWidth >= 768) {
                     document.documentElement.classList.add('sidebar-init-collapsed');
                 }

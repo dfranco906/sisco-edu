@@ -56,13 +56,20 @@
 
 ---
 
-## 📐 4. Escala Tipográfica Estándar
+## 📐 4. Escala Tipográfica Dinámica y Selector de Densidad (11pt / 13pt / 15pt)
 
-* **Títulos de Página:** `text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight` (30 - 36 pt).
-* **Títulos de Sección / Modales:** `text-xl sm:text-2xl font-bold text-slate-900` (18 - 24 pt).
-* **Títulos de Tarjetas / Nombres:** `text-lg sm:text-xl font-bold text-slate-900` (14 - 18 pt).
-* **Texto Base / Tablas / Cuerpos:** `text-base text-slate-800 leading-relaxed font-normal` (12 pt / 16 px).
-* **Metadatos Secundarios / Badges:** `text-sm font-bold uppercase tracking-wider` (10.5 - 11 pt / 14 - 15 px).
+Para dar libertad a los usuarios de elegir entre mayor densidad de información en pantalla o lectura descansada y accesible, el sistema cuenta con un selector de escala tipográfica ubicado en la barra lateral:
+
+* **Modo Compacto (`11pt` / ~14.67 px base):** Diseñado para usuarios que prefieren ver la mayor cantidad de registros y columnas a la vez sin necesidad de desplazarse, optimizando la densidad en pantallas estándar.
+* **Modo Estándar (`13pt` / ~17.33 px base — Por Defecto):** Tamaño equilibrado que cumple con la regla de accesibilidad para lectura cómoda y descanso visual.
+* **Modo Grande / Accesible (`15pt` / ~20 px base):** Pensado para directivos, docentes o adultos mayores con presbicia o visión reducida que utilicen gafas y requieran elementos grandes y claros.
+
+### Proporciones de Elementos según la Escala Dinámica:
+* **Títulos de Página:** `text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight` (escala proporcionalmente según rem).
+* **Títulos de Sección / Modales:** `text-xl sm:text-2xl font-bold text-slate-900`.
+* **Títulos de Tarjetas / Nombres:** `text-lg sm:text-xl font-bold text-slate-900`.
+* **Texto Base / Tablas / Cuerpos:** `text-base text-slate-800 leading-relaxed font-normal`.
+* **Metadatos Secundarios / Badges:** `text-sm font-bold uppercase tracking-wider`.
 
 ---
 

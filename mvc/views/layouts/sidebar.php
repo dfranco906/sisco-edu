@@ -187,18 +187,6 @@ $adminPaths = [
         </a>
 
         <div class="sidebar-header-actions flex items-center gap-1">
-            <!-- Botón Cambiar Tema (Header Sidebar - Oculto al colapsar) -->
-            <button type="button" data-action="toggle-theme"
-                    class="sidebar-theme-toggle hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
-                    title="Alternar Modo Oscuro / Claro" aria-label="Alternar tema claro y oscuro">
-                <svg class="theme-icon-sun w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <svg class="theme-icon-moon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-            </button>
-
             <!-- Botón Colapsar / Expandir (Solo Desktop) -->
             <button id="app-sidebar-collapse-btn" type="button"
                     class="sidebar-collapse-btn hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors group relative"
@@ -267,8 +255,8 @@ $adminPaths = [
         <?php endforeach; ?>
     </nav>
 
-    <!-- Alternar Tema y Botón de Cerrar Sesión -->
-    <div class="pt-3 mt-auto border-t border-slate-800/80 space-y-1">
+    <!-- Alternar Tema, Selector de Escala Visual y Botón de Cerrar Sesión -->
+    <div class="sidebar-footer pt-3 mt-auto border-t border-slate-800/80 space-y-2">
         <button type="button" data-action="toggle-theme"
            class="app-theme-btn w-full group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer"
            title="Alternar Modo Oscuro / Claro">
@@ -280,6 +268,54 @@ $adminPaths = [
             </svg>
             <span class="app-nav-text flex-1 truncate text-left">Modo Claro / Oscuro</span>
         </button>
+
+        <!-- Selector Triple de Tamaño de Elementos / Tipografía (11pt | 13pt | 15pt) -->
+        <div class="sidebar-font-scale-container px-2 py-2 rounded-xl bg-slate-900/70 border border-slate-800" role="group" aria-label="Selector de escala de texto">
+            <div class="flex items-center justify-between px-1.5 pb-1.5 app-nav-text">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h6" />
+                    </svg>
+                    <span>Tamaño de vista</span>
+                </span>
+                <span id="label-current-font-size" class="text-xs font-black text-blue-400">13pt</span>
+            </div>
+
+            <!-- Segmented Control Triple para Modo Expandido y Móvil -->
+            <div class="sidebar-font-scale-control flex items-center p-1 rounded-lg bg-slate-950/80 border border-slate-800 gap-1">
+                <button type="button"
+                        data-font-size="11pt"
+                        class="btn-font-scale flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
+                        title="Tamaño 11pt - Vista Compacta con mayor información en pantalla"
+                        aria-label="Tamaño compacto 11 puntos">
+                    11pt
+                </button>
+                <button type="button"
+                        data-font-size="13pt"
+                        class="btn-font-scale flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
+                        title="Tamaño 13pt - Vista Estándar Equilibrada"
+                        aria-label="Tamaño estándar 13 puntos">
+                    13pt
+                </button>
+                <button type="button"
+                        data-font-size="15pt"
+                        class="btn-font-scale flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
+                        title="Tamaño 15pt - Vista Grande Accesible para lectura descansada"
+                        aria-label="Tamaño grande accesible 15 puntos">
+                    15pt
+                </button>
+            </div>
+
+            <!-- Botón Compacto para Sidebar Colapsado (Desktop Mini) -->
+            <button type="button"
+                    id="btn-font-scale-cycle"
+                    class="sidebar-font-scale-mini hidden w-full py-2 px-1 text-center font-extrabold text-xs text-blue-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer"
+                    title="Alternar tamaño de vista (11pt / 13pt / 15pt)"
+                    aria-label="Alternar escala de vista">
+                <span class="block text-[10px] text-slate-400 font-semibold leading-none">Aa</span>
+                <span id="mini-font-size-badge" class="block text-xs font-black mt-0.5 leading-none">13</span>
+            </button>
+        </div>
 
         <a href="<?= base_url('src/api/logout.php') ?>"
            class="app-logout group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-200 hover:bg-rose-950/30 transition-colors"

@@ -10,6 +10,8 @@
 
         const THEME_STORAGE_KEY = "sisco_theme";
         const SIDEBAR_STORAGE_KEY = "sisco_sidebar_collapsed";
+        const FONT_SIZE_STORAGE_KEY = "sisco_font_size";
+        const VALID_FONT_SIZES = ["11pt", "13pt", "15pt"];
 
         // 1. Control unificado de Tema (Claro / Oscuro)
         const getCurrentTheme = () => document.documentElement.getAttribute("data-theme") || "light";
@@ -47,6 +49,87 @@
                 toggleTheme();
             });
         });
+
+        // 2. Control de Escala Tipográfica y de Elementos (11pt | 13pt | 15pt)
+        const getCurrentFontSize = () => {
+            const attr = document.documentElement.getAttribute("data-font-size");
+            if (VALID_FONT_SIZES.includes(attr)) return attr;
+            try {
+                const stored = localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+                if (VALID_FONT_SIZES.includes(stored)) return stored;
+            } catch (e) {}
+            return "13pt";
+        };
+
+        const applyFontSize = (size, notify = false) => {
+            if (!VALID_FONT_SIZES.includes(size)) {
+                size = "13pt";
+            }
+            document.documentElement.setAttribute("data-font-size", size);
+            try {
+                localStorage.setItem(FONT_SIZE_STORAGE_KEY, size);
+            } catch (e) {}
+
+            // Actualizar estado activo en los botones triples
+            document.querySelectorAll(".btn-font-scale").forEach(btn => {
+                const btnSize = btn.getAttribute("data-font-size");
+                const isActive = (btnSize === size);
+                btn.classList.toggle("is-active", isActive);
+                btn.setAttribute("aria-pressed", String(isActive));
+            });
+
+            // Actualizar etiqueta de tamaño actual en sidebar expandido
+            const labelCurrent = document.getElementById("label-current-font-size");
+            if (labelCurrent) {
+                labelCurrent.textContent = size;
+            }
+
+            // Actualizar indicador numérico en modo colapsado mini
+            const miniBadge = document.getElementById("mini-font-size-badge");
+            if (miniBadge) {
+                miniBadge.textContent = size.replace("pt", "");
+            }
+
+            const cycleBtn = document.getElementById("btn-font-scale-cycle");
+            if (cycleBtn) {
+                cycleBtn.setAttribute("title", `Tamaño de vista: ${size} (Click para alternar)`);
+            }
+
+            if (notify && window.Toast) {
+                const descripcion = size === "11pt"
+                    ? "Compacta (11pt) — Mayor densidad de elementos"
+                    : (size === "15pt"
+                        ? "Grande / Accesible (15pt) — Lectura descansada"
+                        : "Estándar (13pt) — Vista equilibrada");
+                window.Toast.info(descripcion, "Escala Visual", 2200);
+            }
+        };
+
+        const cycleFontSize = () => {
+            const current = getCurrentFontSize();
+            const idx = VALID_FONT_SIZES.indexOf(current);
+            const nextIdx = (idx + 1) % VALID_FONT_SIZES.length;
+            applyFontSize(VALID_FONT_SIZES[nextIdx], true);
+        };
+
+        document.querySelectorAll(".btn-font-scale").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const targetSize = btn.getAttribute("data-font-size");
+                if (targetSize) {
+                    applyFontSize(targetSize, true);
+                }
+            });
+        });
+
+        const cycleBtn = document.getElementById("btn-font-scale-cycle");
+        cycleBtn?.addEventListener("click", (e) => {
+            e.preventDefault();
+            cycleFontSize();
+        });
+
+        // Aplicar estado inicial
+        applyFontSize(getCurrentFontSize(), false);
 
         // 2. Estado inicial colapsado / expandido en desktop
         if (sidebar) {
