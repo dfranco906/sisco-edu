@@ -6,27 +6,47 @@ require_once __DIR__ . '/../../classes/Materia.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    echo json_encode(["status" => "error", "message" => "Método no permitido"]);
     exit;
 }
 
 $db = (new Database())->getConnection();
 $materia = new Materia($db);
 
-$materia->id_materia = $_POST['id_materia'] ?? null;
-$materia->nombre = $_POST['nombre'] ?? null;
-$materia->descripcion = $_POST['descripcion'] ?? null;
-$materia->carga_horaria_semanal = $_POST['carga_horaria_semanal'] ?? null;
+$materia->id_materia = (int)($_POST['id_materia'] ?? 0);
+$materia->nombre = trim((string)($_POST['nombre'] ?? ''));
+$materia->descripcion = trim((string)($_POST['descripcion'] ?? ''));
+$materia->carga_horaria_semanal = (int)($_POST['carga_horaria_semanal'] ?? $_POST['carga_horaria'] ?? 0);
 
-if (!$materia->id_materia || !$materia->nombre || !$materia->carga_horaria_semanal) {
-    echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+if ($materia->id_materia <= 0 || empty($materia->nombre)) {
+    http_response_code(422);
+    echo json_encode([
+        "status" => "error", 
+        "message" => "El identificador y el nombre de la materia son obligatorios"
+    ]);
     exit;
 }
 
-$resultado = $materia->actualizar();
-
-echo json_encode([
-    "status" => $resultado ? "success" : "error",
-    "message" => $resultado ? "Materia actualizada correctamente" : "Error al actualizar materia"
-]);
+try {
+    $resultado = $materia->actualizar();
+    if ($resultado) {
+        echo json_encode([
+            "status" => "success",
+            "message" => "Materia actualizada correctamente"
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Error al actualizar la materia"
+        ]);
+    }
+} catch (Throwable $e) {
+    error_log("Error actualizando materia: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "message" => "Ocurrió un error inesperado al actualizar la materia"
+    ]);
+}
 ?>

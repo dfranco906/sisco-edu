@@ -8,7 +8,7 @@ class Materia {
     public $id_materia;
     public $nombre;
     public $descripcion;
-    public $carga_horaria_semanal;
+    public $carga_horaria_semanal = 0;
 
     public function __construct($db) {
         $this->conn = $db;
@@ -20,86 +20,132 @@ class Materia {
 
         $stmt = $this->conn->prepare($query);
 
-        $this->nombre = htmlspecialchars(strip_tags($this->nombre));
-        $this->descripcion = htmlspecialchars(strip_tags($this->descripcion));
-        $this->carga_horaria_semanal = (int)$this->carga_horaria_semanal;
+        $this->nombre = htmlspecialchars(strip_tags((string)$this->nombre));
+        $this->descripcion = htmlspecialchars(strip_tags((string)$this->descripcion));
+        $carga = (int)($this->carga_horaria_semanal ?? 0);
 
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":descripcion", $this->descripcion);
-        $stmt->bindParam(":carga", $this->carga_horaria_semanal);
+        $stmt->bindParam(":carga", $carga, PDO::PARAM_INT);
 
         return $stmt->execute();
     }
+
     public function leer() {
-   $query = "SELECT *
-          FROM " . $this->table_name . "
-          WHERE activo = 1
-          ORDER BY id_materia DESC";
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt;
-}
-public function leerDesactivadas() {
-    $query = "SELECT *
-          FROM " . $this->table_name . "
-          WHERE activo = 0
-          ORDER BY id_materia DESC";
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt;
-}
-public function actualizar() {
-    $query = "UPDATE " . $this->table_name . "
-              SET nombre=:nombre,
-                  descripcion=:descripcion,
-                  carga_horaria_semanal=:carga
-              WHERE id_materia=:id";
+        $query = "SELECT m.*,
+                         (SELECT COUNT(*) FROM asignacion_docente ad WHERE ad.id_materia = m.id_materia AND ad.activo = 1) AS total_asignaciones
+                  FROM " . $this->table_name . " m
+                  WHERE m.activo = 1
+                  ORDER BY m.nombre ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
 
-    $stmt = $this->conn->prepare($query);
+    public function leerDesactivadas() {
+        $query = "SELECT m.*,
+                         (SELECT COUNT(*) FROM asignacion_docente ad WHERE ad.id_materia = m.id_materia AND ad.activo = 1) AS total_asignaciones
+                  FROM " . $this->table_name . " m
+                  WHERE m.activo = 0
+                  ORDER BY m.nombre ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
 
-    $stmt->bindParam(":nombre", $this->nombre);
-    $stmt->bindParam(":descripcion", $this->descripcion);
-    $stmt->bindParam(":carga", $this->carga_horaria_semanal);
-    $stmt->bindParam(":id", $this->id_materia);
+    public function obtenerDetalle(int $id_materia): ?array {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table_name} WHERE id_materia = :id");
+        $stmt->execute([':id' => $id_materia]);
+        $materia = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$materia) {
+            return null;
+        }
 
-    return $stmt->execute();
-}
-public function desactivar() {
-    $query = "UPDATE " . $this->table_name . "
-              SET activo = 0
-              WHERE id_materia = :id";
+        // Obtener las asignaciones docentes reales donde se imparte esta materia y su carga horaria por curso
+        $stmtAsig = $this->conn->prepare("
+            SELECT ad.id_asignacion, 
+                   COALESCE(ad.carga_horaria, 0) AS carga_horaria, 
+                   ad.anho_lectivo,
+                   p.id_profesor,
+                   p.nombre AS profesor_nombre, 
+                   p.apellido AS profesor_apellido,
+                   g.id_grado,
+                   g.nombre AS grado_nombre, 
+                   g.seccion,
+                   t.nombre AS turno_nombre
+            FROM asignacion_docente ad
+            JOIN profesores p ON ad.id_profesor = p.id_profesor
+            JOIN grados g ON ad.id_grado = g.id_grado
+            LEFT JOIN turnos t ON g.id_turno = t.id_turno
+            WHERE ad.id_materia = :id AND ad.activo = 1
+            ORDER BY g.nombre ASC
+        ");
+        $stmtAsig->execute([':id' => $id_materia]);
+        $materia['asignaciones'] = $stmtAsig->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_materia);
+        return $materia;
+    }
 
-    return $stmt->execute();
-}
-public function restaurar() {
-    $query = "UPDATE " . $this->table_name . "
-              SET activo = 1
-              WHERE id_materia = :id";
+    public function actualizar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET nombre=:nombre,
+                      descripcion=:descripcion,
+                      carga_horaria_semanal=:carga
+                  WHERE id_materia=:id";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_materia);
+        $stmt = $this->conn->prepare($query);
 
-    return $stmt->execute();
-}
-public function contarDependencias() {
-    $query = "SELECT COUNT(*) FROM asignacion_docente WHERE id_materia = :id";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_materia);
-    $stmt->execute();
+        $this->nombre = htmlspecialchars(strip_tags((string)$this->nombre));
+        $this->descripcion = htmlspecialchars(strip_tags((string)$this->descripcion));
+        $carga = (int)($this->carga_horaria_semanal ?? 0);
 
-    return (int) $stmt->fetchColumn();
-}
-public function eliminar() {
-    $query = "DELETE FROM " . $this->table_name . "
-              WHERE id_materia = :id";
+        $stmt->bindParam(":nombre", $this->nombre);
+        $stmt->bindParam(":descripcion", $this->descripcion);
+        $stmt->bindParam(":carga", $carga, PDO::PARAM_INT);
+        $stmt->bindParam(":id", $this->id_materia, PDO::PARAM_INT);
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id", $this->id_materia);
-    $stmt->execute();
+        return $stmt->execute();
+    }
 
-    return $stmt->rowCount() > 0;
-}
+    public function desactivar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET activo = 0
+                  WHERE id_materia = :id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_materia, PDO::PARAM_INT);
+
+        return $stmt->execute();
+    }
+
+    public function restaurar() {
+        $query = "UPDATE " . $this->table_name . "
+                  SET activo = 1
+                  WHERE id_materia = :id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_materia, PDO::PARAM_INT);
+
+        return $stmt->execute();
+    }
+
+    public function contarDependencias() {
+        $query = "SELECT COUNT(*) FROM asignacion_docente WHERE id_materia = :id AND activo = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_materia, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function eliminar() {
+        $query = "DELETE FROM " . $this->table_name . "
+                  WHERE id_materia = :id";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id_materia, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
 }
