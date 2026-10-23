@@ -1,4 +1,4 @@
-// ESP GATEWAY: RYLR998 + Wi-Fi + API Sisco-Edu + Portal Web de Configuración
+// ESP GATEWAY: RYLR998 + Wi-Fi + API Sisco-Edu + Portal Web Seguro + Sincronización Dinámica
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -9,6 +9,7 @@
 #include <ESPmDNS.h>
 #include "configuracion_red.h"
 #include "interfaz_web.h"
+#include "seguridad_portal.h"
 
 // ============================================================================
 // CONSTANTES Y CONTRATO DE INTEGRIDAD BIOMÉTRICA (1536 BYTES / 3072 HEX)
@@ -22,14 +23,16 @@ static_assert(HUELLA_TEMPLATE_HEX_CHARS % CHARS_POR_CHUNK == 0,
 const int MAX_REINTENTOS = 8;
 #define LORA_RX 16
 #define LORA_TX 17
+#define PIN_BOOT_RESET 0 // Pulsador BOOT para restaurar credenciales de fábrica
 
 // ============================================================================
-// OBJETOS DEL SISTEMA Y ALMACENAMIENTO NO VOLÁTIL (NVS)
+// OBJETOS DEL SISTEMA Y SEGURIDAD
 // ============================================================================
 HardwareSerial loraSerial(2);
 WebServer server(80);
 DNSServer dnsServer;
 Preferences prefs;
+SeguridadPortal seguridad("Gateway LoRa");
 
 // Parámetros de red y enlace cargados desde Preferences (con fallback a configuracion_red.h)
 String configSsid;
@@ -42,25 +45,7 @@ int configLoraNetId = LORA_RED_ID;
 bool modoAP = false;
 bool reiniciarPendiente = false;
 unsigned long tiempoReinicio = 0;
-const char *headerKeys[] = {"X-GATEWAY-KEY"};
-
-// ============================================================================
-// TABLA DE ASIGNACIÓN AULAS <-> DIRECCIONES LoRa RYLR998
-// ============================================================================
-struct DispositivoAula { int idAula; int loraId; };
-DispositivoAula tablaAulas[] = {
-  {18, 101}, // Aula de pruebas laboratorio (AULA_A)
-  {22, 102}, // 7° Grado
-  {23, 103}, // 8° Grado
-  {24, 104}, // 9° Grado
-  {25, 105}, // 1° Curso BCB
-  {26, 106}, // 2° Curso BCB
-  {27, 107}, // 3° Curso BCB
-  {28, 108}, // 1° Curso BTI
-  {29, 109}, // 2° Curso BTI
-  {30, 110}  // 3° Curso BTI
-};
-const size_t CANTIDAD_AULAS = sizeof(tablaAulas) / sizeof(tablaAulas[0]);
+const char *headerKeys[] = {"X-GATEWAY-KEY", "Cookie"};
 
 // ============================================================================
 // PROTOTIPOS DE FUNCIONES
@@ -84,7 +69,7 @@ void handleNotFound();
 
 void atenderMensajesLoRa();
 void pedirSyncPendiente();
-bool pedirSyncAula(const DispositivoAula &aula);
+bool pedirSyncAula(int idAula, int loraId);
 bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella);
 bool esperarOKLocal(unsigned long timeoutMs = 500);
 bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs = 900);
@@ -97,7 +82,7 @@ String urlEncode(const String &texto);
 bool crc32HexValido(const String &valor);
 
 // ============================================================================
-// GESTIÓN DE CONFIGURACIÓN NVS (NON-VOLATILE STORAGE)
+// GESTIÓN DE CONFIGURACIÓN NVS
 // ============================================================================
 String normalizarBaseUrl(String url) {
   url.trim();
@@ -128,7 +113,7 @@ void cargarConfiguracion() {
   prefs.end();
 
   configBaseUrl = normalizarBaseUrl(configBaseUrl);
-  Serial.println("[NVS] Parámetros cargados:");
+  Serial.println("[NVS] Parametros cargados:");
   Serial.printf("  - Wi-Fi SSID  : %s\n", configSsid.c_str());
   Serial.printf("  - Servidor URL: %s\n", configBaseUrl.c_str());
   Serial.printf("  - LoRa Red ID : %d | Gateway Addr: %d\n", configLoraNetId, configLoraId);
@@ -143,7 +128,7 @@ void guardarConfiguracion(const String &ssid, const String &pass, const String &
   prefs.putInt("lora_net", loraNet);
   prefs.putInt("lora_id", loraId);
   prefs.end();
-  Serial.println("[NVS] Parámetros actualizados permanentemente en flash.");
+  Serial.println("[NVS] Parametros actualizados permanentemente en flash.");
 }
 
 String formatearUptime() {
@@ -169,7 +154,7 @@ void programarReinicio(unsigned long delayMs) {
 }
 
 // ============================================================================
-// GESTIÓN DE CONEXIÓN WI-FI (STA Y MODO AP DE EMERGENCIA)
+// GESTIÓN DE CONEXIÓN WI-FI
 // ============================================================================
 void iniciarModoAP() {
   modoAP = true;
@@ -225,6 +210,9 @@ void conectarWifi() {
 // HANDLERS DEL SERVIDOR WEB EMBEBIDO
 // ============================================================================
 void handleRoot() {
+  // Guardia de seguridad: login y cambio obligatorio de clave
+  if (!seguridad.verificarAcceso()) return;
+
   String pagina = FPSTR(PAGINA_CONFIGURACION);
 
   pagina.replace("%MODO_CLASE%", modoAP ? "badge-ap" : "badge-online");
@@ -253,6 +241,8 @@ void handleRoot() {
 }
 
 void handleGuardar() {
+  if (!seguridad.verificarAcceso()) return;
+
   String ssid = server.arg("ssid");
   String pass = server.arg("pass");
   String serverUrl = server.arg("server_url");
@@ -291,6 +281,8 @@ void handleEstado() {
 }
 
 void handleTestServer() {
+  if (!seguridad.verificarAcceso()) return;
+
   String url = server.hasArg("url") ? server.arg("url") : configBaseUrl;
   String key = server.hasArg("key") ? server.arg("key") : configApiKey;
   url = normalizarBaseUrl(url);
@@ -328,6 +320,8 @@ void handleTestServer() {
 }
 
 void handleScanWifi() {
+  if (!seguridad.verificarAcceso()) return;
+
   int n = WiFi.scanNetworks();
   DynamicJsonDocument doc(2048);
   JsonArray arr = doc.to<JsonArray>();
@@ -343,6 +337,7 @@ void handleScanWifi() {
 }
 
 void handleReiniciar() {
+  if (!seguridad.verificarAcceso()) return;
   server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Reiniciando Gateway en 1 segundo...\"}");
   programarReinicio(1000);
 }
@@ -365,6 +360,9 @@ void setup() {
   Serial.println("  SISCO-EDU - GATEWAY LoRa / Wi-Fi");
   Serial.println("========================================");
 
+  // Verificación de pulsador BOOT para restaurar credenciales si se olvidaron
+  seguridad.verificarBotonReset(PIN_BOOT_RESET, 8000);
+
   cargarConfiguracion();
 
   Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
@@ -385,8 +383,12 @@ void setup() {
 
   conectarWifi();
 
-  // Rutas del servidor web
-  server.collectHeaders(headerKeys, 1);
+  // Configuración de rutas HTTP
+  server.collectHeaders(headerKeys, 2);
+
+  // Inicializar seguridad (Login, cambio obligatorio de pass y sesiones)
+  seguridad.begin(server);
+
   server.on("/", HTTP_GET, handleRoot);
   server.on("/config", HTTP_GET, handleRoot);
   server.on("/guardar", HTTP_POST, handleGuardar);
@@ -395,7 +397,7 @@ void setup() {
   server.on("/scan_wifi", HTTP_GET, handleScanWifi);
   server.on("/reiniciar", HTTP_GET, handleReiniciar);
 
-  // Endpoint de sincronización backend (preservado)
+  // Endpoint de sincronización backend (protegido por token X-GATEWAY-KEY)
   server.on("/sync", HTTP_POST, []() {
     Serial.printf("[HTTP] Solicitud de sincronizacion recibida desde %s\n",
                   server.client().remoteIP().toString().c_str());
@@ -405,7 +407,7 @@ void setup() {
       return;
     }
     server.send(202, "application/json", "{\"status\":\"accepted\"}");
-    Serial.println("[SYNC] Buscando huellas pendientes para las aulas configuradas");
+    Serial.println("[SYNC] Consultando aulas activas con huellas pendientes...");
     pedirSyncPendiente();
   });
 
@@ -424,13 +426,10 @@ void setup() {
     Serial.println("[HTTP] Portal Web AP   : http://192.168.4.1/");
   }
 
-  Serial.println("[LISTO] Acciones habilitadas:");
-  Serial.println("  - Portal Web de configuracion y deteccion automatica de IP");
-  Serial.println("  - Recibir avisos HTTP POST /sync desde Sisco-Edu");
-  Serial.println("  - Consultar huellas pendientes de cada aula");
-  Serial.println("  - Enviar huellas fragmentadas por LoRa y esperar sus ACK");
-  Serial.println("  - Recibir confirmaciones de almacenamiento desde las aulas");
-  Serial.println("  - Recibir asistencias por LoRa y registrarlas en la API");
+  Serial.println("[LISTO] Sistema Gateway Operativo:");
+  Serial.println("  - Portal Web protegido con autenticacion y cambio obligatorio de clave");
+  Serial.println("  - Sincronizacion dinamica de aulas LoRa desde base de datos");
+  Serial.println("  - Reenvio bidireccional LoRa <-> API REST Sisco-Edu");
   Serial.println("========================================\n");
 }
 
@@ -585,23 +584,59 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
 }
 
 // ============================================================================
-// COMUNICACIÓN CON LA API BACKEND SISCO-EDU
+// COMUNICACIÓN CON LA API BACKEND SISCO-EDU (SINCRONIZACIÓN DINÁMICA)
 // ============================================================================
 void pedirSyncPendiente() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[SYNC] Consulta omitida: Wi-Fi no conectado");
     return;
   }
-  for (size_t i = 0; i < CANTIDAD_AULAS; ++i) {
-    pedirSyncAula(tablaAulas[i]);
+
+  HTTPClient http;
+  const String url = configBaseUrl + "src/api/Gateway/obtener_aulas_sync.php";
+  if (!http.begin(url)) {
+    Serial.println("[SYNC] Error al inicializar peticion a obtener_aulas_sync.php");
+    return;
   }
-  Serial.println("[SYNC] Consulta de aulas finalizada");
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  const int codigo = http.GET();
+  const String respuesta = http.getString();
+  http.end();
+
+  if (codigo != 200) {
+    Serial.printf("[SYNC] API obtener_aulas_sync respondio HTTP %d\n", codigo);
+    return;
+  }
+
+  DynamicJsonDocument doc(4096);
+  if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") {
+    Serial.println("[SYNC] Respuesta JSON de aulas no valida");
+    return;
+  }
+
+  JsonArray aulas = doc["data"]["aulas"].as<JsonArray>();
+  Serial.printf("[SYNC] %u aulas registradas en la base de datos\n", aulas.size());
+
+  for (JsonObject aula : aulas) {
+    const int idAula = aula["id_aula"] | 0;
+    const int loraId = aula["lora_id"] | 0;
+    const int pendientes = aula["pendientes"] | 0;
+    const String nombre = aula["nombre_aula"] | "";
+
+    if (idAula > 0 && loraId > 0 && pendientes > 0) {
+      Serial.printf("[SYNC] Aula %s (ID %d, LoRa %d) tiene %d huellas pendientes\n",
+                    nombre.c_str(), idAula, loraId, pendientes);
+      pedirSyncAula(idAula, loraId);
+    }
+  }
+
+  Serial.println("[SYNC] Consulta dinamica finalizada");
 }
 
-bool pedirSyncAula(const DispositivoAula &aula) {
-  Serial.printf("[SYNC] Consultando aula %d (direccion LoRa %d)\n", aula.idAula, aula.loraId);
+bool pedirSyncAula(int idAula, int loraId) {
+  Serial.printf("[SYNC] Consultando huella para aula %d (direccion LoRa %d)\n", idAula, loraId);
   HTTPClient http;
-  const String url = configBaseUrl + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(aula.idAula);
+  const String url = configBaseUrl + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(idAula);
   if (!http.begin(url)) {
     Serial.println("[SYNC] No se pudo iniciar la solicitud HTTP");
     return false;
@@ -612,29 +647,28 @@ bool pedirSyncAula(const DispositivoAula &aula) {
   http.end();
 
   if (codigo != 200) {
-    Serial.printf("[SYNC] Aula %d: API respondio HTTP %d\n", aula.idAula, codigo);
+    Serial.printf("[SYNC] Aula %d: API respondio HTTP %d\n", idAula, codigo);
     return false;
   }
   DynamicJsonDocument doc(8192);
   if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") {
-    Serial.printf("[SYNC] Aula %d: no hay una sincronizacion valida para procesar\n", aula.idAula);
+    Serial.printf("[SYNC] Aula %d: no hay sincronizacion pendiente valida\n", idAula);
     return false;
   }
-  const int idSync = doc["data"]["id_sync"] | 0, idHuella = doc["data"]["id_huella"] | 0, idAula = doc["data"]["id_aula"] | 0;
+  const int idSync = doc["data"]["id_sync"] | 0, idHuella = doc["data"]["id_huella"] | 0;
   const int templateBytes = doc["data"]["bytes"] | 0;
   const String ci = doc["data"]["ci"] | "", tipo = doc["data"]["tipo_persona"] | "", huella = doc["data"]["huella_base64"] | "";
-  if (!idSync || !idHuella || idAula != aula.idAula || templateBytes != HUELLA_TEMPLATE_BYTES || !ci.length() || !tipo.length() || huella.length() != HUELLA_TEMPLATE_HEX_CHARS) {
-    Serial.printf("[SYNC] Aula %d: datos invalidos (sync=%d, huella=%d, id_aula=%d, bytes=%d/%u, ci=%s, tipo=%s, hex=%u/%u)\n",
-                  aula.idAula, idSync, idHuella, idAula, templateBytes,
+  if (!idSync || !idHuella || templateBytes != HUELLA_TEMPLATE_BYTES || !ci.length() || !tipo.length() || huella.length() != HUELLA_TEMPLATE_HEX_CHARS) {
+    Serial.printf("[SYNC] Aula %d: datos invalidos (sync=%d, huella=%d, bytes=%d/%u, hex=%u/%u)\n",
+                  idAula, idSync, idHuella, templateBytes,
                   (unsigned int)HUELLA_TEMPLATE_BYTES,
-                  ci.length() ? "OK" : "FALTA", tipo.length() ? "OK" : "FALTA",
                   (unsigned int)huella.length(),
                   (unsigned int)HUELLA_TEMPLATE_HEX_CHARS);
     confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS");
     return false;
   }
-  if (!enviarHuellaPorLoRa(aula.loraId, idSync, idHuella, idAula, ci, tipo, huella)) {
-    Serial.printf("[SYNC] Aula %d: fallo el enlace LoRa\n", aula.idAula);
+  if (!enviarHuellaPorLoRa(loraId, idSync, idHuella, idAula, ci, tipo, huella)) {
+    Serial.printf("[SYNC] Aula %d: fallo el enlace LoRa\n", idAula);
     confirmarSync(idSync, "ERROR", "FALLO_ENLACE_LORA");
     return false;
   }

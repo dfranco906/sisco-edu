@@ -85,7 +85,10 @@ const char PAGINA_CONFIGURACION[] PROGMEM = R"rawliteral(<!DOCTYPE html>
     <div class="header">
       <h1>📡 SISCO-EDU</h1>
       <p>Configuración Remota del Nodo Gateway LoRa / Wi-Fi</p>
-      <div class="badge-status %MODO_CLASE%">%MODO_TEXTO%</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-top:0.5rem;">
+        <div class="badge-status %MODO_CLASE%">%MODO_TEXTO%</div>
+        <a href="/logout" class="badge-status" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.4);text-decoration:none;">🔒 Salir</a>
+      </div>
     </div>
 
     <!-- TARJETA AUTO-DETECCIÓN INTELIGENTE DE IP DEL SERVIDOR -->
