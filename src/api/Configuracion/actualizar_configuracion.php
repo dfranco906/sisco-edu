@@ -30,12 +30,28 @@ $camposPermitidos = [
     'lora_id_gateway'
 ];
 
+// Leer payload JSON o POST tradicional
+$rawInput = file_get_contents('php://input');
+$jsonData = json_decode($rawInput, true);
+$inputData = is_array($jsonData) ? $jsonData : $_POST;
+
 $datosAActualizar = [];
 $errores = [];
 
 foreach ($camposPermitidos as $campo) {
-    if (isset($_POST[$campo])) {
-        $valor = trim($_POST[$campo]);
+    if (isset($inputData[$campo])) {
+        $valor = trim((string)$inputData[$campo]);
+
+        // Si es la clave del gateway y viene vacía, no se sobreescribe
+        if ($campo === 'gateway_api_key' && $valor === '') {
+            continue;
+        }
+
+        // Si es la URL del servidor y viene vacía, se permite vacía (autodetección)
+        if ($campo === 'url_servidor' && $valor === '') {
+            $datosAActualizar[$campo] = '';
+            continue;
+        }
 
         // Validaciones semánticas defensivas
         if (in_array($campo, ['ip_servidor', 'ip_registrador', 'ip_gateway'], true)) {
@@ -54,6 +70,7 @@ foreach ($camposPermitidos as $campo) {
                 $errores[] = "La clave API del Gateway debe tener al menos 8 caracteres.";
             }
         } elseif ($campo === 'lora_red_id' || $campo === 'lora_id_gateway') {
+            if ($valor === '') continue;
             if (!ctype_digit($valor) || (int)$valor < 0) {
                 $errores[] = "El campo '{$campo}' debe ser un número entero positivo.";
             }
@@ -106,10 +123,11 @@ try {
         ]);
     }
 } catch (Throwable $e) {
+    error_log("Error en actualizar_configuracion.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         "status" => "error",
         "message" => "Error interno al procesar la actualización",
-        "debug" => $e->getMessage()
+
     ]);
 }

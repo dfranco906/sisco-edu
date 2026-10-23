@@ -1,17 +1,18 @@
-// ESP GATEWAY: RYLR998 + Wi-Fi + API Sisco-Edu
+// ESP GATEWAY: RYLR998 + Wi-Fi + API Sisco-Edu + Portal Web de Configuración
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
+#include <DNSServer.h>
+#include <ESPmDNS.h>
 #include "configuracion_red.h"
+#include "interfaz_web.h"
 
-const char *ssid = RED_WIFI_SSID;
-const char *password = RED_WIFI_PASS;
-const char *BASE = SERVIDOR_BASE_URL;
-const char *API_KEY = CLAVE_API_GATEWAY;
-const int MI_LORA_ID = LORA_ID_GATEWAY;
-const int LORA_NETWORK_ID = LORA_RED_ID;
+// ============================================================================
+// CONSTANTES Y CONTRATO DE INTEGRIDAD BIOMÉTRICA (1536 BYTES / 3072 HEX)
+// ============================================================================
 constexpr size_t HUELLA_TEMPLATE_BYTES = 1536;
 constexpr size_t HUELLA_TEMPLATE_HEX_CHARS = HUELLA_TEMPLATE_BYTES * 2;
 constexpr int CHARS_POR_CHUNK = 128;
@@ -21,12 +22,32 @@ static_assert(HUELLA_TEMPLATE_HEX_CHARS % CHARS_POR_CHUNK == 0,
 const int MAX_REINTENTOS = 8;
 #define LORA_RX 16
 #define LORA_TX 17
+
+// ============================================================================
+// OBJETOS DEL SISTEMA Y ALMACENAMIENTO NO VOLÁTIL (NVS)
+// ============================================================================
 HardwareSerial loraSerial(2);
 WebServer server(80);
+DNSServer dnsServer;
+Preferences prefs;
+
+// Parámetros de red y enlace cargados desde Preferences (con fallback a configuracion_red.h)
+String configSsid;
+String configPass;
+String configBaseUrl;
+String configApiKey;
+int configLoraId = LORA_ID_GATEWAY;
+int configLoraNetId = LORA_RED_ID;
+
+bool modoAP = false;
+bool reiniciarPendiente = false;
+unsigned long tiempoReinicio = 0;
 const char *headerKeys[] = {"X-GATEWAY-KEY"};
 
+// ============================================================================
+// TABLA DE ASIGNACIÓN AULAS <-> DIRECCIONES LoRa RYLR998
+// ============================================================================
 struct DispositivoAula { int idAula; int loraId; };
-// Mantener esta tabla alineada con aulas.id_aula y las direcciones RYLR998.
 DispositivoAula tablaAulas[] = {
   {18, 101}, // Aula de pruebas laboratorio (AULA_A)
   {22, 102}, // 7° Grado
@@ -40,6 +61,26 @@ DispositivoAula tablaAulas[] = {
   {30, 110}  // 3° Curso BTI
 };
 const size_t CANTIDAD_AULAS = sizeof(tablaAulas) / sizeof(tablaAulas[0]);
+
+// ============================================================================
+// PROTOTIPOS DE FUNCIONES
+// ============================================================================
+void cargarConfiguracion();
+void guardarConfiguracion(const String &ssid, const String &pass, const String &url, const String &key, int loraNet, int loraId);
+String normalizarBaseUrl(String url);
+String formatearUptime();
+void programarReinicio(unsigned long delayMs = 1500);
+
+void conectarWifi();
+void iniciarModoAP();
+
+void handleRoot();
+void handleGuardar();
+void handleEstado();
+void handleTestServer();
+void handleScanWifi();
+void handleReiniciar();
+void handleNotFound();
 
 void atenderMensajesLoRa();
 void pedirSyncPendiente();
@@ -55,48 +96,310 @@ String campo(const String &texto, int indice);
 String urlEncode(const String &texto);
 bool crc32HexValido(const String &valor);
 
+// ============================================================================
+// GESTIÓN DE CONFIGURACIÓN NVS (NON-VOLATILE STORAGE)
+// ============================================================================
+String normalizarBaseUrl(String url) {
+  url.trim();
+  if (url.length() == 0) return "";
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = "http://" + url;
+  }
+  int slashPos = url.indexOf('/', 8);
+  if (slashPos < 0) {
+    url += "/sisco-edu/";
+  } else if (slashPos == (int)url.length() - 1) {
+    url += "sisco-edu/";
+  }
+  if (!url.endsWith("/")) {
+    url += "/";
+  }
+  return url;
+}
+
+void cargarConfiguracion() {
+  prefs.begin("sisco_gw", true);
+  configSsid = prefs.getString("ssid", RED_WIFI_SSID);
+  configPass = prefs.getString("pass", RED_WIFI_PASS);
+  configBaseUrl = prefs.getString("server_url", SERVIDOR_BASE_URL);
+  configApiKey = prefs.getString("api_key", CLAVE_API_GATEWAY);
+  configLoraId = prefs.getInt("lora_id", LORA_ID_GATEWAY);
+  configLoraNetId = prefs.getInt("lora_net", LORA_RED_ID);
+  prefs.end();
+
+  configBaseUrl = normalizarBaseUrl(configBaseUrl);
+  Serial.println("[NVS] Parámetros cargados:");
+  Serial.printf("  - Wi-Fi SSID  : %s\n", configSsid.c_str());
+  Serial.printf("  - Servidor URL: %s\n", configBaseUrl.c_str());
+  Serial.printf("  - LoRa Red ID : %d | Gateway Addr: %d\n", configLoraNetId, configLoraId);
+}
+
+void guardarConfiguracion(const String &ssid, const String &pass, const String &url, const String &key, int loraNet, int loraId) {
+  prefs.begin("sisco_gw", false);
+  prefs.putString("ssid", ssid);
+  prefs.putString("pass", pass);
+  prefs.putString("server_url", normalizarBaseUrl(url));
+  prefs.putString("api_key", key);
+  prefs.putInt("lora_net", loraNet);
+  prefs.putInt("lora_id", loraId);
+  prefs.end();
+  Serial.println("[NVS] Parámetros actualizados permanentemente en flash.");
+}
+
+String formatearUptime() {
+  unsigned long segs = millis() / 1000;
+  unsigned long mins = segs / 60;
+  unsigned long horas = mins / 60;
+  segs %= 60;
+  mins %= 60;
+  char buf[32];
+  if (horas > 0) {
+    snprintf(buf, sizeof(buf), "%luh %lum %lus", horas, mins, segs);
+  } else if (mins > 0) {
+    snprintf(buf, sizeof(buf), "%lum %lus", mins, segs);
+  } else {
+    snprintf(buf, sizeof(buf), "%lus", segs);
+  }
+  return String(buf);
+}
+
+void programarReinicio(unsigned long delayMs) {
+  reiniciarPendiente = true;
+  tiempoReinicio = millis() + delayMs;
+}
+
+// ============================================================================
+// GESTIÓN DE CONEXIÓN WI-FI (STA Y MODO AP DE EMERGENCIA)
+// ============================================================================
+void iniciarModoAP() {
+  modoAP = true;
+  WiFi.disconnect();
+  delay(100);
+  WiFi.mode(WIFI_AP);
+  const char *apSsid = "SISCO-GATEWAY-CONFIG";
+  const char *apPass = "12345678";
+  IPAddress apIP(192, 168, 4, 1);
+  IPAddress netMsk(255, 255, 255, 0);
+  WiFi.softAP(apSsid, apPass);
+  WiFi.softAPConfig(apIP, apIP, netMsk);
+
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.start(53, "*", apIP);
+
+  Serial.println("\n[PORTAL] ========================================");
+  Serial.println("[PORTAL] MODO PUNTO DE ACCESO (AP) ACTIVADO");
+  Serial.printf("[PORTAL] Red Wi-Fi : %s\n", apSsid);
+  Serial.printf("[PORTAL] Clave     : %s\n", apPass);
+  Serial.printf("[PORTAL] Abrir en  : http://%s\n", apIP.toString().c_str());
+  Serial.println("[PORTAL] ========================================\n");
+}
+
+void conectarWifi() {
+  WiFi.mode(WIFI_STA);
+  Serial.printf("[WIFI] Conectando a \"%s\"...", configSsid.c_str());
+  WiFi.begin(configSsid.c_str(), configPass.c_str());
+
+  const unsigned long limite = millis() + 15000;
+  while (WiFi.status() != WL_CONNECTED && (int32_t)(millis() - limite) < 0) {
+    delay(300);
+    Serial.print('.');
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    modoAP = false;
+    Serial.println(" conectado");
+    Serial.printf("[WIFI] Direccion IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("[WIFI] Senal RSSI  : %d dBm\n", WiFi.RSSI());
+    if (MDNS.begin("sisco-gateway")) {
+      MDNS.addService("http", "tcp", 80);
+      Serial.println("[MDNS] Disponible en: http://sisco-gateway.local");
+    }
+  } else {
+    Serial.println(" sin conexion");
+    Serial.println("[WIFI] Activando punto de acceso de configuracion...");
+    iniciarModoAP();
+  }
+}
+
+// ============================================================================
+// HANDLERS DEL SERVIDOR WEB EMBEBIDO
+// ============================================================================
+void handleRoot() {
+  String pagina = FPSTR(PAGINA_CONFIGURACION);
+
+  pagina.replace("%MODO_CLASE%", modoAP ? "badge-ap" : "badge-online");
+  if (modoAP) {
+    pagina.replace("%MODO_TEXTO%", "🟠 MODO AP: SISCO-GATEWAY-CONFIG (192.168.4.1)");
+  } else {
+    pagina.replace("%MODO_TEXTO%", "🟢 ONLINE Wi-Fi: " + configSsid + " (IP: " + WiFi.localIP().toString() + ")");
+  }
+
+  IPAddress clientIP = server.client().remoteIP();
+  String strClientIP = clientIP.toString();
+  bool mostrarAuto = (strClientIP != "0.0.0.0" && strClientIP != "255.255.255.255" && strClientIP != WiFi.localIP().toString() && strClientIP != "192.168.4.1");
+  pagina.replace("%AUTO_IP_DISPLAY%", mostrarAuto ? "flex" : "none");
+  pagina.replace("%CLIENT_IP%", strClientIP);
+
+  pagina.replace("%SERVER_URL%", configBaseUrl);
+  pagina.replace("%API_KEY%", configApiKey);
+  pagina.replace("%SSID%", configSsid);
+  pagina.replace("%PASS%", configPass);
+  pagina.replace("%LORA_NET%", String(configLoraNetId));
+  pagina.replace("%LORA_ADDR%", String(configLoraId));
+  pagina.replace("%MAC%", WiFi.macAddress());
+  pagina.replace("%UPTIME%", formatearUptime());
+
+  server.send(200, "text/html", pagina);
+}
+
+void handleGuardar() {
+  String ssid = server.arg("ssid");
+  String pass = server.arg("pass");
+  String serverUrl = server.arg("server_url");
+  String apiKey = server.arg("api_key");
+  int loraNet = server.arg("lora_net_id").toInt();
+  int loraAddr = server.arg("lora_addr").toInt();
+
+  if (ssid.length() > 0) configSsid = ssid;
+  configPass = pass;
+  if (serverUrl.length() > 0) configBaseUrl = normalizarBaseUrl(serverUrl);
+  if (apiKey.length() > 0) configApiKey = apiKey;
+  if (loraNet > 0) configLoraNetId = loraNet;
+  if (loraAddr > 0) configLoraId = loraAddr;
+
+  guardarConfiguracion(configSsid, configPass, configBaseUrl, configApiKey, configLoraNetId, configLoraId);
+
+  server.send_P(200, "text/html", PAGINA_GUARDADO);
+  programarReinicio(2000);
+}
+
+void handleEstado() {
+  DynamicJsonDocument doc(512);
+  doc["status"] = "success";
+  doc["dispositivo"] = "gateway";
+  doc["modo"] = modoAP ? "AP" : "STA";
+  doc["ip"] = modoAP ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
+  doc["mac"] = WiFi.macAddress();
+  doc["ssid"] = configSsid;
+  doc["servidor"] = configBaseUrl;
+  doc["lora_net"] = configLoraNetId;
+  doc["lora_id"] = configLoraId;
+  doc["uptime_s"] = millis() / 1000;
+  String json;
+  serializeJson(doc, json);
+  server.send(200, "application/json", json);
+}
+
+void handleTestServer() {
+  String url = server.hasArg("url") ? server.arg("url") : configBaseUrl;
+  String key = server.hasArg("key") ? server.arg("key") : configApiKey;
+  url = normalizarBaseUrl(url);
+
+  if (WiFi.status() != WL_CONNECTED) {
+    server.send(200, "application/json", "{\"status\":\"error\",\"message\":\"El Gateway no está conectado a una red Wi-Fi para alcanzar al servidor.\"}");
+    return;
+  }
+
+  HTTPClient http;
+  String testUrl = url + "src/api/Configuracion/probar_conexion.php?tipo=gateway";
+  http.begin(testUrl);
+  http.setTimeout(3500);
+  http.addHeader("X-GATEWAY-KEY", key);
+  unsigned long t0 = millis();
+  int code = http.GET();
+  unsigned long ms = millis() - t0;
+  http.end();
+
+  DynamicJsonDocument doc(256);
+  if (code == 200) {
+    doc["status"] = "success";
+    doc["codigo"] = code;
+    doc["latencia_ms"] = ms;
+    doc["message"] = "Conexión exitosa con SISCO-EDU (" + url + ")";
+  } else {
+    doc["status"] = "error";
+    doc["codigo"] = code;
+    doc["latencia_ms"] = ms;
+    doc["message"] = (code > 0) ? ("Servidor respondió con código HTTP " + String(code)) : "No se pudo alcanzar el host (Verifica la IP y que Apache/XAMPP esté activo)";
+  }
+  String json;
+  serializeJson(doc, json);
+  server.send(200, "application/json", json);
+}
+
+void handleScanWifi() {
+  int n = WiFi.scanNetworks();
+  DynamicJsonDocument doc(2048);
+  JsonArray arr = doc.to<JsonArray>();
+  for (int i = 0; i < n && i < 15; ++i) {
+    JsonObject obj = arr.createNestedObject();
+    obj["ssid"] = WiFi.SSID(i);
+    obj["rssi"] = WiFi.RSSI(i);
+    obj["secure"] = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
+  }
+  String json;
+  serializeJson(doc, json);
+  server.send(200, "application/json", json);
+}
+
+void handleReiniciar() {
+  server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Reiniciando Gateway en 1 segundo...\"}");
+  programarReinicio(1000);
+}
+
+void handleNotFound() {
+  if (modoAP) {
+    handleRoot();
+    return;
+  }
+  server.send(404, "text/plain", "404 Not Found");
+}
+
+// ============================================================================
+// SETUP Y LOOP
+// ============================================================================
 void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.println("\n========================================");
   Serial.println("  SISCO-EDU - GATEWAY LoRa / Wi-Fi");
   Serial.println("========================================");
+
+  cargarConfiguracion();
+
   Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
                 (unsigned int)HUELLA_TEMPLATE_BYTES,
                 (unsigned int)HUELLA_TEMPLATE_HEX_CHARS,
                 TOTAL_CHUNKS_HUELLA);
   Serial.printf("[INICIO] Configurando LoRa: RX=%d, TX=%d, direccion=%d, red=%d\n",
-                LORA_RX, LORA_TX, MI_LORA_ID, LORA_NETWORK_ID);
+                LORA_RX, LORA_TX, configLoraId, configLoraNetId);
   loraSerial.begin(115200, SERIAL_8N1, LORA_RX, LORA_TX);
   loraSerial.setTimeout(120);
-  loraSerial.printf("AT+ADDRESS=%d\r\n", MI_LORA_ID);
+  loraSerial.printf("AT+ADDRESS=%d\r\n", configLoraId);
   delay(100);
   while (loraSerial.available()) loraSerial.read();
-  loraSerial.printf("AT+NETWORKID=%d\r\n", LORA_NETWORK_ID);
+  loraSerial.printf("AT+NETWORKID=%d\r\n", configLoraNetId);
   delay(100);
   while (loraSerial.available()) loraSerial.read();
   Serial.println("[LORA] Modulo RYLR998 configurado");
 
-  WiFi.mode(WIFI_STA);
-  Serial.printf("[WIFI] Direccion MAC: %s\n", WiFi.macAddress().c_str());
-  Serial.printf("[WIFI] Conectando a la red \"%s\"", ssid);
-  WiFi.begin(ssid, password);
-  const unsigned long limite = millis() + 20000;
-  while (WiFi.status() != WL_CONNECTED && (int32_t)(millis() - limite) < 0) { delay(300); Serial.print('.'); }
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println(" conectado");
-    Serial.printf("[WIFI] Direccion IP: %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("[WIFI] Potencia de senal: %d dBm\n", WiFi.RSSI());
-  } else {
-    Serial.println(" sin conexion");
-    Serial.println("[WIFI] Se intentara reconectar cada 10 segundos");
-  }
+  conectarWifi();
 
+  // Rutas del servidor web
   server.collectHeaders(headerKeys, 1);
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/config", HTTP_GET, handleRoot);
+  server.on("/guardar", HTTP_POST, handleGuardar);
+  server.on("/estado", HTTP_GET, handleEstado);
+  server.on("/test_server", HTTP_GET, handleTestServer);
+  server.on("/scan_wifi", HTTP_GET, handleScanWifi);
+  server.on("/reiniciar", HTTP_GET, handleReiniciar);
+
+  // Endpoint de sincronización backend (preservado)
   server.on("/sync", HTTP_POST, []() {
     Serial.printf("[HTTP] Solicitud de sincronizacion recibida desde %s\n",
                   server.client().remoteIP().toString().c_str());
-    if (server.header("X-GATEWAY-KEY") != API_KEY) {
+    if (server.header("X-GATEWAY-KEY") != configApiKey) {
       Serial.println("[HTTP] Solicitud rechazada: clave de gateway invalida");
       server.send(404, "application/json", "{\"status\":\"not_found\"}");
       return;
@@ -105,54 +408,83 @@ void setup() {
     Serial.println("[SYNC] Buscando huellas pendientes para las aulas configuradas");
     pedirSyncPendiente();
   });
+
+  // Portal cautivo redirecciones
+  server.on("/generate_204", handleRoot);
+  server.on("/fwlink", handleRoot);
+  server.on("/hotspot-detect.html", handleRoot);
+  server.onNotFound(handleNotFound);
+
   server.begin();
-  Serial.println("[HTTP] Servidor del gateway iniciado en el puerto 80");
-  Serial.printf("[HTTP] API central configurada: %s\n", BASE);
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("[HTTP] Endpoint de sincronizacion: http://%s/sync\n",
-                  WiFi.localIP().toString().c_str());
+  Serial.println("[HTTP] Servidor Web iniciado en el puerto 80");
+  if (!modoAP) {
+    Serial.printf("[HTTP] Portal Web local: http://%s/\n", WiFi.localIP().toString().c_str());
+    Serial.printf("[HTTP] Endpoint sync   : http://%s/sync\n", WiFi.localIP().toString().c_str());
+  } else {
+    Serial.println("[HTTP] Portal Web AP   : http://192.168.4.1/");
   }
 
   Serial.println("[LISTO] Acciones habilitadas:");
+  Serial.println("  - Portal Web de configuracion y deteccion automatica de IP");
   Serial.println("  - Recibir avisos HTTP POST /sync desde Sisco-Edu");
   Serial.println("  - Consultar huellas pendientes de cada aula");
   Serial.println("  - Enviar huellas fragmentadas por LoRa y esperar sus ACK");
   Serial.println("  - Recibir confirmaciones de almacenamiento desde las aulas");
   Serial.println("  - Recibir asistencias por LoRa y registrarlas en la API");
-  Serial.println("  - Recuperar automaticamente la conexion Wi-Fi");
   Serial.println("========================================\n");
 }
 
 void loop() {
+  if (modoAP) {
+    dnsServer.processNextRequest();
+  }
   server.handleClient();
   atenderMensajesLoRa();
-  static unsigned long ultimoReintentoWifi = 0;
-  static wl_status_t ultimoEstadoWifi = WiFi.status();
-  const wl_status_t estadoWifi = WiFi.status();
-  if (estadoWifi != ultimoEstadoWifi) {
-    if (estadoWifi == WL_CONNECTED) {
-      Serial.printf("[WIFI] Conexion recuperada. IP: %s\n", WiFi.localIP().toString().c_str());
-      Serial.printf("[HTTP] Endpoint de sincronizacion: http://%s/sync\n",
-                    WiFi.localIP().toString().c_str());
-    } else if (ultimoEstadoWifi == WL_CONNECTED) {
-      Serial.println("[WIFI] Conexion perdida");
-    }
-    ultimoEstadoWifi = estadoWifi;
+
+  if (reiniciarPendiente && millis() >= tiempoReinicio) {
+    Serial.println("[SISTEMA] Reiniciando microcontrolador...");
+    delay(100);
+    ESP.restart();
   }
-  if (estadoWifi != WL_CONNECTED && millis() - ultimoReintentoWifi > 10000) {
-    ultimoReintentoWifi = millis();
-    Serial.println("[WIFI] Intentando reconectar...");
-    WiFi.reconnect();
+
+  if (!modoAP) {
+    static unsigned long ultimoReintentoWifi = 0;
+    static wl_status_t ultimoEstadoWifi = WiFi.status();
+    const wl_status_t estadoWifi = WiFi.status();
+    if (estadoWifi != ultimoEstadoWifi) {
+      if (estadoWifi == WL_CONNECTED) {
+        Serial.printf("[WIFI] Conexion recuperada. IP: %s\n", WiFi.localIP().toString().c_str());
+      } else if (ultimoEstadoWifi == WL_CONNECTED) {
+        Serial.println("[WIFI] Conexion perdida con el router Wi-Fi");
+      }
+      ultimoEstadoWifi = estadoWifi;
+    }
+    if (estadoWifi != WL_CONNECTED && millis() - ultimoReintentoWifi > 15000) {
+      ultimoReintentoWifi = millis();
+      Serial.println("[WIFI] Intentando reconectar a la red...");
+      WiFi.reconnect();
+    }
   }
 }
 
-void enviarComandoLoRa(int destino, const String &payload) { loraSerial.printf("AT+SEND=%d,%u,%s\r\n", destino, payload.length(), payload.c_str()); }
+// ============================================================================
+// COMUNICACIÓN LoRa RYLR998
+// ============================================================================
+void enviarComandoLoRa(int destino, const String &payload) {
+  loraSerial.printf("AT+SEND=%d,%u,%s\r\n", destino, payload.length(), payload.c_str());
+}
 
 String campo(const String &texto, int indice) {
   int inicio = 0;
-  for (int i = 0; i < indice; ++i) { inicio = texto.indexOf(':', inicio); if (inicio < 0) return ""; ++inicio; }
-  int fin = texto.indexOf(':', inicio); return fin < 0 ? texto.substring(inicio) : texto.substring(inicio, fin);
+  for (int i = 0; i < indice; ++i) {
+    inicio = texto.indexOf(':', inicio);
+    if (inicio < 0) return "";
+    ++inicio;
+  }
+  int fin = texto.indexOf(':', inicio);
+  return fin < 0 ? texto.substring(inicio) : texto.substring(inicio, fin);
 }
+
 bool crc32HexValido(const String &valor) {
   if (valor.length() != 8) return false;
   for (size_t i = 0; i < valor.length(); ++i) {
@@ -161,17 +493,32 @@ bool crc32HexValido(const String &valor) {
   }
   return true;
 }
+
 String urlEncode(const String &texto) {
-  const char *hex = "0123456789ABCDEF"; String salida;
-  for (size_t i = 0; i < texto.length(); ++i) { unsigned char c = texto[i]; if (isalnum(c) || c == '-' || c == '_' || c == '.') salida += (char)c; else { salida += '%'; salida += hex[c >> 4]; salida += hex[c & 15]; } }
+  const char *hex = "0123456789ABCDEF";
+  String salida;
+  for (size_t i = 0; i < texto.length(); ++i) {
+    unsigned char c = texto[i];
+    if (isalnum(c) || c == '-' || c == '_' || c == '.') {
+      salida += (char)c;
+    } else {
+      salida += '%';
+      salida += hex[c >> 4];
+      salida += hex[c & 15];
+    }
+  }
   return salida;
 }
 
 bool esperarOKLocal(unsigned long timeoutMs) {
   const unsigned long inicio = millis();
   while (millis() - inicio < timeoutMs) {
-    if (!loraSerial.available()) { delay(1); continue; }
-    String respuesta = loraSerial.readStringUntil('\n'); respuesta.trim();
+    if (!loraSerial.available()) {
+      delay(1);
+      continue;
+    }
+    String respuesta = loraSerial.readStringUntil('\n');
+    respuesta.trim();
     if (respuesta == "+OK") return true;
     if (respuesta.startsWith("+ERR")) return false;
   }
@@ -179,10 +526,15 @@ bool esperarOKLocal(unsigned long timeoutMs) {
 }
 
 bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
-  const String esperado = "ACK" + String(chunk); const unsigned long inicio = millis();
+  const String esperado = "ACK" + String(chunk);
+  const unsigned long inicio = millis();
   while (millis() - inicio < timeoutMs) {
-    if (!loraSerial.available()) { delay(1); continue; }
-    String linea = loraSerial.readStringUntil('\n'); linea.trim();
+    if (!loraSerial.available()) {
+      delay(1);
+      continue;
+    }
+    String linea = loraSerial.readStringUntil('\n');
+    linea.trim();
     if (!linea.startsWith("+RCV=")) continue;
     int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
     if (c1 < 0 || c2 < 0 || c3 < 0) continue;
@@ -192,9 +544,15 @@ bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
 }
 
 bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella) {
-  if (huella.length() != HUELLA_TEMPLATE_HEX_CHARS || (huella.length() & 1)) { Serial.println("[LORA] Template HEX invalido"); return false; }
+  if (huella.length() != HUELLA_TEMPLATE_HEX_CHARS || (huella.length() & 1)) {
+    Serial.println("[LORA] Template HEX invalido");
+    return false;
+  }
   const int total = (huella.length() + CHARS_POR_CHUNK - 1) / CHARS_POR_CHUNK;
-  if (total != TOTAL_CHUNKS_HUELLA) { Serial.println("[LORA] Cantidad de fragmentos invalida"); return false; }
+  if (total != TOTAL_CHUNKS_HUELLA) {
+    Serial.println("[LORA] Cantidad de fragmentos invalida");
+    return false;
+  }
   Serial.printf("[LORA] Enviando huella %d al aula %d (destino %d, %d fragmentos)\n",
                 idHuella, idAula, loraId, total);
   for (int chunk = 0; chunk < total; ++chunk) {
@@ -202,7 +560,10 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
     const String trama = chunk == 0
       ? "0:" + String(idSync) + ":" + String(idHuella) + ":" + String(idAula) + ":" + ci + ":" + tipo + ":" + String(total) + ":" + datos
       : String(chunk) + ":" + datos;
-    if (trama.length() > 240) { Serial.println("[LORA] Trama excede limite RYLR998"); return false; }
+    if (trama.length() > 240) {
+      Serial.println("[LORA] Trama excede limite RYLR998");
+      return false;
+    }
     bool confirmado = false;
     for (int intento = 0; intento < MAX_REINTENTOS && !confirmado; ++intento) {
       while (loraSerial.available()) loraSerial.read();
@@ -214,31 +575,42 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
         delay(100);
       }
     }
-    if (!confirmado) { Serial.printf("[LORA] Envio cancelado: sin ACK en fragmento %d\n", chunk); return false; }
+    if (!confirmado) {
+      Serial.printf("[LORA] Envio cancelado: sin ACK en fragmento %d\n", chunk);
+      return false;
+    }
   }
   Serial.printf("[LORA] Huella %d enviada; esperando confirmacion de almacenamiento del aula\n", idHuella);
   return true;
 }
 
+// ============================================================================
+// COMUNICACIÓN CON LA API BACKEND SISCO-EDU
+// ============================================================================
 void pedirSyncPendiente() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[SYNC] Consulta omitida: Wi-Fi no conectado");
     return;
   }
-  for (size_t i = 0; i < CANTIDAD_AULAS; ++i) pedirSyncAula(tablaAulas[i]);
+  for (size_t i = 0; i < CANTIDAD_AULAS; ++i) {
+    pedirSyncAula(tablaAulas[i]);
+  }
   Serial.println("[SYNC] Consulta de aulas finalizada");
 }
 
 bool pedirSyncAula(const DispositivoAula &aula) {
   Serial.printf("[SYNC] Consultando aula %d (direccion LoRa %d)\n", aula.idAula, aula.loraId);
   HTTPClient http;
-  const String url = String(BASE) + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(aula.idAula);
+  const String url = configBaseUrl + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(aula.idAula);
   if (!http.begin(url)) {
     Serial.println("[SYNC] No se pudo iniciar la solicitud HTTP");
     return false;
   }
-  http.addHeader("X-GATEWAY-KEY", API_KEY);
-  const int codigo = http.GET(); const String respuesta = http.getString(); http.end();
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  const int codigo = http.GET();
+  const String respuesta = http.getString();
+  http.end();
+
   if (codigo != 200) {
     Serial.printf("[SYNC] Aula %d: API respondio HTTP %d\n", aula.idAula, codigo);
     return false;
@@ -266,7 +638,6 @@ bool pedirSyncAula(const DispositivoAula &aula) {
     confirmarSync(idSync, "ERROR", "FALLO_ENLACE_LORA");
     return false;
   }
-  // El estado queda ENVIADO hasta que el aula confirme que storeModel() tuvo exito.
   return true;
 }
 
@@ -275,9 +646,12 @@ void confirmarSync(int idSync, const String &estado, const String &mensaje) {
     Serial.printf("[SYNC] No se pudo confirmar sync %d: datos invalidos o Wi-Fi desconectado\n", idSync);
     return;
   }
-  HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/confirmar_sync.php")) return;
-  http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const int codigo = http.POST("id_sync=" + String(idSync) + "&estado=" + urlEncode(estado) + "&mensaje=" + urlEncode(mensaje)); http.end();
+  HTTPClient http;
+  if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_sync.php")) return;
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  const int codigo = http.POST("id_sync=" + String(idSync) + "&estado=" + urlEncode(estado) + "&mensaje=" + urlEncode(mensaje));
+  http.end();
   Serial.printf("[SYNC] Estado de sync %d enviado a la API: %s (HTTP %d)\n",
                 idSync, estado.c_str(), codigo);
 }
@@ -293,35 +667,51 @@ void confirmarEntregaAula(const String &payload) {
     Serial.println("[SYNC] Confirmacion LoRa de aula invalida");
     return;
   }
-  if (WiFi.status() != WL_CONNECTED) { Serial.println("[SYNC] Confirmacion no enviada: Wi-Fi desconectado"); return; }
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[SYNC] Confirmacion no enviada: Wi-Fi desconectado");
+    return;
+  }
   Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s)\n", idAula, idHuella, slot, crc.c_str());
-  HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/confirmar_entrega_aula.php")) return;
-  http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  HTTPClient http;
+  if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_entrega_aula.php")) return;
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   const String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&crc32=" + crc;
-  const int codigo = http.POST(cuerpo); http.end();
+  const int codigo = http.POST(cuerpo);
+  http.end();
   Serial.printf("[SYNC] Confirmacion de entrega enviada a la API (HTTP %d)\n", codigo);
 }
 
 void procesarAsistenciaEntrante(const String &payload) {
   // AST:id_aula:ci:tipo:estado
-  const int idAula = campo(payload, 1).toInt(); const String ci = campo(payload, 2), tipo = campo(payload, 3), estado = campo(payload, 4);
+  const int idAula = campo(payload, 1).toInt();
+  const String ci = campo(payload, 2), tipo = campo(payload, 3), estado = campo(payload, 4);
   if (!idAula || !ci.length() || !tipo.length() || !estado.length()) {
     Serial.println("[ASISTENCIA] Trama LoRa invalida");
     return;
   }
-  if (WiFi.status() != WL_CONNECTED) { Serial.println("[ASISTENCIA] Registro omitido: Wi-Fi desconectado"); return; }
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[ASISTENCIA] Registro omitido: Wi-Fi desconectado");
+    return;
+  }
   Serial.printf("[ASISTENCIA] Recibida desde aula %d: tipo=%s, estado=%s\n",
                 idAula, tipo.c_str(), estado.c_str());
-  HTTPClient http; if (!http.begin(String(BASE) + "src/api/Gateway/registrar_asistencia.php")) return;
-  http.addHeader("X-GATEWAY-KEY", API_KEY); http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const int codigo = http.POST("id_aula=" + String(idAula) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&estado=" + urlEncode(estado)); http.end();
+  HTTPClient http;
+  if (!http.begin(configBaseUrl + "src/api/Gateway/registrar_asistencia.php")) return;
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  const int codigo = http.POST("id_aula=" + String(idAula) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&estado=" + urlEncode(estado));
+  http.end();
   Serial.printf("[ASISTENCIA] Registro enviado a la API (HTTP %d)\n", codigo);
 }
 
 void atenderMensajesLoRa() {
   if (!loraSerial.available()) return;
-  String linea = loraSerial.readStringUntil('\n'); linea.trim(); if (!linea.startsWith("+RCV=")) return;
-  int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1); if (c1 < 0 || c2 < 0 || c3 < 0) return;
+  String linea = loraSerial.readStringUntil('\n');
+  linea.trim();
+  if (!linea.startsWith("+RCV=")) return;
+  int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
+  if (c1 < 0 || c2 < 0 || c3 < 0) return;
   const String payload = linea.substring(c2 + 1, c3);
   const int finTipo = payload.indexOf(':');
   const String tipoMensaje = finTipo < 0 ? payload : payload.substring(0, finTipo);

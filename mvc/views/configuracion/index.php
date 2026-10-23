@@ -76,9 +76,14 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                         <label for="ip_gateway" class="font-semibold text-sm text-slate-800">
                             IP ESP32 Gateway (LoRa RYLR998)
                         </label>
-                        <button type="button" onclick="probarConexion('gateway')" id="btn-test-gateway" class="text-xs btn btn-secondary py-1 px-2.5">
-                            Probar Ping
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <a id="btn-portal-gateway" href="http://192.168.100.17/" target="_blank" class="text-xs btn btn-secondary py-1 px-2.5 flex items-center gap-1" title="Abrir portal web embebido del Gateway">
+                                🌐 Portal Web
+                            </a>
+                            <button type="button" onclick="probarConexion('gateway')" id="btn-test-gateway" class="text-xs btn btn-secondary py-1 px-2.5">
+                                Probar Ping
+                            </button>
+                        </div>
                     </div>
                     <input type="text" id="ip_gateway" name="ip_gateway" class="app-input w-full font-mono text-sm" placeholder="192.168.100.17" required>
                     <p class="text-xs text-slate-500 mt-2">
@@ -299,6 +304,10 @@ async function cargarConfiguraciones() {
                     input.value = valor ?? '';
                 }
             }
+            const btnPortal = document.getElementById('btn-portal-gateway');
+            if (btnPortal && vals.ip_gateway) {
+                btnPortal.href = `http://${vals.ip_gateway}/`;
+            }
         } else {
             mostrarAlerta('error', data.message || 'No se pudieron cargar las configuraciones');
         }
@@ -387,6 +396,17 @@ async function probarConexion(tipo) {
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarConfiguraciones();
+
+    const ipGw = document.getElementById('ip_gateway');
+    if (ipGw) {
+        ipGw.addEventListener('input', () => {
+            const btnPortal = document.getElementById('btn-portal-gateway');
+            if (btnPortal) {
+                const ip = ipGw.value.trim();
+                btnPortal.href = ip ? `http://${ip}/` : '#';
+            }
+        });
+    }
 });
 </script>
 

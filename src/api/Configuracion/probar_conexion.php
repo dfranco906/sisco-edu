@@ -49,7 +49,7 @@ if (is_resource($conexion)) {
 
     $extraInfo = "";
     // Si es el registrador, intentar leer /estado
-    if ($tipo === 'registrador' && function_exists('curl_init')) {
+    if (($tipo === 'registrador' || $tipo === 'gateway') && function_exists('curl_init')) {
         $ch = curl_init("http://{$ip}/estado");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -62,7 +62,7 @@ if (is_resource($conexion)) {
         if ($httpCode === 200 && $resp) {
             $data = json_decode($resp, true);
             if (isset($data['status']) && $data['status'] === 'success') {
-                $extraInfo = " (Sensor DY50 responde correctamente)";
+                $extraInfo = $tipo === 'registrador' ? " (Sensor DY50 responde correctamente)" : " (Gateway LoRa responde correctamente)";
             }
         }
     }
