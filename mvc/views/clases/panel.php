@@ -12,29 +12,41 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
 ?>
 
 <main class="app-main flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto">
+    <!-- Breadcrumb de Navegación -->
+    <nav class="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3" aria-label="Ruta de navegación">
+        <a href="<?= base_url('mvc/views/dashboard/index.php') ?>" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+            <span>🏠</span> Inicio
+        </a>
+        <span>/</span>
+        <span class="text-slate-800 dark:text-slate-200">Clase en Vivo</span>
+    </nav>
+
     <!-- Barra Superior -->
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 animate-pulse">
-                    ● EN VIVO
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700 shadow-sm animate-pulse">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    EN VIVO
                 </span>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Panel de Clase y Asistencia Biométrica</h2>
+                <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Panel de Clase y Asistencia Biométrica
+                </h1>
             </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 mt-2 font-normal leading-relaxed">
                 Monitoreo en tiempo real de huellas dactilares, lección pedagógica del día y lista de presentes/ausentes.
             </p>
-            <div class="flex items-center gap-2 mt-2">
+            <div class="flex items-center gap-2 mt-3">
                 <?php if ($esAdmin): ?>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 shadow-2xs">
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
                         <span>🛡️</span> Modo Administrador: Marcación Manual y Rectificación Habilitada
                     </span>
                 <?php elseif ($puedeMarcarManual): ?>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs">
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
                         <span>✍️</span> Modo Docente / Coordinador: Marcación Manual Habilitada (Modificaciones reservadas a Administradores)
                     </span>
                 <?php else: ?>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shadow-2xs">
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-2xs">
                         <span>👁️</span> Modo Observador: Solo lectura
                     </span>
                 <?php endif; ?>
@@ -43,66 +55,68 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
 
         <!-- Controles de Estado y Hora Institucional -->
         <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-mono text-slate-700 dark:text-slate-300">
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 min-h-[44px] px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm text-sm font-mono font-bold text-slate-700 dark:text-slate-300">
                 <span>📅</span>
                 <span id="label-servidor-tiempo">Sincronizando hora...</span>
             </div>
 
             <!-- Indicador Reactivo Supabase Realtime (WebSockets) -->
-            <div id="badge-realtime-status" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs transition-all">
-                <span id="dot-realtime" class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <div id="badge-realtime-status" class="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 shadow-2xs transition-all">
+                <span id="dot-realtime" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
                 <span id="text-realtime">⚡ Realtime: Inicializando...</span>
             </div>
 
-            <!-- Botón de Actualización Manual bajo demanda (Cero consultas fantasma) -->
-            <button id="btn-refrescar-manual" type="button" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-semibold border border-indigo-200 dark:border-indigo-800/40 shadow-2xs transition-all flex items-center gap-1.5" title="Actualizar datos de la clase bajo demanda">
-                <span id="icon-refrescar" class="transition-transform duration-300">🔄</span>
+            <!-- Botón de Actualización Manual bajo demanda -->
+            <button id="btn-refrescar-manual" type="button" class="min-h-[44px] px-5 py-2.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm sm:text-base font-extrabold border-2 border-indigo-200 dark:border-indigo-800 shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95" title="Actualizar datos de la clase bajo demanda">
+                <span id="icon-refrescar" class="transition-transform duration-300 text-base">🔄</span>
                 <span>Actualizar</span>
             </button>
         </div>
     </div>
 
     <!-- Filtros Jerárquicos en Cascada: Turno -> Ciclo/Nivel -> Bachillerato -> Grado/Curso -->
-    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
-        <div class="flex items-center justify-between gap-3 mb-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+    <div class="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <span class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <span>🧭</span> Explorador Jerárquico de Cursos
             </span>
-            <span id="label-estado-filtro" class="text-[11px] text-slate-400 font-medium"></span>
+            <span id="label-estado-filtro" class="text-sm font-bold px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full border border-indigo-200 dark:border-indigo-800">
+                Cargando cursos...
+            </span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-                <label for="filtro-turno" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                <label for="filtro-turno" class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                     1. Turno
                 </label>
-                <select id="filtro-turno" class="app-input w-full text-xs font-semibold">
+                <select id="filtro-turno" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                     <option value="">Todos los turnos</option>
                 </select>
             </div>
 
             <div>
-                <label for="filtro-nivel" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                <label for="filtro-nivel" class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                     2. Ciclo / Nivel
                 </label>
-                <select id="filtro-nivel" class="app-input w-full text-xs font-semibold">
+                <select id="filtro-nivel" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                     <option value="">Todos los ciclos</option>
                 </select>
             </div>
 
             <div>
-                <label for="filtro-bachillerato" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                <label for="filtro-bachillerato" class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                     3. Bachillerato
                 </label>
-                <select id="filtro-bachillerato" class="app-input w-full text-xs font-semibold">
+                <select id="filtro-bachillerato" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                     <option value="">Todos / No aplica</option>
                 </select>
             </div>
 
             <div>
-                <label for="filtro-grado" class="block text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1.5">
+                <label for="filtro-grado" class="block text-sm sm:text-base font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">
                     4. Grado / Curso a Observar
                 </label>
-                <select id="filtro-grado" class="app-input w-full text-xs font-bold border-indigo-300 dark:border-indigo-500/50">
+                <select id="filtro-grado" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border-2 border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all shadow-2xs">
                     <option value="">Seleccione grado o curso...</option>
                 </select>
             </div>
@@ -110,27 +124,59 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
     </div>
 
     <!-- Estado Inicial: Seleccionar Grado o Curso (Prompt Limpio) -->
-    <div id="prompt-seleccion-grado" class="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 p-12 text-center my-6">
-        <div class="mx-auto w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-center text-3xl mb-4 shadow-sm">
+    <div id="prompt-seleccion-grado" class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-12 sm:p-16 text-center my-6">
+        <div class="mx-auto w-20 h-20 rounded-3xl bg-indigo-100 dark:bg-indigo-950/60 border-2 border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-4xl mb-5 shadow-sm">
             📡
         </div>
-        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Seleccionar grado o curso para monitorear</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1.5 leading-relaxed">
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Seleccionar grado o curso para monitorear
+        </h2>
+        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-lg mx-auto mt-2 leading-relaxed font-normal">
             Utilice los filtros superiores para seleccionar el Turno, Ciclo y Grado a observar en tiempo real.
         </p>
-        <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <div class="mt-5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
             Esperando selección de curso
         </div>
     </div>
 
+    <!-- Estado de Carga Tranquilizador (Animación Suave y Armónica) -->
+    <div id="loading-seleccion-grado" class="rounded-3xl border-2 border-indigo-200 dark:border-indigo-900/50 bg-gradient-to-b from-indigo-50/60 to-white dark:from-slate-900/90 dark:to-slate-900 p-12 sm:p-16 text-center my-6 shadow-sm hidden">
+        <div class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <!-- Anillo exterior de onda armónica pulsante -->
+            <div class="absolute inset-0 rounded-full bg-indigo-400/20 dark:bg-indigo-500/20 animate-ping"></div>
+            <!-- Anillo giratorio suave en gradiente -->
+            <div class="w-20 h-20 rounded-full border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 animate-spin"></div>
+            <!-- Icono central estático representativo del aula -->
+            <div class="absolute inset-0 flex items-center justify-center text-3xl">
+                🏫
+            </div>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Sincronizando con el Aula Física...
+        </h3>
+        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto mt-2 leading-relaxed font-medium">
+            Consultando horario activo, plan pedagógico del día y lecturas biométricas en tiempo real. Por favor, aguarde un instante.
+        </p>
+        <!-- Barra de progreso armónica con shimmer -->
+        <div class="max-w-xs mx-auto mt-6 bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden shadow-inner">
+            <div class="h-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 rounded-full animate-pulse w-3/4"></div>
+        </div>
+        <div class="mt-4 flex items-center justify-center gap-2 text-sm font-bold text-indigo-600 dark:text-indigo-400">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Conectando con la base de datos institucional...</span>
+        </div>
+    </div>
+
     <!-- Si no hay clase activa para el curso seleccionado -->
-    <div id="no-clase-banner" class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-6 mb-6 hidden">
-        <div class="flex items-start gap-3">
-            <span class="text-2xl">⚠️</span>
+    <div id="no-clase-banner" class="bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-800/60 rounded-3xl p-6 sm:p-8 mb-6 shadow-sm hidden">
+        <div class="flex items-start gap-4">
+            <span class="text-3xl flex-shrink-0">⚠️</span>
             <div>
-                <h3 class="font-bold text-amber-900 dark:text-amber-300 text-sm">No se detectó una clase en curso para este curso</h3>
-                <p id="no-clase-detalle" class="text-xs text-amber-800 dark:text-amber-400/90 mt-1 leading-relaxed">
+                <h3 class="text-lg sm:text-xl font-black text-amber-900 dark:text-amber-200">
+                    No se detectó una clase en curso para este curso
+                </h3>
+                <p id="no-clase-detalle" class="text-base text-amber-800 dark:text-amber-300/90 mt-1.5 leading-relaxed font-medium">
                     Verifique que el día y la hora actual correspondan al horario programado para este grado o seleccione otro curso en el explorador.
                 </p>
             </div>
@@ -143,74 +189,74 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
         <!-- 1. Encabezado de la Clase y Docente -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Datos de la Materia y Horario -->
-            <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-                <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-7">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
                     <div>
-                        <span class="text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-bold">Materia Activa</span>
-                        <h3 id="clase-materia" class="text-xl font-bold text-slate-900 dark:text-white mt-0.5">-</h3>
+                        <span class="text-xs sm:text-sm uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-extrabold">Materia Activa</span>
+                        <h2 id="clase-materia" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-tight">-</h2>
                     </div>
                     <div class="text-right">
-                        <span id="clase-grado-badge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/30">
+                        <span id="clase-grado-badge" class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-200 dark:border-indigo-800 shadow-2xs">
                             -
                         </span>
-                        <p id="clase-horario" class="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1 font-semibold">-</p>
+                        <p id="clase-horario" class="text-sm sm:text-base font-mono font-bold text-slate-600 dark:text-slate-300 mt-1.5">-</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5">
                     <div>
-                        <span class="text-slate-400 font-medium">Aula Física</span>
-                        <p id="clase-aula" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">-</p>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">Aula Física</span>
+                        <p id="clase-aula" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">-</p>
                     </div>
                     <div>
-                        <span class="text-slate-400 font-medium">Horas Cátedra</span>
-                        <p id="clase-hc" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">-</p>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">Horas Cátedra</span>
+                        <p id="clase-hc" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">-</p>
                     </div>
                     <div>
-                        <span class="text-slate-400 font-medium">Duración Total</span>
-                        <p id="clase-duracion" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5">-</p>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">Duración Total</span>
+                        <p id="clase-duracion" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">-</p>
                     </div>
                     <div>
-                        <span class="text-slate-400 font-medium">Fecha de la Clase</span>
-                        <p id="clase-fecha" class="font-bold text-slate-800 dark:text-slate-200 mt-0.5 font-mono">-</p>
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">Fecha de la Clase</span>
+                        <p id="clase-fecha" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1 font-mono">-</p>
                     </div>
                 </div>
             </div>
 
             <!-- Tarjeta del Docente y su Asistencia -->
-            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 flex flex-col justify-between">
                 <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Profesor a Cargo</span>
-                        <span id="badge-asist-profesor" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs sm:text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400 font-extrabold">Profesor a Cargo</span>
+                        <span id="badge-asist-profesor" class="inline-flex items-center px-3.5 py-1 rounded-xl text-sm font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             Verificando...
                         </span>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-2xl shadow-sm">
                             👨‍🏫
                         </div>
                         <div>
-                            <h4 id="profesor-nombre" class="font-bold text-slate-900 dark:text-white text-base leading-tight">-</h4>
-                            <p id="profesor-ci" class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">CI: -</p>
+                            <h3 id="profesor-nombre" class="font-black text-slate-900 dark:text-white text-lg sm:text-xl leading-tight">-</h3>
+                            <p id="profesor-ci" class="text-sm text-slate-500 dark:text-slate-400 font-mono font-bold mt-1">CI: -</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
+                <div class="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-400">
                     <div>
-                        <span id="profesor-hora-marcacion" class="font-medium block">Hora: --:--:--</span>
-                        <span id="profesor-origen" class="text-[10px] text-slate-400 font-mono">Origen: Pendiente</span>
+                        <span id="profesor-hora-marcacion" class="font-bold text-slate-800 dark:text-slate-200 block">Hora: --:--:--</span>
+                        <span id="profesor-origen" class="text-xs text-slate-500 font-mono mt-0.5 block">Origen: Pendiente</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <?php if ($puedeMarcarManual): ?>
-                        <button id="btn-marcar-prof-manual" type="button" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg text-xs font-semibold border border-indigo-200 dark:border-indigo-800/40 transition-colors shadow-2xs" title="Asistencia docente manual">
-                            ✏️ Asistencia
+                        <button id="btn-marcar-prof-manual" type="button" class="min-h-[44px] px-4 py-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl text-sm font-extrabold border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5" title="Asistencia docente manual">
+                            <span>✏️</span> Asistencia
                         </button>
                         <?php endif; ?>
-                        <button id="btn-simular-prof" type="button" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-xs font-semibold transition-colors" title="Simular marcación de huella docente desde hardware">
-                            👆 Huella
+                        <button id="btn-simular-prof" type="button" class="min-h-[44px] px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5" title="Simular marcación de huella docente desde hardware">
+                            <span>👆</span> Huella
                         </button>
                     </div>
                 </div>
@@ -218,45 +264,45 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
         </div>
 
         <!-- 2. Contenido Pedagógico / Lección del Día -->
-        <div class="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-xl shadow-md p-6 text-white">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-white/10">
+        <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl shadow-xl p-6 sm:p-8 text-white border-2 border-indigo-800/40">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/40 text-indigo-200 border border-indigo-400/30 uppercase tracking-wider">
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 uppercase tracking-wider">
                             Plan Anual MEC Paraguay
                         </span>
-                        <span id="leccion-unidad" class="text-xs text-indigo-200 font-medium">-</span>
+                        <span id="leccion-unidad" class="text-sm font-bold text-indigo-200">-</span>
                     </div>
-                    <h3 id="leccion-tema" class="text-lg font-bold text-white mt-1 leading-snug">
+                    <h3 id="leccion-tema" class="text-xl sm:text-2xl font-black text-white mt-2 leading-snug">
                         Cargando lección del día...
                     </h3>
                 </div>
                 <div class="text-right">
-                    <span class="text-xs text-indigo-300 block">Horas Cátedra</span>
-                    <span id="leccion-hc-badge" class="text-sm font-bold text-white font-mono bg-white/10 px-3 py-1 rounded-md inline-block mt-0.5">
+                    <span class="text-sm text-indigo-300 font-bold block">Horas Cátedra</span>
+                    <span id="leccion-hc-badge" class="text-base font-black text-white font-mono bg-white/10 px-4 py-1.5 rounded-xl border border-white/10 inline-block mt-1">
                         - HC (40m c/u)
                     </span>
                 </div>
             </div>
 
             <!-- Capacidad y Contenido -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="md:col-span-2">
-                    <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wide">Capacidad a Desarrollar</span>
-                    <p id="leccion-capacidad" class="text-xs text-slate-200 mt-1 leading-relaxed">-</p>
+                    <span class="text-xs sm:text-sm font-extrabold text-indigo-300 uppercase tracking-wide">Capacidad a Desarrollar</span>
+                    <p id="leccion-capacidad" class="text-sm sm:text-base text-slate-200 mt-2 leading-relaxed font-normal">-</p>
                 </div>
                 <div>
-                    <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wide">Evaluación Pedagógica</span>
-                    <div id="leccion-evaluacion" class="text-xs text-slate-200 mt-1 space-y-1">-</div>
+                    <span class="text-xs sm:text-sm font-extrabold text-indigo-300 uppercase tracking-wide">Evaluación Pedagógica</span>
+                    <div id="leccion-evaluacion" class="text-sm sm:text-base text-slate-200 mt-2 space-y-1.5 font-normal">-</div>
                 </div>
             </div>
 
             <!-- Indicadores de Logro con Checkbox en Tiempo Real -->
-            <div class="mt-4 pt-4 border-t border-white/10">
-                <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider block mb-2">
+            <div class="mt-4 pt-5 border-t border-white/10">
+                <span class="text-xs sm:text-sm font-extrabold text-indigo-300 uppercase tracking-wider block mb-3">
                     Indicadores de Logro de la Clase (Marcar cumplimiento durante la clase)
                 </span>
-                <div id="leccion-indicadores-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                <div id="leccion-indicadores-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm sm:text-base">
                     <!-- Dinámico -->
                 </div>
             </div>
@@ -266,21 +312,21 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
         <div>
             <!-- Tarjetas Métricas -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <span class="text-xs font-semibold text-slate-400 uppercase">Matriculados</span>
-                    <p id="metric-total" class="text-2xl font-bold text-slate-900 dark:text-white mt-1">0</p>
+                <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm">
+                    <span class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Matriculados</span>
+                    <p id="metric-total" class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mt-1.5">0</p>
                 </div>
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Presentes (Huella)</span>
-                    <p id="metric-presentes" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">0</p>
+                <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm">
+                    <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Presentes (Huella)</span>
+                    <p id="metric-presentes" class="text-3xl sm:text-4xl lg:text-5xl font-black text-emerald-600 dark:text-emerald-400 mt-1.5">0</p>
                 </div>
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <span class="text-xs font-semibold text-rose-500 dark:text-rose-400 uppercase">Ausentes</span>
-                    <p id="metric-ausentes" class="text-2xl font-bold text-rose-500 dark:text-rose-400 mt-1">0</p>
+                <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm">
+                    <span class="text-sm font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Ausentes</span>
+                    <p id="metric-ausentes" class="text-3xl sm:text-4xl lg:text-5xl font-black text-rose-500 dark:text-rose-400 mt-1.5">0</p>
                 </div>
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase">% Asistencia</span>
-                    <p id="metric-porcentaje" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">0%</p>
+                <div class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm">
+                    <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">% Asistencia</span>
+                    <p id="metric-porcentaje" class="text-3xl sm:text-4xl lg:text-5xl font-black text-indigo-600 dark:text-indigo-400 mt-1.5">0%</p>
                 </div>
             </div>
 
@@ -288,31 +334,31 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 <!-- Columna Presentes -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Estudiantes Presentes</h4>
+                <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 flex flex-col">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
+                            <h3 class="font-black text-slate-900 dark:text-white text-lg">Estudiantes Presentes</h3>
                         </div>
-                        <span id="badge-count-presentes" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40">0</span>
+                        <span id="badge-count-presentes" class="px-3 py-1 rounded-full text-sm font-extrabold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">0</span>
                     </div>
 
-                    <div id="lista-presentes" class="space-y-2 flex-1 overflow-y-auto max-h-96 pr-1">
+                    <div id="lista-presentes" class="space-y-3 flex-1 overflow-y-auto max-h-[460px] pr-1">
                         <!-- Items dinámicos -->
                     </div>
                 </div>
 
                 <!-- Columna Ausentes -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Estudiantes Ausentes</h4>
+                <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 flex flex-col">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3.5 h-3.5 rounded-full bg-rose-500"></span>
+                            <h3 class="font-black text-slate-900 dark:text-white text-lg">Estudiantes Ausentes</h3>
                         </div>
-                        <span id="badge-count-ausentes" class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-800/40">0</span>
+                        <span id="badge-count-ausentes" class="px-3 py-1 rounded-full text-sm font-extrabold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800">0</span>
                     </div>
 
-                    <div id="lista-ausentes" class="space-y-2 flex-1 overflow-y-auto max-h-96 pr-1">
+                    <div id="lista-ausentes" class="space-y-3 flex-1 overflow-y-auto max-h-[460px] pr-1">
                         <!-- Items dinámicos -->
                     </div>
                 </div>
@@ -321,30 +367,30 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
         </div>
 
         <!-- 4. Consola de Pruebas: Simulación Rápida de Huella Dactilar -->
-        <div class="bg-slate-100 dark:bg-slate-900/90 rounded-xl p-5 text-slate-800 dark:text-white shadow-md border border-slate-200 dark:border-slate-800">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div class="bg-slate-100/90 dark:bg-slate-900/90 rounded-3xl p-6 sm:p-7 text-slate-800 dark:text-white shadow-sm border-2 border-slate-200/90 dark:border-slate-800">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-amber-500 dark:text-amber-400">⚡ Consola de Pruebas Rápidas:</span>
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-200">Simulador de Marcación Biométrica</h4>
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-base font-black text-amber-500 dark:text-amber-400">⚡ Consola de Pruebas Rápidas:</span>
+                        <h4 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">Simulador de Marcación Biométrica</h4>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1">
                         Permite disparar la marcación de huella de cualquier estudiante o docente sin tocar hardware físico para verificar la detección de clase y lección.
                     </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <select id="simular-select-estudiante" class="px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 min-w-[220px]">
+                <select id="simular-select-estudiante" class="w-full sm:flex-1 min-w-[260px] min-h-[48px] px-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">Seleccione estudiante del curso...</option>
                 </select>
 
-                <button id="btn-disparar-huella" type="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+                <button id="btn-disparar-huella" type="button" class="min-h-[48px] px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm sm:text-base font-extrabold transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95">
                     <span>👆</span> Marcar Huella Estudiante
                 </button>
 
                 <?php if ($puedeMarcarManual): ?>
-                <button id="btn-marcar-todos" type="button" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-all" title="Marcar a todos los ausentes como presentes de forma manual">
+                <button id="btn-marcar-todos" type="button" class="min-h-[48px] px-5 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-sm sm:text-base font-bold transition-all cursor-pointer active:scale-95" title="Marcar a todos los ausentes como presentes de forma manual">
                     Marcar Todos Presentes
                 </button>
                 <?php endif; ?>
@@ -356,74 +402,74 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
     <?php if ($puedeMarcarManual): ?>
     <!-- Modal para Ajuste / Rectificación de Asistencia Manual -->
     <div id="modal-ajuste-asistencia" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden" aria-labelledby="modal-ajuste-titulo" role="dialog" aria-modal="true">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
             <!-- Header -->
-            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg shadow-sm">
                         ✏️
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="modal-ajuste-titulo">Ajustar Asistencia Manual</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400" id="modal-ajuste-subtitulo">Registro institucional</p>
+                        <h3 class="text-lg font-black text-slate-900 dark:text-white" id="modal-ajuste-titulo">Ajustar Asistencia Manual</h3>
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400" id="modal-ajuste-subtitulo">Registro institucional</p>
                     </div>
                 </div>
-                <button type="button" id="btn-cerrar-modal-ajuste" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors text-xl font-bold leading-none" aria-label="Cerrar modal">
+                <button type="button" id="btn-cerrar-modal-ajuste" class="w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-2xl font-bold cursor-pointer" aria-label="Cerrar modal">
                     &times;
                 </button>
             </div>
 
             <!-- Body -->
-            <div class="p-5 space-y-4">
+            <div class="p-6 space-y-5">
                 <!-- Info Persona -->
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-xs">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-slate-400 font-semibold uppercase text-[10px]" id="modal-persona-tipo">Estudiante</span>
-                        <span class="font-mono text-slate-500 dark:text-slate-400 text-[11px]" id="modal-persona-ci">CI: -</span>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-slate-500 dark:text-slate-400 font-extrabold uppercase text-xs tracking-wider" id="modal-persona-tipo">Estudiante</span>
+                        <span class="font-mono text-slate-600 dark:text-slate-400 text-sm font-bold" id="modal-persona-ci">CI: -</span>
                     </div>
-                    <div class="font-bold text-slate-800 dark:text-white text-sm" id="modal-persona-nombre">-</div>
+                    <div class="font-black text-slate-900 dark:text-white text-base sm:text-lg" id="modal-persona-nombre">-</div>
                 </div>
 
                 <!-- Estado Selector -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
                         Estado a Asignar
                     </label>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-500 cursor-pointer transition-all">
-                            <input type="radio" name="modal_estado_asistencia" value="PRESENTE" class="text-emerald-600 focus:ring-0">
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-500 cursor-pointer transition-all">
+                            <input type="radio" name="modal_estado_asistencia" value="PRESENTE" class="w-5 h-5 text-emerald-600 focus:ring-0">
                             <div>
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400 block">🟢 Presente</span>
-                                <span class="text-[10px] text-slate-400 block leading-tight">En aula / horario</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400 block text-base">🟢 Presente</span>
+                                <span class="text-xs text-slate-500 block leading-tight">En aula / horario</span>
                             </div>
                         </label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-500 cursor-pointer transition-all">
-                            <input type="radio" name="modal_estado_asistencia" value="TARDANZA" class="text-amber-600 focus:ring-0">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-500 cursor-pointer transition-all">
+                            <input type="radio" name="modal_estado_asistencia" value="TARDANZA" class="w-5 h-5 text-amber-600 focus:ring-0">
                             <div>
-                                <span class="font-bold text-amber-600 dark:text-amber-400 block">🟡 Tardanza</span>
-                                <span class="text-[10px] text-slate-400 block leading-tight">Llegada posterior</span>
+                                <span class="font-bold text-amber-600 dark:text-amber-400 block text-base">🟡 Tardanza</span>
+                                <span class="text-xs text-slate-500 block leading-tight">Llegada posterior</span>
                             </div>
                         </label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 cursor-pointer transition-all">
-                            <input type="radio" name="modal_estado_asistencia" value="JUSTIFICADO" class="text-blue-600 focus:ring-0">
+                        <label class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 cursor-pointer transition-all">
+                            <input type="radio" name="modal_estado_asistencia" value="JUSTIFICADO" class="w-5 h-5 text-blue-600 focus:ring-0">
                             <div>
-                                <span class="font-bold text-blue-600 dark:text-blue-400 block">🔵 Justificado</span>
-                                <span class="text-[10px] text-slate-400 block leading-tight">Permiso oficial</span>
+                                <span class="font-bold text-blue-600 dark:text-blue-400 block text-base">🔵 Justificado</span>
+                                <span class="text-xs text-slate-500 block leading-tight">Permiso oficial</span>
                             </div>
                         </label>
-                        <label id="opt-estado-ausente" class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-rose-500 cursor-pointer transition-all">
-                            <input type="radio" name="modal_estado_asistencia" value="AUSENTE" class="text-rose-600 focus:ring-0">
+                        <label id="opt-estado-ausente" class="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-rose-500 cursor-pointer transition-all">
+                            <input type="radio" name="modal_estado_asistencia" value="AUSENTE" class="w-5 h-5 text-rose-600 focus:ring-0">
                             <div>
-                                <span class="font-bold text-rose-600 dark:text-rose-400 block">🔴 Ausente</span>
-                                <span class="text-[10px] text-slate-400 block leading-tight">Reversión (Solo Admin)</span>
+                                <span class="font-bold text-rose-600 dark:text-rose-400 block text-base">🔴 Ausente</span>
+                                <span class="text-xs text-slate-500 block leading-tight">Reversión (Solo Admin)</span>
                             </div>
                         </label>
                     </div>
                 </div>
 
                 <!-- Alerta de Política Anti-Duplicado y Origen -->
-                <div class="flex items-start gap-2 p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-800/40 text-[11px] text-indigo-700 dark:text-indigo-300">
-                    <span class="text-sm">🛡️</span>
+                <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-sm text-indigo-800 dark:text-indigo-300">
+                    <span class="text-lg flex-shrink-0">🛡️</span>
                     <div>
                         <strong>Control Institucional:</strong> Se registrará como marcación manual. La base de datos garantiza registro único por persona y día (cero doble escritura).
                     </div>
@@ -431,11 +477,11 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
             </div>
 
             <!-- Footer -->
-            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
-                <button type="button" id="btn-cancelar-modal-ajuste" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                <button type="button" id="btn-cancelar-modal-ajuste" class="min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirmar-modal-ajuste" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors flex items-center gap-1.5">
+                <button type="button" id="btn-confirmar-modal-ajuste" class="min-h-[48px] px-6 py-2.5 rounded-xl text-sm sm:text-base font-extrabold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                     <span>💾</span> Guardar Cambio
                 </button>
             </div>
@@ -467,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const labelEstadoFiltro = document.getElementById('label-estado-filtro');
 
     const promptSeleccionGrado = document.getElementById('prompt-seleccion-grado');
+    const loadingSeleccionGrado = document.getElementById('loading-seleccion-grado');
     const noClaseBanner = document.getElementById('no-clase-banner');
     const noClaseDetalle = document.getElementById('no-clase-detalle');
     const claseContainer = document.getElementById('clase-activa-container');
@@ -545,6 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function mostrarEstadoPrompt() {
         if (promptSeleccionGrado) promptSeleccionGrado.classList.remove('hidden');
+        if (loadingSeleccionGrado) loadingSeleccionGrado.classList.add('hidden');
         if (noClaseBanner) noClaseBanner.classList.add('hidden');
         if (claseContainer) claseContainer.classList.add('hidden');
         currentClaseData = null;
@@ -619,12 +667,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Refrescar datos del panel de forma ligera y protegida
+    // 4. Refrescar datos del panel de forma ligera y protegida con animación de carga
     function refrescarPanel(silencioso = false) {
         const idGrado = filtroGrado ? filtroGrado.value : '';
         if (!idGrado) {
             mostrarEstadoPrompt();
             return;
+        }
+
+        // Si no es silencioso, mostrar el estado de carga tranquilizador
+        if (!silencioso) {
+            if (promptSeleccionGrado) promptSeleccionGrado.classList.add('hidden');
+            if (noClaseBanner) noClaseBanner.classList.add('hidden');
+            if (claseContainer) claseContainer.classList.add('hidden');
+            if (loadingSeleccionGrado) loadingSeleccionGrado.classList.remove('hidden');
         }
 
         // Cancelar petición anterior si aún no terminó para evitar acumulación
@@ -647,15 +703,21 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(e => {
                 if (e.name !== 'AbortError') {
                     console.error("Error al refrescar panel en vivo:", e);
+                    if (!silencioso && window.Toast) {
+                        Toast.error("Error al consultar la clase en vivo. Intente nuevamente.");
+                    }
                 }
             })
             .finally(() => {
                 isFetching = false;
+                if (loadingSeleccionGrado) loadingSeleccionGrado.classList.add('hidden');
             });
     }
 
     // 5. Renderizar vista completa
     function renderizarPanel(data) {
+        if (loadingSeleccionGrado) loadingSeleccionGrado.classList.add('hidden');
+
         if (data.servidor) {
             actualizarRelojServidor(data.servidor);
         }
@@ -701,23 +763,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (profAsist.presente) {
             const isManual = (profAsist.tipo_registro === 'MANUAL');
             const estado = profAsist.estado || 'PRESENTE';
-            let colorClases = 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40';
+            let colorClases = 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700';
             let iconoEstado = '🟢';
             if (estado === 'TARDANZA') {
-                colorClases = 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40';
+                colorClases = 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-700';
                 iconoEstado = '🟡';
             } else if (estado === 'JUSTIFICADO') {
-                colorClases = 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40';
+                colorClases = 'bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-700';
                 iconoEstado = '🔵';
             }
-            badgeProf.className = `inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold ${colorClases}`;
+            badgeProf.className = `inline-flex items-center px-3.5 py-1 rounded-xl text-sm font-extrabold ${colorClases}`;
             badgeProf.textContent = `${iconoEstado} ${estado} (${isManual ? 'MANUAL' : 'HUELLA'})`;
             profHoraElem.textContent = `Hora: ${profAsist.hora || '--:--'}`;
             if (profOrigenElem) {
                 profOrigenElem.textContent = `Origen: ${profAsist.nodo_origen || (isManual ? 'Panel Web' : 'Nodo Aula')}`;
             }
         } else {
-            badgeProf.className = 'inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40';
+            badgeProf.className = 'inline-flex items-center px-3.5 py-1 rounded-xl text-sm font-extrabold bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-2 border-rose-300 dark:border-rose-700';
             badgeProf.textContent = '🔴 AUSENTE';
             profHoraElem.textContent = 'Hora: Pendiente';
             if (profOrigenElem) {
@@ -730,28 +792,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!profAsist.presente) {
                 btnMarcarProfManual.style.display = '';
                 btnMarcarProfManual.disabled = !PUEDE_MARCAR;
-                btnMarcarProfManual.innerHTML = '✏️ Asistencia';
+                btnMarcarProfManual.innerHTML = '<span>✏️</span> Asistencia';
                 btnMarcarProfManual.title = 'Registrar asistencia docente manual (Docentes, Coordinadores y Admins)';
-                btnMarcarProfManual.className = 'px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg text-xs font-semibold border border-indigo-200 dark:border-indigo-800/40 transition-colors shadow-2xs';
+                btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl text-sm font-extrabold border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5';
             } else if (profAsist.tipo_registro === 'BIOMETRICO') {
                 btnMarcarProfManual.style.display = '';
                 btnMarcarProfManual.disabled = true;
-                btnMarcarProfManual.innerHTML = '🔒 Huella Inmutable';
+                btnMarcarProfManual.innerHTML = '<span>🔒</span> Huella Inmutable';
                 btnMarcarProfManual.title = 'La asistencia por huella dactilar es inmutable y no puede modificarse';
-                btnMarcarProfManual.className = 'px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-not-allowed';
+                btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center gap-1.5';
             } else if (profAsist.tipo_registro === 'MANUAL') {
                 if (ES_ADMIN) {
                     btnMarcarProfManual.style.display = '';
                     btnMarcarProfManual.disabled = false;
-                    btnMarcarProfManual.innerHTML = '✏️ Modificar (Admin)';
+                    btnMarcarProfManual.innerHTML = '<span>✏️</span> Modificar (Admin)';
                     btnMarcarProfManual.title = 'Rectificar asistencia docente manual (Solo Administrador)';
-                    btnMarcarProfManual.className = 'px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 rounded-lg text-xs font-semibold border border-amber-200 dark:border-amber-800/40 transition-colors shadow-2xs';
+                    btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 rounded-xl text-sm font-extrabold border border-amber-200 dark:border-amber-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5';
                 } else {
                     btnMarcarProfManual.style.display = '';
                     btnMarcarProfManual.disabled = true;
-                    btnMarcarProfManual.innerHTML = '✍️ Manual Registrado';
+                    btnMarcarProfManual.innerHTML = '<span>✍️</span> Manual Registrado';
                     btnMarcarProfManual.title = 'Solo administradores pueden modificar o revertir asistencias registradas';
-                    btnMarcarProfManual.className = 'px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-not-allowed';
+                    btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center gap-1.5';
                 }
             }
         }
@@ -771,13 +833,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ? evalList.map(item => `<div>• ${item}</div>`).join('')
             : '<div>• Registro Secuencia Aprendizaje (RSA)</div><div>• Observación sistemática</div>';
 
-        // Indicadores con checkboxes interactivos
+        // Indicadores con checkboxes interactivos y accesibles
         const indContainer = document.getElementById('leccion-indicadores-list');
         if (clase.indicadores && clase.indicadores.length > 0) {
             indContainer.innerHTML = clase.indicadores.map(ind => `
-                <label class="flex items-start gap-2.5 p-2 rounded bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5">
-                    <input type="checkbox" data-indicador="${ind.id_indicador}" ${parseInt(ind.cumplido) === 1 ? 'checked' : ''} class="mt-0.5 rounded border-white/30 text-indigo-500 focus:ring-0 cursor-pointer indicador-chk">
-                    <span class="${parseInt(ind.cumplido) === 1 ? 'line-through text-indigo-300' : 'text-slate-100'}">${ind.descripcion}</span>
+                <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/10 select-none">
+                    <input type="checkbox" data-indicador="${ind.id_indicador}" ${parseInt(ind.cumplido) === 1 ? 'checked' : ''} class="w-5 h-5 mt-0.5 rounded-md border-white/30 text-indigo-500 focus:ring-0 cursor-pointer indicador-chk">
+                    <span class="${parseInt(ind.cumplido) === 1 ? 'line-through text-indigo-300' : 'text-slate-100'} font-medium leading-relaxed">${ind.descripcion}</span>
                 </label>
             `).join('');
 
@@ -798,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         } else {
-            indContainer.innerHTML = '<span class="text-xs text-slate-400 italic">No hay indicadores registrados para este tema.</span>';
+            indContainer.innerHTML = '<span class="text-sm text-slate-300 italic">No hay indicadores registrados para este tema.</span>';
         }
 
         // Métricas
@@ -830,53 +892,53 @@ document.addEventListener('DOMContentLoaded', () => {
             listaPresentes.innerHTML = clase.estudiantes_presentes.map(e => {
                 const isManual = (e.tipo_registro === 'MANUAL');
                 const estado = e.estado_asistencia || 'PRESENTE';
-                let badgeClass = 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40';
+                let badgeClass = 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700';
                 let estadoTxt = '🟢 PRESENTE';
                 if (estado === 'TARDANZA') {
-                    badgeClass = 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40';
+                    badgeClass = 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-700';
                     estadoTxt = '🟡 TARDANZA';
                 } else if (estado === 'JUSTIFICADO') {
-                    badgeClass = 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40';
+                    badgeClass = 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-700';
                     estadoTxt = '🔵 JUSTIFICADO';
                 }
                 const badgeOrigen = isManual
-                    ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40">✍️ MANUAL</span>'
-                    : '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">📡 HUELLA</span>';
+                    ? '<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">✍️ MANUAL</span>'
+                    : '<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">📡 HUELLA</span>';
 
                 let accionPresenteHtml = '';
                 if (e.tipo_registro === 'BIOMETRICO') {
                     accionPresenteHtml = `
-                        <span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded text-[10px] font-semibold border border-slate-200 dark:border-slate-700 flex items-center gap-1 shadow-2xs" title="Marcación biométrica por huella física en el aula (Inmutable, protegida por hardware)">
+                        <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 flex items-center gap-1 shadow-2xs" title="Marcación biométrica por huella física en el aula (Inmutable, protegida por hardware)">
                             🔒 Inmutable
                         </span>
                     `;
                 } else if (ES_ADMIN) {
                     accionPresenteHtml = `
-                        <button type="button" data-id="${e.id_estudiante}" data-nombre="${encodeURIComponent(e.nombre_completo)}" data-ci="${e.cedula_identidad}" data-estado="${estado}" data-tipo-registro="${e.tipo_registro || 'MANUAL'}" class="btn-rectificar-estudiante px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-[10px] font-semibold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors" title="Rectificar o modificar asistencia manual (Solo Administrador)">
+                        <button type="button" data-id="${e.id_estudiante}" data-nombre="${encodeURIComponent(e.nombre_completo)}" data-ci="${e.cedula_identidad}" data-estado="${estado}" data-tipo-registro="${e.tipo_registro || 'MANUAL'}" class="btn-rectificar-estudiante min-h-[40px] px-3.5 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer" title="Rectificar o modificar asistencia manual (Solo Administrador)">
                             ✏️ Modificar
                         </button>
                     `;
                 }
 
                 return `
-                    <div class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-emerald-50/40 dark:bg-emerald-950/15 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors text-xs">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="text-base flex-shrink-0">👤</span>
+                    <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-200/80 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-xl flex-shrink-0">👤</span>
                             <div class="truncate">
-                                <span class="font-bold text-slate-800 dark:text-slate-100 block truncate">${e.nombre_completo}</span>
-                                <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                                <span class="font-bold text-slate-900 dark:text-slate-100 text-base block truncate">${e.nombre_completo}</span>
+                                <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                                     <span>CI: ${e.cedula_identidad}</span>
                                     <span>•</span>
                                     ${badgeOrigen}
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="flex items-center gap-3 flex-shrink-0">
                             <div class="text-right">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-black ${badgeClass}">
                                     ${estadoTxt}
                                 </span>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono block mt-0.5">${e.hora_marcacion || '--:--'}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold block mt-1">${e.hora_marcacion || '--:--'}</span>
                             </div>
                             ${accionPresenteHtml}
                         </div>
@@ -902,7 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             listaPresentes.innerHTML = `
-                <div class="p-6 text-center text-slate-400 dark:text-slate-500 text-xs italic">
+                <div class="p-8 text-center text-slate-400 dark:text-slate-500 text-sm italic">
                     Aún no se han registrado huellas dactilares de estudiantes para esta clase.
                 </div>
             `;
@@ -913,29 +975,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clase.estudiantes_ausentes && clase.estudiantes_ausentes.length > 0) {
             listaAusentes.innerHTML = clase.estudiantes_ausentes.map(e => {
                 const accionesAusenteHtml = PUEDE_MARCAR ? `
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <button type="button" data-id="${e.id_estudiante}" class="btn-marcar-presente-rapido px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold shadow-2xs transition-colors flex items-center gap-1" title="Marcar PRESENTE manualmente">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button type="button" data-id="${e.id_estudiante}" class="btn-marcar-presente-rapido min-h-[40px] px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="Marcar PRESENTE manualmente">
                             <span>✓</span> Presente
                         </button>
-                        <button type="button" data-id="${e.id_estudiante}" data-nombre="${encodeURIComponent(e.nombre_completo)}" data-ci="${e.cedula_identidad}" class="btn-abrir-modal-estudiante px-2 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-300 rounded text-[11px] font-bold text-slate-600 dark:text-slate-300 shadow-2xs transition-colors" title="Opciones avanzadas (Tardanza / Justificado)">
+                        <button type="button" data-id="${e.id_estudiante}" data-nombre="${encodeURIComponent(e.nombre_completo)}" data-ci="${e.cedula_identidad}" class="btn-abrir-modal-estudiante min-h-[40px] w-10 flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-300 rounded-xl text-base font-bold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer" title="Opciones avanzadas (Tardanza / Justificado)">
                             ⋯
                         </button>
                     </div>
                 ` : `
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-extrabold bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                             🔴 AUSENTE
                         </span>
                     </div>
                 `;
 
                 return `
-                    <div class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800 transition-colors text-xs">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="text-base text-slate-400 flex-shrink-0">👤</span>
+                    <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-xl text-slate-400 flex-shrink-0">👤</span>
                             <div class="truncate">
-                                <span class="font-medium text-slate-700 dark:text-slate-300 block truncate">${e.nombre_completo}</span>
-                                <span class="text-[11px] text-slate-400 dark:text-slate-500 font-mono">CI: ${e.cedula_identidad}</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200 text-base block truncate">${e.nombre_completo}</span>
+                                <span class="text-sm text-slate-500 dark:text-slate-400 font-mono mt-0.5 block">CI: ${e.cedula_identidad}</span>
                             </div>
                         </div>
                         ${accionesAusenteHtml}
@@ -944,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
 
             if (PUEDE_MARCAR) {
-                // Listeners para marcar rápido como PRESENTE (Docentes, Coordinadores y Administradores)
+                // Listeners para marcar rápido como PRESENTE
                 listaAusentes.querySelectorAll('.btn-marcar-presente-rapido').forEach(btn => {
                     btn.addEventListener('click', (ev) => {
                         const idEst = ev.currentTarget.getAttribute('data-id');
@@ -974,7 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
 
-                // Listeners para abrir modal avanzado (Docentes, Coordinadores y Administradores)
+                // Listeners para abrir modal avanzado
                 listaAusentes.querySelectorAll('.btn-abrir-modal-estudiante').forEach(btn => {
                     btn.addEventListener('click', (ev) => {
                         const b = ev.currentTarget;
@@ -992,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             listaAusentes.innerHTML = `
-                <div class="p-6 text-center text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                <div class="p-8 text-center text-emerald-600 dark:text-emerald-400 text-base font-bold">
                     🎉 ¡100% de asistencia! No hay estudiantes ausentes.
                 </div>
             `;
@@ -1328,8 +1390,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.supabase || !sbUrl || !sbKey) {
             console.info("[SISCO Realtime] Supabase anonKey no configurada aún en config.local.php. Operando en modo reactivo bajo demanda (Cero consultas periódicas a BD).");
             if (badgeRealtime && dotRealtime && textRealtime) {
-                badgeRealtime.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shadow-2xs";
-                dotRealtime.className = "w-2 h-2 rounded-full bg-amber-400";
+                badgeRealtime.className = "inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-2 border-amber-200 dark:border-amber-800 shadow-2xs";
+                dotRealtime.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
                 textRealtime.textContent = "⚡ Realtime: Standby (Bajo Demanda)";
                 badgeRealtime.title = "Configure SUPABASE_ANON_KEY en config.local.php para activar WebSockets automáticos de Supabase";
             }
@@ -1373,15 +1435,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         if (badgeRealtime && dotRealtime && textRealtime) {
-                            badgeRealtime.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shadow-2xs";
-                            dotRealtime.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                            badgeRealtime.className = "inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-200 dark:border-emerald-800 shadow-2xs";
+                            dotRealtime.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
                             textRealtime.textContent = "⚡ Realtime: Conectado (WebSockets)";
                             badgeRealtime.title = "Conexión WebSockets activa con Supabase. Cero consultas periódicas.";
                         }
                     } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
                         if (badgeRealtime && dotRealtime && textRealtime) {
-                            badgeRealtime.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 shadow-2xs";
-                            dotRealtime.className = "w-2 h-2 rounded-full bg-amber-400";
+                            badgeRealtime.className = "inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-2 border-amber-200 dark:border-amber-800 shadow-2xs";
+                            dotRealtime.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
                             textRealtime.textContent = "⚡ Realtime: Reconectando...";
                         }
                     }
