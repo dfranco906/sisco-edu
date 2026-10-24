@@ -124,8 +124,13 @@ public:
 
     /**
      * Detección de botón físico presionado al inicio para resetear claves de fábrica.
+     * @param pinBoton Pin GPIO a monitorear con pull-up.
+     * @param tiempoMs Milisegundos sostenidos requeridos para confirmar el reseteo.
+     * @param reiniciarInmediatamente Si es true, ejecuta ESP.restart() internamente.
+     *                                Si es false, retorna true para permitir que el sketch
+     *                                limpie datos propios (ej. Preferences Wi-Fi) antes de reiniciar.
      */
-    void verificarBotonReset(int pinBoton, unsigned long tiempoMs = 8000) {
+    bool verificarBotonReset(int pinBoton, unsigned long tiempoMs = 8000, bool reiniciarInmediatamente = true) {
         pinMode(pinBoton, INPUT_PULLUP);
         if (digitalRead(pinBoton) == LOW) {
             Serial.println("[SEGURIDAD] Detectado boton presionado. Mantener para reset de fabrica...");
@@ -136,11 +141,19 @@ public:
                     restablecerFabrica();
                     while (digitalRead(pinBoton) == LOW) delay(100);
                     delay(500);
-                    ESP.restart();
-                    break;
+                    if (reiniciarInmediatamente) {
+                        ESP.restart();
+                    }
+                    return true;
                 }
             }
         }
+        return false;
+    }
+
+    // Alias retrocompatible
+    bool verificarBotonResetFisico(int pinBoton, unsigned long tiempoMs = 8000, bool reiniciarInmediatamente = false) {
+        return verificarBotonReset(pinBoton, tiempoMs, reiniciarInmediatamente);
     }
 
 private:

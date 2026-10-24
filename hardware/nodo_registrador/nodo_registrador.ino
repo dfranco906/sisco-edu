@@ -58,6 +58,7 @@ bool sensorDy50Ok = false;
 
 // Estado del enrolamiento biométrico
 bool enrolamientoPendiente = false;
+bool enrolandoActualmente = false;
 bool templateDisponible = false;
 String ultimoError;
 const char *headerKeys[] = {"Cookie"};
@@ -88,6 +89,7 @@ void cors() {
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   server.sendHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  server.sendHeader("Access-Control-Allow-Private-Network", "true");
 }
 
 void jsonError(int codigo, const String &mensaje) {
@@ -181,7 +183,7 @@ void conectarWifi() {
 // HANDLERS WEB DE CONFIGURACIÓN Y SEGURIDAD
 // ============================================================================
 void handleRootConfig() {
-  if (!seguridad.verificarAcceso()) return;
+  if (!modoAP && !seguridad.verificarAcceso()) return;
 
   String p = FPSTR(PAGINA_CONFIG_REGISTRADOR);
   p.replace("%MODO_CLASE%", modoAP ? "badge-ap" : "badge-online");
@@ -201,7 +203,7 @@ void handleRootConfig() {
 }
 
 void handleGuardarConfig() {
-  if (!seguridad.verificarAcceso()) return;
+  if (!modoAP && !seguridad.verificarAcceso()) return;
 
   String ssid = server.arg("ssid");
   String pass = server.arg("pass");
@@ -225,11 +227,24 @@ void handleGuardarConfig() {
 bool esperarDedo(const String &titulo, const String &subtitulo, uint32_t timeoutMs = 30000) {
   pantalla(titulo, subtitulo);
   const uint32_t inicio = millis();
+  int erroresUartConsecutivos = 0;
+
   while (millis() - inicio < timeoutMs) {
+    server.handleClient();
     const uint8_t resultado = finger.getImage();
-    if (resultado == FINGERPRINT_OK) return true;
-    if (resultado == FINGERPRINT_PACKETRECIEVEERR) { ultimoError = "ERROR_UART_DY50"; return false; }
-    delay(80);
+    if (resultado == FINGERPRINT_OK) {
+      return true;
+    }
+    if (resultado == FINGERPRINT_PACKETRECIEVEERR) {
+      erroresUartConsecutivos++;
+      if (erroresUartConsecutivos > 25) {
+        ultimoError = "ERROR_UART_DY50";
+        return false;
+      }
+    } else {
+      erroresUartConsecutivos = 0;
+    }
+    delay(40);
   }
   ultimoError = "TIMEOUT_DEDO";
   return false;
@@ -238,43 +253,64 @@ bool esperarDedo(const String &titulo, const String &subtitulo, uint32_t timeout
 bool esperarRetiroDedo() {
   pantalla("RETIRE", "El dedo");
   const uint32_t inicio = millis();
+  int erroresUartConsecutivos = 0;
+
   while (millis() - inicio < 15000) {
+    server.handleClient();
     const uint8_t resultado = finger.getImage();
-    if (resultado == FINGERPRINT_NOFINGER) return true;
-    if (resultado == FINGERPRINT_PACKETRECIEVEERR) { ultimoError = "ERROR_UART_DY50"; return false; }
-    delay(80);
+    if (resultado == FINGERPRINT_NOFINGER) {
+      return true;
+    }
+    if (resultado == FINGERPRINT_PACKETRECIEVEERR) {
+      erroresUartConsecutivos++;
+      if (erroresUartConsecutivos > 25) {
+        ultimoError = "ERROR_UART_DY50";
+        return false;
+      }
+    } else {
+      erroresUartConsecutivos = 0;
+    }
+    delay(40);
   }
   ultimoError = "TIMEOUT_RETIRO";
   return false;
 }
 
 bool enrolarHuella() {
+  enrolandoActualmente = true;
   templateDisponible = false;
   ultimoError = "";
-  if (!esperarDedo("PONGA DEDO", "Muestra 1/2")) return false;
-  if (finger.image2Tz(1) != FINGERPRINT_OK) { ultimoError = "MUESTRA_1_INVALIDA"; return false; }
-  if (!esperarRetiroDedo()) return false;
-  if (!esperarDedo("PONGA DEDO", "Muestra 2/2")) return false;
-  if (finger.image2Tz(2) != FINGERPRINT_OK) { ultimoError = "MUESTRA_2_INVALIDA"; return false; }
-  pantalla("PROCESANDO", "Comparando muestras");
-  if (finger.createModel() != FINGERPRINT_OK) { ultimoError = "HUELLAS_NO_COINCIDEN"; return false; }
-  
-  // Persistir y recargar el modelo antes de exportarlo. Esta normalizacion
-  // evita distribuir el contenido transitorio de CharBuffer1.
-  uint8_t resultado = finger.storeModel(SLOT_TEMPORAL_REGISTRO);
-  if (resultado != FINGERPRINT_OK) {
-    ultimoError = "STORE_TEMP_0x" + String(resultado, HEX);
-    return false;
-  }
-  resultado = finger.loadModel(SLOT_TEMPORAL_REGISTRO);
-  if (resultado != FINGERPRINT_OK) {
-    ultimoError = "LOAD_TEMP_0x" + String(resultado, HEX);
-    return false;
-  }
-  Serial.printf("[BIOMETRIA] Template normalizado en slot temporal %u\n", SLOT_TEMPORAL_REGISTRO);
-  templateDisponible = true;
-  pantalla("CAPTURADA", "Lista para exportar");
-  return true;
+  bool exito = false;
+
+  do {
+    if (!esperarDedo("PONGA DEDO", "Muestra 1/2")) break;
+    if (finger.image2Tz(1) != FINGERPRINT_OK) { ultimoError = "MUESTRA_1_INVALIDA"; break; }
+    if (!esperarRetiroDedo()) break;
+    if (!esperarDedo("PONGA DEDO", "Muestra 2/2")) break;
+    if (finger.image2Tz(2) != FINGERPRINT_OK) { ultimoError = "MUESTRA_2_INVALIDA"; break; }
+    pantalla("PROCESANDO", "Comparando muestras");
+    if (finger.createModel() != FINGERPRINT_OK) { ultimoError = "HUELLAS_NO_COINCIDEN"; break; }
+    
+    // Persistir y recargar el modelo antes de exportarlo. Esta normalizacion
+    // evita distribuir el contenido transitorio de CharBuffer1.
+    uint8_t resultado = finger.storeModel(SLOT_TEMPORAL_REGISTRO);
+    if (resultado != FINGERPRINT_OK) {
+      ultimoError = "STORE_TEMP_0x" + String(resultado, HEX);
+      break;
+    }
+    resultado = finger.loadModel(SLOT_TEMPORAL_REGISTRO);
+    if (resultado != FINGERPRINT_OK) {
+      ultimoError = "LOAD_TEMP_0x" + String(resultado, HEX);
+      break;
+    }
+    Serial.printf("[BIOMETRIA] Template normalizado en slot temporal %u\n", SLOT_TEMPORAL_REGISTRO);
+    templateDisponible = true;
+    pantalla("CAPTURADA", "Lista para exportar");
+    exito = true;
+  } while (false);
+
+  enrolandoActualmente = false;
+  return exito;
 }
 
 // ============================================================================
@@ -295,7 +331,7 @@ void configurarRutas() {
   // Endpoints biométricos (consumidos por el navegador web en la vista de enrolamiento)
   server.on("/registrar", HTTP_GET, []() {
     cors();
-    if (enrolamientoPendiente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
+    if (enrolamientoPendiente || enrolandoActualmente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
     templateDisponible = false;
     ultimoError = "";
     enrolamientoPendiente = true;
@@ -304,12 +340,13 @@ void configurarRutas() {
 
   server.on("/estado", HTTP_GET, []() {
     cors();
-    server.send(200, "application/json", "{\"status\":\"success\",\"capturando\":" + String(enrolamientoPendiente ? "true" : "false") + ",\"template_disponible\":" + String(templateDisponible ? "true" : "false") + ",\"ultimo_error\":\"" + ultimoError + "\"}");
+    const bool estaCapturando = enrolamientoPendiente || enrolandoActualmente;
+    server.send(200, "application/json", "{\"status\":\"success\",\"capturando\":" + String(estaCapturando ? "true" : "false") + ",\"template_disponible\":" + String(templateDisponible ? "true" : "false") + ",\"ultimo_error\":\"" + ultimoError + "\"}");
   });
 
   server.on("/obtener_template", HTTP_GET, []() {
     cors();
-    if (enrolamientoPendiente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
+    if (enrolamientoPendiente || enrolandoActualmente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
     if (!templateDisponible) { jsonError(404, "No hay huella capturada"); return; }
     if (finger.loadModel(SLOT_TEMPORAL_REGISTRO) != FINGERPRINT_OK) { jsonError(500, "No se pudo recargar el template temporal"); return; }
     if (finger.getModel() != FINGERPRINT_OK) { jsonError(500, "No se pudo iniciar la exportacion"); return; }
@@ -332,6 +369,8 @@ void configurarRutas() {
 
   server.on("/limpiar", HTTP_GET, []() {
     cors();
+    enrolandoActualmente = false;
+    enrolamientoPendiente = false;
     const uint8_t borrado = finger.deleteModel(SLOT_TEMPORAL_REGISTRO);
     if (borrado != FINGERPRINT_OK && borrado != FINGERPRINT_BADLOCATION) {
       jsonError(500, "No se pudo liberar el slot temporal: 0x" + String(borrado, HEX));
@@ -372,8 +411,8 @@ void setup() {
   }
   pantalla("INICIANDO", "Nodo registrador");
 
-  // Detección de pulsación de botón físico de reset al arrancar
-  if (seguridad.verificarBotonResetFisico(PIN_BOOT_RESET, 10000)) {
+  // Detección de pulsación de botón físico de reset al arrancar (10s)
+  if (seguridad.verificarBotonReset(PIN_BOOT_RESET, 10000, false)) {
     pantalla("RESET FABRICA", "Restaurando...");
     prefs.begin("sisco_reg", false);
     prefs.clear();
@@ -382,7 +421,10 @@ void setup() {
     ESP.restart();
   }
 
-  // Cargar configuración persistente
+  // IMPORTANTE: Cargar credenciales de seguridad antes de cualquier verificación
+  seguridad.cargarCredenciales();
+
+  // Cargar configuración persistente de red Wi-Fi
   cargarConfiguracion();
 
   // Inicializar sensor DY50
@@ -398,10 +440,25 @@ void setup() {
     Serial.println("[DY50] ADVERTENCIA: Sensor DY50 no hallado en UART2.");
   }
 
-  // Si se mantiene presionado el botón BOOT por 2 segundos durante el inicio, forzar AP
+  // Detección de pulsación sostenida de 2.5s para forzar modo AP al arrancar
+  bool forzarApPorBoton = false;
   if (digitalRead(PIN_BOOT_RESET) == LOW) {
+    Serial.println("[BOTON] Pulsador presionado al encender. Mantener 2.5s para forzar AP...");
+    pantalla("MODO SETUP?", "Mantenga 2.5s");
+    unsigned long t0 = millis();
+    while (digitalRead(PIN_BOOT_RESET) == LOW && millis() - t0 < 2500) {
+      delay(50);
+    }
+    if (millis() - t0 >= 2500) {
+      forzarApPorBoton = true;
+      Serial.println("[BOTON] Confirmado: Forzando Modo AP por pulsador.");
+    }
+  }
+
+  // Entrar a Modo AP si se forzó por botón o si no hay SSID configurado
+  if (forzarApPorBoton || configSsid.length() == 0) {
     pantalla("FORZANDO AP", "Modo Setup...");
-    delay(1000);
+    delay(800);
     iniciarModoAP();
   } else {
     conectarWifi();
@@ -425,6 +482,39 @@ void loop() {
   }
 
   server.handleClient();
+
+  // Monitoreo del botón BOOT (GPIO 0) en tiempo de ejecución:
+  // - Pulsar durante 2.5s: Activa inmediatamente el Modo AP (SISCO-REGISTRADOR-CONFIG)
+  // - Mantener durante 8s: Restablece a valores de fábrica y reinicia
+  static unsigned long tiempoPresionadoBootReg = 0;
+  static bool accionBootRegEjecutada = false;
+
+  if (digitalRead(PIN_BOOT_RESET) == LOW) {
+    if (tiempoPresionadoBootReg == 0) {
+      tiempoPresionadoBootReg = millis();
+      accionBootRegEjecutada = false;
+    } else if (!accionBootRegEjecutada) {
+      unsigned long duracion = millis() - tiempoPresionadoBootReg;
+      if (duracion >= 8000) {
+        Serial.println("\n[BOOT] 8s detectados: RESETEANDO REGISTRADOR A FABRICA...");
+        accionBootRegEjecutada = true;
+        pantalla("RESET FABRICA", "Restaurando...");
+        seguridad.restablecerFabrica();
+        prefs.begin("sisco_reg", false);
+        prefs.clear();
+        prefs.end();
+        delay(1000);
+        ESP.restart();
+      } else if (duracion >= 2500 && !modoAP) {
+        Serial.println("\n[BOOT] 2.5s detectados: ACTIVANDO MODO AP...");
+        accionBootRegEjecutada = true;
+        iniciarModoAP();
+      }
+    }
+  } else {
+    tiempoPresionadoBootReg = 0;
+    accionBootRegEjecutada = false;
+  }
 
   if (reiniciarPendiente && (int32_t)(millis() - tiempoReinicio) >= 0) {
     Serial.println("[SISTEMA] Reiniciando nodo por solicitud...");

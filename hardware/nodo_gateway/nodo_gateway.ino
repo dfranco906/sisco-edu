@@ -104,13 +104,20 @@ String normalizarBaseUrl(String url) {
 
 void cargarConfiguracion() {
   prefs.begin("sisco_gw", true);
-  configSsid = prefs.getString("ssid", RED_WIFI_SSID);
-  configPass = prefs.getString("pass", RED_WIFI_PASS);
+  configSsid = prefs.getString("ssid", "");
+  configPass = prefs.getString("pass", "");
   configBaseUrl = prefs.getString("server_url", SERVIDOR_BASE_URL);
   configApiKey = prefs.getString("api_key", CLAVE_API_GATEWAY);
   configLoraId = prefs.getInt("lora_id", LORA_ID_GATEWAY);
   configLoraNetId = prefs.getInt("lora_net", LORA_RED_ID);
   prefs.end();
+
+  // Si no hay SSID guardado en NVS y la clave de acceso ya no es la de fábrica,
+  // se permite usar los valores de respaldo de configuracion_red.h:
+  if (configSsid.length() == 0 && !seguridad.debeCambiarPassword()) {
+    configSsid = RED_WIFI_SSID;
+    configPass = RED_WIFI_PASS;
+  }
 
   configBaseUrl = normalizarBaseUrl(configBaseUrl);
   Serial.println("[NVS] Parametros cargados:");
@@ -180,6 +187,12 @@ void iniciarModoAP() {
 }
 
 void conectarWifi() {
+  if (configSsid.length() == 0) {
+    Serial.println("[WIFI] No hay red Wi-Fi configurada en memoria. Iniciando modo AP...");
+    iniciarModoAP();
+    return;
+  }
+
   WiFi.mode(WIFI_STA);
   Serial.printf("[WIFI] Conectando a \"%s\"...", configSsid.c_str());
   WiFi.begin(configSsid.c_str(), configPass.c_str());
@@ -201,7 +214,7 @@ void conectarWifi() {
     }
   } else {
     Serial.println(" sin conexion");
-    Serial.println("[WIFI] Activando punto de acceso de configuracion...");
+    Serial.println("[WIFI] Fallo de conexion. Activando punto de acceso de configuracion...");
     iniciarModoAP();
   }
 }
@@ -360,9 +373,22 @@ void setup() {
   Serial.println("  SISCO-EDU - GATEWAY LoRa / Wi-Fi");
   Serial.println("========================================");
 
-  // Verificación de pulsador BOOT para restaurar credenciales si se olvidaron
-  seguridad.verificarBotonReset(PIN_BOOT_RESET, 8000);
+  pinMode(PIN_BOOT_RESET, INPUT_PULLUP);
 
+  // Verificación de pulsador BOOT sostenido al encender (8s para reset total de fábrica)
+  if (seguridad.verificarBotonReset(PIN_BOOT_RESET, 8000, false)) {
+    Serial.println("[RESET] Restaurando credenciales y parametros a valores de fabrica...");
+    prefs.begin("sisco_gw", false);
+    prefs.clear();
+    prefs.end();
+    delay(1000);
+    ESP.restart();
+  }
+
+  // Cargar credenciales maestras y estado de cambio de clave
+  seguridad.cargarCredenciales();
+
+  // Cargar configuración de red y enlace
   cargarConfiguracion();
 
   Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
@@ -381,7 +407,14 @@ void setup() {
   while (loraSerial.available()) loraSerial.read();
   Serial.println("[LORA] Modulo RYLR998 configurado");
 
-  conectarWifi();
+  // Si se presiona el botón BOOT al arranque, si debe cambiar la contraseña de fábrica,
+  // o si no hay Wi-Fi configurada en memoria: FORZAR MODO AP INMEDIATAMENTE
+  if (digitalRead(PIN_BOOT_RESET) == LOW || seguridad.debeCambiarPassword() || configSsid.length() == 0) {
+    Serial.println("[INICIO] Activando modo Punto de Acceso (AP) para configuracion inicial y cambio de clave...");
+    iniciarModoAP();
+  } else {
+    conectarWifi();
+  }
 
   // Configuración de rutas HTTP
   server.collectHeaders(headerKeys, 2);
@@ -439,6 +472,38 @@ void loop() {
   }
   server.handleClient();
   atenderMensajesLoRa();
+
+  // Monitoreo del botón BOOT (GPIO 0) en tiempo de ejecución:
+  // - Pulsación sostenida de 2.5s: Activa inmediatamente el Modo AP (SISCO-GATEWAY-CONFIG)
+  // - Pulsación sostenida de 8s: Restablece a valores de fábrica y reinicia
+  static unsigned long tiempoPresionadoBoot = 0;
+  static bool accionBootEjecutada = false;
+
+  if (digitalRead(PIN_BOOT_RESET) == LOW) {
+    if (tiempoPresionadoBoot == 0) {
+      tiempoPresionadoBoot = millis();
+      accionBootEjecutada = false;
+    } else if (!accionBootEjecutada) {
+      unsigned long duracion = millis() - tiempoPresionadoBoot;
+      if (duracion >= 8000) {
+        Serial.println("\n[BOOT] 8 segundos detectados: RESETEANDO A FABRICA...");
+        accionBootEjecutada = true;
+        seguridad.restablecerFabrica();
+        prefs.begin("sisco_gw", false);
+        prefs.clear();
+        prefs.end();
+        delay(500);
+        ESP.restart();
+      } else if (duracion >= 2500 && !modoAP) {
+        Serial.println("\n[BOOT] 2.5 segundos detectados: ACTIVANDO MODO AP...");
+        accionBootEjecutada = true;
+        iniciarModoAP();
+      }
+    }
+  } else {
+    tiempoPresionadoBoot = 0;
+    accionBootEjecutada = false;
+  }
 
   if (reiniciarPendiente && millis() >= tiempoReinicio) {
     Serial.println("[SISTEMA] Reiniciando microcontrolador...");

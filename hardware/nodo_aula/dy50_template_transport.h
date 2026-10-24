@@ -208,6 +208,36 @@ inline bool beginDownChar(Stream &serial, uint8_t charBuffer, String &error) {
   return true;
 }
 
+
+inline bool beginUpChar(Stream &serial, uint8_t charBuffer, String &error) {
+  drainInput(serial);
+  const uint8_t command[] = {CMD_UP_CHAR, charBuffer};
+  if (!writePacket(serial, PID_COMMAND, command, sizeof(command))) {
+    error = "UPCHAR_COMMAND_WRITE_FAILED";
+    return false;
+  }
+
+  uint8_t confirmationCode = 0xFF;
+  if (!readAck(serial, confirmationCode, error))
+    return false;
+  if (confirmationCode != 0x00) {
+    error = "UPCHAR_REJECTED_0x" + String(confirmationCode, HEX);
+    return false;
+  }
+  return true;
+}
+
+inline bool receiveTemplate(Stream &serial, uint8_t *output, size_t outputCapacity,
+                            size_t &bytesRead, String &error) {
+  return readTemplate(serial, output, outputCapacity, bytesRead, error);
+}
+
+inline String formatCrc32(uint32_t crc) {
+  char buf[9];
+  snprintf(buf, sizeof(buf), "%08X", (unsigned long)crc);
+  return String(buf);
+}
+
 inline bool sendTemplate(Stream &serial, const uint8_t *templateData,
                          size_t templateLength, String &error) {
   if (templateLength != TEMPLATE_BYTES) {

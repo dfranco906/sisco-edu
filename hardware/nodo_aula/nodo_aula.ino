@@ -98,6 +98,8 @@ String campo(const String &texto, int indice);
 // ============================================================================
 // CARGA Y PERSISTENCIA NVS
 // ============================================================================
+bool configAulaInicializada = false;
+
 void cargarParametrosAula() {
   prefs.begin("sisco_aula", true);
   configIdAula = prefs.getInt("id_aula", 0);
@@ -105,6 +107,7 @@ void cargarParametrosAula() {
   configLoraId = prefs.getInt("lora_id", 0);
   configLoraNetId = prefs.getInt("lora_net", LORA_RED_ID);
   configGatewayId = prefs.getInt("gw_id", LORA_ID_GATEWAY);
+  configAulaInicializada = prefs.getBool("configurado", false);
   prefs.end();
 
   // Si no está configurado, usar valores de compatibilidad
@@ -115,11 +118,11 @@ void cargarParametrosAula() {
   }
 
   Serial.println("[NVS-AULA] Parametros cargados:");
-  Serial.printf("  - ID Aula   : %d\n", configIdAula);
-  Serial.printf("  - Codigo RF : %s\n", configCodigoAula.c_str());
-  Serial.printf("  - LoRa ID   : %d\n", configLoraId);
-  Serial.printf("  - Red LoRa  : %d\n", configLoraNetId);
-  Serial.printf("  - Gateway ID: %d\n", configGatewayId);
+  Serial.printf("  - ID Aula    : %d (Configurado: %s)\n", configIdAula, configAulaInicializada ? "SI" : "NO");
+  Serial.printf("  - Codigo RF  : %s\n", configCodigoAula.c_str());
+  Serial.printf("  - LoRa ID    : %d\n", configLoraId);
+  Serial.printf("  - Red LoRa   : %d\n", configLoraNetId);
+  Serial.printf("  - Gateway ID : %d\n", configGatewayId);
 }
 
 void guardarParametrosAula(int idAula, const String &codigo, int loraId, int loraNet, int gwId) {
@@ -129,6 +132,7 @@ void guardarParametrosAula(int idAula, const String &codigo, int loraId, int lor
   prefs.putInt("lora_id", loraId);
   prefs.putInt("lora_net", loraNet);
   prefs.putInt("gw_id", gwId);
+  prefs.putBool("configurado", true);
   prefs.end();
 
   configIdAula = idAula;
@@ -136,7 +140,8 @@ void guardarParametrosAula(int idAula, const String &codigo, int loraId, int lor
   configLoraId = loraId;
   configLoraNetId = loraNet;
   configGatewayId = gwId;
-  Serial.println("[NVS-AULA] Parametros de aula guardados exitosamente.");
+  configAulaInicializada = true;
+  Serial.println("[NVS-AULA] Parametros de aula guardados exitosamente como CONFIGURADO.");
 }
 
 // ============================================================================
@@ -220,20 +225,48 @@ void setup() {
   Serial.println("========================================");
 
   pinMode(PIN_BOTON_SALIDA, INPUT_PULLUP);
+  delay(50); // Estabilizar pull-up interno
 
   if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) for (;;) delay(1000);
   oled.setTextColor(SSD1306_WHITE);
   msgOled("INICIANDO", "Sisco-Edu LoRa");
 
-  // Detección de pulsación sostenida del botón al encender:
-  // Si se mantiene presionado 3s -> Entra en Setup AP
-  // Si se mantiene presionado 10s -> Reset de credenciales a fábrica
-  seguridad.verificarBotonReset(PIN_BOTON_SALIDA, 10000);
+  // Detección de pulsación sostenida de 10s para reset de fábrica total
+  if (seguridad.verificarBotonReset(PIN_BOTON_SALIDA, 10000, false)) {
+    Serial.println("[RESET] Restaurando credenciales y parametros de aula a fabrica...");
+    msgOled("RESET FABRICA", "Restaurando...");
+    prefs.begin("sisco_aula", false);
+    prefs.clear();
+    prefs.end();
+    delay(1000);
+    ESP.restart();
+  }
+
+  // IMPORTANTE: Cargar credenciales maestras antes de evaluar seguridad.debeCambiarPassword()
+  seguridad.cargarCredenciales();
 
   cargarParametrosAula();
 
-  // Entrar a Setup si el botón se mantiene presionado al inicio o si no se ha cambiado la clave
-  if (digitalRead(PIN_BOTON_SALIDA) == LOW || seguridad.debeCambiarPassword()) {
+  // Detección de pulsación de 2.5s para forzar modo setup manualmente al arrancar
+  bool forzarSetupPorBoton = false;
+  if (digitalRead(PIN_BOTON_SALIDA) == LOW) {
+    Serial.println("[BOTON] Pulsador presionado al encender. Mantener 2.5s para forzar Setup AP...");
+    msgOled("MODO SETUP?", "Mantenga presionado");
+    unsigned long t0 = millis();
+    while (digitalRead(PIN_BOTON_SALIDA) == LOW && millis() - t0 < 2500) {
+      delay(50);
+    }
+    if (millis() - t0 >= 2500) {
+      forzarSetupPorBoton = true;
+      Serial.println("[BOTON] Confirmado: Entrando a Setup AP por pulsador.");
+    }
+  }
+
+  // Entrar a Setup AP en cualquiera de estos 3 casos:
+  // 1. Si el usuario mantuvo presionado el botón por 2.5s al arrancar.
+  // 2. Si aún no se han guardado los parámetros del aula en NVS (!configAulaInicializada).
+  // 3. Si aún debe cambiarse la contraseña root de fábrica.
+  if (forzarSetupPorBoton || !configAulaInicializada || seguridad.debeCambiarPassword()) {
     Serial.println("[INICIO] Entrando a Modo Aprovisionamiento Web...");
     iniciarModoSetupAP();
     return;

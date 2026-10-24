@@ -17,7 +17,7 @@ constexpr char RED_WIFI_PASS[] = "123456789";
 
 // 2. Servidor Central SISCO-EDU (XAMPP / Apache / PHP)
 // Modifica esta URL con la IP de la máquina host del servidor web
-constexpr char SERVIDOR_BASE_URL[] = "http://192.168.100.59/sisco-edu/";
+constexpr char SERVIDOR_BASE_URL[] = "http://192.168.100.52/sisco-edu/";
 
 // 3. Seguridad de Enlace API (Cabecera X-GATEWAY-KEY)
 constexpr char CLAVE_API_GATEWAY[] = "SISCO_GATEWAY_2026_SECRETO";
