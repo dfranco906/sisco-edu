@@ -115,32 +115,6 @@ try {
             </div>
         </div>
 
-        <!-- Guía Visual de la Jerarquía Académica (Letra Grande y Clara) -->
-        <div class="p-6 bg-gradient-to-r from-blue-50 via-indigo-50/70 to-slate-50 rounded-3xl border-2 border-blue-200/80 shadow-xs">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-                <div class="flex items-start sm:items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-2xl shadow-sm flex-shrink-0">
-                        ⚡
-                    </div>
-                    <div>
-                        <h2 class="text-lg sm:text-xl font-bold text-slate-900">Pirámide de Organización Pedagógica</h2>
-                        <p class="text-base text-slate-700 mt-0.5">El sistema organiza los datos en cascada para facilitar la navegación a profesores y coordinadores:</p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 text-sm sm:text-base font-semibold text-slate-800">
-                    <span class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 shadow-xs text-blue-800">1. Turno</span>
-                    <span class="text-slate-400 text-lg">➔</span>
-                    <span class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 shadow-xs text-indigo-800">2. Nivel / Ciclo</span>
-                    <span class="text-slate-400 text-lg">➔</span>
-                    <span class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 shadow-xs text-emerald-800">3. Bachillerato</span>
-                    <span class="text-slate-400 text-lg">➔</span>
-                    <span class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 shadow-xs text-sky-800">4. Grado</span>
-                    <span class="text-slate-400 text-lg">➔</span>
-                    <span class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 shadow-xs text-purple-800">5. Materia</span>
-                </div>
-            </div>
-        </div>
-
         <!-- SECCIÓN 1: ESTRUCTURA ACADÉMICA Y CURRICULAR -->
         <section class="space-y-5 seccion-admin" id="seccion-curricular">
             <div class="flex items-center justify-between border-b-2 border-slate-200 pb-3">
