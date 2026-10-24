@@ -16,6 +16,16 @@ if (!isset($_SESSION['id_usuario'])) {
     <meta charset="UTF-8">
     <title>SISCO-EDU</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e1b4b">
+
+    <!-- Favicon & PWA Branding -->
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('public/favicon.svg') ?>">
+    <link rel="icon" type="image/png" sizes="96x96" href="<?= base_url('public/favicon-96x96.png') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= base_url('public/favicon-32x32.png') ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= base_url('public/favicon-16x16.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('public/favicon.ico') ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('public/apple-touch-icon.png') ?>">
+    <link rel="manifest" href="<?= base_url('public/site.webmanifest') ?>">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

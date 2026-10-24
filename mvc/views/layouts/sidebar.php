@@ -171,9 +171,14 @@ $adminPaths = [
     <!-- Encabezado del Sidebar (Logo + Botones de Control) -->
     <div class="sidebar-header flex items-center justify-between gap-2 mb-5">
         <!-- Logo / Marca Expandida -->
-        <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="sidebar-brand-text flex-1 min-w-0 block">
-            <h1 class="app-logo text-xl font-black tracking-tight leading-none text-white truncate">SISCO-EDU</h1>
-            <p class="text-[11px] text-slate-400 font-medium truncate mt-1">Gestión Académica & IoT</p>
+        <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="sidebar-brand-text flex-1 min-w-0 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 p-0.5 shadow-md shadow-indigo-500/25 shrink-0 flex items-center justify-center">
+                <img src="<?= base_url('public/img/logo-badge.svg') ?>" alt="SISCO-EDU Logo" class="w-full h-full rounded-[10px] object-cover">
+            </div>
+            <div class="min-w-0 flex-1">
+                <h1 class="app-logo text-lg font-black tracking-tight leading-none text-white truncate">SISCO-EDU</h1>
+                <p class="text-[11px] text-slate-400 font-medium truncate mt-1">Gestión Académica & IoT</p>
+            </div>
         </a>
 
         <!-- Logo Compacto (Visible solo al colapsar, ocupando el mismo espacio que los iconos del menú) -->
@@ -181,8 +186,8 @@ $adminPaths = [
            id="sidebar-brand-mini"
            class="sidebar-brand-mini hidden group relative items-center justify-center w-full rounded-xl transition-all"
            title="SISCO-EDU">
-            <span class="sidebar-logo-badge w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/25">
-                SE
+            <span class="sidebar-logo-badge w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-md shadow-blue-500/25">
+                <img src="<?= base_url('public/img/logo-badge.svg') ?>" alt="SISCO-EDU" class="w-full h-full rounded-[9px] object-cover">
             </span>
         </a>
 

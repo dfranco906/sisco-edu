@@ -1,0 +1,27 @@
+{
+  "name": "SISCO-EDU - Gestión Académica & Biometría IoT",
+  "short_name": "SISCO-EDU",
+  "description": "Sistema de Control Educativo y Registro Biométrico de Asistencia IoT",
+  "start_url": "../",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e1b4b",
+  "icons": [
+    {
+      "src": "favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "img/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
