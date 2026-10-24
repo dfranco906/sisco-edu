@@ -2,7 +2,21 @@
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../config/red.php';
 require_once __DIR__ . '/../../classes/ConfiguracionSistema.php';
+
+$headers = function_exists('getallheaders') ? getallheaders() : [];
+$headerKey = $headers['X-GATEWAY-KEY'] ?? $headers['x-gateway-key'] ?? ($_SERVER['HTTP_X_GATEWAY_KEY'] ?? '');
+if (!empty($headerKey) && defined('GATEWAY_API_KEY') && hash_equals(GATEWAY_API_KEY, $headerKey)) {
+    http_response_code(200);
+    echo json_encode([
+        "status" => "success",
+        "online" => true,
+        "dispositivo" => "servidor",
+        "message" => "Conexión exitosa con el servidor SISCO-EDU"
+    ]);
+    exit();
+}
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

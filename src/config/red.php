@@ -36,25 +36,25 @@ try {
 
 // 3. IP / Host del Servidor Central
 if (!defined('IP_SERVIDOR')) {
-    $ipServidor = getenv('IP_SERVIDOR') ?: ($localConfig['IP_SERVIDOR'] ?? ($dbConfig['ip_servidor'] ?? '192.168.100.109'));
+    $ipServidor = getenv('IP_SERVIDOR') ?: (!empty($dbConfig['ip_servidor']) ? $dbConfig['ip_servidor'] : ($localConfig['IP_SERVIDOR'] ?? '192.168.100.52'));
     define('IP_SERVIDOR', $ipServidor);
 }
 
 // 4. IP del Nodo Registrador Biométrico (ESP32 + DY50)
 if (!defined('IP_ESP32_REGISTRADOR')) {
-    $ipReg = getenv('IP_ESP32_REGISTRADOR') ?: ($localConfig['IP_ESP32_REGISTRADOR'] ?? ($dbConfig['ip_registrador'] ?? '192.168.100.125'));
+    $ipReg = getenv('IP_ESP32_REGISTRADOR') ?: (!empty($dbConfig['ip_registrador']) ? $dbConfig['ip_registrador'] : ($localConfig['IP_ESP32_REGISTRADOR'] ?? '192.168.100.39'));
     define('IP_ESP32_REGISTRADOR', $ipReg);
 }
 
 // 5. IP del Gateway LoRa (ESP32)
 if (!defined('IP_ESP32_GATEWAY')) {
-    $ipGw = getenv('IP_ESP32_GATEWAY') ?: ($localConfig['IP_ESP32_GATEWAY'] ?? ($dbConfig['ip_gateway'] ?? '192.168.100.17'));
+    $ipGw = getenv('IP_ESP32_GATEWAY') ?: (!empty($dbConfig['ip_gateway']) ? $dbConfig['ip_gateway'] : ($localConfig['IP_ESP32_GATEWAY'] ?? '192.168.100.17'));
     define('IP_ESP32_GATEWAY', $ipGw);
 }
 
 // 6. URL para notificar sincronizaciones al Gateway
 if (!defined('GATEWAY_SYNC_URL')) {
-    $syncUrl = getenv('GATEWAY_SYNC_URL') ?: ($localConfig['GATEWAY_SYNC_URL'] ?? ($dbConfig['gateway_sync_url'] ?? ('http://' . IP_ESP32_GATEWAY . '/sync')));
+    $syncUrl = getenv('GATEWAY_SYNC_URL') ?: (!empty($dbConfig['gateway_sync_url']) ? $dbConfig['gateway_sync_url'] : ($localConfig['GATEWAY_SYNC_URL'] ?? ('http://' . IP_ESP32_GATEWAY . '/sync')));
     define('GATEWAY_SYNC_URL', $syncUrl);
 }
 
