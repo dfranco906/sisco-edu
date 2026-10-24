@@ -572,7 +572,7 @@
         if (!tbody) return;
 
         if (horariosGrado.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-muted">No hay horarios registrados.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400 dark:text-slate-500 italic text-base">No hay horarios registrados para este curso.</td></tr>';
             return;
         }
 
@@ -586,26 +586,36 @@
         tbody.innerHTML = ordenados
             .map((h) => {
                 const totalEst = Number(h.total_estudiantes || 0);
-                const estText = totalEst > 0 ? `${totalEst} alumnos` : '<span class="text-muted">Sin estudiantes</span>';
+                const estText = totalEst > 0
+                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">${totalEst} alumnos</span>`
+                    : '<span class="text-slate-400 dark:text-slate-500 font-medium text-sm">Sin estudiantes</span>';
+                
                 const botonesAccion = config.esDocente
                     ? ""
                     : `
-                        <td class="text-center">
-                            <div class="table-actions justify-center">
-                                <button type="button" class="btn btn-edit text-xs" data-editar-horario="${escapar(h.id_horario)}">Editar</button>
-                                <button type="button" class="btn btn-danger text-xs" data-desactivar-horario="${escapar(h.id_horario)}">Desactivar</button>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button type="button" class="min-h-[40px] px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5" data-editar-horario="${escapar(h.id_horario)}">
+                                    <span>✏️</span> Editar
+                                </button>
+                                <button type="button" class="min-h-[40px] px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-xl text-sm font-bold border border-rose-200 dark:border-rose-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5" data-desactivar-horario="${escapar(h.id_horario)}">
+                                    <span>🗑️</span> Desactivar
+                                </button>
                             </div>
                         </td>
                     `;
 
                 return `
-                    <tr>
-                        <td class="font-bold">${escapar(h.dia_semana)}</td>
-                        <td>${escapar(horaCorta(h.hora_inicio))} - ${escapar(horaCorta(h.hora_fin))}</td>
-                        <td class="font-bold text-primary">${escapar(h.materia || "Sin materia")}</td>
-                        <td>${escapar(h.profesor || "Sin profesor")}</td>
-                        <td>${escapar(h.aula || "Sin aula")} <span class="text-xs text-muted block">${escapar(h.ubicacion || "")}</span></td>
-                        <td>${estText}</td>
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="p-4 font-black text-slate-900 dark:text-white text-base">${escapar(h.dia_semana)}</td>
+                        <td class="p-4 font-mono font-bold text-slate-700 dark:text-slate-300 text-sm sm:text-base">${escapar(horaCorta(h.hora_inicio))} - ${escapar(horaCorta(h.hora_fin))}</td>
+                        <td class="p-4 font-black text-indigo-600 dark:text-indigo-400 text-base">${escapar(h.materia || "Sin materia")}</td>
+                        <td class="p-4 font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">${escapar(h.profesor || "Sin profesor")}</td>
+                        <td class="p-4 text-sm sm:text-base">
+                            <span class="font-bold text-slate-900 dark:text-white block">${escapar(h.aula || "Sin aula")}</span>
+                            <span class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium block mt-0.5">${escapar(h.ubicacion || "")}</span>
+                        </td>
+                        <td class="p-4">${estText}</td>
                         ${botonesAccion}
                     </tr>
                 `;
@@ -627,7 +637,7 @@
         const horaActual = ahora.toTimeString().slice(0, 5);
 
         if (!gradoSeleccionado) {
-            contenedor.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700";
+            contenedor.className = "flex items-center gap-2.5 min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-700";
             texto.textContent = "Seleccioná un grado para ver su estado";
             return;
         }
@@ -635,10 +645,10 @@
         const claseActual = horariosGrado.find((h) => esClaseEnVivo(h));
 
         if (claseActual) {
-            contenedor.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-sm";
-            texto.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-1"></span>En curso: ${escapar(claseActual.materia)} • ${escapar(claseActual.profesor || "Docente")} (hasta ${escapar(horaCorta(claseActual.hora_fin))})`;
+            contenedor.className = "flex items-center gap-2.5 min-h-[44px] px-4 py-2 rounded-xl text-sm font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700 shadow-sm animate-pulse";
+            texto.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping mr-1"></span>En curso: ${escapar(claseActual.materia)} • ${escapar(claseActual.profesor || "Docente")} (hasta ${escapar(horaCorta(claseActual.hora_fin))})`;
         } else {
-            contenedor.className = "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700";
+            contenedor.className = "flex items-center gap-2.5 min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-700";
             texto.textContent = `Sin clase en este momento (${hoyNombre} ${horaActual})`;
         }
     }
@@ -687,8 +697,8 @@
         if (badgeEstudiantes) {
             badgeEstudiantes.textContent = cantEst > 0 ? "Activos" : "Vacío";
             badgeEstudiantes.className = cantEst > 0
-                ? "text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
-                : "text-xs font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300";
+                ? "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                : "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600";
         }
 
         if (gradoNombre) gradoNombre.textContent = horario.grado || gradoSeleccionado?.nombre || "-";
@@ -887,8 +897,8 @@
         if (btnGrilla && btnLista) {
             btnGrilla.addEventListener("click", () => {
                 vistaActual = "grilla";
-                btnGrilla.className = "btn btn-sm btn-primary text-xs py-1 px-3 shadow-none";
-                btnLista.className = "btn btn-sm btn-muted text-xs py-1 px-3 shadow-none";
+                btnGrilla.className = "min-h-[38px] px-4 py-1.5 rounded-lg text-sm font-extrabold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all";
+                btnLista.className = "min-h-[38px] px-4 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all";
                 if (horariosGrado.length > 0) {
                     if (grillaWrap) grillaWrap.classList.remove("hidden");
                     if (listaWrap) listaWrap.classList.add("hidden");
@@ -897,8 +907,8 @@
 
             btnLista.addEventListener("click", () => {
                 vistaActual = "lista";
-                btnLista.className = "btn btn-sm btn-primary text-xs py-1 px-3 shadow-none";
-                btnGrilla.className = "btn btn-sm btn-muted text-xs py-1 px-3 shadow-none";
+                btnLista.className = "min-h-[38px] px-4 py-1.5 rounded-lg text-sm font-extrabold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all";
+                btnGrilla.className = "min-h-[38px] px-4 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-all";
                 if (horariosGrado.length > 0) {
                     if (listaWrap) listaWrap.classList.remove("hidden");
                     if (grillaWrap) grillaWrap.classList.add("hidden");
