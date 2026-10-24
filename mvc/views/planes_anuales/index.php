@@ -227,6 +227,39 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
             </div>
         </div>
 
+        <!-- Barra de Gestión de Unidades Temáticas (Controles de Expansión / Colapso) -->
+        <div id="barra-unidades-controles" class="hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-2xl shadow-2xs">
+                    📚
+                </span>
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">
+                            Unidades Temáticas del Plan
+                        </h3>
+                        <span id="det-unidades-contador" class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-black bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                            0 unidades
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+                        Estructura secuencial comprimible y expansible de contenidos y capacidades pedagógicas MEC
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 self-start sm:self-center shrink-0">
+                <button type="button" id="btn-expandir-todas" onclick="window.expandirTodasUnidades()" class="min-h-[44px] px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-2xs">
+                    <span class="text-base">📂</span>
+                    <span>Expandir Todas</span>
+                </button>
+                <button type="button" id="btn-colapsar-todas" onclick="window.colapsarTodasUnidades()" class="min-h-[44px] px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-2xs">
+                    <span class="text-base">📁</span>
+                    <span>Comprimir Todas</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Contenedor Dinámico de Unidades, Capacidades y Temas -->
         <div id="unidades-container" class="space-y-6">
             <!-- Animación de Carga Tranquilizadora -->
@@ -534,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let planesCache = [];
     let planActual = null;
     let recursosCache = null;
+    const unidadesColapsadas = new Set();
 
     // Toast feedback
     function mostrarToast(mensaje, tipo = 'success') {
@@ -793,6 +827,9 @@ document.addEventListener('DOMContentLoaded', () => {
         vistaDetalle.classList.remove('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
+        const barraControles = document.getElementById('barra-unidades-controles');
+        if (barraControles) barraControles.classList.add('hidden');
+
         unidadesContainer.innerHTML = `
             <div class="rounded-3xl border-2 border-indigo-200 dark:border-indigo-900/50 bg-gradient-to-b from-indigo-50/60 to-white dark:from-slate-900/90 dark:to-slate-900 p-12 sm:p-16 text-center my-6 shadow-sm">
                 <div class="relative w-20 h-20 mx-auto mb-5 flex items-center justify-center">
@@ -872,8 +909,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const barraControles = document.getElementById('barra-unidades-controles');
+        const contadorBadge = document.getElementById('det-unidades-contador');
+
         // Renderizar Unidades
         if (!plan.unidades || plan.unidades.length === 0) {
+            if (barraControles) barraControles.classList.add('hidden');
             unidadesContainer.innerHTML = `
                 <div class="p-12 sm:p-16 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 shadow-sm">
                     <span class="text-5xl block mb-4">📖</span>
@@ -890,19 +931,68 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (barraControles) barraControles.classList.remove('hidden');
+        if (contadorBadge) {
+            const cantU = plan.unidades.length;
+            contadorBadge.textContent = `${cantU} ${cantU === 1 ? 'unidad temática' : 'unidades temáticas'}`;
+        }
+
         let html = '';
         plan.unidades.forEach(u => {
+            const estaColapsada = unidadesColapsadas.has(u.id_unidad);
+            const cantCapacidades = u.capacidades ? u.capacidades.length : 0;
+            let cantLecciones = 0;
+            let totalHC = 0;
+            if (u.capacidades) {
+                u.capacidades.forEach(c => {
+                    if (c.temas) {
+                        cantLecciones += c.temas.length;
+                        c.temas.forEach(t => {
+                            totalHC += parseFloat(t.horas_catedra || 1);
+                        });
+                    }
+                });
+            }
+            const totalMin = Math.round(totalHC * 40);
+
             html += `
-                <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden mb-6">
-                    <!-- Cabecera de la Unidad -->
-                    <div class="bg-gradient-to-r from-slate-50 via-indigo-50/30 to-white dark:from-slate-800/80 dark:to-slate-900 p-5 sm:p-6 border-b-2 border-slate-200/90 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <span class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wider block mb-1">Unidad Temática</span>
-                            <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">${escapeHtml(u.nombre || 'Unidad de Aprendizaje')}</h3>
-                            ${u.tiempo_texto ? `<span class="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 font-bold mt-1.5"><span>📅</span> Período estimado: ${escapeHtml(u.tiempo_texto)}</span>` : ''}
+                <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden mb-6 transition-all duration-200">
+                    <!-- Cabecera de la Unidad (Comprimible / Expansible) -->
+                    <div id="unidad-header-${u.id_unidad}" 
+                         onclick="window.toggleUnidad(${u.id_unidad})"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.toggleUnidad(${u.id_unidad});}"
+                         role="button"
+                         tabindex="0"
+                         aria-expanded="${estaColapsada ? 'false' : 'true'}"
+                         title="Clic para ${estaColapsada ? 'expandir' : 'comprimir'} unidad temática"
+                         class="group bg-gradient-to-r from-slate-50 via-indigo-50/30 to-white dark:from-slate-800/80 dark:to-slate-900 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-indigo-50/40 dark:hover:bg-slate-800/90 select-none transition-colors">
+                        
+                        <div class="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
+                            <!-- Indicador Chevron Expandir/Comprimir -->
+                            <div class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-2xs group-hover:border-indigo-400 dark:group-hover:border-indigo-500 transition-colors shrink-0 mt-0.5 sm:mt-0">
+                                <svg id="unidad-chevron-${u.id_unidad}" class="w-5 h-5 transform transition-transform duration-200 ${estaColapsada ? '' : 'rotate-180'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">Unidad Temática</span>
+                                    <span id="unidad-estado-texto-${u.id_unidad}" class="text-xs font-semibold text-slate-400 dark:text-slate-500 hidden md:inline-block">· Clic para ${estaColapsada ? 'expandir' : 'comprimir'}</span>
+                                </div>
+                                <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight mt-0.5 truncate">${escapeHtml(u.nombre || 'Unidad de Aprendizaje')}</h3>
+                                
+                                <div class="flex flex-wrap items-center gap-2 mt-2">
+                                    ${u.tiempo_texto ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">📅 ${escapeHtml(u.tiempo_texto)}</span>` : ''}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80">🎯 ${cantCapacidades} ${cantCapacidades === 1 ? 'capacidad' : 'capacidades'}</span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">📝 ${cantLecciones} ${cantLecciones === 1 ? 'lección' : 'lecciones'}</span>
+                                    ${cantLecciones > 0 ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs sm:text-sm font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80">⏱️ ${totalHC} HC (${totalMin}m)</span>` : ''}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="flex items-center gap-2.5 self-start sm:self-center shrink-0">
+                        <!-- Botones de Acción de la Unidad (Sin propagación de clic) -->
+                        <div class="flex items-center gap-2.5 self-start sm:self-center shrink-0" onclick="event.stopPropagation()">
                             <button type="button" onclick="window.abrirModalNuevaCapacidad(${u.id_unidad})" class="min-h-[40px] px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-extrabold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
                                 <span>➕</span> Capacidad MEC
                             </button>
@@ -915,8 +1005,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <!-- Capacidades dentro de la Unidad -->
-                    <div class="p-6 sm:p-7 space-y-6">
+                    <!-- Contenido Comprimible / Expansible de la Unidad -->
+                    <div id="unidad-body-${u.id_unidad}" class="unidad-body ${estaColapsada ? 'hidden' : ''} border-t-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 space-y-6">
             `;
 
             if (u.capacidades && u.capacidades.length > 0) {
@@ -1029,10 +1119,65 @@ document.addEventListener('DOMContentLoaded', () => {
         unidadesContainer.innerHTML = html;
     }
 
+    // ==========================================
+    // CONTROLES DE COMPRESIÓN / EXPANSIÓN
+    // ==========================================
+    window.toggleUnidad = function(idUnidad) {
+        const body = document.getElementById(`unidad-body-${idUnidad}`);
+        const chevron = document.getElementById(`unidad-chevron-${idUnidad}`);
+        const header = document.getElementById(`unidad-header-${idUnidad}`);
+        const estadoTexto = document.getElementById(`unidad-estado-texto-${idUnidad}`);
+        if (!body) return;
+
+        const ahoraOculto = body.classList.toggle('hidden');
+        if (ahoraOculto) {
+            unidadesColapsadas.add(idUnidad);
+            if (chevron) chevron.classList.remove('rotate-180');
+            if (header) {
+                header.setAttribute('aria-expanded', 'false');
+                header.title = 'Clic para expandir unidad temática';
+            }
+            if (estadoTexto) estadoTexto.textContent = '· Clic para expandir';
+        } else {
+            unidadesColapsadas.delete(idUnidad);
+            if (chevron) chevron.classList.add('rotate-180');
+            if (header) {
+                header.setAttribute('aria-expanded', 'true');
+                header.title = 'Clic para comprimir unidad temática';
+            }
+            if (estadoTexto) estadoTexto.textContent = '· Clic para comprimir';
+        }
+    };
+
+    window.expandirTodasUnidades = function() {
+        unidadesColapsadas.clear();
+        document.querySelectorAll('.unidad-body').forEach(b => b.classList.remove('hidden'));
+        document.querySelectorAll('[id^="unidad-chevron-"]').forEach(c => c.classList.add('rotate-180'));
+        document.querySelectorAll('[id^="unidad-header-"]').forEach(h => {
+            h.setAttribute('aria-expanded', 'true');
+            h.title = 'Clic para comprimir unidad temática';
+        });
+        document.querySelectorAll('[id^="unidad-estado-texto-"]').forEach(t => t.textContent = '· Clic para comprimir');
+    };
+
+    window.colapsarTodasUnidades = function() {
+        if (planActual && planActual.unidades) {
+            planActual.unidades.forEach(u => unidadesColapsadas.add(u.id_unidad));
+        }
+        document.querySelectorAll('.unidad-body').forEach(b => b.classList.add('hidden'));
+        document.querySelectorAll('[id^="unidad-chevron-"]').forEach(c => c.classList.remove('rotate-180'));
+        document.querySelectorAll('[id^="unidad-header-"]').forEach(h => {
+            h.setAttribute('aria-expanded', 'false');
+            h.title = 'Clic para expandir unidad temática';
+        });
+        document.querySelectorAll('[id^="unidad-estado-texto-"]').forEach(t => t.textContent = '· Clic para expandir');
+    };
+
     // Volver al Catálogo
     btnVolverCatalogo.addEventListener('click', () => {
         vistaDetalle.classList.add('hidden');
         vistaCatalogo.classList.remove('hidden');
+        unidadesColapsadas.clear();
         cargarCatalogoPlanes();
     });
 
