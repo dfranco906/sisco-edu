@@ -6,7 +6,7 @@ $esProfesor = ($_SESSION['rol'] ?? '') === 'Profesor';
 $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 ?>
 
-<main class="flex-1 p-6 md:p-10 overflow-y-auto">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto">
     <!-- Notificaciones Toast -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
@@ -14,97 +14,113 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
     <!-- VISTA 1: CATÁLOGO DE PLANES ANUALES (MASTER) -->
     <!-- ========================================== -->
     <section id="vista-catalogo" class="transition-opacity duration-200">
-        <!-- Encabezado de la Sección -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                    <?= $esProfesor ? 'Mis Planes Anuales Pedagógicos' : 'Gestión de Planes Anuales' ?>
-                </h1>
-                <p class="text-base text-slate-600 mt-1">
-                    Estructura curricular oficial MEC Paraguay · 1 Hora Cátedra (HC) = 40 minutos.
-                </p>
-            </div>
+        <!-- Breadcrumb de Navegación -->
+        <nav class="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3" aria-label="Ruta de navegación">
+            <a href="<?= base_url('mvc/views/dashboard/index.php') ?>" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                <span>🏠</span> Inicio
+            </a>
+            <span>/</span>
+            <span class="text-slate-800 dark:text-slate-200 font-bold"><?= $esProfesor ? 'Mis Planes Anuales' : 'Gestión de Planes Anuales' ?></span>
+        </nav>
 
-            <div class="flex items-center gap-3">
-                <button id="btn-abrir-crear-plan" type="button" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-base font-bold shadow-sm shadow-indigo-100 transition-all hover:shadow-md cursor-pointer">
-                    <span class="text-lg">➕</span>
-                    <span>Crear Nuevo Plan Anual</span>
-                </button>
+        <!-- Encabezado de la Sección -->
+        <header class="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-2xl shadow-sm">
+                            📚
+                        </span>
+                        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                            <?= $esProfesor ? 'Mis Planes Anuales Pedagógicos' : 'Gestión de Planes Anuales' ?>
+                        </h1>
+                    </div>
+                    <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 mt-2 font-normal leading-relaxed">
+                        Estructura curricular oficial MEC Paraguay · 1 Hora Cátedra (HC) = 40 minutos.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button id="btn-abrir-crear-plan" type="button" class="min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base font-extrabold shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                        <span class="text-lg">➕</span>
+                        <span>Crear Nuevo Plan Anual</span>
+                    </button>
+                </div>
             </div>
-        </div>
+        </header>
 
         <!-- Barra de Estadísticas Rápidas -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-            <div class="bg-white rounded-2xl border-2 border-slate-200 p-5 flex items-center gap-4 shadow-xs">
-                <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl font-bold shrink-0">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 p-6 flex items-center gap-4 shadow-sm">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-3xl font-bold shrink-0">
                     📚
                 </div>
                 <div>
-                    <span class="text-sm uppercase tracking-wider text-slate-500 font-bold">Total de Planes</span>
-                    <p id="stat-total-planes" class="text-2xl sm:text-3xl font-black text-slate-900">0</p>
+                    <span class="text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400 font-extrabold">Total de Planes</span>
+                    <p id="stat-total-planes" class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">0</p>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl border-2 border-slate-200 p-5 flex items-center gap-4 shadow-xs">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-bold shrink-0">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 p-6 flex items-center gap-4 shadow-sm">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-3xl font-bold shrink-0">
                     📝
                 </div>
                 <div>
-                    <span class="text-sm uppercase tracking-wider text-slate-500 font-bold">Lecciones Planificadas</span>
-                    <p id="stat-total-temas" class="text-2xl sm:text-3xl font-black text-slate-900">0</p>
+                    <span class="text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400 font-extrabold">Lecciones Planificadas</span>
+                    <p id="stat-total-temas" class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">0</p>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl border-2 border-slate-200 p-5 flex items-center gap-4 shadow-xs">
-                <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl font-bold shrink-0">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 p-6 flex items-center gap-4 shadow-sm">
+                <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-3xl font-bold shrink-0">
                     ⏱️
                 </div>
                 <div>
-                    <span class="text-sm uppercase tracking-wider text-slate-500 font-bold">Unidad de Tiempo</span>
-                    <p class="text-base font-bold text-slate-800 mt-1">40 min / Hora Cátedra</p>
+                    <span class="text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400 font-extrabold">Unidad de Tiempo</span>
+                    <p class="text-base sm:text-lg font-black text-slate-800 dark:text-slate-200 mt-1">40 min / Hora Cátedra</p>
                 </div>
             </div>
         </div>
 
         <!-- Buscador y Filtros en Cascada -->
-        <div class="bg-white rounded-2xl border-2 border-slate-200 p-6 mb-8 shadow-sm space-y-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 mb-6 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                    <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block"></span>
+                    <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-indigo-600 inline-block"></span>
                         Filtros de Búsqueda y Navegación Curricular
                     </h3>
-                    <p class="text-sm text-slate-500 mt-0.5">Seleccioná turno, ciclo, bachillerato y grado para filtrar los planes anuales al instante.</p>
+                    <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">Seleccioná turno, ciclo, bachillerato y grado para filtrar los planes anuales al instante.</p>
                 </div>
-                <div class="w-full sm:w-80 relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-base">🔍</span>
-                    <input id="input-buscar-plan" type="text" placeholder="Buscar materia, docente o año..." class="w-full pl-10 pr-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-600 font-medium">
+                <div class="w-full sm:w-88 relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 text-lg">🔍</span>
+                    <input id="input-buscar-plan" type="text" placeholder="Buscar materia, docente o año..." class="w-full min-h-[48px] pl-11 pr-4 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl text-base text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <label for="filtro-plan-turno" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">1. Turno</label>
-                    <select id="filtro-plan-turno" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
+                    <label for="filtro-plan-turno" class="block font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-sm mb-2">1. Turno</label>
+                    <select id="filtro-plan-turno" class="w-full min-h-[48px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold cursor-pointer">
                         <option value="">Todos los turnos</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="filtro-plan-nivel" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">2. Ciclo / Nivel</label>
-                    <select id="filtro-plan-nivel" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
+                    <label for="filtro-plan-nivel" class="block font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-sm mb-2">2. Ciclo / Nivel</label>
+                    <select id="filtro-plan-nivel" class="w-full min-h-[48px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold cursor-pointer">
                         <option value="">Todos los ciclos</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="filtro-plan-bach" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">3. Bachillerato</label>
-                    <select id="filtro-plan-bach" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
+                    <label for="filtro-plan-bach" class="block font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-sm mb-2">3. Bachillerato</label>
+                    <select id="filtro-plan-bach" class="w-full min-h-[48px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold cursor-pointer">
                         <option value="">Todos / General</option>
                     </select>
                 </div>
 
                 <div>
-                    <label for="filtro-plan-grado" class="block font-bold uppercase tracking-wider text-slate-700 text-sm mb-1.5">4. Grado / Curso</label>
-                    <select id="filtro-plan-grado" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm sm:text-base focus:outline-none focus:border-indigo-600 font-semibold cursor-pointer">
+                    <label for="filtro-plan-grado" class="block font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-sm mb-2">4. Grado / Curso</label>
+                    <select id="filtro-plan-grado" class="w-full min-h-[48px] bg-slate-50 dark:bg-slate-950 border-2 border-indigo-400 dark:border-indigo-500 text-slate-900 dark:text-white rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold cursor-pointer">
                         <option value="">Todos los grados</option>
                     </select>
                 </div>
@@ -124,76 +140,113 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
     <!-- VISTA 2: DETALLE / EDITOR CURRICULAR (DETAIL) -->
     <!-- ========================================== -->
     <section id="vista-detalle" class="hidden transition-opacity duration-200 space-y-6">
-        <!-- Barra de Navegación Superior -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-            <button id="btn-volver-catalogo" type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">
-                <span>←</span>
+        <!-- Breadcrumb de Navegación de la Vista Individual -->
+        <nav class="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2" aria-label="Ruta de navegación detalle">
+            <a href="<?= base_url('mvc/views/dashboard/index.php') ?>" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                <span>🏠</span> Inicio
+            </a>
+            <span>/</span>
+            <a href="#" id="breadcrumb-catalogo-link" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                <?= $esProfesor ? 'Mis Planes Anuales' : 'Planes Anuales' ?>
+            </a>
+            <span>/</span>
+            <span id="breadcrumb-materia-actual" class="text-slate-800 dark:text-slate-200 font-bold">Detalle Curricular</span>
+        </nav>
+
+        <!-- Barra de Navegación Superior y Acciones Principales -->
+        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <button id="btn-volver-catalogo" type="button" class="min-h-[46px] px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-base font-bold border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-2xs">
+                <span class="text-lg">←</span>
                 <span>Volver al Catálogo de Planes</span>
             </button>
 
-            <div class="flex items-center gap-3">
-                <button id="btn-editar-plan-header" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-sm transition-colors">
+            <div class="flex flex-wrap items-center gap-3">
+                <button id="btn-editar-plan-header" type="button" class="min-h-[46px] px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-sm sm:text-base font-bold shadow-2xs transition-colors flex items-center gap-2 cursor-pointer">
                     <span>✏️</span>
                     <span>Editar Encabezado</span>
                 </button>
-                <button id="btn-eliminar-plan-actual" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold shadow-sm transition-colors">
+                <button id="btn-eliminar-plan-actual" type="button" class="min-h-[46px] px-4 py-2.5 bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-xl text-sm sm:text-base font-bold shadow-2xs transition-colors flex items-center gap-2 cursor-pointer">
                     <span>🗑️</span>
                     <span>Eliminar Plan</span>
                 </button>
-                <button id="btn-nueva-unidad" type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors">
+                <button id="btn-nueva-unidad" type="button" class="min-h-[46px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                     <span>➕</span>
                     <span>Nueva Unidad Temática</span>
                 </button>
             </div>
         </div>
 
-        <!-- Encabezado Institucional del Plan -->
-        <div id="plan-header-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
+        <!-- Encabezado Institucional del Plan (Hero Card) -->
+        <div id="plan-header-card" class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Institución</span>
-                    <p id="det-institucion" class="text-sm font-bold text-slate-800 mt-0.5">-</p>
+                    <span class="text-xs sm:text-sm uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-extrabold">Planificación Anual Oficial MEC</span>
+                    <h2 id="det-materia-curso" class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mt-1 leading-tight">-</h2>
                 </div>
-                <div>
-                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Materia y Curso</span>
-                    <p id="det-materia-curso" class="text-sm font-bold text-indigo-700 mt-0.5">-</p>
-                </div>
-                <div>
-                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Profesor Encargado</span>
-                    <p id="det-profesor" class="text-sm font-bold text-slate-800 mt-0.5">-</p>
-                </div>
-                <div>
-                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Carga Horaria / Turno</span>
-                    <p id="det-carga-turno" class="text-sm font-bold text-slate-800 mt-0.5">-</p>
+                <div class="text-right">
+                    <span id="det-carga-turno" class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-2 border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                        -
+                    </span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <span class="text-xs font-bold text-indigo-900 uppercase tracking-wide flex items-center gap-1.5">
-                        <span>🎯</span> Competencia General
-                    </span>
-                    <p id="det-comp-general" class="text-xs text-slate-600 mt-2 leading-relaxed whitespace-pre-line">-</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-2">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Institución Educativa</span>
+                    <p id="det-institucion" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">-</p>
                 </div>
-                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <span class="text-xs font-bold text-indigo-900 uppercase tracking-wide flex items-center gap-1.5">
-                        <span>📌</span> Competencia Específica
-                    </span>
-                    <p id="det-comp-especifica" class="text-xs text-slate-600 mt-2 leading-relaxed whitespace-pre-line">-</p>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Profesor / Docente Responsable</span>
+                    <p id="det-profesor" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">-</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Régimen y Carga Horaria</span>
+                    <p class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">40 min / Hora Cátedra</p>
                 </div>
             </div>
 
-            <div id="det-obs-wrapper" class="mt-4 pt-4 border-t border-slate-100 hidden">
-                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Observaciones Generales</span>
-                <p id="det-observaciones" class="text-xs text-slate-600 mt-1 italic">-</p>
+            <!-- Competencias Pedagógicas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div class="p-5 sm:p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border-2 border-indigo-100 dark:border-indigo-900/40">
+                    <span class="text-xs sm:text-sm font-extrabold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide flex items-center gap-2">
+                        <span class="text-lg">🎯</span> Competencia General
+                    </span>
+                    <p id="det-comp-general" class="text-base text-slate-700 dark:text-slate-300 mt-2.5 leading-relaxed font-normal whitespace-pre-line">-</p>
+                </div>
+                <div class="p-5 sm:p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border-2 border-indigo-100 dark:border-indigo-900/40">
+                    <span class="text-xs sm:text-sm font-extrabold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide flex items-center gap-2">
+                        <span class="text-lg">📌</span> Competencia Específica de la Disciplina
+                    </span>
+                    <p id="det-comp-especifica" class="text-base text-slate-700 dark:text-slate-300 mt-2.5 leading-relaxed font-normal whitespace-pre-line">-</p>
+                </div>
+            </div>
+
+            <div id="det-obs-wrapper" class="pt-4 border-t border-slate-100 dark:border-slate-800 hidden">
+                <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Observaciones Generales</span>
+                <p id="det-observaciones" class="text-base text-slate-600 dark:text-slate-300 mt-1 italic leading-relaxed">-</p>
             </div>
         </div>
 
         <!-- Contenedor Dinámico de Unidades, Capacidades y Temas -->
         <div id="unidades-container" class="space-y-6">
-            <div class="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-                <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-3"></div>
-                <p class="text-sm font-medium">Cargando desglose pedagógico...</p>
+            <!-- Animación de Carga Tranquilizadora -->
+            <div class="rounded-3xl border-2 border-indigo-200 dark:border-indigo-900/50 bg-gradient-to-b from-indigo-50/60 to-white dark:from-slate-900/90 dark:to-slate-900 p-12 sm:p-16 text-center my-6 shadow-sm">
+                <div class="relative w-20 h-20 mx-auto mb-5 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full bg-indigo-400/20 dark:bg-indigo-500/20 animate-ping"></div>
+                    <div class="w-16 h-16 rounded-full border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-2xl">
+                        📖
+                    </div>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Cargando Estructura Curricular...
+                </h3>
+                <p class="text-base text-slate-600 dark:text-slate-400 max-w-md mx-auto mt-2 leading-relaxed font-medium">
+                    Consultando unidades temáticas, capacidades pedagógicas del MEC e indicadores de logro.
+                </p>
+                <div class="max-w-xs mx-auto mt-5 bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden shadow-inner">
+                    <div class="h-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 rounded-full animate-pulse w-3/4"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -202,32 +255,32 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- ======================================================== -->
 <!-- MODAL 1: CREAR / EDITAR ENCABEZADO DEL PLAN ANUAL        -->
 <!-- ======================================================== -->
-<div id="modal-plan" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-2xl my-8 overflow-hidden animate-scale-up">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 id="modal-plan-title" class="font-bold text-slate-800 text-base">Crear Nuevo Plan Anual</h3>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+<div id="modal-plan" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl my-8 overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 id="modal-plan-title" class="font-black text-slate-900 dark:text-white text-xl">Crear Nuevo Plan Anual</h3>
+            <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
         </div>
 
-        <form id="form-plan" class="p-6 space-y-4">
+        <form id="form-plan" class="p-6 sm:p-8 space-y-5">
             <input type="hidden" id="plan-id" name="id_plan">
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Materia y Grado / Curso Asignado *</label>
-                <select id="plan-id-asignacion" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Materia y Grado / Curso Asignado *</label>
+                <select id="plan-id-asignacion" required class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                     <option value="">Cargando asignaciones...</option>
                 </select>
-                <span class="text-[11px] text-slate-400 mt-1 block">Solo se muestran materias asignadas activas en el colegio.</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 block">Solo se muestran materias asignadas activas en la institución.</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Año Lectivo *</label>
-                    <input type="number" id="plan-anio" required min="2020" max="2035" value="2026" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Año Lectivo *</label>
+                    <input type="number" id="plan-anio" required min="2020" max="2035" value="2026" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Turno *</label>
-                    <select id="plan-turno" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Turno *</label>
+                    <select id="plan-turno" required class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                         <option value="MAÑANA">Mañana</option>
                         <option value="TARDE">Tarde</option>
                         <option value="NOCHE">Noche</option>
@@ -236,28 +289,28 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Institución Educativa</label>
-                <input type="text" id="plan-institucion" value="COLEGIO PRIV. PRESB. SAN PABLO" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Institución Educativa</label>
+                <input type="text" id="plan-institucion" value="COLEGIO PRIV. PRESB. SAN PABLO" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Competencia General (MEC)</label>
-                <textarea id="plan-comp-general" rows="3" placeholder="Formular e implementar soluciones técnicas y éticas acordes al perfil de egreso..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Competencia General (MEC)</label>
+                <textarea id="plan-comp-general" rows="3" placeholder="Formular e implementar soluciones técnicas y éticas acordes al perfil de egreso..." class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"></textarea>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Competencia Específica de la Disciplina</label>
-                <textarea id="plan-comp-especifica" rows="3" placeholder="Aplica las normativas, métodos de análisis y herramientas prácticas del área..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Competencia Específica de la Disciplina</label>
+                <textarea id="plan-comp-especifica" rows="3" placeholder="Aplica las normativas, métodos de análisis y herramientas prácticas del área..." class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"></textarea>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observaciones</label>
-                <input type="text" id="plan-observaciones" placeholder="Planificación ajustada a cronograma institucional" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Observaciones</label>
+                <input type="text" id="plan-observaciones" placeholder="Planificación ajustada a cronograma institucional" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
             </div>
 
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" class="btn-close-modal px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 font-medium">Cancelar</button>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm">Guardar Plan</button>
+            <div class="pt-5 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" class="btn-close-modal min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Cancelar</button>
+                <button type="submit" class="min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all cursor-pointer active:scale-95">Guardar Plan</button>
             </div>
         </form>
     </div>
@@ -266,35 +319,35 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- ======================================================== -->
 <!-- MODAL 2: CREAR / EDITAR UNIDAD TEMÁTICA                  -->
 <!-- ======================================================== -->
-<div id="modal-unidad" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden animate-scale-up">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 id="modal-unidad-title" class="font-bold text-slate-800 text-base">Nueva Unidad Temática</h3>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+<div id="modal-unidad" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 id="modal-unidad-title" class="font-black text-slate-900 dark:text-white text-xl">Nueva Unidad Temática</h3>
+            <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
         </div>
 
-        <form id="form-unidad" class="p-6 space-y-4">
+        <form id="form-unidad" class="p-6 sm:p-8 space-y-5">
             <input type="hidden" id="unidad-id" name="id_unidad">
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Título de la Unidad *</label>
-                <input type="text" id="unidad-nombre" required placeholder="Ej: Unidad I: Fundamentos y Conceptos Clave" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Título de la Unidad *</label>
+                <input type="text" id="unidad-nombre" required placeholder="Ej: Unidad I: Fundamentos y Conceptos Clave" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Período / Tiempo Estimado</label>
-                    <input type="text" id="unidad-tiempo" placeholder="Ej: Febrero a Abril" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Período / Tiempo Estimado</label>
+                    <input type="text" id="unidad-tiempo" placeholder="Ej: Febrero a Abril" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Orden Secuencial</label>
-                    <input type="number" id="unidad-orden" min="1" max="50" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Orden Secuencial</label>
+                    <input type="number" id="unidad-orden" min="1" max="50" value="1" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                 </div>
             </div>
 
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" class="btn-close-modal px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 font-medium">Cancelar</button>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm">Guardar Unidad</button>
+            <div class="pt-5 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" class="btn-close-modal min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Cancelar</button>
+                <button type="submit" class="min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all cursor-pointer active:scale-95">Guardar Unidad</button>
             </div>
         </form>
     </div>
@@ -303,30 +356,30 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- ======================================================== -->
 <!-- MODAL 3: CREAR / EDITAR CAPACIDAD MEC                    -->
 <!-- ======================================================== -->
-<div id="modal-capacidad" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden animate-scale-up">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 id="modal-capacidad-title" class="font-bold text-slate-800 text-base">Capacidad Pedagógica MEC</h3>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+<div id="modal-capacidad" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 id="modal-capacidad-title" class="font-black text-slate-900 dark:text-white text-xl">Capacidad Pedagógica MEC</h3>
+            <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
         </div>
 
-        <form id="form-capacidad" class="p-6 space-y-4">
+        <form id="form-capacidad" class="p-6 sm:p-8 space-y-5">
             <input type="hidden" id="capacidad-id" name="id_capacidad">
             <input type="hidden" id="capacidad-id-unidad" name="id_unidad">
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Descripción de la Capacidad (MEC) *</label>
-                <textarea id="capacidad-desc" required rows="4" placeholder="Comprende la importancia de los estados financieros en la gestión moderna..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Descripción de la Capacidad (MEC) *</label>
+                <textarea id="capacidad-desc" required rows="4" placeholder="Comprende la importancia de los estados financieros en la gestión moderna..." class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"></textarea>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Orden Secuencial</label>
-                <input type="number" id="capacidad-orden" min="1" max="50" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Orden Secuencial</label>
+                <input type="number" id="capacidad-orden" min="1" max="50" value="1" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
             </div>
 
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" class="btn-close-modal px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 font-medium">Cancelar</button>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm">Guardar Capacidad</button>
+            <div class="pt-5 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" class="btn-close-modal min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Cancelar</button>
+                <button type="submit" class="min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all cursor-pointer active:scale-95">Guardar Capacidad</button>
             </div>
         </form>
     </div>
@@ -335,71 +388,71 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- ======================================================== -->
 <!-- MODAL 4: CREAR / EDITAR TEMA / LECCIÓN DETALLADA         -->
 <!-- ======================================================== -->
-<div id="modal-tema" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-2xl my-8 overflow-hidden animate-scale-up">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 id="modal-tema-title" class="font-bold text-slate-800 text-base">Planificar Lección / Tema</h3>
-            <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+<div id="modal-tema" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl my-8 overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 id="modal-tema-title" class="font-black text-slate-900 dark:text-white text-xl">Planificar Lección / Tema</h3>
+            <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
         </div>
 
-        <form id="form-tema" class="p-6 space-y-4">
+        <form id="form-tema" class="p-6 sm:p-8 space-y-5">
             <input type="hidden" id="tema-id" name="id_tema">
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Capacidad MEC Asociada *</label>
-                <select id="tema-id-capacidad" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Capacidad MEC Asociada *</label>
+                <select id="tema-id-capacidad" required class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                     <option value="">Seleccione capacidad...</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tema / Contenido de la Lección *</label>
-                <input type="text" id="tema-titulo" required placeholder="Ej: 1.1 El rol del administrador financiero en la era digital" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Tema / Contenido de la Lección *</label>
+                <input type="text" id="tema-titulo" required placeholder="Ej: 1.1 El rol del administrador financiero en la era digital" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                         Horas Cátedra (HC)
-                        <span id="label-duracion-minutos" class="text-indigo-600 font-semibold normal-case">(= 80 min)</span>
+                        <span id="label-duracion-minutos" class="text-indigo-600 dark:text-indigo-400 font-extrabold normal-case">(= 80 min)</span>
                     </label>
-                    <input type="number" id="tema-horas" min="1" max="10" step="1" value="2" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <input type="number" id="tema-horas" min="1" max="10" step="1" value="2" required class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Fecha Programada de la Clase</label>
-                    <input type="date" id="tema-fecha" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Fecha Programada de la Clase</label>
+                    <input type="date" id="tema-fecha" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+                <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                     Indicadores de Logro
-                    <span class="text-slate-400 font-normal">(Escribe un indicador por línea)</span>
+                    <span class="text-slate-500 dark:text-slate-400 font-normal lowercase">(escribe uno por línea)</span>
                 </label>
-                <textarea id="tema-indicadores" rows="3" placeholder="- Reconoce las variables financieras&#10;- Calcula el presupuesto operativo&#10;- Participa activamente en clase" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-xs"></textarea>
+                <textarea id="tema-indicadores" rows="3" placeholder="- Reconoce las variables financieras&#10;- Calcula el presupuesto operativo&#10;- Participa activamente en clase" class="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm sm:text-base font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"></textarea>
             </div>
 
             <!-- Procedimientos e Instrumentos de Evaluación -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
                 <div>
-                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Procedimientos Evaluativos</span>
-                    <div id="container-procedimientos" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                        <span class="text-xs text-slate-400">Cargando procedimientos...</span>
+                    <span class="block text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3">Procedimientos Evaluativos</span>
+                    <div id="container-procedimientos" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <span class="text-sm text-slate-400">Cargando procedimientos...</span>
                     </div>
                 </div>
 
                 <div>
-                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Instrumentos Evaluativos</span>
-                    <div id="container-instrumentos" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                        <span class="text-xs text-slate-400">Cargando instrumentos...</span>
+                    <span class="block text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3">Instrumentos Evaluativos</span>
+                    <div id="container-instrumentos" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <span class="text-sm text-slate-400">Cargando instrumentos...</span>
                     </div>
                 </div>
             </div>
 
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <button type="button" class="btn-close-modal px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 font-medium">Cancelar</button>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm">Guardar Lección</button>
+            <div class="pt-5 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" class="btn-close-modal min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Cancelar</button>
+                <button type="submit" class="min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all cursor-pointer active:scale-95">Guardar Lección</button>
             </div>
         </form>
     </div>
@@ -443,6 +496,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Botones maestros
     const btnVolverCatalogo = document.getElementById('btn-volver-catalogo');
+    const breadcrumbCatalogoLink = document.getElementById('breadcrumb-catalogo-link');
+    const breadcrumbMateriaActual = document.getElementById('breadcrumb-materia-actual');
     const btnAbrirCrearPlan = document.getElementById('btn-abrir-crear-plan');
     const btnEditarPlanHeader = document.getElementById('btn-editar-plan-header');
     const btnEliminarPlanActual = document.getElementById('btn-eliminar-plan-actual');
@@ -518,16 +573,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarCheckboxesRecursos(data) {
         if (data.procedimientos) {
             containerProcedimientos.innerHTML = data.procedimientos.map(p => `
-                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-indigo-600">
-                    <input type="checkbox" name="procedimientos[]" value="${p.id_procedimiento}" class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                <label class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer select-none transition-colors">
+                    <input type="checkbox" name="procedimientos[]" value="${p.id_procedimiento}" class="w-4 h-4 rounded text-indigo-600 focus:ring-0 border-slate-300 dark:border-slate-600 cursor-pointer">
                     <span>${p.nombre}</span>
                 </label>
             `).join('');
         }
         if (data.instrumentos) {
             containerInstrumentos.innerHTML = data.instrumentos.map(i => `
-                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-indigo-600">
-                    <input type="checkbox" name="instrumentos[]" value="${i.id_instrumento}" class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                <label class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer select-none transition-colors">
+                    <input type="checkbox" name="instrumentos[]" value="${i.id_instrumento}" class="w-4 h-4 rounded text-indigo-600 focus:ring-0 border-slate-300 dark:border-slate-600 cursor-pointer">
                     <span>${i.nombre}</span>
                 </label>
             `).join('');
@@ -559,8 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function cargarCatalogoPlanes() {
         gridPlanes.innerHTML = `
             <div class="col-span-full py-16 text-center text-slate-400">
-                <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-3"></div>
-                <p class="text-sm font-medium">Cargando catálogo de planes anuales...</p>
+                <div class="animate-spin inline-block w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full mb-3"></div>
+                <p class="text-base font-semibold">Cargando catálogo de planes anuales...</p>
             </div>
         `;
 
@@ -646,13 +701,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarCatalogo(planes) {
         if (!planes || planes.length === 0) {
             gridPlanes.innerHTML = `
-                <div class="col-span-full py-16 px-6 text-center bg-white rounded-3xl border-2 border-slate-200 shadow-sm">
+                <div class="col-span-full py-16 px-6 text-center bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
                     <span class="text-5xl block mb-4">📋</span>
-                    <h3 class="text-xl sm:text-2xl font-black text-slate-800">No hay planes anuales que coincidan con la búsqueda</h3>
-                    <p class="text-base text-slate-500 mt-2 max-w-md mx-auto">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">No hay planes anuales que coincidan con la búsqueda</h3>
+                    <p class="text-base text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
                         Verificá los filtros seleccionados o registrá un nuevo plan curricular para tu materia.
                     </p>
-                    <button type="button" onclick="document.getElementById('btn-abrir-crear-plan').click()" class="mt-6 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-base font-bold shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2 cursor-pointer">
+                    <button type="button" onclick="document.getElementById('btn-abrir-crear-plan').click()" class="mt-6 min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base font-extrabold shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2 cursor-pointer active:scale-95">
                         <span>➕</span>
                         <span>Crear Plan Anual</span>
                     </button>
@@ -670,35 +725,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const temas = parseInt(p.total_temas || 0);
 
             return `
-                <div class="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm hover:shadow-xl hover:border-indigo-300 transition-all p-6 sm:p-7 flex flex-col justify-between space-y-6">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-indigo-400 dark:hover:border-indigo-500 transition-all p-6 sm:p-7 flex flex-col justify-between space-y-6">
                     <div class="space-y-4">
                         <!-- Nombre de la Materia -->
-                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 leading-snug hover:text-indigo-600 transition-colors cursor-pointer" onclick="window.abrirPlanDetalle(${p.id_plan})" title="Clic para abrir el plan">
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-snug hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer" onclick="window.abrirPlanDetalle(${p.id_plan})" title="Clic para abrir el plan">
                             ${escapeHtml(materia)}
                         </h3>
 
                         <!-- Grilla 2x2: Grado/Curso (1:1), Turno (1:2), Profesor (2:1), Cantidad de contenidos (2:2) -->
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-3.5 pt-3 border-t border-slate-100 text-base">
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 text-base">
                             <!-- 1:1 Grado / Curso -->
-                            <div class="flex items-center gap-2.5 font-bold text-indigo-700 min-w-0">
+                            <div class="flex items-center gap-2.5 font-bold text-indigo-700 dark:text-indigo-300 min-w-0">
                                 <span class="text-xl shrink-0" aria-hidden="true">🎓</span>
                                 <span class="truncate" title="${escapeHtml(curso)}">${escapeHtml(curso)}</span>
                             </div>
 
                             <!-- 1:2 Turno -->
-                            <div class="flex items-center gap-2.5 font-semibold text-slate-700 min-w-0">
+                            <div class="flex items-center gap-2.5 font-semibold text-slate-700 dark:text-slate-300 min-w-0">
                                 <span class="text-xl shrink-0" aria-hidden="true">⏰</span>
                                 <span class="truncate" title="${escapeHtml(turno)}">${escapeHtml(turno)}</span>
                             </div>
 
                             <!-- 2:1 Profesor -->
-                            <div class="flex items-center gap-2.5 font-semibold text-slate-700 min-w-0">
+                            <div class="flex items-center gap-2.5 font-semibold text-slate-700 dark:text-slate-300 min-w-0">
                                 <span class="text-xl shrink-0" aria-hidden="true">👨‍🏫</span>
                                 <span class="truncate" title="${escapeHtml(profesor)}">${escapeHtml(profesor)}</span>
                             </div>
 
                             <!-- 2:2 Cantidad de Contenidos -->
-                            <div class="flex items-center gap-2.5 font-bold text-slate-800 min-w-0">
+                            <div class="flex items-center gap-2.5 font-bold text-slate-800 dark:text-slate-200 min-w-0">
                                 <span class="text-xl shrink-0" aria-hidden="true">📚</span>
                                 <span class="truncate">${temas} ${temas === 1 ? 'lección' : 'lecciones'}</span>
                             </div>
@@ -706,17 +761,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <!-- Botones de Acción: Abrir plan al 100% de ancho, Editar y Eliminar al 50% debajo -->
-                    <div class="pt-5 border-t border-slate-100 flex flex-col gap-2.5">
-                        <button type="button" onclick="window.abrirPlanDetalle(${p.id_plan})" class="w-full py-3 px-5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-base font-bold rounded-2xl shadow-sm transition-all hover:shadow-md text-center inline-flex items-center justify-center gap-2 cursor-pointer">
+                    <div class="pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        <button type="button" onclick="window.abrirPlanDetalle(${p.id_plan})" class="w-full min-h-[46px] py-2.5 px-5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-base font-extrabold rounded-xl shadow-sm transition-all hover:shadow-md text-center inline-flex items-center justify-center gap-2 cursor-pointer">
                             <span>📖</span>
                             <span>Abrir plan</span>
                         </button>
-                        <div class="grid grid-cols-2 gap-2.5 w-full">
-                            <button type="button" onclick="window.abrirEditarPlanHeader(${p.id_plan})" class="w-full py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-300/80 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Editar encabezado del plan">
+                        <div class="grid grid-cols-2 gap-3 w-full">
+                            <button type="button" onclick="window.abrirEditarPlanHeader(${p.id_plan})" class="w-full min-h-[44px] py-2 px-3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-700 text-sm sm:text-base font-bold rounded-xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Editar encabezado del plan">
                                 <span>✏️</span>
                                 <span>Editar</span>
                             </button>
-                            <button type="button" onclick="window.confirmarEliminarPlan(${p.id_plan})" class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 border border-rose-200 text-base font-bold rounded-2xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Eliminar plan anual">
+                            <button type="button" onclick="window.confirmarEliminarPlan(${p.id_plan})" class="w-full min-h-[44px] py-2 px-3 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-2 border-rose-200 dark:border-rose-800 text-sm sm:text-base font-bold rounded-xl transition-all inline-flex items-center justify-center gap-2 cursor-pointer" title="Eliminar plan anual">
                                 <span>🗑️</span>
                                 <span>Eliminar</span>
                             </button>
@@ -739,9 +794,23 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         unidadesContainer.innerHTML = `
-            <div class="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-                <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-3"></div>
-                <p class="text-sm font-medium">Cargando árbol curricular completo...</p>
+            <div class="rounded-3xl border-2 border-indigo-200 dark:border-indigo-900/50 bg-gradient-to-b from-indigo-50/60 to-white dark:from-slate-900/90 dark:to-slate-900 p-12 sm:p-16 text-center my-6 shadow-sm">
+                <div class="relative w-20 h-20 mx-auto mb-5 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full bg-indigo-400/20 dark:bg-indigo-500/20 animate-ping"></div>
+                    <div class="w-16 h-16 rounded-full border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-2xl">
+                        📖
+                    </div>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Cargando Árbol Curricular Completo...
+                </h3>
+                <p class="text-base text-slate-600 dark:text-slate-400 max-w-md mx-auto mt-2 leading-relaxed font-medium">
+                    Sincronizando unidades temáticas, capacidades pedagógicas del MEC e indicadores de evaluación.
+                </p>
+                <div class="max-w-xs mx-auto mt-5 bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden shadow-inner">
+                    <div class="h-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 rounded-full animate-pulse w-3/4"></div>
+                </div>
             </div>
         `;
 
@@ -752,26 +821,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     planActual = res.data;
                     renderizarDetallePlan(res.data);
                 } else {
-                    unidadesContainer.innerHTML = `<div class="p-8 text-center text-rose-500 font-semibold">${res.message}</div>`;
+                    unidadesContainer.innerHTML = `<div class="p-8 text-center text-rose-500 font-semibold text-base">${res.message}</div>`;
                 }
             })
             .catch(err => {
-                unidadesContainer.innerHTML = `<div class="p-8 text-center text-rose-500 font-semibold">Error al obtener detalle del plan: ${err.message}</div>`;
+                unidadesContainer.innerHTML = `<div class="p-8 text-center text-rose-500 font-semibold text-base">Error al obtener detalle del plan: ${err.message}</div>`;
             });
     };
 
     function renderizarDetallePlan(plan) {
+        const materiaCurso = `${plan.materia_nombre || plan.materia_fuente || 'Materia'} — ${plan.grado_nombre || plan.curso_fuente || 'Curso'}`;
+        
+        // Actualizar breadcrumb
+        if (breadcrumbMateriaActual) {
+            breadcrumbMateriaActual.textContent = plan.materia_nombre || 'Detalle Curricular';
+        }
+
         // Cabecera institucional
         document.getElementById('det-institucion').textContent = plan.institucion_fuente || 'COLEGIO PRIV. PRESB. SAN PABLO';
-        document.getElementById('det-materia-curso').textContent = `${plan.materia_nombre || plan.materia_fuente || 'Materia'} — ${plan.grado_nombre || plan.curso_fuente || 'Curso'}`;
+        document.getElementById('det-materia-curso').textContent = materiaCurso;
         document.getElementById('det-profesor').textContent = plan.profesor_nombre ? `${plan.profesor_nombre} ${plan.profesor_apellido}` : (plan.profesor_fuente || '-');
 
         const cargaHC = plan.carga_horaria || 2;
         const duracionMin = cargaHC * 40;
-        document.getElementById('det-carga-turno').textContent = `${cargaHC} HC (${duracionMin} min) / ${plan.turno_fuente || 'MAÑANA'}`;
+        document.getElementById('det-carga-turno').textContent = `${cargaHC} HC (${duracionMin} min) • Turno ${plan.turno_fuente || 'MAÑANA'}`;
 
-        document.getElementById('det-comp-general').textContent = plan.competencia_general || 'Competencia general orientada a la formación integral técnica y académica.';
-        document.getElementById('det-comp-especifica').textContent = plan.competencia_especifica || 'Aplica los conceptos, procedimientos e instrumentos correspondientes al ámbito de estudio.';
+        document.getElementById('det-comp-general').textContent = plan.competencia_general || 'Competencia general orientada a la formación integral técnica y académica según el perfil de egreso del MEC.';
+        document.getElementById('det-comp-especifica').textContent = plan.competencia_especifica || 'Aplica los conceptos, procedimientos e instrumentos correspondientes al ámbito de estudio y especialidad.';
 
         const obsWrapper = document.getElementById('det-obs-wrapper');
         if (plan.observaciones) {
@@ -799,14 +875,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Renderizar Unidades
         if (!plan.unidades || plan.unidades.length === 0) {
             unidadesContainer.innerHTML = `
-                <div class="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-                    <span class="text-4xl block mb-3">📖</span>
-                    <h3 class="text-base font-bold text-slate-800">El plan no tiene unidades temáticas</h3>
-                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                        Comienza agregando la primera unidad temática del programa curricular (ej: Unidad I).
+                <div class="p-12 sm:p-16 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-800 shadow-sm">
+                    <span class="text-5xl block mb-4">📖</span>
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">El plan no tiene unidades temáticas registradas</h3>
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+                        Comienza agregando la primera unidad temática del programa curricular (ej: Unidad I: Fundamentos y Conceptos).
                     </p>
-                    <button type="button" onclick="window.abrirModalNuevaUnidad()" class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors">
-                        ➕ Agregar Unidad Temática
+                    <button type="button" onclick="window.abrirModalNuevaUnidad()" class="mt-6 min-h-[48px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-base font-extrabold shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2 cursor-pointer active:scale-95">
+                        <span>➕</span>
+                        <span>Agregar Unidad Temática</span>
                     </button>
                 </div>
             `;
@@ -816,68 +893,68 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '';
         plan.unidades.forEach(u => {
             html += `
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden mb-6">
                     <!-- Cabecera de la Unidad -->
-                    <div class="bg-gradient-to-r from-slate-50 to-indigo-50/40 p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="bg-gradient-to-r from-slate-50 via-indigo-50/30 to-white dark:from-slate-800/80 dark:to-slate-900 p-5 sm:p-6 border-b-2 border-slate-200/90 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <span class="text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Unidad Temática</span>
-                            <h3 class="text-base font-bold text-slate-800">${u.nombre || 'Unidad de Aprendizaje'}</h3>
-                            ${u.tiempo_texto ? `<span class="text-xs text-slate-500 font-medium">📅 Período: ${u.tiempo_texto}</span>` : ''}
+                            <span class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wider block mb-1">Unidad Temática</span>
+                            <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">${escapeHtml(u.nombre || 'Unidad de Aprendizaje')}</h3>
+                            ${u.tiempo_texto ? `<span class="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 font-bold mt-1.5"><span>📅</span> Período estimado: ${escapeHtml(u.tiempo_texto)}</span>` : ''}
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="window.abrirModalNuevaCapacidad(${u.id_unidad})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">
-                                <span>➕</span> Capacidad
+                        <div class="flex items-center gap-2.5 self-start sm:self-center shrink-0">
+                            <button type="button" onclick="window.abrirModalNuevaCapacidad(${u.id_unidad})" class="min-h-[40px] px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-extrabold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
+                                <span>➕</span> Capacidad MEC
                             </button>
-                            <button type="button" onclick="window.abrirModalEditarUnidad(${u.id_unidad})" title="Editar Unidad" class="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs transition-colors">
-                                ✏️
+                            <button type="button" onclick="window.abrirModalEditarUnidad(${u.id_unidad})" title="Editar Unidad" class="min-h-[40px] px-3.5 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold transition-colors cursor-pointer flex items-center gap-1">
+                                <span>✏️</span> Editar
                             </button>
-                            <button type="button" onclick="window.confirmarEliminarUnidad(${u.id_unidad})" title="Eliminar Unidad" class="p-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors">
-                                🗑️
+                            <button type="button" onclick="window.confirmarEliminarUnidad(${u.id_unidad})" title="Eliminar Unidad" class="min-h-[40px] px-3.5 py-2 bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-xl text-sm font-bold transition-colors cursor-pointer flex items-center gap-1">
+                                <span>🗑️</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Capacidades dentro de la Unidad -->
-                    <div class="p-5 space-y-6">
+                    <div class="p-6 sm:p-7 space-y-6">
             `;
 
             if (u.capacidades && u.capacidades.length > 0) {
                 u.capacidades.forEach(c => {
                     html += `
-                        <div class="border-l-4 border-indigo-500 pl-4 space-y-3 bg-slate-50/50 p-3 rounded-r-xl border-y border-r border-slate-100">
-                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                <div>
-                                    <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Capacidad Pedagógica MEC</span>
-                                    <p class="text-sm font-semibold text-slate-800 leading-snug mt-0.5">${c.descripcion}</p>
+                        <div class="border-l-4 border-indigo-600 dark:border-indigo-400 pl-5 space-y-4 bg-slate-50/70 dark:bg-slate-800/40 p-5 sm:p-6 rounded-r-3xl border-y border-r border-slate-200/80 dark:border-slate-700/80">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                <div class="max-w-2xl">
+                                    <span class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wider block mb-1">Capacidad Pedagógica MEC</span>
+                                    <h4 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed">${escapeHtml(c.descripcion)}</h4>
                                 </div>
-                                <div class="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
-                                    <button type="button" onclick="window.abrirModalNuevoTema(${c.id_capacidad})" class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
+                                <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+                                    <button type="button" onclick="window.abrirModalNuevoTema(${c.id_capacidad})" class="min-h-[40px] px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
                                         <span>➕</span> Lección
                                     </button>
-                                    <button type="button" onclick="window.abrirModalEditarCapacidad(${c.id_capacidad})" title="Editar Capacidad" class="p-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs transition-colors">
-                                        ✏️
+                                    <button type="button" onclick="window.abrirModalEditarCapacidad(${c.id_capacidad})" title="Editar Capacidad" class="min-h-[40px] px-3 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold transition-colors cursor-pointer flex items-center gap-1">
+                                        <span>✏️</span>
                                     </button>
-                                    <button type="button" onclick="window.confirmarEliminarCapacidad(${c.id_capacidad})" title="Eliminar Capacidad" class="p-1 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs transition-colors">
-                                        🗑️
+                                    <button type="button" onclick="window.confirmarEliminarCapacidad(${c.id_capacidad})" title="Eliminar Capacidad" class="min-h-[40px] px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 text-rose-700 dark:text-rose-300 rounded-xl text-sm font-bold transition-colors cursor-pointer flex items-center gap-1">
+                                        <span>🗑️</span>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Tabla de temas/lecciones -->
-                            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                            <div class="overflow-x-auto rounded-2xl border-2 border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                                <table class="w-full text-left">
+                                    <thead class="bg-slate-100/70 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700">
                                         <tr>
-                                            <th class="py-2.5 px-3 font-semibold">Tema / Contenido</th>
-                                            <th class="py-2.5 px-3 font-semibold w-28">Duración</th>
-                                            <th class="py-2.5 px-3 font-semibold w-32">Fecha Clase</th>
-                                            <th class="py-2.5 px-3 font-semibold">Indicadores de Logro</th>
-                                            <th class="py-2.5 px-3 font-semibold w-36">Evaluación</th>
-                                            <th class="py-2.5 px-3 font-semibold w-20 text-center">Acciones</th>
+                                            <th class="py-3.5 px-4 font-black text-sm uppercase tracking-wider">Tema / Contenido</th>
+                                            <th class="py-3.5 px-4 font-black text-sm uppercase tracking-wider w-36">Duración</th>
+                                            <th class="py-3.5 px-4 font-black text-sm uppercase tracking-wider w-40">Fecha Clase</th>
+                                            <th class="py-3.5 px-4 font-black text-sm uppercase tracking-wider">Indicadores de Logro</th>
+                                            <th class="py-3.5 px-4 font-black text-sm uppercase tracking-wider w-44">Evaluación</th>
+                                            <th class="py-3.5 px-4 font-black text-sm uppercase tracking-wider w-28 text-center">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-base">
                     `;
 
                     if (c.temas && c.temas.length > 0) {
@@ -887,34 +964,34 @@ document.addEventListener('DOMContentLoaded', () => {
                             const fecha = t.fecha_inicio ? t.fecha_inicio : 'Por definir';
 
                             const indHtml = t.indicadores && t.indicadores.length > 0
-                                ? `<ul class="list-disc pl-4 space-y-0.5 text-slate-600">${t.indicadores.map(i => `<li>${i.descripcion}</li>`).join('')}</ul>`
-                                : '<span class="text-slate-400 italic">Sin indicadores cargados</span>';
+                                ? `<ul class="list-disc pl-5 space-y-1 text-slate-700 dark:text-slate-300 font-medium">${t.indicadores.map(i => `<li>${escapeHtml(i.descripcion || i)}</li>`).join('')}</ul>`
+                                : '<span class="text-slate-400 italic text-sm">Sin indicadores cargados</span>';
 
                             const evalHtml = [
                                 ...(t.procedimientos || []),
                                 ...(t.instrumentos || [])
-                            ].map(item => `<span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] mr-1 mb-1">${item}</span>`).join('') || '<span class="text-slate-400 italic">Por definir</span>';
+                            ].map(item => `<span class="inline-block px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm font-bold mr-1.5 mb-1.5 shadow-2xs">${escapeHtml(item)}</span>`).join('') || '<span class="text-slate-400 italic text-sm">Por definir</span>';
 
                             html += `
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="py-3 px-3 font-semibold text-slate-800">${t.titulo}</td>
-                                    <td class="py-3 px-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700">
+                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4 font-bold text-slate-900 dark:text-white leading-snug">${escapeHtml(t.titulo)}</td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-sm font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                                             ${hc} HC (${min}m)
                                         </span>
                                     </td>
-                                    <td class="py-3 px-3 text-slate-600 font-mono text-[11px]">
-                                        📅 ${fecha}
+                                    <td class="p-4 text-slate-700 dark:text-slate-300 font-mono font-bold text-sm sm:text-base">
+                                        📅 ${escapeHtml(fecha)}
                                     </td>
-                                    <td class="py-3 px-3">${indHtml}</td>
-                                    <td class="py-3 px-3">${evalHtml}</td>
-                                    <td class="py-3 px-3 text-center">
-                                        <div class="inline-flex items-center gap-1">
-                                            <button type="button" onclick="window.abrirModalEditarTema(${t.id_tema})" title="Editar Lección" class="p-1 hover:bg-slate-100 text-slate-600 rounded transition-colors">
-                                                ✏️
+                                    <td class="p-4">${indHtml}</td>
+                                    <td class="p-4">${evalHtml}</td>
+                                    <td class="p-4 text-center">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <button type="button" onclick="window.abrirModalEditarTema(${t.id_tema})" title="Editar Lección" class="min-h-[38px] px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold transition-colors cursor-pointer flex items-center gap-1">
+                                                <span>✏️</span>
                                             </button>
-                                            <button type="button" onclick="window.confirmarEliminarTema(${t.id_tema})" title="Eliminar Lección" class="p-1 hover:bg-rose-50 text-rose-600 rounded transition-colors">
-                                                🗑️
+                                            <button type="button" onclick="window.confirmarEliminarTema(${t.id_tema})" title="Eliminar Lección" class="min-h-[38px] px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl text-sm font-bold transition-colors cursor-pointer flex items-center gap-1">
+                                                <span>🗑️</span>
                                             </button>
                                         </div>
                                     </td>
@@ -922,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                         });
                     } else {
-                        html += `<tr><td colspan="6" class="py-4 px-3 text-center text-slate-400 italic">No hay temas programados para esta capacidad aún. Haz clic en "+ Lección" para programar.</td></tr>`;
+                        html += `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic text-base">No hay temas programados para esta capacidad aún. Haz clic en "+ Lección" para programar.</td></tr>`;
                     }
 
                     html += `
@@ -934,10 +1011,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else {
                 html += `
-                    <div class="p-6 text-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                        <p class="text-xs">No hay capacidades registradas en esta unidad temática.</p>
-                        <button type="button" onclick="window.abrirModalNuevaCapacidad(${u.id_unidad})" class="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-                            ➕ Agregar Capacidad MEC
+                    <div class="p-8 text-center text-slate-500 bg-slate-50/70 dark:bg-slate-800/40 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700">
+                        <p class="text-base font-semibold">No hay capacidades pedagógicas registradas en esta unidad temática.</p>
+                        <button type="button" onclick="window.abrirModalNuevaCapacidad(${u.id_unidad})" class="mt-3 min-h-[44px] px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-extrabold shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer">
+                            <span>➕</span> Agregar Capacidad MEC
                         </button>
                     </div>
                 `;
@@ -958,6 +1035,13 @@ document.addEventListener('DOMContentLoaded', () => {
         vistaCatalogo.classList.remove('hidden');
         cargarCatalogoPlanes();
     });
+
+    if (breadcrumbCatalogoLink) {
+        breadcrumbCatalogoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            btnVolverCatalogo.click();
+        });
+    }
 
     // ==========================================
     // 3. CRUD DE PLANES ANUALES (CABECERA)
