@@ -1,23 +1,23 @@
 <!-- Modal Gestor Inteligente de Familias y Vínculos Accesible -->
 <div id="modal-gestor-familias" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="gf-titulo">
-    <div class="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-3xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    <div class="relative w-full max-w-3xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Header Accesible -->
-        <div class="flex items-start justify-between gap-4 p-6 border-b border-slate-200 bg-slate-50/80">
+        <div class="flex items-start justify-between gap-4 p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0">
                     👨‍👩‍👧‍👦
                 </div>
                 <div>
-                    <h2 id="gf-titulo" class="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    <h2 id="gf-titulo" class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                         Gestor de Familias y Vínculos
                     </h2>
-                    <p class="text-base text-slate-600 mt-0.5">
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-0.5">
                         Búsqueda predictiva de tutores y vinculación directa de estudiantes y hermanos.
                     </p>
                 </div>
             </div>
-            <button type="button" onclick="GestorFamilias.cerrar()" class="w-12 h-12 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Cerrar modal">
+            <button type="button" onclick="GestorFamilias.cerrar()" class="w-12 h-12 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-indigo-500" aria-label="Cerrar modal">
                 ✕
             </button>
         </div>
@@ -27,11 +27,11 @@
             <!-- PASO 1: SELECCIONAR O CREAR TUTOR -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <label class="flex items-center gap-2.5 text-sm font-extrabold uppercase tracking-wider text-slate-800">
+                    <label class="flex items-center gap-2.5 text-sm font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">1</span>
                         Tutor / Responsable Familiar
                     </label>
-                    <button type="button" id="gf-btn-toggle-nuevo-tutor" onclick="GestorFamilias.toggleNuevoTutor()" class="text-base text-indigo-700 hover:text-indigo-900 font-bold hover:underline">
+                    <button type="button" id="gf-btn-toggle-nuevo-tutor" onclick="GestorFamilias.toggleNuevoTutor()" class="text-base text-indigo-700 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 font-bold hover:underline">
                         + Registrar Nuevo Tutor
                     </button>
                 </div>
@@ -39,60 +39,60 @@
                 <!-- Buscador de Tutores (visible cuando NO hay tutor seleccionado) -->
                 <div id="gf-box-busqueda-tutor" class="relative">
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </span>
                         <input type="text" id="gf-input-tutor" placeholder="Escribí CI, nombre, apellido o celular del tutor..."
-                               class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 font-medium bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" autocomplete="off">
-                        <button type="button" id="gf-btn-limpiar-tutor-busqueda" onclick="GestorFamilias.limpiarBusquedaTutor()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 hidden text-lg font-bold" aria-label="Limpiar búsqueda">
+                               class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 dark:text-white font-medium bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition" autocomplete="off">
+                        <button type="button" id="gf-btn-limpiar-tutor-busqueda" onclick="GestorFamilias.limpiarBusquedaTutor()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hidden text-lg font-bold" aria-label="Limpiar búsqueda">
                             ✕
                         </button>
                     </div>
 
                     <!-- Lista desplegable de resultados tutores -->
-                    <div id="gf-results-tutor" class="hidden absolute z-30 mt-1 w-full bg-white rounded-2xl shadow-2xl border-2 border-slate-200 max-h-72 overflow-y-auto divide-y divide-slate-100 text-base">
+                    <div id="gf-results-tutor" class="hidden absolute z-30 mt-1 w-full bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-base">
                         <!-- Dinámico -->
                     </div>
                 </div>
 
                 <!-- Tarjeta de Tutor Seleccionado -->
-                <div id="gf-card-tutor-seleccionado" class="hidden p-5 rounded-2xl bg-indigo-50/90 border-2 border-indigo-200 flex items-center justify-between gap-4">
+                <div id="gf-card-tutor-seleccionado" class="hidden p-5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-200 dark:border-indigo-800 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-4 min-w-0">
                         <div id="gf-tutor-avatar" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-bold flex items-center justify-center text-lg shrink-0 shadow-sm">
                             TO
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2.5 flex-wrap">
-                                <span id="gf-tutor-nombre" class="font-extrabold text-slate-900 text-lg truncate">Nombre Tutor</span>
-                                <span id="gf-tutor-ci" class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 font-mono text-sm font-bold border border-indigo-200">CI: 0000000</span>
+                                <span id="gf-tutor-nombre" class="font-extrabold text-slate-900 dark:text-white text-lg truncate">Nombre Tutor</span>
+                                <span id="gf-tutor-ci" class="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-300 font-mono text-sm font-bold border border-indigo-200 dark:border-indigo-800">CI: 0000000</span>
                             </div>
-                            <div class="flex items-center gap-3 mt-1 text-sm font-semibold text-slate-600 flex-wrap">
+                            <div class="flex items-center gap-3 mt-1 text-sm font-semibold text-slate-600 dark:text-slate-400 flex-wrap">
                                 <span id="gf-tutor-celular">📱 Sin celular</span>
                                 <span>•</span>
-                                <span id="gf-tutor-hijos-badge" class="truncate font-bold text-emerald-700">Sin hijos vinculados</span>
+                                <span id="gf-tutor-hijos-badge" class="truncate font-bold text-emerald-700 dark:text-emerald-400">Sin hijos vinculados</span>
                             </div>
                         </div>
                     </div>
-                    <button type="button" onclick="GestorFamilias.quitarTutor()" class="min-h-[40px] px-3.5 py-1.5 text-sm rounded-xl font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition shrink-0">
+                    <button type="button" onclick="GestorFamilias.quitarTutor()" class="min-h-[40px] px-3.5 py-1.5 text-sm rounded-xl font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 transition shrink-0">
                         Cambiar
                     </button>
                 </div>
 
                 <!-- Micro-formulario Colapsable: Registrar Nuevo Tutor en el acto -->
-                <div id="gf-box-nuevo-tutor" class="hidden p-6 rounded-2xl bg-slate-50 border-2 border-slate-200 space-y-4">
+                <div id="gf-box-nuevo-tutor" class="hidden p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 space-y-4">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-extrabold text-indigo-700 uppercase tracking-wider">
+                        <span class="text-sm font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
                             Registrar Nuevo Tutor en el Sistema
                         </span>
-                        <button type="button" onclick="GestorFamilias.toggleNuevoTutor()" class="text-slate-500 hover:text-slate-800 text-base font-bold">✕ Cancelar</button>
+                        <button type="button" onclick="GestorFamilias.toggleNuevoTutor()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white text-base font-bold">✕ Cancelar</button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" id="gf-nuevo-nombre" placeholder="Nombre(s) *" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white border border-slate-300 rounded-xl" required>
-                        <input type="text" id="gf-nuevo-apellido" placeholder="Apellido(s) *" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white border border-slate-300 rounded-xl" required>
+                        <input type="text" id="gf-nuevo-nombre" placeholder="Nombre(s) *" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl" required>
+                        <input type="text" id="gf-nuevo-apellido" placeholder="Apellido(s) *" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl" required>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" id="gf-nuevo-ci" placeholder="Cédula de Identidad *" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white border border-slate-300 rounded-xl" required>
-                        <input type="text" id="gf-nuevo-celular" placeholder="Celular / WhatsApp (opcional)" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white border border-slate-300 rounded-xl">
+                        <input type="text" id="gf-nuevo-ci" placeholder="Cédula de Identidad *" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl" required>
+                        <input type="text" id="gf-nuevo-celular" placeholder="Celular / WhatsApp (opcional)" class="w-full min-h-[46px] px-3.5 py-2.5 text-base bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl">
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" onclick="GestorFamilias.toggleNuevoTutor()" class="btn btn-muted min-h-[44px] text-base px-5 font-bold rounded-xl">
@@ -106,39 +106,39 @@
             </div>
 
             <!-- PASO 2: ESTUDIANTES A VINCULAR (MULTIPLE / HERMANOS) -->
-            <div class="space-y-4 pt-4 border-t-2 border-slate-100">
+            <div class="space-y-4 pt-4 border-t-2 border-slate-100 dark:border-slate-800">
                 <div class="flex items-center justify-between">
-                    <label class="flex items-center gap-2.5 text-sm font-extrabold uppercase tracking-wider text-slate-800">
+                    <label class="flex items-center gap-2.5 text-sm font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">2</span>
                         Estudiantes a Cargo / Hermanos (<span id="gf-cant-estudiantes">0</span>)
                     </label>
-                    <span class="text-sm font-semibold text-slate-500">Podés sumar varios hermanos</span>
+                    <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Podés sumar varios hermanos</span>
                 </div>
 
                 <!-- Buscador para agregar estudiantes a la lista -->
                 <div class="relative">
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </span>
                         <input type="text" id="gf-input-estudiante" placeholder="Escribí CI o nombre del estudiante para sumarlo a la lista..."
-                               class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 font-medium bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" autocomplete="off">
-                        <button type="button" id="gf-btn-limpiar-est-busqueda" onclick="GestorFamilias.limpiarBusquedaEstudiante()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 hidden text-lg font-bold" aria-label="Limpiar búsqueda">
+                               class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 dark:text-white font-medium bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition" autocomplete="off">
+                        <button type="button" id="gf-btn-limpiar-est-busqueda" onclick="GestorFamilias.limpiarBusquedaEstudiante()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hidden text-lg font-bold" aria-label="Limpiar búsqueda">
                             ✕
                         </button>
                     </div>
 
                     <!-- Lista desplegable de resultados estudiantes -->
-                    <div id="gf-results-estudiante" class="hidden absolute z-20 mt-1 w-full bg-white rounded-2xl shadow-2xl border-2 border-slate-200 max-h-72 overflow-y-auto divide-y divide-slate-100 text-base">
+                    <div id="gf-results-estudiante" class="hidden absolute z-20 mt-1 w-full bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-base">
                         <!-- Dinámico -->
                     </div>
                 </div>
 
                 <!-- Contenedor / Tabla de Estudiantes Seleccionados -->
                 <div id="gf-box-lista-estudiantes" class="space-y-3">
-                    <div id="gf-empty-estudiantes" class="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 text-base">
-                        <p class="font-bold text-slate-800">No hay estudiantes seleccionados.</p>
-                        <p class="text-sm text-slate-600 mt-1">Buscá arriba por nombre o cédula para agregar hijos o hermanos a vincular.</p>
+                    <div id="gf-empty-estudiantes" class="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-base">
+                        <p class="font-bold text-slate-800 dark:text-slate-200">No hay estudiantes seleccionados.</p>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Buscá arriba por nombre o cédula para agregar hijos o hermanos a vincular.</p>
                     </div>
 
                     <div id="gf-lista-estudiantes" class="space-y-3 max-h-64 overflow-y-auto pr-1">
@@ -150,7 +150,22 @@
         </div>
 
         <!-- Footer / Botones de Acción Accesibles -->
-        <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 p-5 sm:p-6 border-t border-slate-200 bg-slate-50">
+        <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 p-5 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+            <span id="gf-resumen-estado" class="text-base text-slate-600 dark:text-slate-400 font-medium text-center sm:text-left">
+                Seleccioná un tutor y al menos un estudiante.
+            </span>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button type="button" onclick="GestorFamilias.cerrar()" class="btn btn-muted min-h-[46px] text-base py-2.5 px-6 font-bold flex-1 sm:flex-none rounded-xl">
+                    Cancelar
+                </button>
+                <button type="button" id="gf-btn-guardar" onclick="GestorFamilias.guardar()" disabled class="btn btn-success min-h-[46px] text-base py-2.5 px-7 font-bold flex-1 sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-xs">
+                    Guardar Vínculos Familiares
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
             <span id="gf-resumen-estado" class="text-base text-slate-600 font-medium text-center sm:text-left">
                 Seleccioná un tutor y al menos un estudiante.
             </span>
