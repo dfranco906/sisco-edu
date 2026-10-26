@@ -7,6 +7,9 @@
 #include <Preferences.h>
 #include <DNSServer.h>
 #include <ESPmDNS.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "configuracion_red.h"
 #include "interfaz_web.h"
 #include "seguridad_portal.h"
@@ -24,6 +27,8 @@ const int MAX_REINTENTOS = 8;
 #define LORA_RX 16
 #define LORA_TX 17
 #define PIN_BOOT_RESET 0 // Pulsador BOOT para restaurar credenciales de fábrica
+constexpr int SCREEN_WIDTH = 128;
+constexpr int SCREEN_HEIGHT = 64;
 
 // ============================================================================
 // OBJETOS DEL SISTEMA Y SEGURIDAD
@@ -33,6 +38,9 @@ WebServer server(80);
 DNSServer dnsServer;
 Preferences prefs;
 SeguridadPortal seguridad("Gateway LoRa");
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+bool displayOk = false;
+unsigned long tiempoRestaurarPantalla = 0;
 
 // Parámetros de red y enlace cargados desde Preferences (con fallback a configuracion_red.h)
 String configSsid;
@@ -50,6 +58,12 @@ const char *headerKeys[] = {"X-GATEWAY-KEY", "Cookie"};
 // ============================================================================
 // PROTOTIPOS DE FUNCIONES
 // ============================================================================
+void pantalla(const String &linea1, const String &linea2 = "", const String &linea3 = "");
+void mostrarEstadoGatewayOnline();
+void mostrarModoAP(const String &ssid = "SISCO-GATEWAY-CONFIG", const String &pass = "12345678", const String &ip = "192.168.4.1");
+void mostrarGuiaBotonBoot(unsigned long duracionMs);
+void notificarPantallaTemporal(const String &titulo, const String &linea1 = "", const String &linea2 = "", unsigned long duracionMs = 2500);
+
 void cargarConfiguracion();
 void guardarConfiguracion(const String &ssid, const String &pass, const String &url, const String &key, int loraNet, int loraId);
 String normalizarBaseUrl(String url);
@@ -80,6 +94,168 @@ void procesarAsistenciaEntrante(const String &payload);
 String campo(const String &texto, int indice);
 String urlEncode(const String &texto);
 bool crc32HexValido(const String &valor);
+
+// ============================================================================
+// PANTALLA OLED Y NOTIFICACIONES
+// ============================================================================
+void pantalla(const String &linea1, const String &linea2, const String &linea3) {
+  if (!displayOk) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  if (linea3.length() == 0) {
+    display.setTextSize(2);
+    display.setCursor(0, 6);
+    display.println(linea1);
+
+    display.drawLine(0, 26, 127, 26, SSD1306_WHITE);
+
+    display.setTextSize(1);
+    display.setCursor(0, 38);
+    display.println(linea2);
+  } else {
+    display.setTextSize(1);
+    display.setCursor(0, 2);
+    display.println(linea1);
+    display.drawLine(0, 13, 127, 13, SSD1306_WHITE);
+
+    display.setCursor(0, 20);
+    display.println(linea2);
+    display.setCursor(0, 38);
+    display.println(linea3);
+  }
+  display.display();
+}
+
+void mostrarEstadoGatewayOnline() {
+  if (!displayOk) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  // Titulo en tamaño 2: "GATEWAY ON"
+  display.setTextSize(2);
+  display.setCursor(4, 4);
+  display.println("GATEWAY ON");
+
+  display.drawLine(0, 24, 127, 24, SSD1306_WHITE);
+
+  // LoRa ON - Red: Id de la red LoRa
+  display.setTextSize(1);
+  display.setCursor(0, 31);
+  display.printf("LoRa ON - Red: %d\n", configLoraNetId);
+
+  // IP: Ip del gateway
+  display.setCursor(0, 47);
+  String ipStr = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : "Sin conexion";
+  display.printf("IP: %s\n", ipStr.c_str());
+
+  display.display();
+}
+
+void mostrarModoAP(const String &ssid, const String &pass, const String &ip) {
+  if (!displayOk) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setTextSize(2);
+  display.setCursor(16, 2);
+  display.println("SETUP AP");
+
+  display.drawLine(0, 19, 127, 19, SSD1306_WHITE);
+
+  display.setTextSize(1);
+  if (ssid.length() <= 17) {
+    display.setCursor(0, 23);
+    display.printf("AP  : %s\n", ssid.c_str());
+    display.setCursor(0, 37);
+    display.printf("Pass: %s\n", pass.c_str());
+    display.setCursor(0, 51);
+    display.printf("Web : http://%s/\n", ip.c_str());
+  } else {
+    display.setCursor(0, 22);
+    display.println("AP: " + ssid.substring(0, 17));
+    display.setCursor(0, 32);
+    display.println("    " + ssid.substring(17));
+    display.setCursor(0, 43);
+    display.printf("Pass: %s\n", pass.c_str());
+    display.setCursor(0, 54);
+    display.printf("Web : http://%s/\n", ip.c_str());
+  }
+  display.display();
+}
+
+void mostrarGuiaBotonBoot(unsigned long duracionMs) {
+  if (!displayOk) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  if (duracionMs < 2500) {
+    display.setTextSize(1);
+    display.setCursor(16, 2);
+    display.println(">> BOTON BOOT <<");
+    display.drawLine(0, 14, 127, 14, SSD1306_WHITE);
+
+    display.setCursor(0, 19);
+    display.println("Mantenga para Modo AP");
+    display.setCursor(0, 31);
+    float segs = duracionMs / 1000.0f;
+    display.printf("Tiempo: %.1fs / 2.5s\n", segs);
+
+    // Barra de progreso interactiva (0 - 2.5s)
+    int anchoBarra = map(min((unsigned long)2500, duracionMs), 0, 2500, 0, 120);
+    display.drawRect(3, 45, 122, 14, SSD1306_WHITE);
+    display.fillRect(5, 47, max(0, min(anchoBarra, 118)), 10, SSD1306_WHITE);
+  } else if (duracionMs < 8000) {
+    display.setTextSize(1);
+    display.setCursor(10, 2);
+    display.println("** SOLTAR -> AP **");
+    display.drawLine(0, 14, 127, 14, SSD1306_WHITE);
+
+    display.setCursor(0, 19);
+    display.println("Suelte: Entra a Setup");
+    display.setCursor(0, 31);
+    float segs = duracionMs / 1000.0f;
+    display.printf("Reset Fabrica: %.1fs/8s\n", segs);
+
+    // Barra de progreso interactiva (2.5s - 8s)
+    int anchoBarra = map(min((unsigned long)8000, duracionMs) - 2500, 0, 5500, 0, 120);
+    display.drawRect(3, 45, 122, 14, SSD1306_WHITE);
+    display.fillRect(5, 47, max(0, min(anchoBarra, 118)), 10, SSD1306_WHITE);
+  } else {
+    display.setTextSize(1);
+    display.setCursor(8, 2);
+    display.println("!! RESET FABRICA !!");
+    display.drawLine(0, 14, 127, 14, SSD1306_WHITE);
+
+    display.setCursor(0, 19);
+    display.println("Restaurando valores");
+    display.setCursor(0, 33);
+    display.println("de fabrica en flash...");
+    display.setCursor(0, 48);
+    display.println("Reiniciando Gateway...");
+  }
+  display.display();
+}
+
+void notificarPantallaTemporal(const String &titulo, const String &linea1, const String &linea2, unsigned long duracionMs) {
+  if (!displayOk) return;
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(0, 2);
+  display.println(titulo);
+  display.drawLine(0, 13, 127, 13, SSD1306_WHITE);
+
+  display.setCursor(0, 20);
+  display.println(linea1);
+  display.setCursor(0, 38);
+  display.println(linea2);
+
+  display.display();
+
+  tiempoRestaurarPantalla = millis() + duracionMs;
+}
 
 // ============================================================================
 // GESTIÓN DE CONFIGURACIÓN NVS
@@ -165,6 +341,7 @@ void programarReinicio(unsigned long delayMs) {
 // ============================================================================
 void iniciarModoAP() {
   modoAP = true;
+  tiempoRestaurarPantalla = 0;
   WiFi.disconnect();
   delay(100);
   WiFi.mode(WIFI_AP);
@@ -184,6 +361,8 @@ void iniciarModoAP() {
   Serial.printf("[PORTAL] Clave     : %s\n", apPass);
   Serial.printf("[PORTAL] Abrir en  : http://%s\n", apIP.toString().c_str());
   Serial.println("[PORTAL] ========================================\n");
+
+  mostrarModoAP(apSsid, apPass, apIP.toString());
 }
 
 void conectarWifi() {
@@ -195,6 +374,7 @@ void conectarWifi() {
 
   WiFi.mode(WIFI_STA);
   Serial.printf("[WIFI] Conectando a \"%s\"...", configSsid.c_str());
+  pantalla("CONECTANDO", "Red: " + configSsid, "Espere por favor...");
   WiFi.begin(configSsid.c_str(), configPass.c_str());
 
   const unsigned long limite = millis() + 15000;
@@ -205,6 +385,7 @@ void conectarWifi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     modoAP = false;
+    tiempoRestaurarPantalla = 0;
     Serial.println(" conectado");
     Serial.printf("[WIFI] Direccion IP: %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("[WIFI] Senal RSSI  : %d dBm\n", WiFi.RSSI());
@@ -212,9 +393,12 @@ void conectarWifi() {
       MDNS.addService("http", "tcp", 80);
       Serial.println("[MDNS] Disponible en: http://sisco-gateway.local");
     }
+    mostrarEstadoGatewayOnline();
   } else {
     Serial.println(" sin conexion");
     Serial.println("[WIFI] Fallo de conexion. Activando punto de acceso de configuracion...");
+    pantalla("FALLO WIFI", "Red no alcanzable", "Activando Modo AP...");
+    delay(1500);
     iniciarModoAP();
   }
 }
@@ -272,6 +456,7 @@ void handleGuardar() {
 
   guardarConfiguracion(configSsid, configPass, configBaseUrl, configApiKey, configLoraNetId, configLoraId);
 
+  pantalla("CONFIG GUARDADA", "Reiniciando Gateway...", "Espere por favor...");
   server.send_P(200, "text/html", PAGINA_GUARDADO);
   programarReinicio(2000);
 }
@@ -351,6 +536,7 @@ void handleScanWifi() {
 
 void handleReiniciar() {
   if (!seguridad.verificarAcceso()) return;
+  pantalla("REINICIANDO", "Solicitud Web", "Espere por favor...");
   server.send(200, "application/json", "{\"status\":\"success\",\"message\":\"Reiniciando Gateway en 1 segundo...\"}");
   programarReinicio(1000);
 }
@@ -375,14 +561,43 @@ void setup() {
 
   pinMode(PIN_BOOT_RESET, INPUT_PULLUP);
 
-  // Verificación de pulsador BOOT sostenido al encender (8s para reset total de fábrica)
-  if (seguridad.verificarBotonReset(PIN_BOOT_RESET, 8000, false)) {
-    Serial.println("[RESET] Restaurando credenciales y parametros a valores de fabrica...");
-    prefs.begin("sisco_gw", false);
-    prefs.clear();
-    prefs.end();
-    delay(1000);
-    ESP.restart();
+  // Inicialización de Pantalla OLED SSD1306 (SDA: GPIO 21, SCL: GPIO 22)
+  Wire.begin();
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("[ERROR] Display SSD1306 no responde en direccion I2C 0x3C");
+    displayOk = false;
+  } else {
+    displayOk = true;
+    display.clearDisplay();
+    display.display();
+    pantalla("SISCO-EDU", "Iniciando Gateway...", "Por favor espere...");
+  }
+
+  // Verificación interactiva de pulsador BOOT al encender (con guía visual)
+  bool forzarApAlInicio = false;
+  if (digitalRead(PIN_BOOT_RESET) == LOW) {
+    Serial.println("[BOOT] Pulsador presionado al encender. Monitoreando duracion...");
+    unsigned long t0 = millis();
+    while (digitalRead(PIN_BOOT_RESET) == LOW) {
+      unsigned long duracion = millis() - t0;
+      mostrarGuiaBotonBoot(duracion);
+      if (duracion >= 8000) {
+        Serial.println("[RESET] 8s confirmados al encender: Restaurando fabrica...");
+        mostrarGuiaBotonBoot(8000);
+        seguridad.restablecerFabrica();
+        prefs.begin("sisco_gw", false);
+        prefs.clear();
+        prefs.end();
+        delay(1200);
+        ESP.restart();
+      }
+      delay(40);
+    }
+    unsigned long duracionFinal = millis() - t0;
+    if (duracionFinal >= 2500) {
+      forzarApAlInicio = true;
+      Serial.println("[BOOT] 2.5s alcanzados al encender: Se forzara Modo AP.");
+    }
   }
 
   // Cargar credenciales maestras y estado de cambio de clave
@@ -390,6 +605,8 @@ void setup() {
 
   // Cargar configuración de red y enlace
   cargarConfiguracion();
+
+  pantalla("CONFIG LORA", "Iniciando RYLR998...", "Red: " + String(configLoraNetId) + " Addr: " + String(configLoraId));
 
   Serial.printf("[BIOMETRIA] Contrato compilado: %u bytes / %u HEX / %d fragmentos\n",
                 (unsigned int)HUELLA_TEMPLATE_BYTES,
@@ -409,7 +626,7 @@ void setup() {
 
   // Si se presiona el botón BOOT al arranque, si debe cambiar la contraseña de fábrica,
   // o si no hay Wi-Fi configurada en memoria: FORZAR MODO AP INMEDIATAMENTE
-  if (digitalRead(PIN_BOOT_RESET) == LOW || seguridad.debeCambiarPassword() || configSsid.length() == 0) {
+  if (forzarApAlInicio || seguridad.debeCambiarPassword() || configSsid.length() == 0) {
     Serial.println("[INICIO] Activando modo Punto de Acceso (AP) para configuracion inicial y cambio de clave...");
     iniciarModoAP();
   } else {
@@ -473,36 +690,65 @@ void loop() {
   server.handleClient();
   atenderMensajesLoRa();
 
-  // Monitoreo del botón BOOT (GPIO 0) en tiempo de ejecución:
-  // - Pulsación sostenida de 2.5s: Activa inmediatamente el Modo AP (SISCO-GATEWAY-CONFIG)
-  // - Pulsación sostenida de 8s: Restablece a valores de fábrica y reinicia
+  // Restauración de pantalla tras notificación temporal
+  if (tiempoRestaurarPantalla > 0 && millis() >= tiempoRestaurarPantalla) {
+    tiempoRestaurarPantalla = 0;
+    if (modoAP) {
+      mostrarModoAP();
+    } else {
+      mostrarEstadoGatewayOnline();
+    }
+  }
+
+  // Monitoreo del botón BOOT (GPIO 0) en tiempo de ejecución con guía visual interactiva:
+  // - Mantener presionado: muestra barra de progreso en vivo
+  // - Soltar entre 2.5s y 8s: Activa inmediatamente el Modo AP (Setup)
+  // - Mantener >= 8s: Restablece a valores de fábrica y reinicia
   static unsigned long tiempoPresionadoBoot = 0;
+  static unsigned long ultimoRefrescoBoton = 0;
   static bool accionBootEjecutada = false;
 
   if (digitalRead(PIN_BOOT_RESET) == LOW) {
     if (tiempoPresionadoBoot == 0) {
       tiempoPresionadoBoot = millis();
       accionBootEjecutada = false;
-    } else if (!accionBootEjecutada) {
-      unsigned long duracion = millis() - tiempoPresionadoBoot;
-      if (duracion >= 8000) {
-        Serial.println("\n[BOOT] 8 segundos detectados: RESETEANDO A FABRICA...");
-        accionBootEjecutada = true;
-        seguridad.restablecerFabrica();
-        prefs.begin("sisco_gw", false);
-        prefs.clear();
-        prefs.end();
-        delay(500);
-        ESP.restart();
-      } else if (duracion >= 2500 && !modoAP) {
-        Serial.println("\n[BOOT] 2.5 segundos detectados: ACTIVANDO MODO AP...");
-        accionBootEjecutada = true;
-        iniciarModoAP();
-      }
+      ultimoRefrescoBoton = 0;
+    }
+    unsigned long duracion = millis() - tiempoPresionadoBoot;
+
+    if (millis() - ultimoRefrescoBoton >= 40) {
+      ultimoRefrescoBoton = millis();
+      mostrarGuiaBotonBoot(duracion);
+    }
+
+    if (duracion >= 8000 && !accionBootEjecutada) {
+      Serial.println("\n[BOOT] 8 segundos detectados: RESETEANDO A FABRICA...");
+      accionBootEjecutada = true;
+      mostrarGuiaBotonBoot(8000);
+      seguridad.restablecerFabrica();
+      prefs.begin("sisco_gw", false);
+      prefs.clear();
+      prefs.end();
+      delay(1200);
+      ESP.restart();
     }
   } else {
-    tiempoPresionadoBoot = 0;
-    accionBootEjecutada = false;
+    if (tiempoPresionadoBoot > 0) {
+      unsigned long duracion = millis() - tiempoPresionadoBoot;
+      if (!accionBootEjecutada && duracion >= 2500 && !modoAP) {
+        Serial.println("\n[BOOT] Pulsador liberado tras 2.5s: ACTIVANDO MODO AP...");
+        iniciarModoAP();
+      } else if (!accionBootEjecutada) {
+        // Se soltó antes de los 2.5s requeridos: cancelar y restaurar pantalla
+        if (modoAP) {
+          mostrarModoAP();
+        } else {
+          mostrarEstadoGatewayOnline();
+        }
+      }
+      tiempoPresionadoBoot = 0;
+      accionBootEjecutada = false;
+    }
   }
 
   if (reiniciarPendiente && millis() >= tiempoReinicio) {
@@ -518,8 +764,10 @@ void loop() {
     if (estadoWifi != ultimoEstadoWifi) {
       if (estadoWifi == WL_CONNECTED) {
         Serial.printf("[WIFI] Conexion recuperada. IP: %s\n", WiFi.localIP().toString().c_str());
+        mostrarEstadoGatewayOnline();
       } else if (ultimoEstadoWifi == WL_CONNECTED) {
         Serial.println("[WIFI] Conexion perdida con el router Wi-Fi");
+        notificarPantallaTemporal("WIFI DESCONECTADO", "Reintentando enlace...", "", 4000);
       }
       ultimoEstadoWifi = estadoWifi;
     }
@@ -732,8 +980,10 @@ bool pedirSyncAula(int idAula, int loraId) {
     confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS");
     return false;
   }
+  notificarPantallaTemporal("SYNC LORA", "Aula: " + String(idAula) + " (CI: " + ci + ")", "Enviando template...", 3500);
   if (!enviarHuellaPorLoRa(loraId, idSync, idHuella, idAula, ci, tipo, huella)) {
     Serial.printf("[SYNC] Aula %d: fallo el enlace LoRa\n", idAula);
+    notificarPantallaTemporal("ERROR SYNC", "Fallo enlace LoRa", "Aula: " + String(idAula), 3000);
     confirmarSync(idSync, "ERROR", "FALLO_ENLACE_LORA");
     return false;
   }
@@ -771,6 +1021,7 @@ void confirmarEntregaAula(const String &payload) {
     return;
   }
   Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s)\n", idAula, idHuella, slot, crc.c_str());
+  notificarPantallaTemporal("HUELLA OK", "Aula: " + String(idAula) + " - Slot: " + String(slot), "CRC32: " + crc, 3000);
   HTTPClient http;
   if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_entrega_aula.php")) return;
   http.addHeader("X-GATEWAY-KEY", configApiKey);
@@ -795,6 +1046,7 @@ void procesarAsistenciaEntrante(const String &payload) {
   }
   Serial.printf("[ASISTENCIA] Recibida desde aula %d: tipo=%s, estado=%s\n",
                 idAula, tipo.c_str(), estado.c_str());
+  notificarPantallaTemporal("ASISTENCIA", "Aula: " + String(idAula) + " CI: " + ci, tipo + " [" + estado + "]", 3000);
   HTTPClient http;
   if (!http.begin(configBaseUrl + "src/api/Gateway/registrar_asistencia.php")) return;
   http.addHeader("X-GATEWAY-KEY", configApiKey);
