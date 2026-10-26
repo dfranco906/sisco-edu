@@ -1,6 +1,6 @@
 -- ============================================================================
 -- SISCO-EDU: Esquema Completo PostgreSQL / Supabase Baseline
--- Generado automaticamente: 2026-10-26 11:10:08
+-- Generado automaticamente: 2026-10-26 12:37:48
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Tabla: public.usuarios
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.usuarios (
-    "id_usuario" INTEGER DEFAULT nextval('usuarios_id_usuario_seq'::regclass) NOT NULL,
+    "id_usuario" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "apellido" VARCHAR(100) NOT NULL,
     "usuario" VARCHAR(50) NOT NULL,
@@ -34,7 +34,7 @@ END $$;
 -- Tabla: public.turnos
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.turnos (
-    "id_turno" INTEGER DEFAULT nextval('turnos_id_turno_seq'::regclass) NOT NULL,
+    "id_turno" SERIAL,
     "nombre" VARCHAR(50) NOT NULL,
     "hora_inicio" TIME,
     "hora_fin" TIME,
@@ -55,7 +55,7 @@ END $$;
 -- Tabla: public.niveles_academicos
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.niveles_academicos (
-    "id_nivel" INTEGER DEFAULT nextval('niveles_academicos_id_nivel_seq'::regclass) NOT NULL,
+    "id_nivel" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "codigo" VARCHAR(30),
     "descripcion" TEXT,
@@ -75,7 +75,7 @@ END $$;
 -- Tabla: public.bachilleratos
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.bachilleratos (
-    "id_bachillerato" INTEGER DEFAULT nextval('bachilleratos_id_bachillerato_seq'::regclass) NOT NULL,
+    "id_bachillerato" SERIAL,
     "nombre" VARCHAR(150) NOT NULL,
     "codigo" VARCHAR(20) NOT NULL,
     "tipo" VARCHAR(50) DEFAULT 'Técnico'::character varying NOT NULL,
@@ -96,7 +96,7 @@ END $$;
 -- Tabla: public.aulas
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.aulas (
-    "id_aula" INTEGER DEFAULT nextval('aulas_id_aula_seq'::regclass) NOT NULL,
+    "id_aula" SERIAL,
     "nombre" VARCHAR(50) NOT NULL,
     "codigo_sala" VARCHAR(20),
     "capacidad" INTEGER DEFAULT 30,
@@ -120,7 +120,7 @@ END $$;
 -- Tabla: public.grados
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.grados (
-    "id_grado" INTEGER DEFAULT nextval('grados_id_grado_seq'::regclass) NOT NULL,
+    "id_grado" SERIAL,
     "nombre" VARCHAR(50) NOT NULL,
     "seccion" VARCHAR(10),
     "turno" VARCHAR(20),
@@ -146,7 +146,7 @@ END $$;
 -- Tabla: public.materias
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.materias (
-    "id_materia" INTEGER DEFAULT nextval('materias_id_materia_seq'::regclass) NOT NULL,
+    "id_materia" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "descripcion" TEXT,
     "carga_horaria_semanal" INTEGER DEFAULT 0,
@@ -165,7 +165,7 @@ END $$;
 -- Tabla: public.profesores
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.profesores (
-    "id_profesor" INTEGER DEFAULT nextval('profesores_id_profesor_seq'::regclass) NOT NULL,
+    "id_profesor" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "apellido" VARCHAR(100) NOT NULL,
     "cedula_identidad" VARCHAR(20) NOT NULL,
@@ -189,7 +189,7 @@ END $$;
 -- Tabla: public.estudiantes
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.estudiantes (
-    "id_estudiante" INTEGER DEFAULT nextval('estudiantes_id_estudiante_seq'::regclass) NOT NULL,
+    "id_estudiante" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "apellido" VARCHAR(100) NOT NULL,
     "cedula_identidad" VARCHAR(20) NOT NULL,
@@ -218,7 +218,7 @@ END $$;
 -- Tabla: public.tutores
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.tutores (
-    "id_tutor" INTEGER DEFAULT nextval('tutores_id_tutor_seq'::regclass) NOT NULL,
+    "id_tutor" SERIAL,
     "id_usuario" INTEGER,
     "nombre" VARCHAR(100) NOT NULL,
     "apellido" VARCHAR(100) NOT NULL,
@@ -242,7 +242,7 @@ END $$;
 -- Tabla: public.estudiante_tutores
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.estudiante_tutores (
-    "id_estudiante_tutor" INTEGER DEFAULT nextval('estudiante_tutores_id_estudiante_tutor_seq'::regclass) NOT NULL,
+    "id_estudiante_tutor" SERIAL,
     "id_estudiante" INTEGER NOT NULL,
     "id_tutor" INTEGER NOT NULL,
     "parentesco" VARCHAR(50) DEFAULT 'Padre/Madre/Tutor'::character varying,
@@ -263,7 +263,7 @@ END $$;
 -- Tabla: public.coordinador_grados
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.coordinador_grados (
-    "id_coordinador_grado" INTEGER DEFAULT nextval('coordinador_grados_id_coordinador_grado_seq'::regclass) NOT NULL,
+    "id_coordinador_grado" SERIAL,
     "id_usuario" INTEGER NOT NULL,
     "id_grado" INTEGER NOT NULL,
     "fecha_asignacion" TIMESTAMPTZ DEFAULT now(),
@@ -282,7 +282,7 @@ END $$;
 -- Tabla: public.matriculas
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.matriculas (
-    "id_matricula" INTEGER DEFAULT nextval('matriculas_id_matricula_seq'::regclass) NOT NULL,
+    "id_matricula" SERIAL,
     "id_estudiante" INTEGER NOT NULL,
     "id_grado" INTEGER NOT NULL,
     "id_materia" INTEGER NOT NULL,
@@ -304,7 +304,7 @@ END $$;
 -- Tabla: public.asignaciones
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.asignaciones (
-    "id_asignacion" INTEGER DEFAULT nextval('asignaciones_id_asignacion_seq'::regclass) NOT NULL,
+    "id_asignacion" SERIAL,
     "id_profesor" INTEGER NOT NULL,
     "id_materia" INTEGER NOT NULL,
     "id_grado" INTEGER NOT NULL,
@@ -324,7 +324,7 @@ END $$;
 -- Tabla: public.asignacion_docente
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.asignacion_docente (
-    "id_asignacion" INTEGER DEFAULT nextval('asignacion_docente_id_asignacion_seq'::regclass) NOT NULL,
+    "id_asignacion" SERIAL,
     "id_profesor" INTEGER NOT NULL,
     "id_materia" INTEGER NOT NULL,
     "id_grado" INTEGER,
@@ -348,7 +348,7 @@ END $$;
 -- Tabla: public.horarios
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.horarios (
-    "id_horario" INTEGER DEFAULT nextval('horarios_id_horario_seq'::regclass) NOT NULL,
+    "id_horario" SERIAL,
     "id_asignacion" INTEGER,
     "dia_semana" VARCHAR(20) NOT NULL,
     "hora_inicio" TIME NOT NULL,
@@ -375,7 +375,7 @@ END $$;
 -- Tabla: public.nodos_esp32
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.nodos_esp32 (
-    "id_nodo" INTEGER DEFAULT nextval('nodos_esp32_id_nodo_seq'::regclass) NOT NULL,
+    "id_nodo" SERIAL,
     "node_id" VARCHAR(100) NOT NULL,
     "id_aula" INTEGER,
     "tipo" VARCHAR(20) NOT NULL,
@@ -420,7 +420,7 @@ END $$;
 -- Tabla: public.configuracion_informes
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.configuracion_informes (
-    "id_configuracion" INTEGER DEFAULT nextval('configuracion_informes_id_configuracion_seq'::regclass) NOT NULL,
+    "id_configuracion" SERIAL,
     "membrete_path" VARCHAR(255),
     "activo" SMALLINT DEFAULT 1,
     "updated_by" INTEGER,
@@ -440,7 +440,7 @@ END $$;
 -- Tabla: public.instrumentos_evaluativos
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.instrumentos_evaluativos (
-    "id_instrumento" INTEGER DEFAULT nextval('instrumentos_evaluativos_id_instrumento_seq'::regclass) NOT NULL,
+    "id_instrumento" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "activo" SMALLINT DEFAULT 1,
     "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -458,7 +458,7 @@ END $$;
 -- Tabla: public.procedimientos_evaluativos
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.procedimientos_evaluativos (
-    "id_procedimiento" INTEGER DEFAULT nextval('procedimientos_evaluativos_id_procedimiento_seq'::regclass) NOT NULL,
+    "id_procedimiento" SERIAL,
     "nombre" VARCHAR(100) NOT NULL,
     "activo" SMALLINT DEFAULT 1,
     "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -476,7 +476,7 @@ END $$;
 -- Tabla: public.planes_anuales
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.planes_anuales (
-    "id_plan" INTEGER DEFAULT nextval('planes_anuales_id_plan_seq'::regclass) NOT NULL,
+    "id_plan" SERIAL,
     "id_asignacion" INTEGER,
     "anio" INTEGER,
     "competencia_general" TEXT,
@@ -508,7 +508,7 @@ END $$;
 -- Tabla: public.plan_unidades
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.plan_unidades (
-    "id_unidad" INTEGER DEFAULT nextval('plan_unidades_id_unidad_seq'::regclass) NOT NULL,
+    "id_unidad" SERIAL,
     "id_plan" INTEGER,
     "codigo" VARCHAR(50),
     "nombre" VARCHAR(255),
@@ -538,7 +538,7 @@ END $$;
 -- Tabla: public.plan_capacidades
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.plan_capacidades (
-    "id_capacidad" INTEGER DEFAULT nextval('plan_capacidades_id_capacidad_seq'::regclass) NOT NULL,
+    "id_capacidad" SERIAL,
     "id_unidad" INTEGER,
     "descripcion" TEXT NOT NULL,
     "proceso_desarrollo" TEXT,
@@ -559,7 +559,7 @@ END $$;
 -- Tabla: public.plan_temas
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.plan_temas (
-    "id_tema" INTEGER DEFAULT nextval('plan_temas_id_tema_seq'::regclass) NOT NULL,
+    "id_tema" SERIAL,
     "id_capacidad" INTEGER,
     "codigo" VARCHAR(50),
     "titulo" VARCHAR(255) NOT NULL,
@@ -584,7 +584,7 @@ END $$;
 -- Tabla: public.plan_indicadores
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.plan_indicadores (
-    "id_indicador" INTEGER DEFAULT nextval('plan_indicadores_id_indicador_seq'::regclass) NOT NULL,
+    "id_indicador" SERIAL,
     "id_tema" INTEGER,
     "codigo" VARCHAR(50),
     "descripcion" TEXT NOT NULL,
@@ -605,7 +605,7 @@ END $$;
 -- Tabla: public.plan_tema_programacion
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.plan_tema_programacion (
-    "id_programacion" INTEGER DEFAULT nextval('plan_tema_programacion_id_programacion_seq'::regclass) NOT NULL,
+    "id_programacion" SERIAL,
     "id_tema" INTEGER,
     "fecha_inicio" DATE,
     "fecha_fin" DATE,
@@ -632,7 +632,7 @@ CREATE TABLE IF NOT EXISTS public.plan_tema_instrumentos (
     "id_instrumento" INTEGER NOT NULL,
     "texto_fuente" TEXT,
     "orden" INTEGER DEFAULT 1,
-    PRIMARY KEY ("id_instrumento", "id_tema")
+    PRIMARY KEY ("id_tema", "id_instrumento")
 );
 
 ALTER TABLE public.plan_tema_instrumentos ENABLE ROW LEVEL SECURITY;
@@ -650,7 +650,7 @@ CREATE TABLE IF NOT EXISTS public.plan_tema_procedimientos (
     "id_procedimiento" INTEGER NOT NULL,
     "texto_fuente" TEXT,
     "orden" INTEGER DEFAULT 1,
-    PRIMARY KEY ("id_procedimiento", "id_tema")
+    PRIMARY KEY ("id_tema", "id_procedimiento")
 );
 
 ALTER TABLE public.plan_tema_procedimientos ENABLE ROW LEVEL SECURITY;
@@ -664,7 +664,7 @@ END $$;
 -- Tabla: public.clases_diarias
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.clases_diarias (
-    "id_clase" INTEGER DEFAULT nextval('clases_diarias_id_clase_seq'::regclass) NOT NULL,
+    "id_clase" SERIAL,
     "id_asignacion" INTEGER,
     "id_horario" INTEGER,
     "id_plan" INTEGER,
@@ -708,7 +708,7 @@ END $$;
 -- Tabla: public.registros_anecdoticos
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.registros_anecdoticos (
-    "id_registro" INTEGER DEFAULT nextval('registros_anecdoticos_id_registro_seq'::regclass) NOT NULL,
+    "id_registro" SERIAL,
     "id_asistencia_estudiante" INTEGER,
     "observacion" TEXT,
     "activo" SMALLINT DEFAULT 1,
@@ -731,7 +731,7 @@ END $$;
 -- Tabla: public.huellas_templates
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.huellas_templates (
-    "id_huella" INTEGER DEFAULT nextval('huellas_templates_id_huella_seq'::regclass) NOT NULL,
+    "id_huella" SERIAL,
     "id_estudiante" INTEGER,
     "fingerprint_data" TEXT NOT NULL,
     "crc32_hash" VARCHAR(8),
@@ -758,7 +758,7 @@ END $$;
 -- Tabla: public.solicitudes_huella
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.solicitudes_huella (
-    "id_solicitud" INTEGER DEFAULT nextval('solicitudes_huella_id_solicitud_seq'::regclass) NOT NULL,
+    "id_solicitud" SERIAL,
     "id_estudiante" INTEGER NOT NULL,
     "estado" VARCHAR(20) DEFAULT 'PENDIENTE'::character varying,
     "huella_id" INTEGER,
@@ -779,7 +779,7 @@ END $$;
 -- Tabla: public.sync_biometrica
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.sync_biometrica (
-    "id_sync" INTEGER DEFAULT nextval('sync_biometrica_id_sync_seq'::regclass) NOT NULL,
+    "id_sync" SERIAL,
     "id_huella" INTEGER NOT NULL,
     "id_aula" INTEGER,
     "estado" VARCHAR(20) DEFAULT 'PENDIENTE'::character varying,
@@ -802,7 +802,7 @@ END $$;
 -- Tabla: public.aula_huellas_sync
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.aula_huellas_sync (
-    "id" INTEGER DEFAULT nextval('aula_huellas_sync_id_seq'::regclass) NOT NULL,
+    "id" SERIAL,
     "id_sync" INTEGER,
     "id_huella" INTEGER,
     "id_aula" INTEGER,
@@ -828,7 +828,7 @@ END $$;
 -- Tabla: public.asistencias
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.asistencias (
-    "id_asistencia" INTEGER DEFAULT nextval('asistencias_id_asistencia_seq'::regclass) NOT NULL,
+    "id_asistencia" SERIAL,
     "user_id_global" VARCHAR(50),
     "id_aula" INTEGER,
     "huella_id" INTEGER,
@@ -850,7 +850,7 @@ END $$;
 -- Tabla: public.asistencias_estudiantes
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.asistencias_estudiantes (
-    "id_asistencia" INTEGER DEFAULT nextval('asistencias_estudiantes_id_asistencia_seq'::regclass) NOT NULL,
+    "id_asistencia" SERIAL,
     "id_estudiante" INTEGER NOT NULL,
     "id_horario" INTEGER,
     "fecha" DATE NOT NULL,
@@ -859,7 +859,7 @@ CREATE TABLE IF NOT EXISTS public.asistencias_estudiantes (
     "tipo_registro" VARCHAR(20) DEFAULT 'BIOMETRICO'::character varying NOT NULL,
     "nodo_origen" VARCHAR(50),
     "fecha_creacion" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "id_asistencia_estudiante" INTEGER DEFAULT nextval('asistencias_estudiantes_id_asistencia_estudiante_seq'::regclass) NOT NULL,
+    "id_asistencia_estudiante" SERIAL,
     "huella_id" INTEGER,
     "hora" TIME,
     "activo" SMALLINT DEFAULT 1,
@@ -878,7 +878,7 @@ END $$;
 -- Tabla: public.asistencias_profesores
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.asistencias_profesores (
-    "id_asistencia_prof" INTEGER DEFAULT nextval('asistencias_profesores_id_asistencia_prof_seq'::regclass) NOT NULL,
+    "id_asistencia_prof" SERIAL,
     "id_profesor" INTEGER NOT NULL,
     "id_horario" INTEGER,
     "fecha" DATE NOT NULL,
@@ -887,7 +887,7 @@ CREATE TABLE IF NOT EXISTS public.asistencias_profesores (
     "tipo_registro" VARCHAR(20) DEFAULT 'BIOMETRICO'::character varying NOT NULL,
     "nodo_origen" VARCHAR(50),
     "fecha_creacion" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "id_asistencia_profesor" INTEGER DEFAULT nextval('asistencias_profesores_id_asistencia_profesor_seq'::regclass) NOT NULL,
+    "id_asistencia_profesor" SERIAL,
     "huella_id" INTEGER,
     "hora" TIME,
     "activo" SMALLINT DEFAULT 1,
@@ -906,7 +906,7 @@ END $$;
 -- Tabla: public.eventos_asistencia
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.eventos_asistencia (
-    "id_evento" INTEGER DEFAULT nextval('eventos_asistencia_id_evento_seq'::regclass) NOT NULL,
+    "id_evento" SERIAL,
     "user_id_global" VARCHAR(50),
     "id_aula" INTEGER,
     "room_id" VARCHAR(50),
@@ -930,7 +930,7 @@ END $$;
 -- Tabla: public.biometric_mapping
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.biometric_mapping (
-    "id_mapping" INTEGER DEFAULT nextval('biometric_mapping_id_mapping_seq'::regclass) NOT NULL,
+    "id_mapping" SERIAL,
     "user_id_global" VARCHAR(50) NOT NULL,
     "room_id" VARCHAR(50) NOT NULL,
     "sensor_slot" INTEGER NOT NULL,
@@ -950,7 +950,7 @@ END $$;
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_huella_template_activa_1536') THEN
         ALTER TABLE public.huellas_templates ADD CONSTRAINT chk_huella_template_activa_1536
-        CHECK (activo != 1 OR length(huella_template) = 3072);
+        CHECK (activo = 0 OR (formato = 'HEX' AND length(fingerprint_data) = 3072 AND fingerprint_data ~ '^[0-9a-fA-F]+$'));
     END IF;
 END $$;
 

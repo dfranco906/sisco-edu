@@ -2,11 +2,28 @@
 /**
  * Exportador completo del esquema y datos de Supabase Cloud a supabase/migrations y supabase/seed.sql
  */
-require_once __DIR__ . '/../src/config/db.php';
+require_once __DIR__ . '/../src/config/app.php';
 
 try {
-    $db = (new Database())->getConnection();
-    echo "Conectado a la base de datos cloud exitosamente.\n";
+    $configFile = __DIR__ . '/../config.local.php';
+    $config = file_exists($configFile) ? (include $configFile) : [];
+    $cloud = $config['CLOUD_DB'] ?? [
+        'DB_DRIVER' => 'pgsql',
+        'DB_HOST'   => 'aws-0-us-east-1.pooler.supabase.com',
+        'DB_PORT'   => 6543,
+        'DB_NAME'   => 'postgres',
+        'DB_USER'   => 'postgres.eiwhpbwzaelyuwxmpdss',
+        'DB_PASS'   => 'R%p2Bx0G&o$G0g',
+        'DB_SSL'    => true,
+    ];
+
+    $dsn = "pgsql:host={$cloud['DB_HOST']};port={$cloud['DB_PORT']};dbname={$cloud['DB_NAME']};sslmode=" . (!empty($cloud['DB_SSL']) ? 'require' : 'prefer');
+    $db = new PDO($dsn, $cloud['DB_USER'], $cloud['DB_PASS'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    echo "Conectado a la base de datos cloud ({$cloud['DB_HOST']}) exitosamente.\n";
 
     $supabaseDir = __DIR__ . '/../supabase';
     $migrationsDir = $supabaseDir . '/migrations';
@@ -70,7 +87,6 @@ try {
 
     // Extraer DDL de cada tabla
     foreach ($tablas as $tabla) {
-        // Verificar si la tabla existe
         $check = $db->prepare("SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?");
         $check->execute([$tabla]);
         if (!$check->fetch()) continue;
@@ -95,33 +111,44 @@ try {
         foreach ($columnas as $col) {
             $nombre = $col['column_name'];
             $tipo = $col['udt_name'];
-            
-            // Mapeo amigable de tipos Postgres
-            if ($tipo === 'varchar') {
-                $tipoSql = "VARCHAR(" . ($col['character_maximum_length'] ?: 255) . ")";
-            } elseif ($tipo === 'bpchar') {
-                $tipoSql = "CHAR(" . ($col['character_maximum_length'] ?: 1) . ")";
-            } elseif ($tipo === 'int4') {
-                $tipoSql = "INTEGER";
-            } elseif ($tipo === 'int2') {
-                $tipoSql = "SMALLINT";
-            } elseif ($tipo === 'int8') {
-                $tipoSql = "BIGINT";
-            } elseif ($tipo === 'bool') {
-                $tipoSql = "BOOLEAN";
-            } elseif ($tipo === 'timestamptz') {
-                $tipoSql = "TIMESTAMPTZ";
-            } elseif ($tipo === 'timestamp') {
-                $tipoSql = "TIMESTAMP";
-            } elseif ($tipo === 'numeric') {
-                $tipoSql = "NUMERIC";
-            } else {
-                $tipoSql = strtoupper($tipo);
-            }
-
-            // SERIAL / Secuencia en default
             $default = $col['column_default'];
             $nullable = ($col['is_nullable'] === 'NO') ? 'NOT NULL' : '';
+            
+            // Detectar si es una secuencia auto-incremental (SERIAL)
+            if ($default !== null && str_contains($default, 'nextval(')) {
+                if ($tipo === 'int8') {
+                    $tipoSql = "BIGSERIAL";
+                } elseif ($tipo === 'int2') {
+                    $tipoSql = "SMALLSERIAL";
+                } else {
+                    $tipoSql = "SERIAL";
+                }
+                $default = null;
+                $nullable = ''; // SERIAL ya es NOT NULL implícito en Postgres
+            } else {
+                // Mapeo amigable de tipos Postgres
+                if ($tipo === 'varchar') {
+                    $tipoSql = "VARCHAR(" . ($col['character_maximum_length'] ?: 255) . ")";
+                } elseif ($tipo === 'bpchar') {
+                    $tipoSql = "CHAR(" . ($col['character_maximum_length'] ?: 1) . ")";
+                } elseif ($tipo === 'int4') {
+                    $tipoSql = "INTEGER";
+                } elseif ($tipo === 'int2') {
+                    $tipoSql = "SMALLINT";
+                } elseif ($tipo === 'int8') {
+                    $tipoSql = "BIGINT";
+                } elseif ($tipo === 'bool') {
+                    $tipoSql = "BOOLEAN";
+                } elseif ($tipo === 'timestamptz') {
+                    $tipoSql = "TIMESTAMPTZ";
+                } elseif ($tipo === 'timestamp') {
+                    $tipoSql = "TIMESTAMP";
+                } elseif ($tipo === 'numeric') {
+                    $tipoSql = "NUMERIC";
+                } else {
+                    $tipoSql = strtoupper($tipo);
+                }
+            }
 
             $colDef = "    \"{$nombre}\" {$tipoSql}";
             if ($default !== null) {
@@ -133,12 +160,14 @@ try {
             $lineasCols[] = $colDef;
         }
 
-        // Obtener Clave Primaria
+        // Obtener Clave Primaria precisa desde pg_index
         $pkStmt = $db->prepare("
-            SELECT c.column_name
-            FROM information_schema.table_constraints tc 
-            JOIN information_schema.constraint_column_usage c ON c.constraint_name = tc.constraint_name
-            WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = 'public' AND tc.table_name = ?
+            SELECT a.attname
+            FROM   pg_index i
+            JOIN   pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+            WHERE  i.indrelid = ('public.' || ?)::regclass
+            AND    i.indisprimary
+            ORDER BY array_position(i.indkey, a.attnum)
         ");
         $pkStmt->execute([$tabla]);
         $pks = $pkStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -163,7 +192,7 @@ try {
     $ddlSql .= "DO $$ BEGIN\n";
     $ddlSql .= "    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_huella_template_activa_1536') THEN\n";
     $ddlSql .= "        ALTER TABLE public.huellas_templates ADD CONSTRAINT chk_huella_template_activa_1536\n";
-    $ddlSql .= "        CHECK (activo != 1 OR length(huella_template) = 3072);\n";
+    $ddlSql .= "        CHECK (activo = 0 OR (formato = 'HEX' AND length(fingerprint_data) = 3072 AND fingerprint_data ~ '^[0-9a-fA-F]+$'));\n";
     $ddlSql .= "    END IF;\n";
     $ddlSql .= "END $$;\n\n";
 
@@ -188,8 +217,11 @@ try {
         'materias',
         'profesores',
         'estudiantes',
-        'matriculas',
+        'tutores',
+        'estudiante_tutores',
         'coordinador_grados',
+        'matriculas',
+        'asignaciones',
         'asignacion_docente',
         'horarios',
         'nodos_esp32',
@@ -226,10 +258,12 @@ try {
 
         // Obtener PK para ON CONFLICT
         $pkStmt = $db->prepare("
-            SELECT c.column_name
-            FROM information_schema.table_constraints tc 
-            JOIN information_schema.constraint_column_usage c ON c.constraint_name = tc.constraint_name
-            WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = 'public' AND tc.table_name = ?
+            SELECT a.attname
+            FROM   pg_index i
+            JOIN   pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+            WHERE  i.indrelid = ('public.' || ?)::regclass
+            AND    i.indisprimary
+            ORDER BY array_position(i.indkey, a.attnum)
         ");
         $pkStmt->execute([$tabla]);
         $pks = $pkStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -258,7 +292,10 @@ try {
         // Actualizar secuencia de la clave primaria si aplica
         if (count($pks) === 1) {
             $pkCol = $pks[0];
-            $seedSql .= "SELECT setval(pg_get_serial_sequence('public.{$tabla}', '{$pkCol}'), coalesce(max(\"{$pkCol}\"), 1), true) FROM public.{$tabla};\n\n";
+            $seedSql .= "DO $$ BEGIN\n";
+            $seedSql .= "    PERFORM setval(pg_get_serial_sequence('public.{$tabla}', '{$pkCol}'), coalesce(max(\"{$pkCol}\"), 1), true) FROM public.{$tabla};\n";
+            $seedSql .= "EXCEPTION WHEN OTHERS THEN NULL;\n";
+            $seedSql .= "END $$;\n\n";
         } else {
             $seedSql .= "\n";
         }

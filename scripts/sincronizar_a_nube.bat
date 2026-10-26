@@ -14,7 +14,7 @@ if not exist "%PHP_EXE%" (
     set PHP_EXE=php
 )
 
-"%PHP_EXE%" -r "require 'src/classes/SincronizadorNube.php'; try { $s = new SincronizadorNube(); echo 'Conectando a bases de datos...' . PHP_EOL; $res = $s->sincronizarLocalHaciaNube(); echo PHP_EOL . '>>> SINCRONIZACIÓN EXITOSA <<<' . PHP_EOL; foreach($res['resumen'] as $t => $cant) { if($cant > 0) echo '  - ' . str_pad($t, 25) . ': ' . $cant . ' registros' . PHP_EOL; } echo PHP_EOL . 'Detalles:' . PHP_EOL; foreach($res['detalles'] as $d) echo '  ' . $d . PHP_EOL; } catch(Throwable $e) { echo PHP_EOL . 'ERROR: ' . $e->getMessage() . PHP_EOL; exit(1); }"
+"%PHP_EXE%" "%~dp0sincronizar_nube_cli.php"
 
 if %ERRORLEVEL% equ 0 (
     echo.

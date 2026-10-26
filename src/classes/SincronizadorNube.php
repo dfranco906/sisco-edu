@@ -18,7 +18,7 @@ class SincronizadorNube {
         $this->configLocal = $config['LOCAL_DB'] ?? [
             'DB_DRIVER' => 'pgsql',
             'DB_HOST'   => '127.0.0.1',
-            'DB_PORT'   => 54322,
+            'DB_PORT'   => 5432,
             'DB_NAME'   => 'postgres',
             'DB_USER'   => 'postgres',
             'DB_PASS'   => 'postgres',
@@ -110,7 +110,7 @@ class SincronizadorNube {
             'huellas_templates'       => 'id_huella',
             'solicitudes_huella'      => 'id_solicitud',
             'sync_biometrica'         => 'id_sync',
-            'aula_huellas_sync'       => 'id_sync',
+            'aula_huellas_sync'       => 'id',
             'asistencias'             => 'id_asistencia',
             'asistencias_estudiantes' => 'id_asistencia_estudiante',
             'asistencias_profesores'  => 'id_asistencia_profesor',
@@ -153,10 +153,11 @@ class SincronizadorNube {
             'estudiante_tutores'         => 'id_estudiante_tutor',
             'coordinador_grados'         => 'id_coordinador_grado',
             'matriculas'                 => 'id_matricula',
+            'asignaciones'               => 'id_asignacion',
             'asignacion_docente'         => 'id_asignacion',
             'horarios'                   => 'id_horario',
             'nodos_esp32'                => 'id_nodo',
-            'configuraciones_sistema'    => 'id_config',
+            'configuraciones_sistema'    => 'clave',
             'configuracion_informes'     => 'id_configuracion',
             'instrumentos_evaluativos'   => 'id_instrumento',
             'procedimientos_evaluativos' => 'id_procedimiento',
@@ -166,11 +167,15 @@ class SincronizadorNube {
             'plan_temas'                 => 'id_tema',
             'plan_indicadores'           => 'id_indicador',
             'plan_tema_programacion'     => 'id_programacion',
-            'plan_tema_instrumentos'     => 'id_relacion',
-            'plan_tema_procedimientos'   => 'id_relacion',
+            'plan_tema_instrumentos'     => ['id_tema', 'id_instrumento'],
+            'plan_tema_procedimientos'   => ['id_tema', 'id_procedimiento'],
             'clases_diarias'             => 'id_clase',
-            'clase_diaria_indicadores'   => 'id_clase_indicador',
+            'clase_diaria_indicadores'   => ['id_clase', 'id_indicador'],
+            'registros_anecdoticos'      => 'id_registro',
             'huellas_templates'          => 'id_huella',
+            'solicitudes_huella'         => 'id_solicitud',
+            'sync_biometrica'            => 'id_sync',
+            'aula_huellas_sync'          => 'id',
             'asistencias'                => 'id_asistencia',
             'asistencias_estudiantes'    => 'id_asistencia_estudiante',
             'asistencias_profesores'     => 'id_asistencia_profesor',
@@ -191,7 +196,7 @@ class SincronizadorNube {
         ];
     }
 
-    private function sincronizarTabla(string $tabla, string $colPk): int {
+    private function sincronizarTabla(string $tabla, string|array $colPk): int {
         // Verificar si la tabla existe en ambos lados
         if (!$this->tablaExiste($this->pdoLocal, $tabla) || !$this->tablaExiste($this->pdoCloud, $tabla)) {
             return 0;
@@ -207,27 +212,30 @@ class SincronizadorNube {
         if (empty($filas)) return 0;
 
         $cantSincronizados = 0;
+        $pks = (array)$colPk;
 
         // Construir sentencia UPSERT en Cloud
         $colsSql = '"' . implode('", "', $columnas) . '"';
-        $paramsSql = ':' . implode(', :', $columnas);
+        $paramsSql = implode(', ', array_fill(0, count($columnas), '?'));
 
         $updateParts = [];
         foreach ($columnas as $col) {
-            if ($col === $colPk) continue;
+            if (in_array($col, $pks, true)) continue;
             $updateParts[] = "\"{$col}\" = EXCLUDED.\"{$col}\"";
         }
         $updateSql = !empty($updateParts) 
             ? "DO UPDATE SET " . implode(', ', $updateParts) 
             : "DO NOTHING";
 
-        $sqlUpsert = "INSERT INTO public.{$tabla} ({$colsSql}) VALUES ({$paramsSql}) ON CONFLICT (\"{$colPk}\") {$updateSql}";
+        $conflictCols = '"' . implode('", "', $pks) . '"';
+        $sqlUpsert = "INSERT INTO public.{$tabla} ({$colsSql}) VALUES ({$paramsSql}) ON CONFLICT ({$conflictCols}) {$updateSql}";
         $stmtCloud = $this->pdoCloud->prepare($sqlUpsert);
 
         foreach ($filas as $fila) {
             // Regla de integridad biométrica: verificar template si es huellas_templates
-            if ($tabla === 'huellas_templates' && !empty($fila['huella_template'])) {
-                if ($fila['activo'] == 1 && strlen($fila['huella_template']) !== 3072) {
+            if ($tabla === 'huellas_templates') {
+                $templateData = $fila['fingerprint_data'] ?? ($fila['huella_template'] ?? null);
+                if (!empty($templateData) && $fila['activo'] == 1 && strlen($templateData) !== 3072) {
                     $this->logSync[] = "Advertencia: Huella ID {$fila['id_huella']} omitida por no cumplir contrato de 3072 HEX.";
                     continue;
                 }
@@ -235,19 +243,22 @@ class SincronizadorNube {
 
             $binds = [];
             foreach ($columnas as $col) {
-                $binds[':' . $col] = $fila[$col] ?? null;
+                $binds[] = $fila[$col] ?? null;
             }
 
             try {
                 $stmtCloud->execute($binds);
                 $cantSincronizados++;
             } catch (Throwable $e) {
-                $this->logSync[] = "Error sincronizando {$tabla} (PK {$fila[$colPk]}): " . $e->getMessage();
+                $pkVal = implode('-', array_map(fn($k) => $fila[$k] ?? '?', $pks));
+                $this->logSync[] = "Error sincronizando {$tabla} (PK {$pkVal}): " . $e->getMessage();
             }
         }
 
         // Actualizar secuencia de PK en la nube
-        $this->actualizarSecuencia($this->pdoCloud, $tabla, $colPk);
+        if (count($pks) === 1) {
+            $this->actualizarSecuencia($this->pdoCloud, $tabla, $pks[0]);
+        }
 
         if ($cantSincronizados > 0) {
             $this->logSync[] = "Tabla {$tabla}: {$cantSincronizados} registros sincronizados a la Nube.";
@@ -256,7 +267,7 @@ class SincronizadorNube {
         return $cantSincronizados;
     }
 
-    private function sincronizarTablaInversa(string $tabla, string $colPk): int {
+    private function sincronizarTablaInversa(string $tabla, string|array $colPk): int {
         if (!$this->tablaExiste($this->pdoCloud, $tabla) || !$this->tablaExiste($this->pdoLocal, $tabla)) {
             return 0;
         }
@@ -269,35 +280,49 @@ class SincronizadorNube {
         if (empty($filas)) return 0;
 
         $cant = 0;
+        $pks = (array)$colPk;
         $colsSql = '"' . implode('", "', $columnas) . '"';
-        $paramsSql = ':' . implode(', :', $columnas);
+        $paramsSql = implode(', ', array_fill(0, count($columnas), '?'));
 
         $updateParts = [];
         foreach ($columnas as $col) {
-            if ($col === $colPk) continue;
+            if (in_array($col, $pks, true)) continue;
             $updateParts[] = "\"{$col}\" = EXCLUDED.\"{$col}\"";
         }
         $updateSql = !empty($updateParts) 
             ? "DO UPDATE SET " . implode(', ', $updateParts) 
             : "DO NOTHING";
 
-        $sqlUpsert = "INSERT INTO public.{$tabla} ({$colsSql}) VALUES ({$paramsSql}) ON CONFLICT (\"{$colPk}\") {$updateSql}";
+        $conflictCols = '"' . implode('", "', $pks) . '"';
+        $sqlUpsert = "INSERT INTO public.{$tabla} ({$colsSql}) VALUES ({$paramsSql}) ON CONFLICT ({$conflictCols}) {$updateSql}";
         $stmtLocal = $this->pdoLocal->prepare($sqlUpsert);
 
         foreach ($filas as $fila) {
+            // Contrato de Integridad Biometrica (1536 bytes / 3072 HEX)
+            if ($tabla === 'huellas_templates') {
+                $templateData = $fila['fingerprint_data'] ?? ($fila['huella_template'] ?? null);
+                if (!empty($templateData) && $fila['activo'] == 1 && strlen($templateData) !== 3072) {
+                    $this->logSync[] = "Advertencia: Huella ID {$fila['id_huella']} omitida en descarga por no cumplir contrato de 3072 HEX.";
+                    continue;
+                }
+            }
+
             $binds = [];
             foreach ($columnas as $col) {
-                $binds[':' . $col] = $fila[$col] ?? null;
+                $binds[] = $fila[$col] ?? null;
             }
             try {
                 $stmtLocal->execute($binds);
                 $cant++;
             } catch (Throwable $e) {
-                $this->logSync[] = "Error descargando {$tabla} (PK {$fila[$colPk]}): " . $e->getMessage();
+                $pkVal = implode('-', array_map(fn($k) => $fila[$k] ?? '?', $pks));
+                $this->logSync[] = "Error descargando {$tabla} (PK {$pkVal}): " . $e->getMessage();
             }
         }
 
-        $this->actualizarSecuencia($this->pdoLocal, $tabla, $colPk);
+        if (count($pks) === 1) {
+            $this->actualizarSecuencia($this->pdoLocal, $tabla, $pks[0]);
+        }
         return $cant;
     }
 

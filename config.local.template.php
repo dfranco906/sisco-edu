@@ -16,11 +16,11 @@ $configCloud = [
     'DB_SSL'    => true,
 ];
 
-// Perfil Local Offline: Supabase CLI (puerto 54322) o PostgreSQL Nativo (puerto 5432)
+// Perfil Local Offline: PostgreSQL Nativo (puerto 5432) o Supabase CLI (puerto 54322)
 $configLocal = [
     'DB_DRIVER' => 'pgsql',
     'DB_HOST'   => '127.0.0.1',
-    'DB_PORT'   => 54322, // 54322 para Supabase CLI, o 5432 para PostgreSQL nativo
+    'DB_PORT'   => 5432, // 5432 para PostgreSQL nativo o 54322 para Supabase CLI
     'DB_NAME'   => 'postgres',
     'DB_USER'   => 'postgres',
     'DB_PASS'   => 'postgres',
