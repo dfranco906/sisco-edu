@@ -116,13 +116,16 @@ try {
     $db->prepare("UPDATE huellas_templates SET activo = 0 WHERE {$idCampo} = :id")
        ->execute([':id' => $idPersona]);
 
+    $driver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
+    $returningHuella = ($driver === 'pgsql') ? ' RETURNING id_huella' : '';
+
     // Insertar nueva plantilla validada
     $stmtIns = $db->prepare("
         INSERT INTO huellas_templates (
             user_id_global, {$idCampo}, fingerprint_data, crc32_hash, formato, pendiente_sync, activo
         ) VALUES (
             :uid, :id, :data, :crc, 'HEX', 1, 1
-        )
+        ){$returningHuella}
     ");
     $stmtIns->execute([
         ':uid' => $persona['user_id_global'],
@@ -130,7 +133,7 @@ try {
         ':data' => strtolower($template),
         ':crc' => $crcCalculado
     ]);
-    $idHuella = (int)$db->lastInsertId();
+    $idHuella = ($driver === 'pgsql') ? (int)$stmtIns->fetchColumn() : (int)$db->lastInsertId();
 
     // Actualizar tabla principal (estudiantes o profesores)
     if ($tipo === 'estudiante') {
@@ -146,7 +149,7 @@ try {
     } else {
         $db->prepare("
             UPDATE profesores 
-            SET huella_id = :huella, huella_registrada = 1
+            SET huella_id = :huella, pendiente_sync = 1
             WHERE id_profesor = :id
         ")->execute([
             ':huella' => $idHuella,
@@ -154,15 +157,18 @@ try {
         ]);
     }
 
+    $returningSync = ($driver === 'pgsql') ? ' RETURNING id_sync' : '';
+
     // Encolar en sync_biometrica para transporte LoRa hacia el nodo del aula
-    $db->prepare("
+    $stmtSync = $db->prepare("
         INSERT INTO sync_biometrica (id_huella, id_aula, estado, intentos) 
-        VALUES (:huella, :aula, 'PENDIENTE', 0)
-    ")->execute([
+        VALUES (:huella, :aula, 'PENDIENTE', 0){$returningSync}
+    ");
+    $stmtSync->execute([
         ':huella' => $idHuella,
         ':aula' => $idAula
     ]);
-    $idSync = (int)$db->lastInsertId();
+    $idSync = ($driver === 'pgsql') ? (int)$stmtSync->fetchColumn() : (int)$db->lastInsertId();
 
     $db->commit();
 
@@ -188,5 +194,14 @@ try {
     }
     error_log("Error en Huella/guardar_template: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Error interno al guardar template biométrico']);
+
+    $modo = defined('MODO_ENTORNO') ? MODO_ENTORNO : 'cloud';
+    $mensaje = ($modo === 'local')
+        ? 'Error al guardar template biométrico: ' . $e->getMessage()
+        : 'Error interno al guardar template biométrico';
+
+    echo json_encode([
+        'status'  => 'error',
+        'message' => $mensaje
+    ], JSON_UNESCAPED_UNICODE);
 }
