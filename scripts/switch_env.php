@@ -6,8 +6,8 @@ $target = strtolower(trim($target));
 
 $configFile = __DIR__ . '/../config.local.php';
 if (!file_exists($configFile)) {
-    echo "El archivo config.local.php no existe. Creando desde template...\n";
-    copy(__DIR__ . '/../config.local.template.php', $configFile);
+    echo "El archivo config.local.php no existe. Creando desde plantilla de ejemplo...\n";
+    copy(__DIR__ . '/../config.local.example.php', $configFile);
 }
 
 $content = file_get_contents($configFile);

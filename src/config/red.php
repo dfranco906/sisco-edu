@@ -78,7 +78,7 @@ if (!defined('LORA_ID_GATEWAY')) {
 
 // 9. Configuración Supabase Realtime (WebSockets)
 if (!defined('SUPABASE_URL')) {
-    $sbUrl = getenv('SUPABASE_URL') ?: ($localConfig['SUPABASE_URL'] ?? ($dbConfig['supabase_url'] ?? 'https://eiwhpbwzaelyuwxmpdss.supabase.co'));
+    $sbUrl = getenv('SUPABASE_URL') ?: ($localConfig['SUPABASE_URL'] ?? ($dbConfig['supabase_url'] ?? ''));
     define('SUPABASE_URL', rtrim($sbUrl, '/'));
 }
 

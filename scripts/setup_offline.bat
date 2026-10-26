@@ -13,8 +13,8 @@ if not exist "%PHP_EXE%" (
 
 echo [1/3] Verificando archivo de configuración local...
 if not exist "config.local.php" (
-    echo Creando config.local.php a partir de config.local.template.php...
-    copy config.local.template.php config.local.php > nul
+    echo Creando config.local.php a partir de config.local.example.php...
+    copy config.local.example.php config.local.php > nul
 )
 echo [OK] config.local.php verificado.
 echo.

@@ -34,7 +34,7 @@ El repositorio contiene todo lo necesario para inicializar cualquier máquina de
 * `supabase/config.toml`: Configuración estándar de Supabase CLI (puertos DB `54322`, Studio `54323`, API `54321`).
 * `supabase/migrations/20261026000000_sisco_edu_baseline.sql`: Esquema completo DDL de las 41 tablas, restricciones CHECK biométricas (1536 bytes / 3072 HEX) y políticas RLS.
 * `supabase/seed.sql`: Datos semilla completos (docentes, materias, aulas, grados, horarios, matriculas y usuarios).
-* `config.local.template.php`: Plantilla de configuración con perfiles duales (`LOCAL_DB` y `CLOUD_DB`).
+* `config.local.example.php`: Plantilla de configuración con perfiles duales (`LOCAL_DB` y `CLOUD_DB`).
 * `src/classes/SincronizadorNube.php`: Motor de sincronización bidireccional seguro.
 * `src/api/Sincronizacion/sincronizar_nube.php`: Endpoint REST para sincronizar desde el panel web.
 * `scripts/`:

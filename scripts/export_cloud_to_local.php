@@ -7,15 +7,11 @@ require_once __DIR__ . '/../src/config/app.php';
 try {
     $configFile = __DIR__ . '/../config.local.php';
     $config = file_exists($configFile) ? (include $configFile) : [];
-    $cloud = $config['CLOUD_DB'] ?? [
-        'DB_DRIVER' => 'pgsql',
-        'DB_HOST'   => 'aws-0-us-east-1.pooler.supabase.com',
-        'DB_PORT'   => 6543,
-        'DB_NAME'   => 'postgres',
-        'DB_USER'   => 'postgres.eiwhpbwzaelyuwxmpdss',
-        'DB_PASS'   => 'R%p2Bx0G&o$G0g',
-        'DB_SSL'    => true,
-    ];
+    $cloud = $config['CLOUD_DB'] ?? null;
+
+    if (!$cloud || empty($cloud['DB_USER']) || empty($cloud['DB_PASS']) || $cloud['DB_PASS'] === 'TU_PASSWORD_DE_SUPABASE') {
+        throw new RuntimeException("Credenciales de Supabase Cloud no encontradas o incompletas en config.local.php. Por favor configura la sección 'CLOUD_DB' con tus credenciales.");
+    }
 
     $dsn = "pgsql:host={$cloud['DB_HOST']};port={$cloud['DB_PORT']};dbname={$cloud['DB_NAME']};sslmode=" . (!empty($cloud['DB_SSL']) ? 'require' : 'prefer');
     $db = new PDO($dsn, $cloud['DB_USER'], $cloud['DB_PASS'], [

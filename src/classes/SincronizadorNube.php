@@ -30,8 +30,8 @@ class SincronizadorNube {
             'DB_HOST'   => 'aws-0-us-east-1.pooler.supabase.com',
             'DB_PORT'   => 6543,
             'DB_NAME'   => 'postgres',
-            'DB_USER'   => 'postgres.eiwhpbwzaelyuwxmpdss',
-            'DB_PASS'   => 'R%p2Bx0G&o$G0g',
+            'DB_USER'   => '',
+            'DB_PASS'   => '',
             'DB_SSL'    => true,
         ];
     }
@@ -76,9 +76,13 @@ class SincronizadorNube {
             $host = $this->configCloud['DB_HOST'] ?? 'aws-0-us-east-1.pooler.supabase.com';
             $port = $this->configCloud['DB_PORT'] ?? 6543;
             $dbName = $this->configCloud['DB_NAME'] ?? 'postgres';
-            $user = $this->configCloud['DB_USER'] ?? 'postgres';
+            $user = $this->configCloud['DB_USER'] ?? '';
             $pass = $this->configCloud['DB_PASS'] ?? '';
             $ssl = !empty($this->configCloud['DB_SSL']) ? 'require' : 'prefer';
+
+            if (empty($user) || empty($pass) || $pass === 'TU_PASSWORD_DE_SUPABASE') {
+                throw new RuntimeException("Credenciales de Supabase Cloud no configuradas. Por favor ingresa tus datos en config.local.php (sección 'CLOUD_DB').");
+            }
 
             $dsn = "pgsql:host={$host};port={$port};dbname={$dbName};sslmode={$ssl}";
             $this->pdoCloud = new PDO($dsn, $user, $pass, [
