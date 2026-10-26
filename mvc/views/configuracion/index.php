@@ -5,6 +5,10 @@ require_once __DIR__ . '/../../../src/middleware/auth.php';
 // RBAC: Solo SuperAdmin y Administración pueden acceder a la configuración del sistema
 verificarRol(['SuperAdmin', 'Administracion', 'Administrador']);
 
+$localConfigFile = __DIR__ . '/../../../config.local.php';
+$localConfig = file_exists($localConfigFile) ? (include $localConfigFile) : [];
+$modoEntorno = $localConfig['MODO_ENTORNO'] ?? 'cloud';
+
 require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
@@ -335,7 +339,84 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         </div>
 
-        <!-- PANEL 3: Alta Disponibilidad & Estrategia Cloud -->
+        <!-- PANEL 3: Sincronización Local & Cloud (1 Solo Clic) -->
+        <div class="p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b-2 border-slate-100 gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-3">
+                        <span>⚡</span> Sincronización de Base de Datos (1 Clic)
+                    </h2>
+                    <p class="text-base text-slate-600 mt-1 leading-relaxed">
+                        Permite trabajar 100% offline con la base de datos local y sincronizar asistencias y huellas a la nube cuando haya Internet.
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="badge-modo-entorno" class="text-sm px-4 py-1.5 rounded-full font-black uppercase tracking-wide <?= ($modoEntorno === 'local') ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300' ?>">
+                        <?= ($modoEntorno === 'local') ? '🟠 Modo Local (Offline)' : '🟢 Modo Cloud (Supabase)' ?>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Botonera de Acciones 1 Clic -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Tarjeta 1: Subir cambios locales a la nube -->
+                <div class="p-6 rounded-3xl border-2 border-indigo-200 bg-indigo-50/50 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2.5 text-indigo-950 font-black text-lg mb-2">
+                            <span class="text-2xl">☁️</span>
+                            <span>Subir a la Nube</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-medium">
+                            Envía a Supabase Cloud las huellas enroladas, asistencias registradas y eventos generados mientras estuviste offline.
+                        </p>
+                    </div>
+                    <button type="button" onclick="ejecutarSincronizacion('subir')" id="btn-sync-subir" class="w-full py-3.5 px-4 rounded-xl font-black text-white bg-indigo-600 hover:bg-indigo-700 active:scale-98 transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                        <span id="icon-sync-subir">🚀</span>
+                        <span>Sincronizar a la Nube (1 Clic)</span>
+                    </button>
+                </div>
+
+                <!-- Tarjeta 2: Descargar de la nube a local -->
+                <div class="p-6 rounded-3xl border-2 border-blue-200 bg-blue-50/50 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2.5 text-blue-950 font-black text-lg mb-2">
+                            <span class="text-2xl">⬇️</span>
+                            <span>Descargar de la Nube</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-medium">
+                            Actualiza la base de datos local con los últimos estudiantes, materias, horarios y profesores dados de alta en la nube.
+                        </p>
+                    </div>
+                    <button type="button" onclick="ejecutarSincronizacion('bajar')" id="btn-sync-bajar" class="w-full py-3.5 px-4 rounded-xl font-black text-blue-900 bg-blue-200 hover:bg-blue-300 active:scale-98 transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                        <span id="icon-sync-bajar">📥</span>
+                        <span>Actualizar Base Local (1 Clic)</span>
+                    </button>
+                </div>
+
+                <!-- Tarjeta 3: Cambiar Entorno Activo -->
+                <div class="p-6 rounded-3xl border-2 border-slate-200 bg-slate-50 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2.5 text-slate-900 font-black text-lg mb-2">
+                            <span class="text-2xl">🔄</span>
+                            <span>Entorno del Sistema</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-medium">
+                            Alterna la conexión principal entre PostgreSQL Local (127.0.0.1) y Supabase Cloud (aws-0-us-east-1).
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="cambiarEntorno('local')" class="flex-1 py-3 px-3 rounded-xl font-extrabold text-sm transition cursor-pointer <?= ($modoEntorno === 'local') ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-200 text-slate-700 hover:bg-slate-300' ?>">
+                            Modo Local
+                        </button>
+                        <button type="button" onclick="cambiarEntorno('cloud')" class="flex-1 py-3 px-3 rounded-xl font-extrabold text-sm transition cursor-pointer <?= ($modoEntorno === 'cloud') ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700 hover:bg-slate-300' ?>">
+                            Modo Cloud
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 4: Alta Disponibilidad & Estrategia Cloud -->
         <div class="p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm space-y-6">
             <div class="flex items-center justify-between pb-4 border-b-2 border-slate-100">
                 <div>
@@ -1068,6 +1149,59 @@ async function eliminarNodo(idNodo, nombreAula) {
         }
     } catch (e) {
         mostrarAlerta('error', 'Error al desvincular nodo: ' + e.message);
+    }
+}
+
+async function ejecutarSincronizacion(direccion) {
+    const btn = document.getElementById(direccion === 'subir' ? 'btn-sync-subir' : 'btn-sync-bajar');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-wait');
+    btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Procesando...`;
+
+    try {
+        const resp = await fetch(BASE_URL + 'src/api/Sincronizacion/sincronizar_nube.php?direccion=' + direccion);
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+            let resumenTexto = '';
+            if (res.data && res.data.resumen) {
+                const items = Object.entries(res.data.resumen).filter(([_, count]) => count > 0);
+                if (items.length > 0) {
+                    resumenTexto = items.map(([tabla, count]) => `${tabla}: ${count}`).join(', ');
+                } else {
+                    resumenTexto = 'No hubo nuevos registros por transferir.';
+                }
+            }
+            mostrarAlerta('success', res.message + (resumenTexto ? ` Detalle: ${resumenTexto}` : ''));
+        } else {
+            mostrarAlerta('error', res.message || 'Error durante la sincronización');
+        }
+    } catch (e) {
+        mostrarAlerta('error', 'Fallo de red o servidor: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-wait');
+        btn.innerHTML = originalText;
+    }
+}
+
+async function cambiarEntorno(modo) {
+    try {
+        const resp = await fetch(BASE_URL + 'src/api/Configuracion/cambiar_entorno.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modo: modo })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+            mostrarAlerta('success', res.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            mostrarAlerta('error', res.message || 'Error al cambiar entorno');
+        }
+    } catch (e) {
+        mostrarAlerta('error', 'Error: ' + e.message);
     }
 }
 

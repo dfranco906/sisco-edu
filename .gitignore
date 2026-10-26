@@ -52,3 +52,7 @@ $RECYCLE.BIN/
 !database/
 !database/migrations/
 !database/migrations/*.sql
+!supabase/
+!supabase/migrations/
+!supabase/migrations/*.sql
+!supabase/seed.sql
