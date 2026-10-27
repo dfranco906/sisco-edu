@@ -628,6 +628,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     <td class="p-4" ${mensajeTooltip}>
                         <div>${badgeEstado}</div>
                         ${it.intentos > 0 ? `<div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Intentos: <b>${it.intentos}</b></div>` : ''}
+                        ${obtenerBadgeTelemetria(it.mensaje)}
                         ${it.mensaje ? `<div class="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px] mt-0.5" title="${escapeHtml(it.mensaje)}">${escapeHtml(it.mensaje)}</div>` : ''}
                     </td>
 
@@ -674,6 +675,41 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     /**
      * Helpers de UI
      */
+    function obtenerBadgeTelemetria(mensaje) {
+        if (!mensaje) return '';
+        let match = mensaje.match(/LoRa RSSI:\s*(-?\d+)\s*dBm(?:,\s*SNR:\s*(-?\d+)\s*dB)?/i);
+        if (!match) {
+            match = mensaje.match(/RSSI:\s*(-?\d+)\s*dBm/i);
+        }
+        if (!match) return '';
+
+        const rssi = parseInt(match[1], 10);
+        const snr = match[2] ? parseInt(match[2], 10) : null;
+
+        let badgeClass = '';
+        let estadoSenal = '';
+        if (rssi >= -70) {
+            badgeClass = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+            estadoSenal = 'Excelente';
+        } else if (rssi >= -90) {
+            badgeClass = 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+            estadoSenal = 'Buena';
+        } else {
+            badgeClass = 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800';
+            estadoSenal = 'Débil';
+        }
+
+        return `
+            <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${badgeClass} border" title="Telemetría LoRa recibida (${estadoSenal})">
+                    <span>📶</span>
+                    <span>${rssi} dBm</span>
+                    ${snr !== null ? `<span class="opacity-75">| SNR: ${snr} dB</span>` : ''}
+                </span>
+            </div>
+        `;
+    }
+
     function obtenerBadgeEstado(estado) {
         switch ((estado || '').toUpperCase()) {
             case 'PENDIENTE':

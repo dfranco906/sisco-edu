@@ -105,7 +105,7 @@ bool esperarOKLocal(unsigned long timeoutMs = 500);
 bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs = 900);
 void enviarComandoLoRa(int destino, const String &payload);
 void confirmarSync(int idSync, const String &estado, const String &mensaje);
-void confirmarEntregaAula(const String &payload);
+void confirmarEntregaAula(const String &payload, int rssi = 0, int snr = 0);
 void procesarAsistenciaEntrante(const String &payload);
 String campo(const String &texto, int indice);
 String urlEncode(const String &texto);
@@ -1590,7 +1590,7 @@ void confirmarSync(int idSync, const String &estado, const String &mensaje) {
                 idSync, estado.c_str(), codigo);
 }
 
-void confirmarEntregaAula(const String &payload) {
+void confirmarEntregaAula(const String &payload, int rssi, int snr) {
   // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:CRC32_xxxxxxxx[:token]
   const int idSync = campo(payload, 1).toInt(), idHuella = campo(payload, 2).toInt(), idAula = campo(payload, 3).toInt(), slot = campo(payload, 4).toInt();
   const String ci = campo(payload, 5), tipo = campo(payload, 6);
@@ -1617,14 +1617,17 @@ void confirmarEntregaAula(const String &payload) {
     Serial.println("[SYNC] Confirmacion no enviada: Wi-Fi desconectado");
     return;
   }
-  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s, HMAC=%s)\n",
-                idAula, idHuella, slot, crc.c_str(), token.length() ? token.c_str() : "N/A");
+  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s, HMAC=%s, RSSI=%d, SNR=%d)\n",
+                idAula, idHuella, slot, crc.c_str(), token.length() ? token.c_str() : "N/A", rssi, snr);
   notificarPantallaTemporal("HUELLA OK", "Aula: " + String(idAula) + " - Slot: " + String(slot), "CRC32: " + crc, 3000);
   HTTPClient http;
   if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_entrega_aula.php")) return;
   http.addHeader("X-GATEWAY-KEY", configApiKey);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&crc32=" + crc;
+  String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&crc32=" + crc;
+  if (rssi != 0 || snr != 0) {
+    cuerpo += "&rssi=" + String(rssi) + "&snr=" + String(snr);
+  }
   const int codigo = http.POST(cuerpo);
   http.end();
   Serial.printf("[SYNC] Confirmacion de entrega enviada a la API (HTTP %d)\n", codigo);
@@ -1671,16 +1674,19 @@ void atenderMensajesLoRa() {
   String linea = loraSerial.readStringUntil('\n');
   linea.trim();
   if (!linea.startsWith("+RCV=")) return;
-  int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
+  int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1), c4 = linea.indexOf(',', c3 + 1);
   if (c1 < 0 || c2 < 0 || c3 < 0) return;
   const String payload = linea.substring(c2 + 1, c3);
+  int rssi = (c4 > 0) ? linea.substring(c3 + 1, c4).toInt() : 0;
+  int snr = (c4 > 0) ? linea.substring(c4 + 1).toInt() : 0;
+
   const int finTipo = payload.indexOf(':');
   const String tipoMensaje = finTipo < 0 ? payload : payload.substring(0, finTipo);
-  Serial.printf("[LORA] Mensaje %s recibido del dispositivo %d\n",
-                tipoMensaje.c_str(), linea.substring(5, c1).toInt());
+  Serial.printf("[LORA] Mensaje %s recibido del dispositivo %d (RSSI: %d dBm, SNR: %d dB)\n",
+                tipoMensaje.c_str(), linea.substring(5, c1).toInt(), rssi, snr);
   if (payload.startsWith("AST:")) procesarAsistenciaEntrante(payload);
-  else if (payload.startsWith("SYNCOK:")) confirmarEntregaAula(payload);
-  else if (payload.startsWith("SYNCERR:")) confirmarSync(campo(payload, 1).toInt(), "ERROR", campo(payload, 7));
+  else if (payload.startsWith("SYNCOK:")) confirmarEntregaAula(payload, rssi, snr);
+  else if (payload.startsWith("SYNCERR:")) confirmarSync(campo(payload, 1).toInt(), "ERROR", campo(payload, 7) + " (RSSI: " + String(rssi) + " dBm)");
   else if (payload.startsWith("PING")) {
     int emisor = linea.substring(5, c1).toInt();
     Serial.printf("[LORA] PING recibido de Nodo ID %d. Respondiendo PONG...\n", emisor);

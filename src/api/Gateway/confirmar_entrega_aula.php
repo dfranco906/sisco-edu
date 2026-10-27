@@ -96,12 +96,20 @@ try {
         ")->execute([':id_sync' => $id_sync, ':id_huella' => $id_huella, ':id_aula' => $id_aula, ':ci' => $ci, ':slot' => $slot, ':tipo' => $tipo]);
     }
 
-    // 2. Marcar la sincronización como CONFIRMADO
+    // 2. Marcar la sincronización como CONFIRMADO con telemetría RF LoRa
+    $telemetria = '';
+    $rawRssi = $_POST['rssi'] ?? null;
+    $rawSnr = $_POST['snr'] ?? null;
+    if ($rawRssi !== null && $rawRssi !== '' && is_numeric($rawRssi)) {
+        $telemetria = sprintf(" [LoRa RSSI: %d dBm%s]", (int)$rawRssi, ($rawSnr !== null && is_numeric($rawSnr)) ? ", SNR: " . (int)$rawSnr . " dB" : "");
+    }
+    $mensajeConfirmacion = 'Huella instalada y verificada por aula. CRC32=' . $crc32 . $telemetria;
+
     $db->prepare("
         UPDATE sync_biometrica 
         SET estado = 'CONFIRMADO', mensaje = :mensaje, fecha_actualizacion = NOW() 
         WHERE id_sync = :id
-    ")->execute([':id' => $id_sync, ':mensaje' => 'Huella instalada y verificada por aula. CRC32=' . $crc32]);
+    ")->execute([':id' => $id_sync, ':mensaje' => $mensajeConfirmacion]);
 
     // 3. Marcar el template como sincronizado y registrar slot
     $db->prepare("
