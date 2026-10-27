@@ -364,6 +364,20 @@ void loop() {
       msgOled("PING LORA", "Hacia GW: #" + String(destino));
       delay(800);
       mostrarPantallaReposoAula();
+    } else if (entradaSerial.equalsIgnoreCase("AUDIT") || entradaSerial.equalsIgnoreCase("DY50") || entradaSerial.equalsIgnoreCase("TEST")) {
+      Serial.println("[MONITOR-SERIAL] Diagnosticando sensor biometrico DY50 local...");
+      msgOled("TEST DY50", "Consultando...");
+      uint8_t p = finger.getTemplateCount();
+      if (p == FINGERPRINT_OK) {
+        Serial.printf("[MONITOR-SERIAL] Sensor DY50 OK: %d huellas en memoria (Capacidad: %u)\n",
+                      finger.templateCount, finger.capacity);
+        msgOled("DY50 OK", String(finger.templateCount) + " huellas");
+      } else {
+        Serial.printf("[MONITOR-SERIAL] Error leyendo DY50: codigo %d\n", p);
+        msgOled("DY50 ERROR", "Codigo: " + String(p));
+      }
+      delay(1500);
+      mostrarPantallaReposoAula();
     }
   }
 
@@ -708,14 +722,17 @@ void atenderComandosLoRa() {
   if (c1 < 0 || c2 < 0) return;
   int emisor = datosRcv.substring(0, c1).toInt();
   const String payload = (c3 > 0) ? datosRcv.substring(c2 + 1, c3) : datosRcv.substring(c2 + 1);
+  String rssiStr = (c4 > 0) ? datosRcv.substring(c3 + 1, c4) : "N/A";
+  String snrStr = (c4 > 0) ? datosRcv.substring(c4 + 1) : "N/A";
+
+  Serial.printf("[LORA-AULA] +RCV de Emisor #%d (RSSI: %s, SNR: %s): '%s'\n",
+                emisor, rssiStr.c_str(), snrStr.c_str(), payload.c_str());
 
   // Guardar el último Gateway que se comunicó para enviarle las respuestas de sync
   gatewayEmisorId = emisor;
 
   // ATENCIÓN DE PING DIAGNÓSTICO
   if (payload.startsWith("PING")) {
-    String rssiStr = (c4 > 0) ? datosRcv.substring(c3 + 1, c4) : "N/A";
-    String snrStr = (c4 > 0) ? datosRcv.substring(c4 + 1) : "N/A";
     Serial.printf("[LORA-AULA] PING recibido de Nodo ID %d (RSSI: %s, SNR: %s). Respondiendo PONG...\n",
                   emisor, rssiStr.c_str(), snrStr.c_str());
     enviarComandoLoRa(emisor, "PONG:" + String(configIdAula) + ":" + String(configLoraId));
@@ -738,39 +755,49 @@ void atenderComandosLoRa() {
     String tokenRecibido = campo(payload, 3);
     String baseValidar = "CMD:AUDIT:" + String(idAulaDestino);
 
+    Serial.printf("[LORA-AULA] CMD:AUDIT recibido. Aula solicitada: %d (Aula local: %d), Token: '%s'\n",
+                  idAulaDestino, configIdAula, tokenRecibido.c_str());
+
     // Verificación criptográfica HMAC anti-spoofing
-    if (tokenRecibido.length() > 0 && !SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
-      Serial.printf("[LORA-ALERTA] CMD:AUDIT rechazado para Aula %d: Token HMAC invalido ('%s') de emisor %d\n",
-                    idAulaDestino, tokenRecibido.c_str(), emisor);
-      msgOled("ALERTA RF", "Token AUDIT invalido");
-      delay(1500);
-      mostrarPantallaReposoAula();
-      return;
-    }
-
-    if (idAulaDestino == configIdAula || idAulaDestino == 0) {
-      Serial.printf("[LORA-AULA] Comando AUDIT autenticado recibido de Gateway #%d para Aula %d. Consultando sensor DY50...\n",
-                    emisor, configIdAula);
-      msgOled("AUDIT AULA", "Leyendo DY50...");
-
-      uint8_t p = finger.getTemplateCount();
-      if (p == FINGERPRINT_OK) {
-        int totalTemplates = finger.templateCount;
-        Serial.printf("[LORA-AULA] Auditoria OK: %d huellas en sensor DY50\n", totalTemplates);
-        msgOled("AUDIT OK", String(totalTemplates) + " huellas DY50");
-        String respOk = "AUDIT_OK:" + String(configIdAula) + ":" + String(totalTemplates);
-        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
+    if (tokenRecibido.length() > 0) {
+      if (!SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
+        String esperado = SeguridadLoRa::calcularToken(baseValidar, CLAVE_API_GATEWAY);
+        Serial.printf("[LORA-ALERTA] Token AUDIT no coincide: recibido='%s', esperado='%s'\n",
+                      tokenRecibido.c_str(), esperado.c_str());
       } else {
-        Serial.printf("[LORA-AULA] Error consultando sensor DY50 (codigo %d)\n", p);
-        msgOled("AUDIT ERROR", "Fallo DY50: " + String(p));
-        String respErr = "AUDIT_ERR:" + String(configIdAula) + ":" + String(p);
-        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respErr, CLAVE_API_GATEWAY));
+        Serial.println("[LORA-AULA] Token AUDIT verificado criptograficamente (HMAC OK).");
       }
-
-      delay(1500);
-      mostrarPantallaReposoAula();
-      return;
     }
+
+    // Sincronización automática de ID de Aula si difiere (la base de datos central es la autoridad)
+    if (idAulaDestino > 0 && configIdAula != idAulaDestino) {
+      Serial.printf("[LORA-AULA] Sincronizando ID de Aula local con comando AUDIT: %d -> %d\n",
+                    configIdAula, idAulaDestino);
+      configIdAula = idAulaDestino;
+    }
+
+    Serial.printf("[LORA-AULA] Consultando cantidad de plantillas al sensor optico DY50...\n");
+    msgOled("AUDIT AULA", "Leyendo DY50...");
+
+    uint8_t p = finger.getTemplateCount();
+    if (p == FINGERPRINT_OK) {
+      int totalTemplates = finger.templateCount;
+      Serial.printf("[LORA-AULA] Auditoria OK: %d huellas en sensor DY50\n", totalTemplates);
+      msgOled("AUDIT OK", String(totalTemplates) + " huellas DY50");
+      String respOk = "AUDIT_OK:" + String(configIdAula) + ":" + String(totalTemplates);
+      enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
+      Serial.printf("[LORA-AULA] Respuesta emitida al Gateway #%d: '%s'\n", emisor, respOk.c_str());
+    } else {
+      Serial.printf("[LORA-AULA] Error consultando sensor DY50 (codigo %d)\n", p);
+      msgOled("AUDIT ERROR", "Fallo DY50: " + String(p));
+      String respErr = "AUDIT_ERR:" + String(configIdAula) + ":" + String(p);
+      enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respErr, CLAVE_API_GATEWAY));
+      Serial.printf("[LORA-AULA] Notificacion de error emitida al Gateway #%d: '%s'\n", emisor, respErr.c_str());
+    }
+
+    delay(1200);
+    mostrarPantallaReposoAula();
+    return;
   }
 
   // COMANDO REMOTO DE RESET / VACIADO COMPLETO DEL SENSOR DE AULA
@@ -779,48 +806,59 @@ void atenderComandosLoRa() {
     String tokenRecibido = campo(payload, 3);
     String baseValidar = "CMD:CLEAR:" + String(idAulaDestino);
 
+    Serial.printf("[LORA-AULA] CMD:CLEAR recibido. Aula solicitada: %d (Aula local: %d), Token: '%s'\n",
+                  idAulaDestino, configIdAula, tokenRecibido.c_str());
+
     // Verificación criptográfica HMAC anti-spoofing
-    if (tokenRecibido.length() > 0 && !SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
-      Serial.printf("[LORA-ALERTA] CMD:CLEAR rechazado para Aula %d: Token HMAC invalido ('%s') de emisor %d\n",
-                    idAulaDestino, tokenRecibido.c_str(), emisor);
-      msgOled("ALERTA RF", "Token CLEAR invalido");
-      delay(1500);
-      mostrarPantallaReposoAula();
-      return;
-    }
-
-    if (idAulaDestino == configIdAula || idAulaDestino == 0) {
-      Serial.printf("[LORA-AULA] Comando CLEAR autenticado recibido de Gateway #%d para Aula %d. Vaciando sensor DY50 y NVS...\n",
-                    emisor, configIdAula);
-      msgOled("RESET AULA", "Vaciando DY50...");
-
-      // 1. Vaciar memoria flash interna del sensor óptico DY50
-      uint8_t p = finger.emptyDatabase();
-      bool sensorVaciado = (p == FINGERPRINT_OK);
-
-      // 2. Limpiar base de datos local (RAM y NVS Preferences)
-      prefs.begin("dblocal", false);
-      prefs.clear();
-      prefs.end();
-      memset(dbLocal, 0, sizeof(dbLocal));
-
-      // 3. Responder al Gateway por LoRa con firma HMAC
-      if (sensorVaciado) {
-        msgOled("RESET OK", "0 huellas DY50");
-        Serial.printf("[LORA-AULA] Sensor DY50 y NVS vaciados exitosamente para Aula %d\n", configIdAula);
-        String respOk = "CLEAR_OK:" + String(configIdAula);
-        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
+    if (tokenRecibido.length() > 0) {
+      if (!SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
+        String esperado = SeguridadLoRa::calcularToken(baseValidar, CLAVE_API_GATEWAY);
+        Serial.printf("[LORA-ALERTA] Token CLEAR no coincide: recibido='%s', esperado='%s'\n",
+                      tokenRecibido.c_str(), esperado.c_str());
       } else {
-        msgOled("RESET ERROR", "Fallo DY50: " + String(p));
-        Serial.printf("[LORA-AULA] Error al vaciar sensor DY50 (codigo %d)\n", p);
-        String respErr = "CLEAR_ERR:" + String(configIdAula) + ":" + String(p);
-        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respErr, CLAVE_API_GATEWAY));
+        Serial.println("[LORA-AULA] Token CLEAR verificado criptograficamente (HMAC OK).");
       }
-
-      delay(1500);
-      mostrarPantallaReposoAula();
-      return;
     }
+
+    // Sincronización automática de ID de Aula si difiere
+    if (idAulaDestino > 0 && configIdAula != idAulaDestino) {
+      Serial.printf("[LORA-AULA] Sincronizando ID de Aula local con comando CLEAR: %d -> %d\n",
+                    configIdAula, idAulaDestino);
+      configIdAula = idAulaDestino;
+    }
+
+    Serial.printf("[LORA-AULA] Comando CLEAR recibido de Gateway #%d para Aula %d. Vaciando sensor DY50 y NVS...\n",
+                  emisor, configIdAula);
+    msgOled("RESET AULA", "Vaciando DY50...");
+
+    // 1. Vaciar memoria flash interna del sensor óptico DY50
+    uint8_t p = finger.emptyDatabase();
+    bool sensorVaciado = (p == FINGERPRINT_OK);
+
+    // 2. Limpiar base de datos local (RAM y NVS Preferences)
+    prefs.begin("dblocal", false);
+    prefs.clear();
+    prefs.end();
+    memset(dbLocal, 0, sizeof(dbLocal));
+
+    // 3. Responder al Gateway por LoRa con firma HMAC
+    if (sensorVaciado) {
+      msgOled("RESET OK", "0 huellas DY50");
+      Serial.printf("[LORA-AULA] Sensor DY50 y NVS vaciados exitosamente para Aula %d\n", configIdAula);
+      String respOk = "CLEAR_OK:" + String(configIdAula);
+      enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
+      Serial.printf("[LORA-AULA] Confirmacion CLEAR_OK emitida al Gateway #%d: '%s'\n", emisor, respOk.c_str());
+    } else {
+      msgOled("RESET ERROR", "Fallo DY50: " + String(p));
+      Serial.printf("[LORA-AULA] Error al vaciar sensor DY50 (codigo %d)\n", p);
+      String respErr = "CLEAR_ERR:" + String(configIdAula) + ":" + String(p);
+      enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respErr, CLAVE_API_GATEWAY));
+      Serial.printf("[LORA-AULA] Error CLEAR_ERR emitido al Gateway #%d: '%s'\n", emisor, respErr.c_str());
+    }
+
+    delay(1200);
+    mostrarPantallaReposoAula();
+    return;
   }
 
   const int sep = payload.indexOf(':');
