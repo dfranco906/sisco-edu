@@ -62,8 +62,53 @@ unsigned long tiempoReinicio = 0;
 const char *headerKeys[] = {"X-GATEWAY-KEY", "Cookie"};
 
 // ============================================================================
+// ARQUITECTURA MULTI-NÚCLEO FREERTOS Y COMUNICACIÓN INTER-CORE
+// ============================================================================
+struct TramaAsistencia {
+  int idAula;
+  char ci[24];
+  char tipo[16];
+  char estado[16];
+  int rssi;
+  int snr;
+};
+
+struct TramaSyncOk {
+  int idSync;
+  int idHuella;
+  int idAula;
+  int slot;
+  char ci[24];
+  char tipo[16];
+  char crc32[10];
+  int rssi;
+  int snr;
+};
+
+struct TramaSyncErr {
+  int idSync;
+  char mensaje[64];
+  int rssi;
+};
+
+QueueHandle_t colaAsistenciasLoRa = NULL;
+QueueHandle_t colaSyncOkLoRa = NULL;
+QueueHandle_t colaSyncErrLoRa = NULL;
+SemaphoreHandle_t mutexDisplay = NULL;
+SemaphoreHandle_t mutexLoRa = NULL;
+TaskHandle_t tareaRedHandle = NULL;
+
+// ============================================================================
 // PROTOTIPOS DE FUNCIONES
 // ============================================================================
+void tareaRedCore0(void *pvParameters);
+void encolarAsistencia(const String &payload, int rssi = 0, int snr = 0);
+void encolarSyncOk(const String &payload, int rssi = 0, int snr = 0);
+void encolarSyncErr(const String &payload, int rssi = 0, int snr = 0);
+void despacharColaAsistencias();
+void despacharColaSync();
+void confirmarSyncHttp(int idSync, const String &estado, const String &mensaje);
+
 void pantalla(const String &linea1, const String &linea2 = "", const String &linea3 = "");
 void mostrarEstadoGatewayOnline();
 void mostrarModoAP(const String &ssid = "SISCO-GATEWAY-CONFIG", const String &pass = "12345678", const String &ip = "192.168.4.1");
@@ -106,17 +151,19 @@ bool esperarOKLocal(unsigned long timeoutMs = 500);
 bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs = 900);
 void enviarComandoLoRa(int destino, const String &payload);
 void confirmarSync(int idSync, const String &estado, const String &mensaje);
-void confirmarEntregaAula(const String &payload, int rssi = 0, int snr = 0);
-void procesarAsistenciaEntrante(const String &payload);
 String campo(const String &texto, int indice);
 String urlEncode(const String &texto);
 bool crc32HexValido(const String &valor);
 
 // ============================================================================
-// PANTALLA OLED Y NOTIFICACIONES
+// PANTALLA OLED Y NOTIFICACIONES (THREAD-SAFE CON MUTEX DE HARDWARE I2C)
 // ============================================================================
 void pantalla(const String &linea1, const String &linea2, const String &linea3) {
   if (!displayOk) return;
+  if (mutexDisplay != NULL) {
+    if (xSemaphoreTake(mutexDisplay, pdMS_TO_TICKS(300)) != pdTRUE) return;
+  }
+
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
@@ -142,10 +189,18 @@ void pantalla(const String &linea1, const String &linea2, const String &linea3) 
     display.println(linea3);
   }
   display.display();
+
+  if (mutexDisplay != NULL) {
+    xSemaphoreGive(mutexDisplay);
+  }
 }
 
 void mostrarEstadoGatewayOnline() {
   if (!displayOk) return;
+  if (mutexDisplay != NULL) {
+    if (xSemaphoreTake(mutexDisplay, pdMS_TO_TICKS(300)) != pdTRUE) return;
+  }
+
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
@@ -171,10 +226,18 @@ void mostrarEstadoGatewayOnline() {
   display.printf("IP: %s\n", ipStr.c_str());
 
   display.display();
+
+  if (mutexDisplay != NULL) {
+    xSemaphoreGive(mutexDisplay);
+  }
 }
 
 void mostrarModoAP(const String &ssid, const String &pass, const String &ip) {
   if (!displayOk) return;
+  if (mutexDisplay != NULL) {
+    if (xSemaphoreTake(mutexDisplay, pdMS_TO_TICKS(300)) != pdTRUE) return;
+  }
+
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
@@ -203,10 +266,18 @@ void mostrarModoAP(const String &ssid, const String &pass, const String &ip) {
     display.printf("Web : http://%s/\n", ip.c_str());
   }
   display.display();
+
+  if (mutexDisplay != NULL) {
+    xSemaphoreGive(mutexDisplay);
+  }
 }
 
 void mostrarGuiaBotonBoot(unsigned long duracionMs) {
   if (!displayOk) return;
+  if (mutexDisplay != NULL) {
+    if (xSemaphoreTake(mutexDisplay, pdMS_TO_TICKS(300)) != pdTRUE) return;
+  }
+
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
@@ -256,10 +327,18 @@ void mostrarGuiaBotonBoot(unsigned long duracionMs) {
     display.println("Reiniciando Gateway...");
   }
   display.display();
+
+  if (mutexDisplay != NULL) {
+    xSemaphoreGive(mutexDisplay);
+  }
 }
 
 void notificarPantallaTemporal(const String &titulo, const String &linea1, const String &linea2, unsigned long duracionMs) {
   if (!displayOk) return;
+  if (mutexDisplay != NULL) {
+    if (xSemaphoreTake(mutexDisplay, pdMS_TO_TICKS(300)) != pdTRUE) return;
+  }
+
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
 
@@ -276,6 +355,10 @@ void notificarPantallaTemporal(const String &titulo, const String &linea1, const
   display.display();
 
   tiempoRestaurarPantalla = millis() + duracionMs;
+
+  if (mutexDisplay != NULL) {
+    xSemaphoreGive(mutexDisplay);
+  }
 }
 
 // ============================================================================
@@ -492,7 +575,7 @@ void handleGuardar() {
 }
 
 void handleEstado() {
-  DynamicJsonDocument doc(512);
+  DynamicJsonDocument doc(768);
   doc["status"] = "success";
   doc["dispositivo"] = "gateway";
   doc["modo"] = modoAP ? "AP" : "STA";
@@ -506,6 +589,14 @@ void handleEstado() {
   doc["lora_diag"] = loraDiag;
   doc["lora_version"] = loraVersion;
   doc["uptime_s"] = millis() / 1000;
+
+  JsonObject mc = doc.createNestedObject("multicore");
+  mc["enabled"] = true;
+  mc["core_lora"] = 1;
+  mc["core_red"] = 0;
+  mc["cola_asistencias_espera"] = colaAsistenciasLoRa ? uxQueueMessagesWaiting(colaAsistenciasLoRa) : 0;
+  mc["cola_sync_espera"] = colaSyncOkLoRa ? uxQueueMessagesWaiting(colaSyncOkLoRa) : 0;
+
   String json;
   serializeJson(doc, json);
   server.send(200, "application/json", json);
@@ -654,6 +745,17 @@ void setup() {
   Serial.println("========================================");
 
   pinMode(PIN_BOOT_RESET, INPUT_PULLUP);
+
+  // Inicialización de primitivas FreeRTOS (Multi-Núcleo: Semáforos y Colas)
+  mutexDisplay = xSemaphoreCreateMutex();
+  mutexLoRa = xSemaphoreCreateRecursiveMutex();
+  colaAsistenciasLoRa = xQueueCreate(25, sizeof(TramaAsistencia));
+  colaSyncOkLoRa = xQueueCreate(10, sizeof(TramaSyncOk));
+  colaSyncErrLoRa = xQueueCreate(10, sizeof(TramaSyncErr));
+
+  if (!mutexDisplay || !mutexLoRa || !colaAsistenciasLoRa || !colaSyncOkLoRa || !colaSyncErrLoRa) {
+    Serial.println("[ERROR-CRITICO] Fallo al crear semaforos o colas FreeRTOS");
+  }
 
   // Inicialización de Pantalla OLED SSD1306 (SDA: GPIO 21, SCL: GPIO 22)
   Wire.begin();
@@ -852,21 +954,29 @@ void setup() {
     Serial.println("[HTTP] Portal Web AP   : http://192.168.4.1/");
   }
 
-  Serial.println("[LISTO] Sistema Gateway Operativo:");
-  Serial.println("  - Portal Web protegido con autenticacion y cambio obligatorio de clave");
-  Serial.println("  - Sincronizacion dinamica de aulas LoRa desde base de datos");
-  Serial.println("  - Reenvio bidireccional LoRa <-> API REST Sisco-Edu");
+  // Crear y anclar la tarea de Red y Servidor Web a Core 0 (PRO_CPU)
+  xTaskCreatePinnedToCore(
+    tareaRedCore0,      // Función de la tarea
+    "RedYHttpCore0",    // Nombre identificativo
+    12288,              // Tamaño de pila (12 KB para peticiones HTTP/JSON)
+    NULL,               // Parámetros
+    1,                  // Prioridad (1 = estándar cooperativa)
+    &tareaRedHandle,    // Handle de la tarea
+    0                   // Anclado a Core 0 (PRO_CPU, donde corre la pila Wi-Fi/lwIP)
+  );
+
+  Serial.println("\n[MULTICORE] Arquitectura FreeRTOS Inicializada con Exito:");
+  Serial.println("  - Core 0 (PRO_CPU): Pila Wi-Fi/lwIP, Servidor Web (puerto 80), Despacho HTTP a PHP");
+  Serial.println("  - Core 1 (APP_CPU): Loop principal, Polling LoRa UART a 115200 baud, CLI Serial y UI");
+  Serial.println("  - Colas: Asistencias (25 slots), SyncOk (10 slots), SyncErr (10 slots)");
   Serial.println("========================================\n");
 }
 
 void loop() {
-  if (modoAP) {
-    dnsServer.processNextRequest();
-  }
-  server.handleClient();
+  // 1. Polling de mensajes LoRa de alta velocidad en Core 1
   atenderMensajesLoRa();
 
-  // Restauración de pantalla tras notificación temporal
+  // 2. Restauración de pantalla tras notificación temporal
   if (tiempoRestaurarPantalla > 0 && millis() >= tiempoRestaurarPantalla) {
     tiempoRestaurarPantalla = 0;
     if (modoAP) {
@@ -876,10 +986,7 @@ void loop() {
     }
   }
 
-  // Monitoreo del botón BOOT (GPIO 0) en tiempo de ejecución con guía visual interactiva:
-  // - Mantener presionado: muestra barra de progreso en vivo
-  // - Soltar entre 2.5s y 8s: Activa inmediatamente el Modo AP (Setup)
-  // - Mantener >= 8s: Restablece a valores de fábrica y reinicia
+  // 3. Monitoreo interactivo del botón BOOT (GPIO 0) en tiempo de ejecución con guía visual:
   static unsigned long tiempoPresionadoBoot = 0;
   static unsigned long ultimoRefrescoBoton = 0;
   static bool accionBootEjecutada = false;
@@ -915,7 +1022,6 @@ void loop() {
         Serial.println("\n[BOOT] Pulsador liberado tras 2.5s: ACTIVANDO MODO AP...");
         iniciarModoAP();
       } else if (!accionBootEjecutada) {
-        // Se soltó antes de los 2.5s requeridos: cancelar y restaurar pantalla
         if (modoAP) {
           mostrarModoAP();
         } else {
@@ -927,42 +1033,14 @@ void loop() {
     }
   }
 
+  // 4. Verificación de reinicio programado
   if (reiniciarPendiente && millis() >= tiempoReinicio) {
     Serial.println("[SISTEMA] Reiniciando microcontrolador...");
     delay(100);
     ESP.restart();
   }
 
-  if (!modoAP) {
-    static unsigned long ultimoReintentoWifi = 0;
-    static wl_status_t ultimoEstadoWifi = WiFi.status();
-    const wl_status_t estadoWifi = WiFi.status();
-    if (estadoWifi != ultimoEstadoWifi) {
-      if (estadoWifi == WL_CONNECTED) {
-        Serial.printf("[WIFI] Conexion recuperada. IP: %s\n", WiFi.localIP().toString().c_str());
-        mostrarEstadoGatewayOnline();
-      } else if (ultimoEstadoWifi == WL_CONNECTED) {
-        Serial.println("[WIFI] Conexion perdida con el router Wi-Fi");
-        notificarPantallaTemporal("WIFI DESCONECTADO", "Reintentando enlace...", "", 4000);
-      }
-      ultimoEstadoWifi = estadoWifi;
-    }
-    if (estadoWifi != WL_CONNECTED && millis() - ultimoReintentoWifi > 15000) {
-      ultimoReintentoWifi = millis();
-      Serial.println("[WIFI] Intentando reconectar a la red...");
-      WiFi.reconnect();
-    }
-
-    // Sondeo periódico automático de huellas pendientes (cada 45 segundos)
-    static unsigned long ultimoSondeoSyncAuto = 0;
-    if (estadoWifi == WL_CONNECTED && millis() - ultimoSondeoSyncAuto >= 45000) {
-      ultimoSondeoSyncAuto = millis();
-      Serial.println("[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...");
-      pedirSyncPendiente();
-    }
-  }
-
-  // Comandos de diagnóstico desde Monitor Serial (115200 baud)
+  // 5. Comandos de diagnóstico desde Monitor Serial (115200 baud)
   if (Serial.available()) {
     String cmdSerial = Serial.readStringUntil('\n');
     cmdSerial.trim();
@@ -984,7 +1062,14 @@ void loop() {
       }
     } else if (cmdSerial.equalsIgnoreCase("LORA") || cmdSerial.equalsIgnoreCase("STATUS")) {
       Serial.println("[MONITOR-SERIAL] Ejecutando diagnostico de hardware LoRa...");
-      loraOk = verificarYConfigurarLoRa(loraSerial, LORA_RX, LORA_TX, configLoraId, configLoraNetId, loraDiag, loraVersion);
+      if (mutexLoRa != NULL) {
+        if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(3000)) == pdTRUE) {
+          loraOk = verificarYConfigurarLoRa(loraSerial, LORA_RX, LORA_TX, configLoraId, configLoraNetId, loraDiag, loraVersion);
+          xSemaphoreGiveRecursive(mutexLoRa);
+        }
+      } else {
+        loraOk = verificarYConfigurarLoRa(loraSerial, LORA_RX, LORA_TX, configLoraId, configLoraNetId, loraDiag, loraVersion);
+      }
       if (modoAP) mostrarModoAP(); else mostrarEstadoGatewayOnline();
     } else if (cmdSerial.equalsIgnoreCase("AUDIT") || cmdSerial.startsWith("AUDIT ") || cmdSerial.startsWith("audit ")) {
       int destino = 110;
@@ -1007,6 +1092,263 @@ void loop() {
                     r ? "EXITO" : "FALLO", total, rssi, msg.c_str());
     }
   }
+
+  // Ceder CPU a FreeRTOS en Core 1
+  vTaskDelay(pdMS_TO_TICKS(5));
+}
+
+// ============================================================================
+// TAREA FREERTOS CORE 0 (PRO_CPU): RED, SERVIDOR WEB Y CLIENTE HTTP
+// ============================================================================
+void tareaRedCore0(void *pvParameters) {
+  Serial.printf("[MULTICORE] Tarea Red/WebServer iniciada en Core %d (Prioridad %d)\n",
+                xPortGetCoreID(), uxTaskPriorityGet(NULL));
+
+  unsigned long ultimoReintentoWifi = 0;
+  unsigned long ultimoSondeoSyncAuto = 0;
+  wl_status_t ultimoEstadoWifi = WiFi.status();
+
+  for (;;) {
+    // 1. Manejo de DNS en modo AP (portal cautivo)
+    if (modoAP) {
+      dnsServer.processNextRequest();
+    }
+
+    // 2. Procesar solicitudes Web entrantes (portal web y endpoints /sync, /clear_aula, /audit_aula)
+    server.handleClient();
+
+    // 3. Despacho asíncrono de asistencias encoladas por LoRa hacia la API PHP de Sisco-Edu
+    despacharColaAsistencias();
+
+    // 4. Despacho asíncrono de confirmaciones SYNCOK / SYNCERR hacia la API PHP
+    despacharColaSync();
+
+    // 5. Monitoreo de estado Wi-Fi y reconexión automática (solo en modo estación)
+    if (!modoAP) {
+      const wl_status_t estadoWifi = WiFi.status();
+      if (estadoWifi != ultimoEstadoWifi) {
+        if (estadoWifi == WL_CONNECTED) {
+          Serial.printf("[WIFI] Conexion recuperada. IP: %s\n", WiFi.localIP().toString().c_str());
+          mostrarEstadoGatewayOnline();
+        } else if (ultimoEstadoWifi == WL_CONNECTED) {
+          Serial.println("[WIFI] Conexion perdida con el router Wi-Fi");
+          notificarPantallaTemporal("WIFI DESCONECTADO", "Reintentando enlace...", "", 4000);
+        }
+        ultimoEstadoWifi = estadoWifi;
+      }
+      if (estadoWifi != WL_CONNECTED && (millis() - ultimoReintentoWifi > 15000)) {
+        ultimoReintentoWifi = millis();
+        Serial.println("[WIFI] Intentando reconectar a la red...");
+        WiFi.reconnect();
+      }
+
+      // 6. Sondeo periódico automático de huellas pendientes (cada 45 segundos)
+      if (estadoWifi == WL_CONNECTED && (millis() - ultimoSondeoSyncAuto >= 45000)) {
+        ultimoSondeoSyncAuto = millis();
+        Serial.println("[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...");
+        pedirSyncPendiente();
+      }
+    }
+
+    // Ceder CPU a FreeRTOS para permitir la ejecución de la tarea IDLE y alimentar el WDT de Core 0
+    vTaskDelay(pdMS_TO_TICKS(5));
+  }
+}
+
+// ============================================================================
+// ENCOLAMIENTO Y DESPACHO DE MENSAJES (COMUNICACIÓN INTER-CORE SEGURA)
+// ============================================================================
+void encolarAsistencia(const String &payload, int rssi, int snr) {
+  // AST:id_aula:ci:tipo:estado[:token]
+  const int idAula = campo(payload, 1).toInt();
+  const String ci = campo(payload, 2);
+  const String tipo = campo(payload, 3);
+  const String estado = campo(payload, 4);
+  const String token = campo(payload, 5);
+
+  if (!idAula || !ci.length() || !tipo.length() || !estado.length()) {
+    Serial.println("[ASISTENCIA] Trama LoRa invalida");
+    return;
+  }
+
+  // Verificación de autenticidad criptográfica HMAC anti-spoofing
+  if (token.length() > 0) {
+    String baseValidar = "AST:" + String(idAula) + ":" + ci + ":" + tipo + ":" + estado;
+    bool tokenValido = SeguridadLoRa::validarToken(baseValidar, token, CLAVE_API_GATEWAY) ||
+                       SeguridadLoRa::validarToken(baseValidar, token, configApiKey.c_str());
+    if (!tokenValido) {
+      Serial.printf("[LORA-ALERTA] Asistencia rechazada para Aula %d: Token HMAC invalido ('%s')\n", idAula, token.c_str());
+      return;
+    }
+  }
+
+  TramaAsistencia item;
+  item.idAula = idAula;
+  strncpy(item.ci, ci.c_str(), sizeof(item.ci) - 1);
+  item.ci[sizeof(item.ci) - 1] = '\0';
+  strncpy(item.tipo, tipo.c_str(), sizeof(item.tipo) - 1);
+  item.tipo[sizeof(item.tipo) - 1] = '\0';
+  strncpy(item.estado, estado.c_str(), sizeof(item.estado) - 1);
+  item.estado[sizeof(item.estado) - 1] = '\0';
+  item.rssi = rssi;
+  item.snr = snr;
+
+  if (colaAsistenciasLoRa != NULL) {
+    if (xQueueSend(colaAsistenciasLoRa, &item, pdMS_TO_TICKS(20)) == pdPASS) {
+      Serial.printf("[QUEUE] Asistencia Aula %d (CI %s, %s [%s]) encolada exitosamente para Core 0 (RSSI: %d dBm)\n",
+                    idAula, item.ci, item.tipo, item.estado, rssi);
+      notificarPantallaTemporal("ASISTENCIA", "Aula: " + String(idAula) + " CI: " + String(item.ci), String(item.tipo) + " [" + String(item.estado) + "]", 2500);
+    } else {
+      Serial.printf("[QUEUE-ALERTA] Cola de asistencias llena. Paquete descartado para CI %s\n", item.ci);
+    }
+  }
+}
+
+void despacharColaAsistencias() {
+  if (colaAsistenciasLoRa == NULL) return;
+  TramaAsistencia item;
+  if (xQueueReceive(colaAsistenciasLoRa, &item, 0) == pdPASS) {
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.printf("[DISPATCH-CORE0] Wi-Fi desconectado. Asistencia omitida para CI %s\n", item.ci);
+      return;
+    }
+
+    Serial.printf("[DISPATCH-CORE0] Transmitiendo asistencia de Aula %d (CI %s) a la API PHP...\n", item.idAula, item.ci);
+    HTTPClient http;
+    if (!http.begin(configBaseUrl + "src/api/Gateway/registrar_asistencia.php")) return;
+    http.addHeader("X-GATEWAY-KEY", configApiKey);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    String cuerpo = "id_aula=" + String(item.idAula) +
+                    "&ci=" + urlEncode(String(item.ci)) +
+                    "&tipo_persona=" + urlEncode(String(item.tipo)) +
+                    "&estado=" + urlEncode(String(item.estado));
+
+    const int codigo = http.POST(cuerpo);
+    http.end();
+    Serial.printf("[DISPATCH-CORE0] Asistencia de CI %s registrada en API Sisco-Edu (HTTP %d)\n", item.ci, codigo);
+  }
+}
+
+void encolarSyncOk(const String &payload, int rssi, int snr) {
+  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:CRC32_xxxxxxxx[:token]
+  const int idSync = campo(payload, 1).toInt();
+  const int idHuella = campo(payload, 2).toInt();
+  const int idAula = campo(payload, 3).toInt();
+  const int slot = campo(payload, 4).toInt();
+  const String ci = campo(payload, 5);
+  const String tipo = campo(payload, 6);
+  const String detalle = campo(payload, 7);
+  const String token = campo(payload, 8);
+
+  String crc = detalle.startsWith("CRC32_") ? detalle.substring(6) : "";
+  crc.toLowerCase();
+  if (!idSync || !idHuella || !idAula || !slot || !ci.length() || !tipo.length() || !crc32HexValido(crc)) {
+    Serial.println("[SYNC] Confirmacion LoRa de aula invalida");
+    return;
+  }
+
+  // Verificación de autenticidad criptográfica HMAC anti-spoofing
+  if (token.length() > 0) {
+    String baseValidar = "SYNCOK:" + String(idSync) + ":" + String(idHuella) + ":" + String(idAula) + ":" + String(slot) + ":" + ci + ":" + tipo + ":" + detalle;
+    bool tokenValido = SeguridadLoRa::validarToken(baseValidar, token, CLAVE_API_GATEWAY) ||
+                       SeguridadLoRa::validarToken(baseValidar, token, configApiKey.c_str());
+    if (!tokenValido) {
+      Serial.printf("[LORA-ALERTA] SYNCOK rechazado para Aula %d: Token HMAC invalido ('%s')\n", idAula, token.c_str());
+      return;
+    }
+  }
+
+  TramaSyncOk item;
+  item.idSync = idSync;
+  item.idHuella = idHuella;
+  item.idAula = idAula;
+  item.slot = slot;
+  strncpy(item.ci, ci.c_str(), sizeof(item.ci) - 1);
+  item.ci[sizeof(item.ci) - 1] = '\0';
+  strncpy(item.tipo, tipo.c_str(), sizeof(item.tipo) - 1);
+  item.tipo[sizeof(item.tipo) - 1] = '\0';
+  strncpy(item.crc32, crc.c_str(), sizeof(item.crc32) - 1);
+  item.crc32[sizeof(item.crc32) - 1] = '\0';
+  item.rssi = rssi;
+  item.snr = snr;
+
+  if (colaSyncOkLoRa != NULL) {
+    if (xQueueSend(colaSyncOkLoRa, &item, pdMS_TO_TICKS(20)) == pdPASS) {
+      Serial.printf("[QUEUE] SYNCOK Aula %d Huella %d en slot %d encolado para Core 0 (CRC32: %s, RSSI: %d dBm)\n",
+                    idAula, idHuella, slot, crc.c_str(), rssi);
+      notificarPantallaTemporal("HUELLA OK", "Aula: " + String(idAula) + " - Slot: " + String(slot), "CRC32: " + crc, 3000);
+    } else {
+      Serial.printf("[QUEUE-ALERTA] Cola SyncOk llena. Descartado para Huella %d\n", idHuella);
+    }
+  }
+}
+
+void encolarSyncErr(const String &payload, int rssi, int snr) {
+  // SYNCERR:id_sync:id_huella:id_aula:slot:ci:tipo:error_msg[:token]
+  const int idSync = campo(payload, 1).toInt();
+  const String detalle = campo(payload, 7);
+
+  TramaSyncErr item;
+  item.idSync = idSync;
+  strncpy(item.mensaje, detalle.c_str(), sizeof(item.mensaje) - 1);
+  item.mensaje[sizeof(item.mensaje) - 1] = '\0';
+  item.rssi = rssi;
+
+  if (colaSyncErrLoRa != NULL) {
+    xQueueSend(colaSyncErrLoRa, &item, pdMS_TO_TICKS(20));
+  }
+}
+
+void despacharColaSync() {
+  if (colaSyncOkLoRa != NULL) {
+    TramaSyncOk item;
+    if (xQueueReceive(colaSyncOkLoRa, &item, 0) == pdPASS) {
+      if (WiFi.status() == WL_CONNECTED) {
+        Serial.printf("[DISPATCH-CORE0] Transmitiendo confirmacion SYNCOK Aula %d Huella %d a API...\n",
+                      item.idAula, item.idHuella);
+        HTTPClient http;
+        if (http.begin(configBaseUrl + "src/api/Gateway/confirmar_entrega_aula.php")) {
+          http.addHeader("X-GATEWAY-KEY", configApiKey);
+          http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+          String cuerpo = "id_sync=" + String(item.idSync) +
+                          "&id_huella=" + String(item.idHuella) +
+                          "&id_aula=" + String(item.idAula) +
+                          "&slot_local=" + String(item.slot) +
+                          "&ci=" + urlEncode(String(item.ci)) +
+                          "&tipo_persona=" + urlEncode(String(item.tipo)) +
+                          "&crc32=" + String(item.crc32);
+          if (item.rssi != 0 || item.snr != 0) {
+            cuerpo += "&rssi=" + String(item.rssi) + "&snr=" + String(item.snr);
+          }
+          const int codigo = http.POST(cuerpo);
+          http.end();
+          Serial.printf("[DISPATCH-CORE0] Confirmacion SYNCOK enviada a API (HTTP %d)\n", codigo);
+        }
+      }
+    }
+  }
+
+  if (colaSyncErrLoRa != NULL) {
+    TramaSyncErr item;
+    if (xQueueReceive(colaSyncErrLoRa, &item, 0) == pdPASS) {
+      if (WiFi.status() == WL_CONNECTED) {
+        confirmarSyncHttp(item.idSync, "ERROR", String(item.mensaje) + " (RSSI: " + String(item.rssi) + " dBm)");
+      }
+    }
+  }
+}
+
+void confirmarSyncHttp(int idSync, const String &estado, const String &mensaje) {
+  if (!idSync || WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http;
+  if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_sync.php")) return;
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  const int codigo = http.POST("id_sync=" + String(idSync) + "&estado=" + urlEncode(estado) + "&mensaje=" + urlEncode(mensaje));
+  http.end();
+  Serial.printf("[SYNC] Estado de sync %d enviado a la API: %s (HTTP %d)\n",
+                idSync, estado.c_str(), codigo);
 }
 
 // ============================================================================
@@ -1142,6 +1484,13 @@ bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, i
     Serial.println("[PING-ERR] Imposible enviar Ping: Modulo LoRa local en FALLO");
     return false;
   }
+  if (mutexLoRa != NULL) {
+    if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(timeoutMs + 1000)) != pdTRUE) {
+      Serial.println("[PING-ERR] Modem LoRa ocupado (mutex no disponible)");
+      return false;
+    }
+  }
+
   while (loraSerial.available()) loraSerial.read();
 
   Serial.printf("[PING] Transmitiendo PING a LoRa ID %d...\n", loraId);
@@ -1175,6 +1524,18 @@ bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, i
         int emisor = linea.substring(5, c1).toInt();
         String payload = linea.substring(c2 + 1, c3);
         payload.trim();
+
+        // Si mientras esperamos PONG entra una asistencia o sync, encolarla
+        if (payload.startsWith("AST:")) {
+          int astRssi = (c4 > 0) ? linea.substring(c3 + 1, c4).toInt() : 0;
+          int astSnr = (c4 > 0) ? linea.substring(c4 + 1).toInt() : 0;
+          encolarAsistencia(payload, astRssi, astSnr);
+        } else if (payload.startsWith("SYNCOK:")) {
+          int syncRssi = (c4 > 0) ? linea.substring(c3 + 1, c4).toInt() : 0;
+          int syncSnr = (c4 > 0) ? linea.substring(c4 + 1).toInt() : 0;
+          encolarSyncOk(payload, syncRssi, syncSnr);
+        }
+
         if ((loraId == 0 || emisor == loraId) && (payload.startsWith("PONG") || payload == "PONG")) {
           if (c4 > 0) {
             rssi = linea.substring(c3 + 1, c4).toInt();
@@ -1184,12 +1545,14 @@ bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, i
           payloadDetectado = payload;
           Serial.printf("[PING] PONG recibido de Nodo %d! (Payload: %s, RSSI: %d dBm, SNR: %d dB, RTT: %lu ms)\n",
                         emisor, payload.c_str(), rssi, snr, millis() - inicio);
+          if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
           return true;
         }
       }
     }
   }
   Serial.printf("[PING] Sin respuesta PONG de LoRa ID %d (+OK local=%s)\n", loraId, okLocal ? "SI" : "NO");
+  if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
   return false;
 }
 
@@ -1198,6 +1561,13 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
     mensaje = "Modulo LoRa del Gateway en fallo de comunicacion AT";
     return false;
   }
+  if (mutexLoRa != NULL) {
+    if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(timeoutMs + 1000)) != pdTRUE) {
+      mensaje = "Modem LoRa ocupado (mutex no disponible)";
+      return false;
+    }
+  }
+
   while (loraSerial.available()) loraSerial.read();
 
   String cmdBase = "CMD:CLEAR:" + String(idAula);
@@ -1230,10 +1600,18 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
       int c1 = linea.indexOf(',');
       int c2 = linea.indexOf(',', c1 + 1);
       int c3 = linea.indexOf(',', c2 + 1);
+      int c4 = linea.indexOf(',', c3 + 1);
       if (c1 > 0 && c2 > 0 && c3 > 0) {
         int emisor = linea.substring(5, c1).toInt();
         String payload = linea.substring(c2 + 1, c3);
         payload.trim();
+
+        // Encolar asistencias recibidas oportunistamente
+        if (payload.startsWith("AST:")) {
+          int astRssi = (c4 > 0) ? linea.substring(c3 + 1, c4).toInt() : 0;
+          int astSnr = (c4 > 0) ? linea.substring(c4 + 1).toInt() : 0;
+          encolarAsistencia(payload, astRssi, astSnr);
+        }
 
         if (emisor == loraId || loraId == 0) {
           if (payload.startsWith("CLEAR_OK")) {
@@ -1250,6 +1628,7 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
             Serial.printf("[CLEAR-AULA] Exito: Aula %d (Nodo %d) confirmo vaciado completo del sensor DY50\n", idAula, emisor);
             mensaje = "Sensor DY50 y NVS vaciados exitosamente por el nodo de aula #" + String(emisor);
             notificarPantallaTemporal("CLEAR AULA: OK", "Aula #" + String(idAula), "Sensor vaciado", 2500);
+            if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
             return true;
           } else if (payload.startsWith("CLEAR_ERR")) {
             String codErr = campo(payload, 2);
@@ -1257,6 +1636,7 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
             Serial.printf("[CLEAR-AULA] Error reportado por Aula %d: %s\n", idAula, codErr.c_str());
             mensaje = "El sensor DY50 del aula reporto error al vaciar: " + codErr;
             notificarPantallaTemporal("CLEAR: ERROR", "Aula #" + String(idAula), codErr, 2500);
+            if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
             return false;
           }
         }
@@ -1267,6 +1647,7 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
   mensaje = "Tiempo de espera agotado (4.5s) sin respuesta de vaciado del Aula #" + String(idAula) + " (LoRa #" + String(loraId) + ")";
   Serial.println("[CLEAR-AULA] " + mensaje);
   notificarPantallaTemporal("CLEAR: TIMEOUT", "Sin respuesta", "Nodo #" + String(loraId), 2500);
+  if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
   return false;
 }
 
@@ -1278,6 +1659,13 @@ bool auditarSensorAulaLoRa(int loraId, int idAula, int &totalHuellas, int &rssi,
     mensaje = "Modulo LoRa del Gateway en fallo de comunicacion AT";
     return false;
   }
+  if (mutexLoRa != NULL) {
+    if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(timeoutMs + 1000)) != pdTRUE) {
+      mensaje = "Modem LoRa ocupado (mutex no disponible)";
+      return false;
+    }
+  }
+
   while (loraSerial.available()) loraSerial.read();
 
   String cmdBase = "CMD:AUDIT:" + String(idAula);
@@ -1317,6 +1705,13 @@ bool auditarSensorAulaLoRa(int loraId, int idAula, int &totalHuellas, int &rssi,
         String payload = linea.substring(c2 + 1, c3);
         payload.trim();
 
+        // Encolar asistencias recibidas oportunistamente
+        if (payload.startsWith("AST:")) {
+          int astRssi = (c4 > 0) ? linea.substring(c3 + 1, c4).toInt() : 0;
+          int astSnr = (c4 > 0) ? linea.substring(c4 + 1).toInt() : 0;
+          encolarAsistencia(payload, astRssi, astSnr);
+        }
+
         if (emisor == loraId || loraId == 0) {
           if (c4 > 0) {
             rssi = linea.substring(c3 + 1, c4).toInt();
@@ -1339,6 +1734,7 @@ bool auditarSensorAulaLoRa(int loraId, int idAula, int &totalHuellas, int &rssi,
                           idAula, emisor, totalHuellas, rssi, snr);
             mensaje = "Sensor DY50 responde: " + String(totalHuellas) + " huellas registradas en hardware.";
             notificarPantallaTemporal("AUDIT OK", "Aula #" + String(idAula), String(totalHuellas) + " huellas DY50", 2500);
+            if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
             return true;
           } else if (payload.startsWith("AUDIT_ERR")) {
             String codErr = campo(payload, 2);
@@ -1346,6 +1742,7 @@ bool auditarSensorAulaLoRa(int loraId, int idAula, int &totalHuellas, int &rssi,
             Serial.printf("[AUDIT-AULA] Error reportado por Aula %d: %s\n", idAula, codErr.c_str());
             mensaje = "El sensor DY50 del aula reporto error al auditar: " + codErr;
             notificarPantallaTemporal("AUDIT ERROR", "Aula #" + String(idAula), codErr, 2500);
+            if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
             return false;
           }
         }
@@ -1356,6 +1753,7 @@ bool auditarSensorAulaLoRa(int loraId, int idAula, int &totalHuellas, int &rssi,
   mensaje = "Sin respuesta AUDIT del Aula #" + String(idAula) + " (Timeout " + String(timeoutMs / 1000.0, 1) + "s)";
   Serial.printf("[AUDIT-AULA] Timeout: Aula %d no respondio tras %lu ms\n", idAula, timeoutMs);
   notificarPantallaTemporal("AUDIT TIMEOUT", "Aula #" + String(idAula), "Sin ACK LoRa", 2500);
+  if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
   return false;
 }
 
@@ -1363,6 +1761,19 @@ bool auditarSensorAulaLoRa(int loraId, int idAula, int &totalHuellas, int &rssi,
 // COMUNICACIÓN LoRa RYLR998
 // ============================================================================
 void enviarComandoLoRa(int destino, const String &payload) {
+  if (mutexLoRa != NULL) {
+    if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(500)) == pdTRUE) {
+      loraSerial.print("AT+SEND=");
+      loraSerial.print(destino);
+      loraSerial.print(",");
+      loraSerial.print(payload.length());
+      loraSerial.print(",");
+      loraSerial.print(payload);
+      loraSerial.print("\r\n");
+      xSemaphoreGiveRecursive(mutexLoRa);
+      return;
+    }
+  }
   loraSerial.print("AT+SEND=");
   loraSerial.print(destino);
   loraSerial.print(",");
@@ -1477,10 +1888,22 @@ bool enviarFragmentoConAck(int loraId, const String &trama, int chunk, unsigned 
       int c1 = datos.indexOf(',');
       int c2 = datos.indexOf(',', c1 + 1);
       int c3 = datos.indexOf(',', c2 + 1);
+      int c4 = datos.indexOf(',', c3 + 1);
       if (c1 > 0 && c2 > 0) {
         int emisor = datos.substring(0, c1).toInt();
         String payload = (c3 > 0) ? datos.substring(c2 + 1, c3) : datos.substring(c2 + 1);
         payload.trim();
+
+        int rssi = (c4 > 0) ? datos.substring(c3 + 1, c4).toInt() : 0;
+        int snr = (c4 > 0) ? datos.substring(c4 + 1).toInt() : 0;
+
+        // Si mientras transmitimos huella entra una asistencia o confirmación, encolarla de inmediato
+        if (payload.startsWith("AST:")) {
+          encolarAsistencia(payload, rssi, snr);
+        } else if (payload.startsWith("SYNCOK:")) {
+          encolarSyncOk(payload, rssi, snr);
+        }
+
         if ((loraId == 0 || emisor == loraId)) {
           // Si recibimos el ACK exacto esperado
           if (payload == esperado || payload.indexOf(esperado) != -1) {
@@ -1523,6 +1946,13 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
     Serial.println("[LORA] Cantidad de fragmentos invalida");
     return false;
   }
+  if (mutexLoRa != NULL) {
+    if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(15000)) != pdTRUE) {
+      Serial.println("[LORA-ERR] Modem LoRa ocupado al intentar enviar huella");
+      return false;
+    }
+  }
+
   Serial.printf("[LORA] Transmitiendo Huella #%d a Aula ID %d (LoRa ID %d, %d fragmentos con ARQ selectivo)...\n",
                 idHuella, idAula, loraId, total);
 
@@ -1537,6 +1967,7 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
 
     if (trama.length() > 240) {
       Serial.println("[LORA] Trama excede limite RYLR998");
+      if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
       return false;
     }
 
@@ -1572,11 +2003,13 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
       } else {
         notificarPantallaTemporal("SIN ACK LORA", "Destino #" + String(loraId), "Aula no responde", 3500);
       }
+      if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
       return false;
     }
   }
 
   Serial.printf("[LORA] Huella #%d enviada completa a LoRa ID %d; esperando confirmacion de almacenamiento del aula\n", idHuella, loraId);
+  if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
   return true;
 }
 
@@ -1732,131 +2165,61 @@ void pedirSyncHuella(int idHuella) {
 }
 
 void confirmarSync(int idSync, const String &estado, const String &mensaje) {
-  if (!idSync || WiFi.status() != WL_CONNECTED) {
-    Serial.printf("[SYNC] No se pudo confirmar sync %d: datos invalidos o Wi-Fi desconectado\n", idSync);
-    return;
-  }
-  HTTPClient http;
-  if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_sync.php")) return;
-  http.addHeader("X-GATEWAY-KEY", configApiKey);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const int codigo = http.POST("id_sync=" + String(idSync) + "&estado=" + urlEncode(estado) + "&mensaje=" + urlEncode(mensaje));
-  http.end();
-  Serial.printf("[SYNC] Estado de sync %d enviado a la API: %s (HTTP %d)\n",
-                idSync, estado.c_str(), codigo);
-}
-
-void confirmarEntregaAula(const String &payload, int rssi, int snr) {
-  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:CRC32_xxxxxxxx[:token]
-  const int idSync = campo(payload, 1).toInt(), idHuella = campo(payload, 2).toInt(), idAula = campo(payload, 3).toInt(), slot = campo(payload, 4).toInt();
-  const String ci = campo(payload, 5), tipo = campo(payload, 6);
-  const String detalle = campo(payload, 7);
-  const String token = campo(payload, 8);
-
-  String crc = detalle.startsWith("CRC32_") ? detalle.substring(6) : "";
-  crc.toLowerCase();
-  if (!idSync || !idHuella || !idAula || !slot || !ci.length() || !tipo.length() || !crc32HexValido(crc)) {
-    Serial.println("[SYNC] Confirmacion LoRa de aula invalida");
-    return;
-  }
-
-  // Verificación de autenticidad criptográfica HMAC anti-spoofing
-  if (token.length() > 0) {
-    String baseValidar = "SYNCOK:" + String(idSync) + ":" + String(idHuella) + ":" + String(idAula) + ":" + String(slot) + ":" + ci + ":" + tipo + ":" + detalle;
-    bool tokenValido = SeguridadLoRa::validarToken(baseValidar, token, CLAVE_API_GATEWAY) ||
-                       SeguridadLoRa::validarToken(baseValidar, token, configApiKey.c_str());
-    if (!tokenValido) {
-      Serial.printf("[LORA-ALERTA] SYNCOK rechazado para Aula %d: Token HMAC invalido ('%s')\n", idAula, token.c_str());
-      return;
-    }
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[SYNC] Confirmacion no enviada: Wi-Fi desconectado");
-    return;
-  }
-  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s, HMAC=%s, RSSI=%d, SNR=%d)\n",
-                idAula, idHuella, slot, crc.c_str(), token.length() ? token.c_str() : "N/A", rssi, snr);
-  notificarPantallaTemporal("HUELLA OK", "Aula: " + String(idAula) + " - Slot: " + String(slot), "CRC32: " + crc, 3000);
-  HTTPClient http;
-  if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_entrega_aula.php")) return;
-  http.addHeader("X-GATEWAY-KEY", configApiKey);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  String cuerpo = "id_sync=" + String(idSync) + "&id_huella=" + String(idHuella) + "&id_aula=" + String(idAula) + "&slot_local=" + String(slot) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&crc32=" + crc;
-  if (rssi != 0 || snr != 0) {
-    cuerpo += "&rssi=" + String(rssi) + "&snr=" + String(snr);
-  }
-  const int codigo = http.POST(cuerpo);
-  http.end();
-  Serial.printf("[SYNC] Confirmacion de entrega enviada a la API (HTTP %d)\n", codigo);
-}
-
-void procesarAsistenciaEntrante(const String &payload) {
-  // AST:id_aula:ci:tipo:estado[:token]
-  const int idAula = campo(payload, 1).toInt();
-  const String ci = campo(payload, 2), tipo = campo(payload, 3), estado = campo(payload, 4);
-  const String token = campo(payload, 5);
-
-  if (!idAula || !ci.length() || !tipo.length() || !estado.length()) {
-    Serial.println("[ASISTENCIA] Trama LoRa invalida");
-    return;
-  }
-
-  // Verificación de autenticidad criptográfica HMAC anti-spoofing
-  if (token.length() > 0) {
-    String baseValidar = "AST:" + String(idAula) + ":" + ci + ":" + tipo + ":" + estado;
-    bool tokenValido = SeguridadLoRa::validarToken(baseValidar, token, CLAVE_API_GATEWAY) ||
-                       SeguridadLoRa::validarToken(baseValidar, token, configApiKey.c_str());
-    if (!tokenValido) {
-      Serial.printf("[LORA-ALERTA] Asistencia rechazada para Aula %d: Token HMAC invalido ('%s')\n", idAula, token.c_str());
-      return;
-    }
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[ASISTENCIA] Registro omitido: Wi-Fi desconectado");
-    return;
-  }
-  Serial.printf("[ASISTENCIA] Recibida autenticada desde aula %d: CI=%s, tipo=%s, estado=%s\n",
-                idAula, ci.c_str(), tipo.c_str(), estado.c_str());
-  notificarPantallaTemporal("ASISTENCIA", "Aula: " + String(idAula) + " CI: " + ci, tipo + " [" + estado + "]", 3000);
-  HTTPClient http;
-  if (!http.begin(configBaseUrl + "src/api/Gateway/registrar_asistencia.php")) return;
-  http.addHeader("X-GATEWAY-KEY", configApiKey);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  const int codigo = http.POST("id_aula=" + String(idAula) + "&ci=" + urlEncode(ci) + "&tipo_persona=" + urlEncode(tipo) + "&estado=" + urlEncode(estado));
-  http.end();
-  Serial.printf("[ASISTENCIA] Registro enviado a la API (HTTP %d)\n", codigo);
+  confirmarSyncHttp(idSync, estado, mensaje);
 }
 
 void atenderMensajesLoRa() {
-  if (!loraSerial.available()) return;
+  if (mutexLoRa != NULL) {
+    if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(5)) != pdTRUE) return;
+  }
+
+  if (!loraSerial.available()) {
+    if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
+    return;
+  }
+
   String linea = loraSerial.readStringUntil('\n');
   linea.trim();
-  if (!linea.startsWith("+RCV=")) return;
+  if (!linea.startsWith("+RCV=")) {
+    if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
+    return;
+  }
+
   int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1), c4 = linea.indexOf(',', c3 + 1);
-  if (c1 < 0 || c2 < 0 || c3 < 0) return;
+  if (c1 < 0 || c2 < 0 || c3 < 0) {
+    if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
+    return;
+  }
+
   const String payload = linea.substring(c2 + 1, c3);
   int rssi = (c4 > 0) ? linea.substring(c3 + 1, c4).toInt() : 0;
   int snr = (c4 > 0) ? linea.substring(c4 + 1).toInt() : 0;
 
   const int finTipo = payload.indexOf(':');
   const String tipoMensaje = finTipo < 0 ? payload : payload.substring(0, finTipo);
-  Serial.printf("[LORA] Mensaje %s recibido del dispositivo %d (RSSI: %d dBm, SNR: %d dB)\n",
+  Serial.printf("[LORA-CORE1] Mensaje %s recibido del dispositivo %d (RSSI: %d dBm, SNR: %d dB)\n",
                 tipoMensaje.c_str(), linea.substring(5, c1).toInt(), rssi, snr);
-  if (payload.startsWith("AST:")) procesarAsistenciaEntrante(payload);
-  else if (payload.startsWith("SYNCOK:")) confirmarEntregaAula(payload, rssi, snr);
-  else if (payload.startsWith("SYNCERR:")) confirmarSync(campo(payload, 1).toInt(), "ERROR", campo(payload, 7) + " (RSSI: " + String(rssi) + " dBm)");
-  else if (payload.startsWith("PING")) {
+
+  if (payload.startsWith("AST:")) {
+    encolarAsistencia(payload, rssi, snr);
+  } else if (payload.startsWith("SYNCOK:")) {
+    encolarSyncOk(payload, rssi, snr);
+  } else if (payload.startsWith("SYNCERR:")) {
+    encolarSyncErr(payload, rssi, snr);
+  } else if (payload.startsWith("PING")) {
     int emisor = linea.substring(5, c1).toInt();
-    Serial.printf("[LORA] PING recibido de Nodo ID %d. Respondiendo PONG...\n", emisor);
+    Serial.printf("[LORA-CORE1] PING recibido de Nodo ID %d. Respondiendo PONG...\n", emisor);
     enviarComandoLoRa(emisor, "PONG:" + String(configLoraId));
     notificarPantallaTemporal("PING LORA", "De Nodo #" + String(emisor), "PONG enviado", 2000);
-  }
-  else if (payload.startsWith("PONG")) {
+  } else if (payload.startsWith("PONG")) {
     int emisor = linea.substring(5, c1).toInt();
-    Serial.printf("[LORA] PONG recibido de Nodo ID %d (Payload: %s)\n", emisor, payload.c_str());
+    Serial.printf("[LORA-CORE1] PONG recibido de Nodo ID %d (Payload: %s)\n", emisor, payload.c_str());
     notificarPantallaTemporal("PONG LORA", "De Nodo #" + String(emisor), "Enlace OK", 2500);
+  } else {
+    Serial.println("[LORA-CORE1] Tipo de mensaje no reconocido");
   }
-  else Serial.println("[LORA] Tipo de mensaje no reconocido");
+
+  if (mutexLoRa != NULL) {
+    xSemaphoreGiveRecursive(mutexLoRa);
+  }
 }
