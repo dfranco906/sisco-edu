@@ -58,11 +58,11 @@ if (!isset($_SESSION['id_usuario'])) {
     <script src="<?= base_url('public/js/notifications.js?v=' . filemtime(__DIR__ . '/../../../public/js/notifications.js')) ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        window.BASE_URL = "<?= base_url() ?>/";
+        window.BASE_URL = "<?= rtrim(base_url(), '/') ?>/";
         window.CONFIG_RED = {
             ipRegistrador: "<?= IP_ESP32_REGISTRADOR ?>",
             ipGateway: "<?= IP_ESP32_GATEWAY ?>",
-            servidorUrl: "<?= base_url() ?>/"
+            servidorUrl: "<?= rtrim(base_url(), '/') ?>/"
         };
         window.CONFIG_SUPABASE = {
             url: "<?= defined('SUPABASE_URL') ? SUPABASE_URL : '' ?>",

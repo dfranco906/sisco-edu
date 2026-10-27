@@ -20,7 +20,8 @@ $totales = [
     'total_usuarios' => 0,
     'total_estudiantes' => 0,
     'total_tutores' => 0,
-    'total_aulas' => 0
+    'total_aulas' => 0,
+    'total_sync_pendientes' => 0
 ];
 
 try {
@@ -36,7 +37,8 @@ try {
             (SELECT COUNT(*) FROM usuarios WHERE activo = 1) AS total_usuarios,
             (SELECT COUNT(*) FROM estudiantes WHERE activo = 1) AS total_estudiantes,
             (SELECT COUNT(*) FROM tutores WHERE activo = 1) AS total_tutores,
-            (SELECT COUNT(*) FROM aulas WHERE activo = 1) AS total_aulas
+            (SELECT COUNT(*) FROM aulas WHERE activo = 1) AS total_aulas,
+            (SELECT COUNT(*) FROM sync_biometrica WHERE estado = 'PENDIENTE') AS total_sync_pendientes
     ");
     if ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $totales = array_merge($totales, $fila);
@@ -111,7 +113,7 @@ try {
             </div>
             <div class="flex items-center gap-2 self-start md:self-auto text-base text-slate-600 dark:text-slate-400 font-medium">
                 <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                <span id="contador-modulos-visibles">11 módulos disponibles</span>
+                <span id="contador-modulos-visibles">12 módulos disponibles</span>
             </div>
         </div>
 
@@ -308,7 +310,7 @@ try {
                     <p class="text-base text-slate-600 dark:text-slate-400 mt-1">Nóminas de personas, espacios físicos e infraestructura técnica IoT</p>
                 </div>
                 <span class="text-sm font-bold px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    5 Módulos
+                    6 Módulos
                 </span>
             </div>
 
@@ -441,6 +443,34 @@ try {
                     <div class="mt-6">
                         <a href="<?= base_url('mvc/views/configuracion/index.php') ?>" class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-blue-50/90 dark:bg-blue-950/60 hover:bg-blue-600 dark:hover:bg-blue-600 text-blue-700 dark:text-blue-300 hover:text-white dark:hover:text-white border border-blue-200 dark:border-blue-800/60 hover:border-blue-600 flex items-center justify-between text-base font-bold transition">
                             <span>Configurar parámetros</span>
+                            <span class="text-lg group-hover:translate-x-1 transition-transform">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 12. Sincronización Biométrica LoRa -->
+                <div class="card-modulo app-card p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 flex flex-col justify-between group hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-lg transition duration-200 bg-white dark:bg-slate-900"
+                     data-titulo="sincronizacion biometrica lora cola huellas sensores aulas transmision pendiente" data-desc="cola de envio y distribucion de huellas dactilares a las aulas via radiofrecuencia lora">
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-200 dark:border-amber-800 group-hover:scale-105 transition-transform text-2xl font-bold">
+                                📡
+                            </div>
+                            <span class="text-sm font-bold px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1.5">
+                                <?php if ((int)$totales['total_sync_pendientes'] > 0): ?>
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <?php endif; ?>
+                                <?= (int)$totales['total_sync_pendientes'] ?> pendientes
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">Sincronización Biométrica</h3>
+                        <p class="text-base text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
+                            Cola de distribución y transmisión de huellas por LoRa hacia los sensores de asistencia en cada aula física.
+                        </p>
+                    </div>
+                    <div class="mt-6">
+                        <a href="<?= base_url('mvc/views/administracion/sync_biometrica.php') ?>" class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/60 hover:bg-amber-600 dark:hover:bg-amber-600 text-amber-800 dark:text-amber-300 hover:text-white dark:hover:text-white border border-amber-200 dark:border-amber-800/60 hover:border-amber-600 flex items-center justify-between text-base font-bold transition">
+                            <span>Supervisar cola LoRa</span>
                             <span class="text-lg group-hover:translate-x-1 transition-transform">→</span>
                         </a>
                     </div>
