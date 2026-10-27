@@ -49,6 +49,7 @@ String configCodigoAula = "3_RO_BTI";
 int configLoraId = LORA_ID_AULA_DEFAULT;
 int configLoraNetId = LORA_RED_ID;
 int configGatewayId = LORA_ID_GATEWAY;
+int gatewayEmisorId = 100;
 
 // Estado y diagnóstico de hardware LoRa RYLR998
 bool loraOk = false;
@@ -93,7 +94,7 @@ bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respue
 bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin);
 bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int targetAddr, int targetNetId, String &diagSalida, String &versionSalida);
 void enviarComandoLoRa(int destino, const String &payload);
-void enviarAckLoRa(int chunk);
+void enviarAckLoRa(int destino, int chunk);
 void atenderComandosLoRa();
 void verificarLecturaHuella();
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado);
@@ -484,10 +485,11 @@ void limpiarSyncRecibida() {
 }
 
 void notificarResultadoSync(bool exito, int slot, const String &detalle) {
+  int gwDestino = (gatewayEmisorId > 0) ? gatewayEmisorId : configGatewayId;
   if (exito) {
-    enviarComandoLoRa(configGatewayId, "SYNCOK:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":" + String(slot) + ":" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":CRC32_" + detalle);
+    enviarComandoLoRa(gwDestino, "SYNCOK:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":" + String(slot) + ":" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":CRC32_" + detalle);
   } else {
-    enviarComandoLoRa(configGatewayId, "SYNCERR:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":0:" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":" + detalle);
+    enviarComandoLoRa(gwDestino, "SYNCERR:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":0:" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":" + detalle);
   }
 }
 
@@ -515,6 +517,7 @@ bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respue
 }
 
 bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin) {
+  serial.setRxBufferSize(1024);
   const unsigned long bauds[] = {115200, 9600, 57600};
   for (unsigned long b : bauds) {
     serial.begin(b, SERIAL_8N1, rxPin, txPin);
@@ -619,11 +622,24 @@ bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int 
 }
 
 void enviarComandoLoRa(int destino, const String &payload) {
-  loraSerial.printf("AT+SEND=%d,%u,%s\r\n", destino, payload.length(), payload.c_str());
+  loraSerial.print("AT+SEND=");
+  loraSerial.print(destino);
+  loraSerial.print(",");
+  loraSerial.print(payload.length());
+  loraSerial.print(",");
+  loraSerial.print(payload);
+  loraSerial.print("\r\n");
 }
 
-void enviarAckLoRa(int chunk) {
-  enviarComandoLoRa(configGatewayId, "ACK" + String(chunk));
+void enviarAckLoRa(int destino, int chunk) {
+  String stringAck = "ACK" + String(chunk);
+  loraSerial.print("AT+SEND=");
+  loraSerial.print(destino);
+  loraSerial.print(",");
+  loraSerial.print(stringAck.length());
+  loraSerial.print(",");
+  loraSerial.print(stringAck);
+  loraSerial.print("\r\n");
 }
 
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado) {
@@ -645,17 +661,22 @@ void atenderComandosLoRa() {
   if (!loraSerial.available()) return;
   String linea = loraSerial.readStringUntil('\n');
   linea.trim();
-  if (!linea.startsWith("+RCV=")) return;
-  int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
-  int c4 = linea.indexOf(',', c3 + 1);
-  if (c1 < 0 || c2 < 0 || c3 < 0) return;
-  int emisor = linea.substring(5, c1).toInt();
-  const String payload = linea.substring(c2 + 1, c3);
+  int idxRcv = linea.indexOf("+RCV=");
+  if (idxRcv < 0) return;
+  String datosRcv = linea.substring(idxRcv + 5);
+  int c1 = datosRcv.indexOf(','), c2 = datosRcv.indexOf(',', c1 + 1), c3 = datosRcv.indexOf(',', c2 + 1);
+  int c4 = datosRcv.indexOf(',', c3 + 1);
+  if (c1 < 0 || c2 < 0) return;
+  int emisor = datosRcv.substring(0, c1).toInt();
+  const String payload = (c3 > 0) ? datosRcv.substring(c2 + 1, c3) : datosRcv.substring(c2 + 1);
+
+  // Guardar el último Gateway que se comunicó para enviarle las respuestas de sync
+  gatewayEmisorId = emisor;
 
   // ATENCIÓN DE PING DIAGNÓSTICO
   if (payload.startsWith("PING")) {
-    String rssiStr = (c4 > 0) ? linea.substring(c3 + 1, c4) : "N/A";
-    String snrStr = (c4 > 0) ? linea.substring(c4 + 1) : "N/A";
+    String rssiStr = (c4 > 0) ? datosRcv.substring(c3 + 1, c4) : "N/A";
+    String snrStr = (c4 > 0) ? datosRcv.substring(c4 + 1) : "N/A";
     Serial.printf("[LORA-AULA] PING recibido de Nodo ID %d (RSSI: %s, SNR: %s). Respondiendo PONG...\n",
                   emisor, rssiStr.c_str(), snrStr.c_str());
     enviarComandoLoRa(emisor, "PONG:" + String(configIdAula) + ":" + String(configLoraId));
@@ -681,20 +702,20 @@ void atenderComandosLoRa() {
     const int idSync = campo(resto, 0).toInt(), idHuella = campo(resto, 1).toInt(), idAula = campo(resto, 2).toInt();
     const String ci = campo(resto, 3), tipo = campo(resto, 4), totalTexto = campo(resto, 5), hex = campo(resto, 6);
     const int total = totalTexto.toInt();
-    const bool tipoValido = tipo == "estudiante" || tipo == "profesor";
+    const bool tipoValido = tipo.equalsIgnoreCase("estudiante") || tipo.equalsIgnoreCase("profesor");
 
-    Serial.printf("[LORA-AULA] Chunk 0 recibido: sync=%d huella=%d aula=%d ci=%s tipo=%s\n",
-                  idSync, idHuella, idAula, ci.c_str(), tipo.c_str());
+    Serial.printf("[LORA-AULA] Chunk 0 recibido de GW #%d: sync=%d huella=%d aula=%d ci=%s tipo=%s total=%d hexLen=%u\n",
+                  emisor, idSync, idHuella, idAula, ci.c_str(), tipo.c_str(), total, (unsigned int)hex.length());
 
-    // FILTRO ESTRICTO: Si no le pertenece a este aula, registrar e ignorar
-    if (idAula != configIdAula) {
-      Serial.printf("[LORA-AULA] Trama ignorada: Aula recibida %d != Aula local (%d - %s)\n",
-                    idAula, configIdAula, configCodigoAula.c_str());
-      return;
+    // Sincronización automática de ID de Aula si difiere (la base de datos central es la autoridad)
+    if (configIdAula != idAula && idAula > 0) {
+      Serial.printf("[LORA-AULA] Sincronizando ID de Aula local con el Gateway: %d -> %d\n",
+                    configIdAula, idAula);
+      configIdAula = idAula;
     }
     if (!idSync || !idHuella || ci.length() == 0 || !tipoValido || total != MAX_CHUNKS_HUELLA || hex.length() != CHARS_POR_CHUNK) {
-      Serial.printf("[LORA-AULA] Trama ignorada: parametros invalidos (total=%d, hexLen=%u)\n",
-                    total, (unsigned int)hex.length());
+      Serial.printf("[LORA-AULA] Trama ignorada: parametros invalidos (sync=%d, huella=%d, ci='%s', tipoValido=%d, total=%d/%d, hexLen=%u/%d)\n",
+                    idSync, idHuella, ci.c_str(), tipoValido, total, MAX_CHUNKS_HUELLA, (unsigned int)hex.length(), CHARS_POR_CHUNK);
       return;
     }
     limpiarSyncRecibida();
@@ -708,15 +729,15 @@ void atenderComandosLoRa() {
     tiempoPrimerChunk = tiempoUltimoChunk = millis();
     estadoSync = SYNC_RECIBIENDO;
 
-    enviarAckLoRa(0);
-    Serial.println("[LORA-AULA] ACK0 emitido hacia el Gateway");
+    enviarAckLoRa(emisor, 0);
+    Serial.printf("[LORA-AULA] ACK0 emitido hacia el Gateway ID %d\n", emisor);
     msgOled("SYNC", "Recibiendo...");
     return;
   }
 
   if (estadoSync != SYNC_RECIBIENDO || chunk < 0 || chunk >= totalChunksEsperados) return;
   if (chunk <= ultimoIndiceProcesado) {
-    enviarAckLoRa(chunk);
+    enviarAckLoRa(emisor, chunk);
     return;
   }
   if (chunk != ultimoIndiceProcesado + 1 || resto.length() != CHARS_POR_CHUNK) return;
@@ -732,8 +753,8 @@ void atenderComandosLoRa() {
   longitudHuellaHex = offset + resto.length();
   ultimoIndiceProcesado = chunk;
   tiempoUltimoChunk = millis();
-  enviarAckLoRa(chunk);
-  Serial.printf("[LORA-AULA] Chunk %d/%d recibido y ACK emitido\n", chunk + 1, totalChunksEsperados);
+  enviarAckLoRa(emisor, chunk);
+  Serial.printf("[LORA-AULA] Chunk %d/%d recibido de GW #%d y ACK emitido\n", chunk + 1, totalChunksEsperados, emisor);
 
   if (chunk != totalChunksEsperados - 1) return;
 

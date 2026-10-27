@@ -553,7 +553,8 @@ void handleTestLoRa() {
       detalle = " [¡AVISO: Respondio Nodo #" + String(emisorDetectado) + " pero se pidio #" + String(destino) + "!]";
     }
 
-    doc["message"] = "Enlace LoRa operativo con Nodo #" + String(emisorDetectado) + detalle + " (RSSI: " + String(rssi) + " dBm, SNR: " + String(snr) + " dB, RTT: " + String(latencia) + " ms)";
+    String aulaInfo = (idAulaDetectada > 0) ? ("Aula #" + String(idAulaDetectada) + " (Nodo #" + String(emisorDetectado) + ")") : ("Nodo #" + String(emisorDetectado));
+    doc["message"] = "Enlace LoRa operativo con " + aulaInfo + detalle + " (RSSI: " + String(rssi) + " dBm, SNR: " + String(snr) + " dB, RTT: " + String(latencia) + " ms)";
     notificarPantallaTemporal("PING: OK", "Resp: #" + String(emisorDetectado), "RSSI: " + String(rssi) + " dBm", 2500);
   } else {
     doc["status"] = "error";
@@ -940,6 +941,7 @@ bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respue
 }
 
 bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin) {
+  serial.setRxBufferSize(1024);
   const unsigned long bauds[] = {115200, 9600, 57600};
   for (unsigned long b : bauds) {
     serial.begin(b, SERIAL_8N1, rxPin, txPin);
@@ -1103,7 +1105,13 @@ bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, i
 // COMUNICACIÓN LoRa RYLR998
 // ============================================================================
 void enviarComandoLoRa(int destino, const String &payload) {
-  loraSerial.printf("AT+SEND=%d,%u,%s\r\n", destino, payload.length(), payload.c_str());
+  loraSerial.print("AT+SEND=");
+  loraSerial.print(destino);
+  loraSerial.print(",");
+  loraSerial.print(payload.length());
+  loraSerial.print(",");
+  loraSerial.print(payload);
+  loraSerial.print("\r\n");
 }
 
 String campo(const String &texto, int indice) {
@@ -1182,42 +1190,46 @@ bool enviarFragmentoConAck(int loraId, const String &trama, int chunk, unsigned 
   const String esperado = "ACK" + String(chunk);
   const unsigned long inicio = millis();
   bool okLocal = false;
+  String ultimaLinea = "";
 
   while (millis() - inicio < timeoutMs) {
     if (!loraSerial.available()) {
-      delay(4);
+      delay(3);
       continue;
     }
     String linea = loraSerial.readStringUntil('\n');
     linea.trim();
     if (linea.length() == 0) continue;
+    ultimaLinea = linea;
 
-    if (linea == "+OK") {
+    if (linea.indexOf("+OK") != -1) {
       okLocal = true;
       continue;
     }
-    if (linea.startsWith("+ERR")) {
+    if (linea.indexOf("+ERR") != -1) {
       Serial.printf("[LORA] Error local RYLR998 al transmitir: %s\n", linea.c_str());
       return false;
     }
-    if (linea.startsWith("+RCV=")) {
-      int c1 = linea.indexOf(',');
-      int c2 = linea.indexOf(',', c1 + 1);
-      int c3 = linea.indexOf(',', c2 + 1);
-      if (c1 > 0 && c2 > 0 && c3 > 0) {
-        int emisor = linea.substring(5, c1).toInt();
-        String payload = linea.substring(c2 + 1, c3);
+    int idxRcv = linea.indexOf("+RCV=");
+    if (idxRcv != -1) {
+      String datos = linea.substring(idxRcv + 5);
+      int c1 = datos.indexOf(',');
+      int c2 = datos.indexOf(',', c1 + 1);
+      int c3 = datos.indexOf(',', c2 + 1);
+      if (c1 > 0 && c2 > 0) {
+        int emisor = datos.substring(0, c1).toInt();
+        String payload = (c3 > 0) ? datos.substring(c2 + 1, c3) : datos.substring(c2 + 1);
         payload.trim();
-        if (emisor == loraId && payload == esperado) {
+        if ((loraId == 0 || emisor == loraId) && (payload == esperado || payload.indexOf(esperado) != -1)) {
           return true;
         }
       }
     }
   }
-  Serial.printf("[LORA] Timeout esperando ACK%d de LoRa ID %d (+OK local=%s)\n",
-                chunk, loraId, okLocal ? "SI" : "NO");
+  Serial.printf("[LORA] Timeout esperando ACK%d de LoRa ID %d (+OK local=%s, ultima resp='%s')\n",
+                chunk, loraId, okLocal ? "SI" : "NO", ultimaLinea.c_str());
   if (!okLocal) {
-    Serial.println("[LORA-ALERTA] El modulo RYLR998 local no respondio +OK al comando AT+SEND. Revise cables GPIO 16 (RX) y GPIO 17 (TX).");
+    Serial.println("[LORA-ALERTA] El modulo RYLR998 local no respondio +OK al comando AT+SEND. Revise conexion serial.");
   }
   return false;
 }
