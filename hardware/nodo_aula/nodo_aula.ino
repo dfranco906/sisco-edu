@@ -11,6 +11,7 @@
 #include "configuracion_red.h"
 #include "interfaz_aula.h"
 #include "seguridad_portal.h"
+#include "seguridad_lora.h"
 
 // ============================================================================
 // CONSTANTES Y HARDWARE
@@ -511,9 +512,11 @@ void limpiarSyncRecibida() {
 void notificarResultadoSync(bool exito, int slot, const String &detalle) {
   int gwDestino = (gatewayEmisorId > 0) ? gatewayEmisorId : configGatewayId;
   if (exito) {
-    enviarComandoLoRa(gwDestino, "SYNCOK:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":" + String(slot) + ":" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":CRC32_" + detalle);
+    String baseSync = "SYNCOK:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":" + String(slot) + ":" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":CRC32_" + detalle;
+    enviarComandoLoRa(gwDestino, SeguridadLoRa::firmar(baseSync, CLAVE_API_GATEWAY));
   } else {
-    enviarComandoLoRa(gwDestino, "SYNCERR:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":0:" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":" + detalle);
+    String baseErr = "SYNCERR:" + String(idSyncActual) + ":" + String(idHuellaActual) + ":" + String(configIdAula) + ":0:" + String(ciSyncActual) + ":" + String(tipoSyncActual) + ":" + detalle;
+    enviarComandoLoRa(gwDestino, SeguridadLoRa::firmar(baseErr, CLAVE_API_GATEWAY));
   }
 }
 
@@ -678,7 +681,8 @@ void enviarNackLoRa(int destino, int chunkFaltante) {
 }
 
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado) {
-  enviarComandoLoRa(configGatewayId, "AST:" + String(configIdAula) + ":" + ci + ":" + tipo + ":" + estado);
+  String baseAst = "AST:" + String(configIdAula) + ":" + ci + ":" + tipo + ":" + estado;
+  enviarComandoLoRa(configGatewayId, SeguridadLoRa::firmar(baseAst, CLAVE_API_GATEWAY));
 }
 
 String campo(const String &texto, int indice) {
@@ -730,9 +734,22 @@ void atenderComandosLoRa() {
 
   // COMANDO REMOTO DE RESET / VACIADO COMPLETO DEL SENSOR DE AULA
   if (payload.startsWith("CMD:CLEAR:")) {
-    int idAulaDestino = payload.substring(10).toInt();
+    int idAulaDestino = campo(payload, 2).toInt();
+    String tokenRecibido = campo(payload, 3);
+    String baseValidar = "CMD:CLEAR:" + String(idAulaDestino);
+
+    // Verificación criptográfica HMAC anti-spoofing
+    if (tokenRecibido.length() > 0 && !SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
+      Serial.printf("[LORA-ALERTA] CMD:CLEAR rechazado para Aula %d: Token HMAC invalido ('%s') de emisor %d\n",
+                    idAulaDestino, tokenRecibido.c_str(), emisor);
+      msgOled("ALERTA RF", "Token CLEAR invalido");
+      delay(1500);
+      mostrarPantallaReposoAula();
+      return;
+    }
+
     if (idAulaDestino == configIdAula || idAulaDestino == 0) {
-      Serial.printf("[LORA-AULA] Comando CLEAR recibido de Gateway #%d para Aula %d. Vaciando sensor DY50 y NVS...\n",
+      Serial.printf("[LORA-AULA] Comando CLEAR autenticado recibido de Gateway #%d para Aula %d. Vaciando sensor DY50 y NVS...\n",
                     emisor, configIdAula);
       msgOled("RESET AULA", "Vaciando DY50...");
 
@@ -746,15 +763,17 @@ void atenderComandosLoRa() {
       prefs.end();
       memset(dbLocal, 0, sizeof(dbLocal));
 
-      // 3. Responder al Gateway por LoRa
+      // 3. Responder al Gateway por LoRa con firma HMAC
       if (sensorVaciado) {
         msgOled("RESET OK", "0 huellas DY50");
         Serial.printf("[LORA-AULA] Sensor DY50 y NVS vaciados exitosamente para Aula %d\n", configIdAula);
-        enviarComandoLoRa(emisor, "CLEAR_OK:" + String(configIdAula));
+        String respOk = "CLEAR_OK:" + String(configIdAula);
+        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
       } else {
         msgOled("RESET ERROR", "Fallo DY50: " + String(p));
         Serial.printf("[LORA-AULA] Error al vaciar sensor DY50 (codigo %d)\n", p);
-        enviarComandoLoRa(emisor, "CLEAR_ERR:" + String(configIdAula) + ":" + String(p));
+        String respErr = "CLEAR_ERR:" + String(configIdAula) + ":" + String(p);
+        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respErr, CLAVE_API_GATEWAY));
       }
 
       delay(1500);

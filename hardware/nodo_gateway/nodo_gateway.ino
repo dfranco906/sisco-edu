@@ -13,6 +13,7 @@
 #include "configuracion_red.h"
 #include "interfaz_web.h"
 #include "seguridad_portal.h"
+#include "seguridad_lora.h"
 
 // ============================================================================
 // CONSTANTES Y CONTRATO DE INTEGRIDAD BIOMÉTRICA (1536 BYTES / 3072 HEX)
@@ -1141,8 +1142,10 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
   }
   while (loraSerial.available()) loraSerial.read();
 
-  Serial.printf("[CLEAR-AULA] Transmitiendo comando CLEAR a Aula ID %d (LoRa ID %d)...\n", idAula, loraId);
-  enviarComandoLoRa(loraId, "CMD:CLEAR:" + String(idAula));
+  String cmdBase = "CMD:CLEAR:" + String(idAula);
+  String cmdFirmado = SeguridadLoRa::firmar(cmdBase, configApiKey.c_str());
+  Serial.printf("[CLEAR-AULA] Transmitiendo comando CLEAR firmado a Aula ID %d (LoRa ID %d)...\n", idAula, loraId);
+  enviarComandoLoRa(loraId, cmdFirmado);
 
   const unsigned long inicio = millis();
   notificarPantallaTemporal("VACIAR AULA", "Aula #" + String(idAula), "Espere ACK...", 2000);
@@ -1167,12 +1170,23 @@ bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long
 
         if (emisor == loraId || loraId == 0) {
           if (payload.startsWith("CLEAR_OK")) {
-            Serial.printf("[CLEAR-AULA] Exito: Aula %d (Nodo %d) confirmo vaciado completo del sensor DY50\n", idAula, emisor);
+            // Formato: CLEAR_OK:idAula[:token]
+            int aulaResp = campo(payload, 1).toInt();
+            String tokenResp = campo(payload, 2);
+            if (tokenResp.length() > 0) {
+              String baseResp = "CLEAR_OK:" + String(aulaResp);
+              if (!SeguridadLoRa::validarToken(baseResp, tokenResp, configApiKey.c_str())) {
+                Serial.printf("[CLEAR-AULA] Alerta: CLEAR_OK con token HMAC invalido ('%s') de emisor %d\n", tokenResp.c_str(), emisor);
+                continue;
+              }
+            }
+            Serial.printf("[CLEAR-AULA] Exito autenticado: Aula %d (Nodo %d) confirmo vaciado completo del sensor DY50\n", idAula, emisor);
             mensaje = "Sensor DY50 y NVS vaciados exitosamente por el nodo de aula #" + String(emisor);
             notificarPantallaTemporal("CLEAR AULA: OK", "Aula #" + String(idAula), "Sensor vaciado", 2500);
             return true;
           } else if (payload.startsWith("CLEAR_ERR")) {
-            String codErr = payload.substring(10);
+            String codErr = campo(payload, 2);
+            if (codErr.length() == 0) codErr = payload.substring(10);
             Serial.printf("[CLEAR-AULA] Error reportado por Aula %d: %s\n", idAula, codErr.c_str());
             mensaje = "El sensor DY50 del aula reporto error al vaciar: " + codErr;
             notificarPantallaTemporal("CLEAR: ERROR", "Aula #" + String(idAula), codErr, 2500);
@@ -1577,21 +1591,34 @@ void confirmarSync(int idSync, const String &estado, const String &mensaje) {
 }
 
 void confirmarEntregaAula(const String &payload) {
-  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:CRC32_xxxxxxxx
+  // SYNCOK:id_sync:id_huella:id_aula:slot:ci:tipo:CRC32_xxxxxxxx[:token]
   const int idSync = campo(payload, 1).toInt(), idHuella = campo(payload, 2).toInt(), idAula = campo(payload, 3).toInt(), slot = campo(payload, 4).toInt();
   const String ci = campo(payload, 5), tipo = campo(payload, 6);
   const String detalle = campo(payload, 7);
+  const String token = campo(payload, 8);
+
   String crc = detalle.startsWith("CRC32_") ? detalle.substring(6) : "";
   crc.toLowerCase();
   if (!idSync || !idHuella || !idAula || !slot || !ci.length() || !tipo.length() || !crc32HexValido(crc)) {
     Serial.println("[SYNC] Confirmacion LoRa de aula invalida");
     return;
   }
+
+  // Verificación de autenticidad criptográfica HMAC anti-spoofing
+  if (token.length() > 0) {
+    String baseValidar = "SYNCOK:" + String(idSync) + ":" + String(idHuella) + ":" + String(idAula) + ":" + String(slot) + ":" + ci + ":" + tipo + ":" + detalle;
+    if (!SeguridadLoRa::validarToken(baseValidar, token, configApiKey.c_str())) {
+      Serial.printf("[LORA-ALERTA] SYNCOK rechazado para Aula %d: Token HMAC invalido ('%s')\n", idAula, token.c_str());
+      return;
+    }
+  }
+
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[SYNC] Confirmacion no enviada: Wi-Fi desconectado");
     return;
   }
-  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s)\n", idAula, idHuella, slot, crc.c_str());
+  Serial.printf("[SYNC] Aula %d confirmo huella %d en slot %d (CRC32=%s, HMAC=%s)\n",
+                idAula, idHuella, slot, crc.c_str(), token.length() ? token.c_str() : "N/A");
   notificarPantallaTemporal("HUELLA OK", "Aula: " + String(idAula) + " - Slot: " + String(slot), "CRC32: " + crc, 3000);
   HTTPClient http;
   if (!http.begin(configBaseUrl + "src/api/Gateway/confirmar_entrega_aula.php")) return;
@@ -1604,19 +1631,31 @@ void confirmarEntregaAula(const String &payload) {
 }
 
 void procesarAsistenciaEntrante(const String &payload) {
-  // AST:id_aula:ci:tipo:estado
+  // AST:id_aula:ci:tipo:estado[:token]
   const int idAula = campo(payload, 1).toInt();
   const String ci = campo(payload, 2), tipo = campo(payload, 3), estado = campo(payload, 4);
+  const String token = campo(payload, 5);
+
   if (!idAula || !ci.length() || !tipo.length() || !estado.length()) {
     Serial.println("[ASISTENCIA] Trama LoRa invalida");
     return;
   }
+
+  // Verificación de autenticidad criptográfica HMAC anti-spoofing
+  if (token.length() > 0) {
+    String baseValidar = "AST:" + String(idAula) + ":" + ci + ":" + tipo + ":" + estado;
+    if (!SeguridadLoRa::validarToken(baseValidar, token, configApiKey.c_str())) {
+      Serial.printf("[LORA-ALERTA] Asistencia rechazada para Aula %d: Token HMAC invalido ('%s')\n", idAula, token.c_str());
+      return;
+    }
+  }
+
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[ASISTENCIA] Registro omitido: Wi-Fi desconectado");
     return;
   }
-  Serial.printf("[ASISTENCIA] Recibida desde aula %d: tipo=%s, estado=%s\n",
-                idAula, tipo.c_str(), estado.c_str());
+  Serial.printf("[ASISTENCIA] Recibida autenticada desde aula %d: CI=%s, tipo=%s, estado=%s\n",
+                idAula, ci.c_str(), tipo.c_str(), estado.c_str());
   notificarPantallaTemporal("ASISTENCIA", "Aula: " + String(idAula) + " CI: " + ci, tipo + " [" + estado + "]", 3000);
   HTTPClient http;
   if (!http.begin(configBaseUrl + "src/api/Gateway/registrar_asistencia.php")) return;
