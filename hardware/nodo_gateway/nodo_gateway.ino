@@ -83,8 +83,11 @@ void handleNotFound();
 
 void atenderMensajesLoRa();
 void pedirSyncPendiente();
-bool pedirSyncAula(int idAula, int loraId);
+bool pedirSyncAula(int idAula, int loraId, int idHuella = 0);
+bool pedirSyncEspecifica(int idHuella, int idAula);
+void pedirSyncHuella(int idHuella);
 bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella);
+bool enviarFragmentoConAck(int loraId, const String &trama, int chunk, unsigned long timeoutMs = 2800);
 bool esperarOKLocal(unsigned long timeoutMs = 500);
 bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs = 900);
 void enviarComandoLoRa(int destino, const String &payload);
@@ -656,9 +659,22 @@ void setup() {
       server.send(404, "application/json", "{\"status\":\"not_found\"}");
       return;
     }
-    server.send(202, "application/json", "{\"status\":\"accepted\"}");
-    Serial.println("[SYNC] Consultando aulas activas con huellas pendientes...");
-    pedirSyncPendiente();
+
+    int idHuella = server.hasArg("id_huella") ? server.arg("id_huella").toInt() : 0;
+    int idAula = server.hasArg("id_aula") ? server.arg("id_aula").toInt() : 0;
+
+    server.send(202, "application/json", "{\"status\":\"accepted\",\"id_huella\":" + String(idHuella) + ",\"id_aula\":" + String(idAula) + "}");
+
+    if (idHuella > 0 && idAula > 0) {
+      Serial.printf("[SYNC DIRIGIDO] Huella ID %d dirigida al Aula %d...\n", idHuella, idAula);
+      pedirSyncEspecifica(idHuella, idAula);
+    } else if (idHuella > 0) {
+      Serial.printf("[SYNC DIRIGIDO] Huella ID %d dirigida a sus aulas asignadas...\n", idHuella);
+      pedirSyncHuella(idHuella);
+    } else {
+      Serial.println("[SYNC] Consultando aulas activas con huellas pendientes...");
+      pedirSyncPendiente();
+    }
   });
 
   // Portal cautivo redirecciones
@@ -776,6 +792,14 @@ void loop() {
       Serial.println("[WIFI] Intentando reconectar a la red...");
       WiFi.reconnect();
     }
+
+    // Sondeo periódico automático de huellas pendientes (cada 45 segundos)
+    static unsigned long ultimoSondeoSyncAuto = 0;
+    if (estadoWifi == WL_CONNECTED && millis() - ultimoSondeoSyncAuto >= 45000) {
+      ultimoSondeoSyncAuto = millis();
+      Serial.println("[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...");
+      pedirSyncPendiente();
+    }
   }
 }
 
@@ -855,6 +879,50 @@ bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
   return false;
 }
 
+bool enviarFragmentoConAck(int loraId, const String &trama, int chunk, unsigned long timeoutMs) {
+  while (loraSerial.available()) loraSerial.read();
+  enviarComandoLoRa(loraId, trama);
+
+  const String esperado = "ACK" + String(chunk);
+  const unsigned long inicio = millis();
+  bool okLocal = false;
+
+  while (millis() - inicio < timeoutMs) {
+    if (!loraSerial.available()) {
+      delay(4);
+      continue;
+    }
+    String linea = loraSerial.readStringUntil('\n');
+    linea.trim();
+    if (linea.length() == 0) continue;
+
+    if (linea == "+OK") {
+      okLocal = true;
+      continue;
+    }
+    if (linea.startsWith("+ERR")) {
+      Serial.printf("[LORA] Error local RYLR998 al transmitir: %s\n", linea.c_str());
+      return false;
+    }
+    if (linea.startsWith("+RCV=")) {
+      int c1 = linea.indexOf(',');
+      int c2 = linea.indexOf(',', c1 + 1);
+      int c3 = linea.indexOf(',', c2 + 1);
+      if (c1 > 0 && c2 > 0 && c3 > 0) {
+        int emisor = linea.substring(5, c1).toInt();
+        String payload = linea.substring(c2 + 1, c3);
+        payload.trim();
+        if (emisor == loraId && payload == esperado) {
+          return true;
+        }
+      }
+    }
+  }
+  Serial.printf("[LORA] Timeout esperando ACK%d de LoRa ID %d (+OK local=%s)\n",
+                chunk, loraId, okLocal ? "SI" : "NO");
+  return false;
+}
+
 bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const String &ci, const String &tipo, const String &huella) {
   if (huella.length() != HUELLA_TEMPLATE_HEX_CHARS || (huella.length() & 1)) {
     Serial.println("[LORA] Template HEX invalido");
@@ -865,7 +933,7 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
     Serial.println("[LORA] Cantidad de fragmentos invalida");
     return false;
   }
-  Serial.printf("[LORA] Enviando huella %d al aula %d (destino %d, %d fragmentos)\n",
+  Serial.printf("[LORA] Transmitiendo Huella #%d a Aula ID %d (LoRa ID %d, %d fragmentos)...\n",
                 idHuella, idAula, loraId, total);
   for (int chunk = 0; chunk < total; ++chunk) {
     const String datos = huella.substring(chunk * CHARS_POR_CHUNK, min((chunk + 1) * CHARS_POR_CHUNK, (int)huella.length()));
@@ -878,21 +946,20 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
     }
     bool confirmado = false;
     for (int intento = 0; intento < MAX_REINTENTOS && !confirmado; ++intento) {
-      while (loraSerial.available()) loraSerial.read();
-      enviarComandoLoRa(loraId, trama);
-      confirmado = esperarOKLocal() && esperarAckRemoto(loraId, chunk);
+      confirmado = enviarFragmentoConAck(loraId, trama, chunk, 2800);
       if (!confirmado) {
         Serial.printf("[LORA] Fragmento %d/%d sin ACK; reintento %d/%d\n",
                       chunk + 1, total, intento + 1, MAX_REINTENTOS);
-        delay(100);
+        delay(120);
       }
     }
     if (!confirmado) {
-      Serial.printf("[LORA] Envio cancelado: sin ACK en fragmento %d\n", chunk);
+      Serial.printf("[LORA] Envio cancelado: sin ACK en fragmento %d (Destino LoRa ID %d)\n", chunk, loraId);
       return false;
     }
+    delay(20);
   }
-  Serial.printf("[LORA] Huella %d enviada; esperando confirmacion de almacenamiento del aula\n", idHuella);
+  Serial.printf("[LORA] Huella #%d enviada completa a LoRa ID %d; esperando confirmacion de almacenamiento del aula\n", idHuella, loraId);
   return true;
 }
 
@@ -946,10 +1013,14 @@ void pedirSyncPendiente() {
   Serial.println("[SYNC] Consulta dinamica finalizada");
 }
 
-bool pedirSyncAula(int idAula, int loraId) {
-  Serial.printf("[SYNC] Consultando huella para aula %d (direccion LoRa %d)\n", idAula, loraId);
+bool pedirSyncAula(int idAula, int loraId, int idHuella) {
+  Serial.printf("[SYNC] Consultando huella para aula %d (direccion LoRa %d, huella %d)\n", idAula, loraId, idHuella);
   HTTPClient http;
-  const String url = configBaseUrl + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(idAula);
+  String url = configBaseUrl + "src/api/Gateway/obtener_sync_aula.php?id_aula=" + String(idAula);
+  if (idHuella > 0) {
+    url += "&id_huella=" + String(idHuella);
+  }
+
   if (!http.begin(url)) {
     Serial.println("[SYNC] No se pudo iniciar la solicitud HTTP");
     return false;
@@ -968,26 +1039,79 @@ bool pedirSyncAula(int idAula, int loraId) {
     Serial.printf("[SYNC] Aula %d: no hay sincronizacion pendiente valida\n", idAula);
     return false;
   }
-  const int idSync = doc["data"]["id_sync"] | 0, idHuella = doc["data"]["id_huella"] | 0;
+  const int idSync = doc["data"]["id_sync"] | 0, idHuellaObtenida = doc["data"]["id_huella"] | 0;
   const int templateBytes = doc["data"]["bytes"] | 0;
+  const int loraIdResp = doc["data"]["lora_id"] | 0;
+  const int loraIdFinal = (loraIdResp > 0) ? loraIdResp : loraId;
   const String ci = doc["data"]["ci"] | "", tipo = doc["data"]["tipo_persona"] | "", huella = doc["data"]["huella_base64"] | "";
-  if (!idSync || !idHuella || templateBytes != HUELLA_TEMPLATE_BYTES || !ci.length() || !tipo.length() || huella.length() != HUELLA_TEMPLATE_HEX_CHARS) {
+  if (!idSync || !idHuellaObtenida || templateBytes != HUELLA_TEMPLATE_BYTES || !ci.length() || !tipo.length() || huella.length() != HUELLA_TEMPLATE_HEX_CHARS) {
     Serial.printf("[SYNC] Aula %d: datos invalidos (sync=%d, huella=%d, bytes=%d/%u, hex=%u/%u)\n",
-                  idAula, idSync, idHuella, templateBytes,
+                  idAula, idSync, idHuellaObtenida, templateBytes,
                   (unsigned int)HUELLA_TEMPLATE_BYTES,
                   (unsigned int)huella.length(),
                   (unsigned int)HUELLA_TEMPLATE_HEX_CHARS);
     confirmarSync(idSync, "ERROR", "DATOS_SYNC_INVALIDOS");
     return false;
   }
-  notificarPantallaTemporal("SYNC LORA", "Aula: " + String(idAula) + " (CI: " + ci + ")", "Enviando template...", 3500);
-  if (!enviarHuellaPorLoRa(loraId, idSync, idHuella, idAula, ci, tipo, huella)) {
-    Serial.printf("[SYNC] Aula %d: fallo el enlace LoRa\n", idAula);
-    notificarPantallaTemporal("ERROR SYNC", "Fallo enlace LoRa", "Aula: " + String(idAula), 3000);
-    confirmarSync(idSync, "ERROR", "FALLO_ENLACE_LORA");
+  if (loraIdFinal <= 0) {
+    Serial.printf("[SYNC] Aula %d no tiene un nodo LoRa ID valido asignado\n", idAula);
+    notificarPantallaTemporal("ERROR LORA", "Aula sin LoRa ID", "Aula: " + String(idAula), 3500);
+    confirmarSync(idSync, "ERROR", "AULA_SIN_LORA_ID");
+    return false;
+  }
+  notificarPantallaTemporal("SYNC LORA", "Aula: " + String(idAula) + " (CI: " + ci + ")", "LoRa #" + String(loraIdFinal) + " H#" + String(idHuellaObtenida), 3500);
+  if (!enviarHuellaPorLoRa(loraIdFinal, idSync, idHuellaObtenida, idAula, ci, tipo, huella)) {
+    Serial.printf("[SYNC] Aula %d (LoRa ID %d): fallo el enlace LoRa\n", idAula, loraIdFinal);
+    notificarPantallaTemporal("ERROR LORA", "Sin ACK LoRa #" + String(loraIdFinal), "Aula: " + String(idAula), 3500);
+    confirmarSync(idSync, "ERROR", "FALLO_ENLACE_LORA (Sin ACK LoRa #" + String(loraIdFinal) + ")");
     return false;
   }
   return true;
+}
+
+bool pedirSyncEspecifica(int idHuella, int idAula) {
+  return pedirSyncAula(idAula, 0, idHuella);
+}
+
+void pedirSyncHuella(int idHuella) {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[SYNC] Consulta omitida: Wi-Fi no conectado");
+    return;
+  }
+
+  HTTPClient http;
+  const String url = configBaseUrl + "src/api/Gateway/obtener_aulas_sync.php?id_huella=" + String(idHuella);
+  if (!http.begin(url)) {
+    Serial.println("[SYNC] Error al inicializar peticion a obtener_aulas_sync.php");
+    return;
+  }
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  const int codigo = http.GET();
+  const String respuesta = http.getString();
+  http.end();
+
+  if (codigo != 200) {
+    Serial.printf("[SYNC] API obtener_aulas_sync respondio HTTP %d\n", codigo);
+    return;
+  }
+
+  DynamicJsonDocument doc(4096);
+  if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") {
+    Serial.println("[SYNC] Respuesta JSON de aulas no valida");
+    return;
+  }
+
+  JsonArray aulas = doc["data"]["aulas"].as<JsonArray>();
+  Serial.printf("[SYNC] %u aulas encontradas para Huella ID %d\n", aulas.size(), idHuella);
+
+  for (JsonObject aula : aulas) {
+    const int idAula = aula["id_aula"] | 0;
+    const int loraId = aula["lora_id"] | 0;
+    if (idAula > 0) {
+      pedirSyncAula(idAula, loraId, idHuella);
+      delay(800);
+    }
+  }
 }
 
 void confirmarSync(int idSync, const String &estado, const String &mensaje) {

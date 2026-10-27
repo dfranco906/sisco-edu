@@ -26,13 +26,16 @@ try {
     $db = (new Database())->getConnection();
     $nodoModel = new NodoEsp32($db);
 
-    $aulas = $nodoModel->obtenerAulasParaSync();
+    $rawHuella = $_GET['id_huella'] ?? null;
+    $idHuella = filter_var($rawHuella, FILTER_VALIDATE_INT) ?: null;
+    $aulas = $nodoModel->obtenerAulasParaSync($idHuella ?: null);
 
     echo json_encode([
         "status" => "success",
         "data" => [
+            "id_huella"   => $idHuella ?: null,
             "total_aulas" => count($aulas),
-            "aulas" => $aulas
+            "aulas"       => $aulas
         ]
     ]);
 } catch (Throwable $e) {

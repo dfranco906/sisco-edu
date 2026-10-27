@@ -477,14 +477,24 @@ void atenderComandosLoRa() {
   const int chunk = payload.substring(0, sep).toInt();
   const String resto = payload.substring(sep + 1);
 
-  if (chunk == 0 && estadoSync == SYNC_IDLE) {
+  if (chunk == 0) {
     const int idSync = campo(resto, 0).toInt(), idHuella = campo(resto, 1).toInt(), idAula = campo(resto, 2).toInt();
     const String ci = campo(resto, 3), tipo = campo(resto, 4), totalTexto = campo(resto, 5), hex = campo(resto, 6);
     const int total = totalTexto.toInt();
     const bool tipoValido = tipo == "estudiante" || tipo == "profesor";
 
-    // FILTRO ESTRICTO: Si no le pertenece a este aula, ignorar
-    if (!idSync || !idHuella || idAula != configIdAula || ci.length() == 0 || !tipoValido || total != MAX_CHUNKS_HUELLA || hex.length() != CHARS_POR_CHUNK) {
+    Serial.printf("[LORA-AULA] Chunk 0 recibido: sync=%d huella=%d aula=%d ci=%s tipo=%s\n",
+                  idSync, idHuella, idAula, ci.c_str(), tipo.c_str());
+
+    // FILTRO ESTRICTO: Si no le pertenece a este aula, registrar e ignorar
+    if (idAula != configIdAula) {
+      Serial.printf("[LORA-AULA] Trama ignorada: Aula recibida %d != Aula local (%d - %s)\n",
+                    idAula, configIdAula, configCodigoAula.c_str());
+      return;
+    }
+    if (!idSync || !idHuella || ci.length() == 0 || !tipoValido || total != MAX_CHUNKS_HUELLA || hex.length() != CHARS_POR_CHUNK) {
+      Serial.printf("[LORA-AULA] Trama ignorada: parametros invalidos (total=%d, hexLen=%u)\n",
+                    total, (unsigned int)hex.length());
       return;
     }
     limpiarSyncRecibida();
@@ -499,12 +509,16 @@ void atenderComandosLoRa() {
     estadoSync = SYNC_RECIBIENDO;
 
     enviarAckLoRa(0);
+    Serial.println("[LORA-AULA] ACK0 emitido hacia el Gateway");
     msgOled("SYNC", "Recibiendo...");
     return;
   }
 
   if (estadoSync != SYNC_RECIBIENDO || chunk < 0 || chunk >= totalChunksEsperados) return;
-  if (chunk <= ultimoIndiceProcesado) { enviarAckLoRa(chunk); return; }
+  if (chunk <= ultimoIndiceProcesado) {
+    enviarAckLoRa(chunk);
+    return;
+  }
   if (chunk != ultimoIndiceProcesado + 1 || resto.length() != CHARS_POR_CHUNK) return;
 
   const size_t offset = (size_t)chunk * CHARS_POR_CHUNK;
@@ -519,6 +533,7 @@ void atenderComandosLoRa() {
   ultimoIndiceProcesado = chunk;
   tiempoUltimoChunk = millis();
   enviarAckLoRa(chunk);
+  Serial.printf("[LORA-AULA] Chunk %d/%d recibido y ACK emitido\n", chunk + 1, totalChunksEsperados);
 
   if (chunk != totalChunksEsperados - 1) return;
 

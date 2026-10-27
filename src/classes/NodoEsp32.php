@@ -191,20 +191,28 @@ class NodoEsp32 {
      * Endpoint dinámico para el Gateway: obtiene las aulas activas en la red LoRa
      * y la cantidad de huellas pendientes por sincronizar en cada una.
      */
-    public function obtenerAulasParaSync(): array {
+    public function obtenerAulasParaSync(?int $idHuella = null): array {
+        $filterHuella = "";
+        $params = [];
+        if ($idHuella !== null && $idHuella > 0) {
+            $filterHuella = " AND s.id_huella = :huella";
+            $params[':huella'] = $idHuella;
+        }
+
         $sql = "SELECT n.id_aula, n.lora_id, n.lora_red_id,
                        COALESCE(n.room_id, a.codigo_sala, 'AULA_' || n.id_aula) AS codigo_aula,
                        COALESCE(a.nombre, 'Aula ' || n.id_aula) AS nombre_aula,
                        COUNT(s.id_sync) AS pendientes
                 FROM {$this->table_name} n
                 LEFT JOIN aulas a ON a.id_aula = n.id_aula
-                LEFT JOIN sync_biometrica s ON s.id_aula = n.id_aula AND s.estado = 'PENDIENTE'
+                LEFT JOIN sync_biometrica s ON s.id_aula = n.id_aula AND s.estado = 'PENDIENTE'{$filterHuella}
                 WHERE n.tipo = 'AULA' AND n.activo = 1 AND n.lora_id IS NOT NULL
                 GROUP BY n.id_aula, n.lora_id, n.lora_red_id, n.room_id, a.codigo_sala, a.nombre
+                HAVING COUNT(s.id_sync) > 0
                 ORDER BY pendientes DESC, n.lora_id ASC";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $resultado = [];

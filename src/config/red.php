@@ -48,13 +48,17 @@ if (!defined('IP_ESP32_REGISTRADOR')) {
 
 // 5. IP del Gateway LoRa (ESP32)
 if (!defined('IP_ESP32_GATEWAY')) {
-    $ipGw = getenv('IP_ESP32_GATEWAY') ?: (!empty($dbConfig['ip_gateway']) ? $dbConfig['ip_gateway'] : ($localConfig['IP_ESP32_GATEWAY'] ?? '192.168.100.17'));
+    $ipGw = getenv('IP_ESP32_GATEWAY') ?: (!empty($dbConfig['ip_gateway']) ? $dbConfig['ip_gateway'] : ($localConfig['IP_ESP32_GATEWAY'] ?? '192.168.100.137'));
     define('IP_ESP32_GATEWAY', $ipGw);
 }
 
-// 6. URL para notificar sincronizaciones al Gateway
+// 6. URL para notificar sincronizaciones al Gateway (Auto-regenerada con IP actual si hay discordancia)
 if (!defined('GATEWAY_SYNC_URL')) {
-    $syncUrl = getenv('GATEWAY_SYNC_URL') ?: (!empty($dbConfig['gateway_sync_url']) ? $dbConfig['gateway_sync_url'] : ($localConfig['GATEWAY_SYNC_URL'] ?? ('http://' . IP_ESP32_GATEWAY . '/sync')));
+    $dbSyncUrl = !empty($dbConfig['gateway_sync_url']) ? $dbConfig['gateway_sync_url'] : null;
+    if ($dbSyncUrl && strpos($dbSyncUrl, IP_ESP32_GATEWAY) === false) {
+        $dbSyncUrl = null;
+    }
+    $syncUrl = getenv('GATEWAY_SYNC_URL') ?: ($localConfig['GATEWAY_SYNC_URL'] ?? ($dbSyncUrl ?: ('http://' . IP_ESP32_GATEWAY . '/sync')));
     define('GATEWAY_SYNC_URL', $syncUrl);
 }
 
@@ -74,7 +78,6 @@ if (!defined('LORA_ID_GATEWAY')) {
     $loraGw = getenv('LORA_ID_GATEWAY') ?: ($localConfig['LORA_ID_GATEWAY'] ?? ($dbConfig['lora_id_gateway'] ?? '100'));
     define('LORA_ID_GATEWAY', (int)$loraGw);
 }
-
 
 // 9. Configuración Supabase Realtime (WebSockets)
 if (!defined('SUPABASE_URL')) {
