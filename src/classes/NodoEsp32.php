@@ -125,6 +125,159 @@ class NodoEsp32 {
     }
 
     /**
+     * Realiza una auditoría completa del aula consultando el hardware DY50 vía LoRa
+     * y comparando el número de huellas físicas contra los registros activos de la BD.
+     */
+    public function auditarAulaHuellas(int $idAula): array {
+        $nodo = $this->obtenerPorAula($idAula);
+        if (!$nodo) {
+            return [
+                'ok'      => false,
+                'message' => "No se encontró configuración de nodo para el aula #{$idAula}."
+            ];
+        }
+
+        $nombreAula = $nodo['nombre_aula'] ?? "Aula #{$idAula}";
+        $loraId = !empty($nodo['lora_id']) ? (int)$nodo['lora_id'] : null;
+
+        // 1. Huellas activas en Base de Datos para esta aula
+        $stmtDb = $this->conn->prepare("
+            SELECT 
+                COUNT(*) AS total_asignaciones,
+                COUNT(DISTINCT user_id_global) AS total_usuarios,
+                COUNT(DISTINCT sensor_slot) AS total_slots
+            FROM biometric_mapping
+            WHERE id_aula = :id_aula AND activo = 1
+        ");
+        $stmtDb->execute([':id_aula' => $idAula]);
+        $metricasDb = $stmtDb->fetch(PDO::FETCH_ASSOC) ?: [];
+        $totalDb = (int)($metricasDb['total_slots'] ?? 0);
+
+        // 2. Estado de la cola de sincronización para esta aula
+        $stmtSync = $this->conn->prepare("
+            SELECT 
+                COUNT(CASE WHEN estado = 'PENDIENTE' THEN 1 END) AS pendientes,
+                COUNT(CASE WHEN estado = 'ENVIADO' THEN 1 END) AS enviados,
+                COUNT(CASE WHEN estado = 'ERROR' THEN 1 END) AS errores,
+                COUNT(CASE WHEN estado = 'CONFIRMADO' THEN 1 END) AS confirmados
+            FROM sync_biometrica
+            WHERE id_aula = :id_aula
+        ");
+        $stmtSync->execute([':id_aula' => $idAula]);
+        $resSync = $stmtSync->fetch(PDO::FETCH_ASSOC) ?: [];
+        $pendientes = (int)($resSync['pendientes'] ?? 0);
+        $errores = (int)($resSync['errores'] ?? 0);
+        $enviados = (int)($resSync['enviados'] ?? 0);
+        $confirmados = (int)($resSync['confirmados'] ?? 0);
+
+        // 3. Consulta de hardware remoto vía LoRa Gateway
+        $loraOnline = false;
+        $totalSensor = null;
+        $rssi = null;
+        $snr = null;
+        $mensajeHardware = '';
+
+        if ($loraId && function_exists('solicitarAuditoriaAulaGateway')) {
+            $hardwareResp = solicitarAuditoriaAulaGateway($idAula, $loraId);
+            $loraOnline = !empty($hardwareResp['ok']);
+            $mensajeHardware = $hardwareResp['message'] ?? '';
+            if ($loraOnline) {
+                $totalSensor = (int)($hardwareResp['total_huellas'] ?? 0);
+                $rssi = $hardwareResp['rssi'] ?? null;
+                $snr = $hardwareResp['snr'] ?? null;
+            }
+        } else {
+            $mensajeHardware = 'Aula sin nodo LoRa asignado.';
+        }
+
+        // 4. Conciliación y diagnóstico
+        $estadoConciliacion = 'HARDWARE_OFFLINE';
+        $discrepancia = null;
+
+        if ($loraOnline && $totalSensor !== null) {
+            $discrepancia = $totalSensor - $totalDb;
+            if ($discrepancia === 0) {
+                $estadoConciliacion = 'CONCILIADO';
+            } elseif ($discrepancia < 0) {
+                $estadoConciliacion = 'FALTAN_EN_SENSOR';
+            } else {
+                $estadoConciliacion = 'SOBRAN_EN_SENSOR';
+            }
+        }
+
+        return [
+            'ok'                  => true,
+            'id_aula'             => $idAula,
+            'nombre_aula'         => $nombreAula,
+            'lora_id'             => $loraId,
+            'lora_red_id'         => (int)($nodo['lora_red_id'] ?? 18),
+            'lora_online'         => $loraOnline,
+            'total_db'            => $totalDb,
+            'total_sensor'        => $totalSensor,
+            'discrepancia'        => $discrepancia,
+            'estado_conciliacion' => $estadoConciliacion,
+            'rssi'                => $rssi,
+            'snr'                 => $snr,
+            'sync_stats'          => [
+                'pendientes'  => $pendientes,
+                'enviados'    => $enviados,
+                'errores'     => $errores,
+                'confirmados' => $confirmados
+            ],
+            'mensaje_hardware'    => $mensajeHardware
+        ];
+    }
+
+    /**
+     * Re-encola todas las huellas activas pertenecientes a estudiantes del aula
+     * que no estén ya en estado PENDIENTE o ENVIADO en la cola de sincronización.
+     */
+    public function reencolarHuellasAula(int $idAula): array {
+        $nodo = $this->obtenerPorAula($idAula);
+        $nombreAula = $nodo['nombre_aula'] ?? "Aula #{$idAula}";
+
+        // Obtener huellas activas de estudiantes asignados a esta aula
+        $sql = "
+            SELECT DISTINCT h.id_huella, e.nombre, e.apellido, e.cedula_identidad AS ci
+            FROM estudiantes e
+            INNER JOIN huellas_templates h ON h.id_estudiante = e.id_estudiante AND h.activo = 1
+            WHERE e.id_aula = :id_aula AND e.activo = 1
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id_aula' => $idAula]);
+        $huellasEst = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $encoladas = 0;
+        $stmtCheck = $this->conn->prepare("
+            SELECT id_sync FROM sync_biometrica 
+            WHERE id_huella = :id_huella AND id_aula = :id_aula AND estado IN ('PENDIENTE', 'ENVIADO')
+        ");
+        $stmtInsert = $this->conn->prepare("
+            INSERT INTO sync_biometrica (id_huella, id_aula, estado, intentos, mensaje, fecha_creacion)
+            VALUES (:id_huella, :id_aula, 'PENDIENTE', 0, 'Re-encolado tras auditoría de hardware LoRa', NOW())
+        ");
+        $stmtUpdTemplate = $this->conn->prepare("UPDATE huellas_templates SET pendiente_sync = 1 WHERE id_huella = :id");
+
+        foreach ($huellasEst as $row) {
+            $idHuella = (int)$row['id_huella'];
+            $stmtCheck->execute([':id_huella' => $idHuella, ':id_aula' => $idAula]);
+            if (!$stmtCheck->fetch()) {
+                $stmtInsert->execute([':id_huella' => $idHuella, ':id_aula' => $idAula]);
+                $stmtUpdTemplate->execute([':id' => $idHuella]);
+                $encoladas++;
+            }
+        }
+
+        return [
+            'ok'                => true,
+            'id_aula'           => $idAula,
+            'nombre_aula'       => $nombreAula,
+            'huellas_encoladas' => $encoladas,
+            'message'           => "Se encolaron {$encoladas} huellas para sincronización LoRa con {$nombreAula}."
+        ];
+    }
+
+    /**
      * Sugiere el siguiente ID LoRa correlativo disponible (ej. 101, 102...).
      */
     public function obtenerSiguienteLoraId(int $lora_red_id = 18): int {

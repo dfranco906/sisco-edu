@@ -68,6 +68,10 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </a>
 
                 <?php if ($esAdmin): ?>
+                <button type="button" onclick="abrirModalAuditarAula()" class="btn min-h-[46px] px-4 py-2.5 text-base font-bold rounded-2xl border border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/60 transition flex items-center gap-2 cursor-pointer shadow-xs" title="Auditar y conciliar plantillas de huellas almacenadas en el sensor del aula vía LoRa">
+                    <span>🔍</span>
+                    <span>Auditar Sensor</span>
+                </button>
                 <button type="button" onclick="abrirModalResetearAula()" class="btn min-h-[46px] px-4 py-2.5 text-base font-bold rounded-2xl border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 transition flex items-center gap-2 cursor-pointer shadow-xs" title="Vaciar todas las huellas del sensor de un aula vía LoRa">
                     <span>🧹</span>
                     <span>Resetear Aula</span>
@@ -406,6 +410,90 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     </div>
 </div>
 
+<!-- MODAL DE AUDITORÍA Y CONCILIACIÓN REMOTA DE SENSORES DY50 (ETAPA 6) -->
+<div id="modal-auditar-aula" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-audit-titulo">
+    <div class="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        
+        <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-sky-500/10 to-indigo-500/10 dark:bg-slate-800/60">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-sky-500/20">
+                    🔍
+                </div>
+                <div>
+                    <h2 id="modal-audit-titulo" class="text-xl font-extrabold text-slate-900 dark:text-white">Auditar y Conciliar Sensor</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Diagnóstico y comparación de huellas físicas en DY50 vs Base de Datos</p>
+                </div>
+            </div>
+            <button type="button" onclick="cerrarModalAuditarAula()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer">
+                ✕
+            </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+            <!-- Selector de Aula con Nodo LoRa -->
+            <div>
+                <label for="mau-select-aula" class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                    Seleccione el Aula a Auditar:
+                </label>
+                <div class="flex gap-2">
+                    <select id="mau-select-aula" class="flex-1 px-4 py-3 text-base rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                        <option value="">Cargando aulas activas con LoRa...</option>
+                    </select>
+                    <button type="button" id="mau-btn-consultar" onclick="ejecutarAuditoriaAula()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-sm">
+                        <span>📡</span>
+                        <span>Auditar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Resultados de Auditoría -->
+            <div id="mau-resultado" class="hidden space-y-4">
+                <!-- Indicador de Enlace y Telemetría -->
+                <div id="mau-card-enlace" class="p-4 rounded-2xl border text-xs sm:text-sm font-medium flex items-center justify-between">
+                    <!-- Dinámico -->
+                </div>
+
+                <!-- Comparativa de Métrica -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Sensor Físico DY50</div>
+                        <div id="mau-val-sensor" class="text-2xl font-black text-slate-800 dark:text-white mt-1">--</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">huellas en memoria</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
+                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Base de Datos</div>
+                        <div id="mau-val-db" class="text-2xl font-black text-slate-800 dark:text-white mt-1">--</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">slots activos asignados</div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de Estado de Conciliación -->
+                <div id="mau-card-conciliacion" class="p-4 rounded-2xl border text-xs sm:text-sm leading-relaxed">
+                    <!-- Dinámico -->
+                </div>
+
+                <!-- Botón de Acción Reconciliar si faltan -->
+                <div id="mau-contenedor-reconciliar" class="hidden">
+                    <button type="button" id="mau-btn-reconciliar" onclick="ejecutarReconciliacionAula()"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                        <span>⚡ Re-encolar Huellas Faltantes en la Cola LoRa</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Spinner / Feedback -->
+            <div id="mau-feedback" class="p-4 rounded-xl text-center text-xs font-bold hidden"></div>
+        </div>
+
+        <div class="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-end">
+            <button type="button" onclick="cerrarModalAuditarAula()" class="btn btn-muted px-5 py-2.5 text-sm font-semibold rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer">
+                Cerrar
+            </button>
+        </div>
+
+    </div>
+</div>
+
 <script>
 (() => {
     // Endpoints relativos portables con BASE_URL
@@ -414,6 +502,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     const API_PROCESAR = `${BASE}/src/api/Gateway/procesar_sync_cola.php`;
     const API_ELIMINAR = `${BASE}/src/api/Gateway/eliminar_sync.php`;
     const API_RESETEAR_AULA = `${BASE}/src/api/Gateway/resetear_aula.php`;
+    const API_AUDITAR_AULA = `${BASE}/src/api/Gateway/auditar_aula.php`;
+    const API_RECONCILIAR_AULA = `${BASE}/src/api/Gateway/reconciliar_aula.php`;
     const API_NODOS = `${BASE}/src/api/Nodos/listar_nodos.php`;
     const GATEWAY_IP = <?= json_encode($gatewayIp) ?>;
     const ES_ADMIN = <?= $esAdmin ? 'true' : 'false' ?>;
@@ -1284,6 +1374,210 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
                 feedback.textContent = 'Fallo de comunicación: ' + e.message;
             }
+            btn.disabled = false;
+        }
+    };
+
+    /**
+     * Modal: Auditoría y Conciliación Biométrica LoRa (ETAPA 6)
+     */
+    let ultimoResultadoAuditoria = null;
+
+    window.abrirModalAuditarAula = async function() {
+        if (!ES_ADMIN) {
+            mostrarAlertaUI('error', 'Solo los usuarios con rol de Administrador pueden auditar sensores.');
+            return;
+        }
+
+        const modal = document.getElementById('modal-auditar-aula');
+        const sel = document.getElementById('mau-select-aula');
+        const resultadoDiv = document.getElementById('mau-resultado');
+        const feedback = document.getElementById('mau-feedback');
+        const btnConsultar = document.getElementById('mau-btn-consultar');
+
+        if (!modal || !sel) return;
+
+        resultadoDiv.classList.add('hidden');
+        feedback.classList.add('hidden');
+        if (btnConsultar) btnConsultar.disabled = false;
+        sel.innerHTML = '<option value="">Cargando aulas activas...</option>';
+        modal.classList.remove('hidden');
+
+        try {
+            const resp = await fetch(API_NODOS);
+            const res = await resp.json();
+            const nodos = (res.status === 'success' && res.data && Array.isArray(res.data.nodos)) ? res.data.nodos : [];
+            const nodosConLora = nodos.filter(n => n.lora_id && n.id_aula);
+
+            if (nodosConLora.length === 0) {
+                sel.innerHTML = '<option value="">No hay aulas con nodos LoRa asignados</option>';
+                return;
+            }
+
+            sel.innerHTML = '<option value="">-- Seleccione un aula para auditar --</option>' +
+                nodosConLora.map(n => `<option value="${n.id_aula}">${escapeHtml(n.nombre_aula || ('Aula #' + n.id_aula))} (LoRa #${escapeHtml(String(n.lora_id))})</option>`).join('');
+        } catch (e) {
+            sel.innerHTML = '<option value="">Error cargando nodos de aula</option>';
+        }
+    };
+
+    window.cerrarModalAuditarAula = function() {
+        const modal = document.getElementById('modal-auditar-aula');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    window.ejecutarAuditoriaAula = async function() {
+        const sel = document.getElementById('mau-select-aula');
+        const btnConsultar = document.getElementById('mau-btn-consultar');
+        const feedback = document.getElementById('mau-feedback');
+        const resultadoDiv = document.getElementById('mau-resultado');
+        const cardEnlace = document.getElementById('mau-card-enlace');
+        const valSensor = document.getElementById('mau-val-sensor');
+        const valDb = document.getElementById('mau-val-db');
+        const cardConciliacion = document.getElementById('mau-card-conciliacion');
+        const contenedorReconciliar = document.getElementById('mau-contenedor-reconciliar');
+
+        const idAula = parseInt(sel?.value || '0', 10);
+        if (!idAula) {
+            mostrarAlertaUI('warning', 'Seleccione un aula con nodo LoRa.');
+            return;
+        }
+
+        btnConsultar.disabled = true;
+        resultadoDiv.classList.add('hidden');
+        feedback.className = 'p-4 rounded-xl text-center text-xs font-bold block bg-sky-100 text-sky-900 dark:bg-sky-950/60 dark:text-sky-200';
+        feedback.textContent = '⏳ Transmitiendo comando LoRa CMD:AUDIT al nodo de aula... Espere hasta 5 segundos.';
+
+        try {
+            const resp = await fetch(API_AUDITAR_AULA, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ id_aula: idAula })
+            });
+            const res = await resp.json();
+            btnConsultar.disabled = false;
+            feedback.classList.add('hidden');
+
+            if (res.status !== 'success' || !res.data) {
+                feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
+                feedback.textContent = '⚠ ' + (res.message || 'Error al ejecutar auditoría');
+                return;
+            }
+
+            const data = res.data;
+            ultimoResultadoAuditoria = data;
+            resultadoDiv.classList.remove('hidden');
+
+            // 1. Tarjeta de enlace RF LoRa
+            if (data.lora_online) {
+                let badgeSenal = '';
+                if (data.rssi !== null && data.rssi !== undefined) {
+                    badgeSenal = `<span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white/60 dark:bg-black/30">RSSI: ${data.rssi} dBm ${data.snr !== null ? '| SNR: ' + data.snr + ' dB' : ''}</span>`;
+                }
+                cardEnlace.className = 'p-4 rounded-2xl border text-xs sm:text-sm font-medium flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200';
+                cardEnlace.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span><b>Nodo #${data.lora_id} Online:</b> Enlace RF operativo</span>
+                    </div>
+                    ${badgeSenal}
+                `;
+            } else {
+                cardEnlace.className = 'p-4 rounded-2xl border text-xs sm:text-sm font-medium flex items-center justify-between bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                cardEnlace.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                        <span><b>Nodo #${data.lora_id} Fuera de Línea:</b> Sin respuesta ACK</span>
+                    </div>
+                    <span class="text-xs text-rose-600 dark:text-rose-300">Timeout 4.5s</span>
+                `;
+            }
+
+            // 2. Valores numéricos
+            valSensor.textContent = (data.total_sensor !== null && data.total_sensor !== undefined) ? data.total_sensor : 'N/A';
+            valDb.textContent = data.total_db;
+
+            // 3. Tarjeta de Estado de Conciliación
+            contenedorReconciliar.classList.add('hidden');
+
+            if (!data.lora_online) {
+                cardConciliacion.className = 'p-4 rounded-2xl border bg-slate-50 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+                cardConciliacion.innerHTML = `
+                    <p class="font-bold text-rose-700 dark:text-rose-300 mb-1">🔴 Hardware no accesible:</p>
+                    <p>No se pudo contactar al sensor óptico DY50 del aula vía radiofrecuencia. Verifique que el aula esté encendida y en la misma Red LoRa.</p>
+                `;
+            } else if (data.estado_conciliacion === 'CONCILIADO') {
+                cardConciliacion.className = 'p-4 rounded-2xl border bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200';
+                cardConciliacion.innerHTML = `
+                    <p class="font-extrabold text-emerald-800 dark:text-emerald-300 mb-1 flex items-center gap-1.5">
+                        <span>✓</span>
+                        <span>Hardware y Base de Datos Conciliados al 100%:</span>
+                    </p>
+                    <p>Tanto el sensor óptico físico DY50 como los registros de SISCO-EDU tienen exactamente <b>${data.total_db} huellas</b> sincronizadas sin discrepancias.</p>
+                `;
+            } else if (data.estado_conciliacion === 'FALTAN_EN_SENSOR') {
+                const faltantes = Math.abs(data.discrepancia || 0);
+                contenedorReconciliar.classList.remove('hidden');
+                cardConciliacion.className = 'p-4 rounded-2xl border bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200';
+                cardConciliacion.innerHTML = `
+                    <p class="font-extrabold text-amber-800 dark:text-amber-300 mb-1 flex items-center gap-1.5">
+                        <span>⚠️</span>
+                        <span>Discrepancia: Faltan ${faltantes} huella(s) en el Sensor:</span>
+                    </p>
+                    <p>La base de datos tiene <b>${data.total_db}</b> slots activos, pero el sensor físico solo cuenta con <b>${data.total_sensor}</b>. Puede sincronizarlas de inmediato usando el botón inferior.</p>
+                `;
+            } else if (data.estado_conciliacion === 'SOBRAN_EN_SENSOR') {
+                const sobrantes = data.discrepancia || 0;
+                cardConciliacion.className = 'p-4 rounded-2xl border bg-orange-50 dark:bg-orange-950/30 border-orange-300 dark:border-orange-800 text-orange-900 dark:text-orange-200';
+                cardConciliacion.innerHTML = `
+                    <p class="font-extrabold text-orange-800 dark:text-orange-300 mb-1 flex items-center gap-1.5">
+                        <span>ℹ️</span>
+                        <span>Huellas Residuales en el Sensor: +${sobrantes}</span>
+                    </p>
+                    <p>El sensor físico contiene <b>${data.total_sensor}</b> huellas mientras que la base de datos solo tiene <b>${data.total_db}</b> activas para este curso. Si desea una limpieza limpia, puede usar la opción "Resetear Aula".</p>
+                `;
+            }
+        } catch (e) {
+            btnConsultar.disabled = false;
+            feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
+            feedback.textContent = 'Fallo de red: ' + e.message;
+        }
+    };
+
+    window.ejecutarReconciliacionAula = async function() {
+        if (!ultimoResultadoAuditoria || !ultimoResultadoAuditoria.id_aula) return;
+
+        const btn = document.getElementById('mau-btn-reconciliar');
+        const feedback = document.getElementById('mau-feedback');
+        btn.disabled = true;
+
+        feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200';
+        feedback.textContent = '⏳ Encolando huellas faltantes en sync_biometrica...';
+
+        try {
+            const resp = await fetch(API_RECONCILIAR_AULA, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ id_aula: ultimoResultadoAuditoria.id_aula })
+            });
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200';
+                feedback.textContent = '✓ ' + (res.message || 'Huellas encoladas correctamente.');
+                mostrarAlertaUI('success', res.message || 'Huellas añadidas a la cola.');
+                setTimeout(() => {
+                    cerrarModalAuditarAula();
+                    cargarColaSincronizacion();
+                }, 1500);
+            } else {
+                feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
+                feedback.textContent = '⚠ ' + (res.message || 'Error al reconciliar huellas.');
+                btn.disabled = false;
+            }
+        } catch (e) {
+            feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
+            feedback.textContent = 'Fallo de conexión: ' + e.message;
             btn.disabled = false;
         }
     };

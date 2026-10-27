@@ -732,6 +732,47 @@ void atenderComandosLoRa() {
     return;
   }
 
+  // COMANDO REMOTO DE AUDITORÍA Y CONCILIACIÓN DEL SENSOR DE AULA
+  if (payload.startsWith("CMD:AUDIT:")) {
+    int idAulaDestino = campo(payload, 2).toInt();
+    String tokenRecibido = campo(payload, 3);
+    String baseValidar = "CMD:AUDIT:" + String(idAulaDestino);
+
+    // Verificación criptográfica HMAC anti-spoofing
+    if (tokenRecibido.length() > 0 && !SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
+      Serial.printf("[LORA-ALERTA] CMD:AUDIT rechazado para Aula %d: Token HMAC invalido ('%s') de emisor %d\n",
+                    idAulaDestino, tokenRecibido.c_str(), emisor);
+      msgOled("ALERTA RF", "Token AUDIT invalido");
+      delay(1500);
+      mostrarPantallaReposoAula();
+      return;
+    }
+
+    if (idAulaDestino == configIdAula || idAulaDestino == 0) {
+      Serial.printf("[LORA-AULA] Comando AUDIT autenticado recibido de Gateway #%d para Aula %d. Consultando sensor DY50...\n",
+                    emisor, configIdAula);
+      msgOled("AUDIT AULA", "Leyendo DY50...");
+
+      uint8_t p = finger.getTemplateCount();
+      if (p == FINGERPRINT_OK) {
+        int totalTemplates = finger.templateCount;
+        Serial.printf("[LORA-AULA] Auditoria OK: %d huellas en sensor DY50\n", totalTemplates);
+        msgOled("AUDIT OK", String(totalTemplates) + " huellas DY50");
+        String respOk = "AUDIT_OK:" + String(configIdAula) + ":" + String(totalTemplates);
+        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
+      } else {
+        Serial.printf("[LORA-AULA] Error consultando sensor DY50 (codigo %d)\n", p);
+        msgOled("AUDIT ERROR", "Fallo DY50: " + String(p));
+        String respErr = "AUDIT_ERR:" + String(configIdAula) + ":" + String(p);
+        enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respErr, CLAVE_API_GATEWAY));
+      }
+
+      delay(1500);
+      mostrarPantallaReposoAula();
+      return;
+    }
+  }
+
   // COMANDO REMOTO DE RESET / VACIADO COMPLETO DEL SENSOR DE AULA
   if (payload.startsWith("CMD:CLEAR:")) {
     int idAulaDestino = campo(payload, 2).toInt();
