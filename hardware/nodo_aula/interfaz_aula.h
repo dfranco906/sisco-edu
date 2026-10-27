@@ -79,8 +79,11 @@ const char PAGINA_CONFIG_AULA[] PROGMEM = R"rawliteral(<!DOCTYPE html>
       </div>
 
       <div class="panel">
-        <div class="panel-header">
-          <span>📻</span> Parámetros de Radiofrecuencia LoRa (RYLR998)
+        <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span>📻</span> Parámetros de Radiofrecuencia LoRa (RYLR998)
+          </div>
+          %LORA_STATUS%
         </div>
 
         <div class="grid-2">

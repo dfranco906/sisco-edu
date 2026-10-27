@@ -176,8 +176,11 @@ const char PAGINA_CONFIGURACION[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 
       <!-- PANEL 3: RADIO LoRa RYLR998 -->
       <div class="panel">
-        <div class="panel-header">
-          <span>📻</span> Par&aacute;metros de Radiofrecuencia LoRa
+        <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span>📻</span> Par&aacute;metros de Radiofrecuencia LoRa
+          </div>
+          %LORA_STATUS_BADGE%
         </div>
 
         <div class="grid-2">
@@ -191,6 +194,18 @@ const char PAGINA_CONFIGURACION[] PROGMEM = R"rawliteral(<!DOCTYPE html>
             <input type="number" id="lora_addr" name="lora_addr" value="%LORA_ADDR%" min="1" max="65535" required>
             <small class="hint">Dirección de este Gateway (def: 100).</small>
           </div>
+        </div>
+
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06);">
+          <label for="ping_destino">Diagnóstico de Enlace RF (Ping a Nodo de Aula)</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.35rem;">
+            <input type="number" id="ping_destino" value="110" min="1" max="65535" style="max-width: 140px;" placeholder="LoRa ID">
+            <button type="button" class="btn btn-outline" style="white-space: nowrap; padding: 0.65rem 1rem;" onclick="probarEnlaceLoRa()">
+              📡 Probar Enlace LoRa
+            </button>
+          </div>
+          <small class="hint">Env&iacute;a un paquete PING por radio al nodo seleccionado y mide RSSI/SNR de respuesta.</small>
+          <div id="lora-test-result" class="test-box"></div>
         </div>
       </div>
 
@@ -291,6 +306,29 @@ const char PAGINA_CONFIGURACION[] PROGMEM = R"rawliteral(<!DOCTYPE html>
         document.getElementById('ssid').value = ssid;
         document.getElementById('pass').focus();
         mostrarToast('Red seleccionada: ' + ssid);
+      }
+    }
+
+    async function probarEnlaceLoRa() {
+      const box = document.getElementById('lora-test-result');
+      box.style.display = 'block';
+      box.className = 'test-box test-loading';
+      box.innerHTML = '⏳ Transmitiendo PING a través de radiofrecuencia LoRa...';
+
+      const destino = encodeURIComponent(document.getElementById('ping_destino').value.trim());
+      try {
+        const resp = await fetch('/test_lora?destino=' + destino);
+        const data = await resp.json();
+        if (data.status === 'success') {
+          box.className = 'test-box test-success';
+          box.innerHTML = '✅ <strong>ÉXITO:</strong> ' + data.message;
+        } else {
+          box.className = 'test-box test-error';
+          box.innerHTML = '❌ <strong>FALLO:</strong> ' + data.message;
+        }
+      } catch (e) {
+        box.className = 'test-box test-error';
+        box.innerHTML = '❌ Error de comunicación con el Gateway: ' + e.message;
       }
     }
 

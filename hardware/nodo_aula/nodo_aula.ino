@@ -50,6 +50,11 @@ int configLoraId = 101;
 int configLoraNetId = 18;
 int configGatewayId = 100;
 
+// Estado y diagnóstico de hardware LoRa RYLR998
+bool loraOk = false;
+String diagLoRa = "No verificado";
+String versionLoRa = "";
+
 bool modoSetup = false;
 bool reiniciarPendiente = false;
 unsigned long tiempoReinicio = 0;
@@ -78,11 +83,15 @@ char ciSyncActual[15] = "", tipoSyncActual[15] = "";
 // PROTOTIPOS
 // ============================================================================
 void msgOled(const String &t1, const String &t2 = "");
+void mostrarPantallaReposoAula();
 void cargarParametrosAula();
 void guardarParametrosAula(int idAula, const String &codigo, int loraId, int loraNet, int gwId);
 void iniciarModoSetupAP();
 void handleRootAula();
 void handleGuardarAula();
+bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respuesta, unsigned long timeoutMs = 400);
+bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin);
+bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int targetAddr, int targetNetId, String &diagSalida, String &versionSalida);
 void enviarComandoLoRa(int destino, const String &payload);
 void enviarAckLoRa(int chunk);
 void atenderComandosLoRa();
@@ -189,6 +198,14 @@ void handleRootAula() {
   p.replace("%GATEWAY_ID%", String(configGatewayId));
   p.replace("%MAC%", WiFi.macAddress());
 
+  String badgeLora;
+  if (loraOk) {
+    badgeLora = "<span style=\"font-size:0.75rem;padding:0.25rem 0.6rem;border-radius:9999px;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.4);\">🟢 LoRa: OK (" + (versionLoRa.length() > 0 ? versionLoRa : "Detectado") + ")</span>";
+  } else {
+    badgeLora = "<span style=\"font-size:0.75rem;padding:0.25rem 0.6rem;border-radius:9999px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.4);\">🔴 LoRa: FALLO HW (" + diagLoRa + ")</span>";
+  }
+  p.replace("%LORA_STATUS%", badgeLora);
+
   server.send(200, "text/html", p);
 }
 
@@ -280,28 +297,36 @@ void setup() {
                 (unsigned int)HUELLA_TEMPLATE_HEX_CHARS,
                 MAX_CHUNKS_HUELLA);
 
-  loraSerial.begin(115200, SERIAL_8N1, LORA_RX, LORA_TX);
-  loraSerial.setTimeout(120);
-  loraSerial.printf("AT+ADDRESS=%d\r\n", configLoraId);
-  delay(100); while (loraSerial.available()) loraSerial.read();
-  loraSerial.printf("AT+NETWORKID=%d\r\n", configLoraNetId);
-  delay(100); while (loraSerial.available()) loraSerial.read();
+  // 1. Diagnóstico y configuración del módulo LoRa RYLR998
+  msgOled("VERIF LORA...", "Iniciando RYLR");
+  loraOk = verificarYConfigurarLoRa(loraSerial, LORA_RX, LORA_TX, configLoraId, configLoraNetId, diagLoRa, versionLoRa);
+  if (loraOk) {
+    msgOled("LORA: OK", "Red: " + String(configLoraNetId) + " ID: " + String(configLoraId));
+    delay(1200);
+  } else {
+    msgOled("LORA: FALLO", "Sin resp RYLR998");
+    delay(3000);
+  }
 
+  // 2. Diagnóstico del sensor biométrico DY50
+  msgOled("VERIF DY50...", "Probando sensor");
   dy50Serial.begin(57600, SERIAL_8N1, DY50_RX, DY50_TX);
   finger.begin(57600);
-  delay(1000);
+  delay(800);
   if (finger.verifyPassword()) {
     if (finger.getParameters() == FINGERPRINT_OK) {
       Serial.printf("[DY50] cap=%u sec=%u baud=%lu\n",
                     finger.capacity, finger.security_level, (unsigned long)finger.baud_rate);
     }
     cargarDbLocalDesdeNVS();
-    msgOled("DY50: OK", "Sistema listo");
+    msgOled("DY50: OK", "Sensor listo");
   } else {
-    msgOled("ERROR HW", "DY50 no hallado");
+    msgOled("DY50: FALLO", "No detectado");
   }
   delay(1200);
-  msgOled(configCodigoAula, "LoRa ID: " + String(configLoraId));
+
+  // Pantalla principal de reposo
+  mostrarPantallaReposoAula();
 }
 
 void loop() {
@@ -317,6 +342,26 @@ void loop() {
 
   atenderComandosLoRa();
 
+  // Comandos de diagnóstico desde Monitor Serial (115200 baud)
+  if (Serial.available()) {
+    String entradaSerial = Serial.readStringUntil('\n');
+    entradaSerial.trim();
+    if (entradaSerial.equalsIgnoreCase("LORA") || entradaSerial.equalsIgnoreCase("STATUS")) {
+      Serial.println("[MONITOR-SERIAL] Ejecutando chequeo de modulo LoRa...");
+      loraOk = verificarYConfigurarLoRa(loraSerial, LORA_RX, LORA_TX, configLoraId, configLoraNetId, diagLoRa, versionLoRa);
+      mostrarPantallaReposoAula();
+    } else if (entradaSerial.equalsIgnoreCase("PING") || entradaSerial.startsWith("PING ") || entradaSerial.startsWith("ping ")) {
+      int destino = configGatewayId;
+      int sp = entradaSerial.indexOf(' ');
+      if (sp > 0) destino = entradaSerial.substring(sp + 1).toInt();
+      Serial.printf("[MONITOR-SERIAL] Enviando PING a Gateway ID %d...\n", destino);
+      enviarComandoLoRa(destino, "PING:" + String(configLoraId));
+      msgOled("PING LORA", "Hacia GW: #" + String(destino));
+      delay(800);
+      mostrarPantallaReposoAula();
+    }
+  }
+
   if (digitalRead(PIN_BOTON_SALIDA) == LOW && estadoActual == NORMAL && estadoSync == SYNC_IDLE) {
     estadoActual = ESPERANDO_PROFE;
     tiempoLimiteEstado = millis() + 15000;
@@ -328,7 +373,7 @@ void loop() {
     estadoActual = NORMAL;
     msgOled("CANCELADO", "Tiempo expirado");
     delay(1200);
-    msgOled(configCodigoAula, "Listo");
+    mostrarPantallaReposoAula();
   }
 
   if (estadoSync == SYNC_RECIBIENDO && millis() - tiempoUltimoChunk > 5000) {
@@ -336,7 +381,7 @@ void loop() {
     notificarResultadoSync(false, 0, "TIMEOUT_CHUNKS");
     limpiarSyncRecibida();
     estadoSync = SYNC_IDLE;
-    msgOled(configCodigoAula, "Listo");
+    mostrarPantallaReposoAula();
   }
 
   if (estadoSync == SYNC_IDLE) {
@@ -357,6 +402,11 @@ void msgOled(const String &t1, const String &t2) {
   oled.setCursor(0, 45);
   oled.println(t2);
   oled.display();
+}
+
+void mostrarPantallaReposoAula() {
+  String lineaEstado = loraOk ? ("LoRa: OK (ID " + String(configLoraId) + ")") : "LoRa: FALLO HW (!)";
+  msgOled(configCodigoAula, lineaEstado);
 }
 
 void guardarSlotEnNVS(int slot) {
@@ -441,6 +491,116 @@ void notificarResultadoSync(bool exito, int slot, const String &detalle) {
   }
 }
 
+// ============================================================================
+// VERIFICACIÓN Y DIAGNÓSTICO DE HARDWARE LoRa RYLR998
+// ============================================================================
+bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respuesta, unsigned long timeoutMs) {
+  while (serial.available()) serial.read();
+  serial.print(cmd + "\r\n");
+
+  const unsigned long t0 = millis();
+  respuesta = "";
+  while (millis() - t0 < timeoutMs) {
+    if (serial.available()) {
+      String linea = serial.readStringUntil('\n');
+      linea.trim();
+      if (linea.length() > 0) {
+        respuesta = linea;
+        return true;
+      }
+    }
+    delay(2);
+  }
+  return false;
+}
+
+bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin) {
+  const unsigned long bauds[] = {115200, 9600, 57600};
+  for (unsigned long b : bauds) {
+    serial.begin(b, SERIAL_8N1, rxPin, txPin);
+    serial.setTimeout(150);
+    delay(40);
+    while (serial.available()) serial.read();
+
+    for (int intento = 0; intento < 2; ++intento) {
+      serial.print("AT\r\n");
+      const unsigned long t0 = millis();
+      while (millis() - t0 < 250) {
+        if (serial.available()) {
+          String resp = serial.readStringUntil('\n');
+          resp.trim();
+          if (resp == "+OK") {
+            if (b != 115200) {
+              Serial.printf("[LORA-AULA] Modulo respondio a %lu baud. Reconfigurando a 115200...\n", b);
+              serial.print("AT+IPR=115200\r\n");
+              delay(150);
+              serial.begin(115200, SERIAL_8N1, rxPin, txPin);
+              delay(40);
+            }
+            return true;
+          }
+        }
+        delay(2);
+      }
+      delay(40);
+    }
+  }
+  serial.begin(115200, SERIAL_8N1, rxPin, txPin);
+  return false;
+}
+
+bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int targetAddr, int targetNetId, String &diagSalida, String &versionSalida) {
+  Serial.println("\n[LORA] ========================================");
+  Serial.println("[LORA] DIAGNOSTICO DE HARDWARE RYLR998 (NODO AULA)");
+  Serial.printf("[LORA] Pines UART : RX=GPIO %d, TX=GPIO %d\n", rxPin, txPin);
+  Serial.printf("[LORA] Esperado   : Addr=%d, Red=%d (Aula ID: %d)\n", targetAddr, targetNetId, configIdAula);
+
+  bool respondeAT = sincronizarBaudRateRYLR(serial, rxPin, txPin);
+  if (!respondeAT) {
+    diagSalida = "ERROR: Sin resp AT (Pines RX=" + String(rxPin) + " TX=" + String(txPin) + " y 3.3V)";
+    versionSalida = "DESCONOCIDO";
+    Serial.println("[LORA-FALLO] " + diagSalida);
+    Serial.println("[LORA-FALLO] CAUSAS POSIBLES:");
+    Serial.println("  1. Pines RX/TX cruzados o desconectados (ESP32 GPIO 26 RX -> RYLR998 TX, GPIO 27 TX -> RYLR998 RX).");
+    Serial.println("  2. Modulo sin alimentacion (VCC 3.3V / GND).");
+    Serial.println("  3. Pin RST del RYLR998 conectado a GND en lugar de libre o HIGH.");
+    Serial.println("[LORA] ========================================\n");
+    return false;
+  }
+  Serial.println("[LORA-OK] Modulo responde comandos AT (+OK)");
+
+  // Consultar Versión
+  versionSalida = "";
+  if (ejecutarComandoAT(serial, "AT+VER?", versionSalida, 300)) {
+    Serial.printf("[LORA] Firmware RYLR998: %s\n", versionSalida.c_str());
+  }
+
+  // Configurar Address
+  String respAddr = "";
+  ejecutarComandoAT(serial, "AT+ADDRESS=" + String(targetAddr), respAddr, 400);
+
+  // Configurar Network ID
+  String respNet = "";
+  ejecutarComandoAT(serial, "AT+NETWORKID=" + String(targetNetId), respNet, 400);
+
+  // Verificación mediante lectura (Readback)
+  String leidoAddr = "", leidoNet = "", leidoBand = "", leidoParam = "";
+  ejecutarComandoAT(serial, "AT+ADDRESS?", leidoAddr, 300);
+  ejecutarComandoAT(serial, "AT+NETWORKID?", leidoNet, 300);
+  ejecutarComandoAT(serial, "AT+BAND?", leidoBand, 300);
+  ejecutarComandoAT(serial, "AT+PARAMETER?", leidoParam, 300);
+
+  Serial.println("[LORA] Parametros verificados en memoria del modulo:");
+  Serial.printf("  - Direccion (AT+ADDRESS?)  : %s\n", leidoAddr.c_str());
+  Serial.printf("  - Red LoRa  (AT+NETWORKID?): %s\n", leidoNet.c_str());
+  Serial.printf("  - Frecuencia(AT+BAND?)     : %s\n", leidoBand.c_str());
+  Serial.printf("  - Parametros RF            : %s\n", leidoParam.c_str());
+  Serial.println("[LORA] ========================================\n");
+
+  diagSalida = "OK (Addr " + String(targetAddr) + ", Red " + String(targetNetId) + ")";
+  return true;
+}
+
 void enviarComandoLoRa(int destino, const String &payload) {
   loraSerial.printf("AT+SEND=%d,%u,%s\r\n", destino, payload.length(), payload.c_str());
 }
@@ -470,8 +630,31 @@ void atenderComandosLoRa() {
   linea.trim();
   if (!linea.startsWith("+RCV=")) return;
   int c1 = linea.indexOf(','), c2 = linea.indexOf(',', c1 + 1), c3 = linea.indexOf(',', c2 + 1);
+  int c4 = linea.indexOf(',', c3 + 1);
   if (c1 < 0 || c2 < 0 || c3 < 0) return;
+  int emisor = linea.substring(5, c1).toInt();
   const String payload = linea.substring(c2 + 1, c3);
+
+  // ATENCIÓN DE PING DIAGNÓSTICO
+  if (payload.startsWith("PING")) {
+    String rssiStr = (c4 > 0) ? linea.substring(c3 + 1, c4) : "N/A";
+    String snrStr = (c4 > 0) ? linea.substring(c4 + 1) : "N/A";
+    Serial.printf("[LORA-AULA] PING recibido de Nodo ID %d (RSSI: %s, SNR: %s). Respondiendo PONG...\n",
+                  emisor, rssiStr.c_str(), snrStr.c_str());
+    enviarComandoLoRa(emisor, "PONG:" + String(configIdAula) + ":" + String(configLoraId));
+    msgOled("PING LORA", "GW #" + String(emisor) + " OK");
+    delay(1200);
+    mostrarPantallaReposoAula();
+    return;
+  }
+  if (payload.startsWith("PONG")) {
+    Serial.printf("[LORA-AULA] PONG recibido de Nodo ID %d\n", emisor);
+    msgOled("PONG LORA", "De ID: #" + String(emisor));
+    delay(1200);
+    mostrarPantallaReposoAula();
+    return;
+  }
+
   const int sep = payload.indexOf(':');
   if (sep <= 0) return;
   const int chunk = payload.substring(0, sep).toInt();
@@ -570,7 +753,7 @@ void atenderComandosLoRa() {
   delay(1200);
   limpiarSyncRecibida();
   estadoSync = SYNC_IDLE;
-  msgOled(configCodigoAula, "Listo");
+  mostrarPantallaReposoAula();
 }
 
 void verificarLecturaHuella() {
@@ -579,7 +762,7 @@ void verificarLecturaHuella() {
   if (finger.fingerFastSearch() != FINGERPRINT_OK) {
     msgOled("DESCONOCIDO", "No registrado");
     delay(1500);
-    msgOled(configCodigoAula, "Listo");
+    mostrarPantallaReposoAula();
     return;
   }
   const int slot = finger.fingerID;
@@ -597,14 +780,14 @@ void verificarLecturaHuella() {
       msgOled("DENEGADO", "Solo profesor");
       delay(1500);
     }
-    msgOled(configCodigoAula, "Listo");
+    mostrarPantallaReposoAula();
     return;
   }
 
   if (millis() - ultimoRegistroSlot[slot] < TIEMPO_COOLDOWN) {
     msgOled("YA MARCADO", "Espere 5 min");
     delay(1500);
-    msgOled(configCodigoAula, "Listo");
+    mostrarPantallaReposoAula();
     return;
   }
   ultimoRegistroSlot[slot] = millis();
@@ -612,5 +795,5 @@ void verificarLecturaHuella() {
   enviarAsistenciaPorLoRa(ci, tipo, estado);
   msgOled(ci, estado);
   delay(1500);
-  msgOled(configCodigoAula, "Listo");
+  mostrarPantallaReposoAula();
 }
