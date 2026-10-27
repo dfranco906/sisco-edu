@@ -25,7 +25,10 @@ constexpr char CLAVE_API_GATEWAY[] = "SISCO_GATEWAY_2026_SECRETO";
 // 4. Parámetros de Red LoRa (Módulos Reyax RYLR998)
 constexpr int LORA_RED_ID = 18;
 constexpr int LORA_ID_GATEWAY = 100;
-constexpr int LORA_ID_AULA_DEFAULT = 101;
+constexpr int LORA_ID_AULA_DEFAULT = 110;
+constexpr unsigned long LORA_BANDA_DEFAULT = 915000000;
+constexpr char LORA_PARAM_DEFAULT[] = "7,9,1,12";
+constexpr int LORA_CRFOP_DEFAULT = 22;
 
 // 5. Parámetros Biométricos Normalizados (Contrato 1536 bytes)
 constexpr size_t TAMANO_HUELLA_BYTES = 1536;

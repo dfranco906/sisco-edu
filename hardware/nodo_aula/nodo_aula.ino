@@ -44,11 +44,11 @@ SeguridadPortal seguridad("Nodo de Aula LoRa");
 // ============================================================================
 // PARÁMETROS DINÁMICOS DE AULA (NVS)
 // ============================================================================
-int configIdAula = 18;
-String configCodigoAula = "AULA_A";
-int configLoraId = 101;
-int configLoraNetId = 18;
-int configGatewayId = 100;
+int configIdAula = 30;
+String configCodigoAula = "3_RO_BTI";
+int configLoraId = LORA_ID_AULA_DEFAULT;
+int configLoraNetId = LORA_RED_ID;
+int configGatewayId = LORA_ID_GATEWAY;
 
 // Estado y diagnóstico de hardware LoRa RYLR998
 bool loraOk = false;
@@ -119,11 +119,11 @@ void cargarParametrosAula() {
   configAulaInicializada = prefs.getBool("configurado", false);
   prefs.end();
 
-  // Si no está configurado, usar valores de compatibilidad
-  if (configIdAula == 0) {
-    configIdAula = 18;
-    configCodigoAula = "AULA_A";
-    configLoraId = 101;
+  // Si no está configurado explícitamente o tiene valores antiguos de prueba (18 / 101), usar valores estándar (Aula 30 / LoRa 110)
+  if (!configAulaInicializada || configIdAula == 0 || (configIdAula == 18 && configLoraId == 101)) {
+    configIdAula = 30;
+    configCodigoAula = "3_RO_BTI";
+    configLoraId = LORA_ID_AULA_DEFAULT;
   }
 
   Serial.println("[NVS-AULA] Parametros cargados:");
@@ -575,11 +575,28 @@ bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int 
     Serial.printf("[LORA] Firmware RYLR998: %s\n", versionSalida.c_str());
   }
 
-  // Configurar Address
+  // 1. Configurar Frecuencia de Banda RF ISM 915 MHz (Semtech SX1262 / RYLR998)
+  String respBand = "";
+  ejecutarComandoAT(serial, "AT+BAND=" + String(LORA_BANDA_DEFAULT), respBand, 500);
+  if (respBand != "+OK") {
+    Serial.printf("[LORA-WARN] Respuesta configurando BAND (%lu Hz): %s\n", LORA_BANDA_DEFAULT, respBand.c_str());
+  }
+
+  // 2. Configurar Parámetros RF estándar (SF=7, BW=500kHz, CR=4/5, Preamble=12 para biometría rápida)
+  String respParam = "";
+  ejecutarComandoAT(serial, "AT+PARAMETER=" + String(LORA_PARAM_DEFAULT), respParam, 500);
+  if (respParam != "+OK") {
+    Serial.printf("[LORA-WARN] Respuesta configurando PARAMETER (%s): %s\n", LORA_PARAM_DEFAULT, respParam.c_str());
+  }
+
+  // 3. Configurar Potencia de Emisión Máxima (22 dBm)
+  String respPwr = "";
+  ejecutarComandoAT(serial, "AT+CRFOP=" + String(LORA_CRFOP_DEFAULT), respPwr, 400);
+
+  // 4. Configurar Address y Network ID
   String respAddr = "";
   ejecutarComandoAT(serial, "AT+ADDRESS=" + String(targetAddr), respAddr, 400);
 
-  // Configurar Network ID
   String respNet = "";
   ejecutarComandoAT(serial, "AT+NETWORKID=" + String(targetNetId), respNet, 400);
 
@@ -597,7 +614,7 @@ bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int 
   Serial.printf("  - Parametros RF            : %s\n", leidoParam.c_str());
   Serial.println("[LORA] ========================================\n");
 
-  diagSalida = "OK (Addr " + String(targetAddr) + ", Red " + String(targetNetId) + ")";
+  diagSalida = "OK (Addr " + String(targetAddr) + ", Red " + String(targetNetId) + ", SF7/BW500)";
   return true;
 }
 

@@ -78,7 +78,7 @@ void programarReinicio(unsigned long delayMs = 1500);
 bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respuesta, unsigned long timeoutMs = 400);
 bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin);
 bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int targetAddr, int targetNetId, String &diagSalida, String &versionSalida);
-bool hacerPingLoRa(int loraId, int &rssi, int &snr, unsigned long timeoutMs = 2500);
+bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, int &rssi, int &snr, unsigned long timeoutMs = 2500);
 
 void conectarWifi();
 void iniciarModoAP();
@@ -512,8 +512,8 @@ void handleTestLoRa() {
   if (!seguridad.verificarAcceso()) return;
 
   int destino = server.hasArg("destino") ? server.arg("destino").toInt() : 110;
-  if (destino <= 0) {
-    server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Destino LoRa invalido\"}");
+  if (destino < 0 || destino > 65535) {
+    server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Destino LoRa invalido (rango 0 a 65535)\"}");
     return;
   }
 
@@ -522,28 +522,44 @@ void handleTestLoRa() {
     return;
   }
 
-  int rssi = 0, snr = 0;
-  notificarPantallaTemporal("TEST LORA PING", "Hacia Nodo #" + String(destino), "Espere...", 1500);
+  int rssi = 0, snr = 0, emisorDetectado = 0;
+  String payloadDetectado = "";
+  notificarPantallaTemporal("TEST LORA PING", (destino == 0 ? "Ping Broadcast 0" : ("Hacia Nodo #" + String(destino))), "Espere...", 1500);
 
   unsigned long t0 = millis();
-  bool exito = hacerPingLoRa(destino, rssi, snr, 2500);
+  bool exito = hacerPingLoRa(destino, emisorDetectado, payloadDetectado, rssi, snr, 2500);
   unsigned long latencia = millis() - t0;
 
-  DynamicJsonDocument doc(256);
+  DynamicJsonDocument doc(512);
   if (exito) {
     doc["status"] = "success";
     doc["destino"] = destino;
+    doc["emisor_real"] = emisorDetectado;
+    doc["payload"] = payloadDetectado;
     doc["pong"] = true;
     doc["latencia_ms"] = latencia;
     doc["rssi"] = rssi;
     doc["snr"] = snr;
-    doc["message"] = "Enlace LoRa operativo con Aula #" + String(destino) + " (RSSI: " + String(rssi) + " dBm, SNR: " + String(snr) + " dB, RTT: " + String(latencia) + " ms)";
-    notificarPantallaTemporal("PING: OK", "RSSI: " + String(rssi) + " dBm", "Nodo #" + String(destino), 2500);
+
+    int idAulaDetectada = 0;
+    if (payloadDetectado.startsWith("PONG:")) {
+      idAulaDetectada = campo(payloadDetectado, 1).toInt();
+    }
+
+    String detalle = "";
+    if (destino == 0) {
+      detalle = " [Detectado via Broadcast: Aula #" + String(idAulaDetectada) + ", LoRa ID #" + String(emisorDetectado) + "]";
+    } else if (emisorDetectado != destino) {
+      detalle = " [¡AVISO: Respondio Nodo #" + String(emisorDetectado) + " pero se pidio #" + String(destino) + "!]";
+    }
+
+    doc["message"] = "Enlace LoRa operativo con Nodo #" + String(emisorDetectado) + detalle + " (RSSI: " + String(rssi) + " dBm, SNR: " + String(snr) + " dB, RTT: " + String(latencia) + " ms)";
+    notificarPantallaTemporal("PING: OK", "Resp: #" + String(emisorDetectado), "RSSI: " + String(rssi) + " dBm", 2500);
   } else {
     doc["status"] = "error";
     doc["destino"] = destino;
     doc["pong"] = false;
-    doc["message"] = "Sin respuesta PONG del Nodo #" + String(destino) + " (Timeout 2.5s). Verifique si el nodo de aula esta encendido, en la misma Red LoRa " + String(configLoraNetId) + " y configurado con ID " + String(destino);
+    doc["message"] = "Sin respuesta PONG del Nodo #" + String(destino) + " tras 2.5s. Si desconoce el ID del aula, use la direccion 0 (Broadcast) para detectarlo.";
     notificarPantallaTemporal("PING: FALLO", "Sin respuesta", "Nodo #" + String(destino), 2500);
   }
 
@@ -882,11 +898,14 @@ void loop() {
       if (sp > 0) destino = cmdSerial.substring(sp + 1).toInt();
       Serial.printf("[MONITOR-SERIAL] Transmitiendo PING hacia LoRa ID %d...\n", destino);
       notificarPantallaTemporal("PING LORA", "Hacia #" + String(destino), "Espere...", 1500);
-      int rssi = 0, snr = 0;
-      bool r = hacerPingLoRa(destino, rssi, snr, 2500);
+      int rssi = 0, snr = 0, emisor = 0;
+      String payload = "";
+      bool r = hacerPingLoRa(destino, emisor, payload, rssi, snr, 2500);
       if (r) {
-        notificarPantallaTemporal("PING: OK!", "RSSI: " + String(rssi) + " dBm", "Nodo #" + String(destino), 3000);
+        Serial.printf("[MONITOR-SERIAL] PONG recibido de #%d: RSSI=%d dBm, SNR=%d dB, Payload='%s'\n", emisor, rssi, snr, payload.c_str());
+        notificarPantallaTemporal("PING: OK!", "RSSI: " + String(rssi) + " dBm", "Nodo #" + String(emisor), 3000);
       } else {
+        Serial.printf("[MONITOR-SERIAL] Sin respuesta PONG de #%d tras timeout\n", destino);
         notificarPantallaTemporal("PING: FALLO", "Sin respuesta", "Nodo #" + String(destino), 3000);
       }
     } else if (cmdSerial.equalsIgnoreCase("LORA") || cmdSerial.equalsIgnoreCase("STATUS")) {
@@ -981,11 +1000,28 @@ bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int 
     Serial.printf("[LORA] Firmware RYLR998: %s\n", versionSalida.c_str());
   }
 
-  // Configurar Address
+  // 1. Configurar Frecuencia de Banda RF ISM 915 MHz (Semtech SX1262 / RYLR998)
+  String respBand = "";
+  ejecutarComandoAT(serial, "AT+BAND=" + String(LORA_BANDA_DEFAULT), respBand, 500);
+  if (respBand != "+OK") {
+    Serial.printf("[LORA-WARN] Respuesta configurando BAND (%lu Hz): %s\n", LORA_BANDA_DEFAULT, respBand.c_str());
+  }
+
+  // 2. Configurar Parámetros RF estándar (SF=7, BW=500kHz, CR=4/5, Preamble=12 para biometría rápida)
+  String respParam = "";
+  ejecutarComandoAT(serial, "AT+PARAMETER=" + String(LORA_PARAM_DEFAULT), respParam, 500);
+  if (respParam != "+OK") {
+    Serial.printf("[LORA-WARN] Respuesta configurando PARAMETER (%s): %s\n", LORA_PARAM_DEFAULT, respParam.c_str());
+  }
+
+  // 3. Configurar Potencia de Emisión Máxima (22 dBm)
+  String respPwr = "";
+  ejecutarComandoAT(serial, "AT+CRFOP=" + String(LORA_CRFOP_DEFAULT), respPwr, 400);
+
+  // 4. Configurar Address y Network ID
   String respAddr = "";
   ejecutarComandoAT(serial, "AT+ADDRESS=" + String(targetAddr), respAddr, 400);
 
-  // Configurar Network ID
   String respNet = "";
   ejecutarComandoAT(serial, "AT+NETWORKID=" + String(targetNetId), respNet, 400);
 
@@ -1007,7 +1043,7 @@ bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int 
   return true;
 }
 
-bool hacerPingLoRa(int loraId, int &rssi, int &snr, unsigned long timeoutMs) {
+bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, int &rssi, int &snr, unsigned long timeoutMs) {
   if (!loraOk) {
     Serial.println("[PING-ERR] Imposible enviar Ping: Modulo LoRa local en FALLO");
     return false;
@@ -1020,6 +1056,8 @@ bool hacerPingLoRa(int loraId, int &rssi, int &snr, unsigned long timeoutMs) {
   const unsigned long inicio = millis();
   bool okLocal = false;
   rssi = 0; snr = 0;
+  emisorDetectado = 0;
+  payloadDetectado = "";
 
   while (millis() - inicio < timeoutMs) {
     if (!loraSerial.available()) {
@@ -1043,13 +1081,15 @@ bool hacerPingLoRa(int loraId, int &rssi, int &snr, unsigned long timeoutMs) {
         int emisor = linea.substring(5, c1).toInt();
         String payload = linea.substring(c2 + 1, c3);
         payload.trim();
-        if (emisor == loraId && (payload.startsWith("PONG") || payload == "PONG")) {
+        if ((loraId == 0 || emisor == loraId) && (payload.startsWith("PONG") || payload == "PONG")) {
           if (c4 > 0) {
             rssi = linea.substring(c3 + 1, c4).toInt();
             snr = linea.substring(c4 + 1).toInt();
           }
-          Serial.printf("[PING] PONG recibido con exito de Nodo %d! (RSSI: %d dBm, SNR: %d dB, RTT: %lu ms)\n",
-                        emisor, rssi, snr, millis() - inicio);
+          emisorDetectado = emisor;
+          payloadDetectado = payload;
+          Serial.printf("[PING] PONG recibido de Nodo %d! (Payload: %s, RSSI: %d dBm, SNR: %d dB, RTT: %lu ms)\n",
+                        emisor, payload.c_str(), rssi, snr, millis() - inicio);
           return true;
         }
       }

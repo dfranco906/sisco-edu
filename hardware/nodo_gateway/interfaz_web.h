@@ -197,14 +197,17 @@ const char PAGINA_CONFIGURACION[] PROGMEM = R"rawliteral(<!DOCTYPE html>
         </div>
 
         <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06);">
-          <label for="ping_destino">Diagnóstico de Enlace RF (Ping a Nodo de Aula)</label>
-          <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.35rem;">
-            <input type="number" id="ping_destino" value="110" min="1" max="65535" style="max-width: 140px;" placeholder="LoRa ID">
+          <label for="ping_destino">Diagnóstico de Enlace RF (Ping / Broadcast)</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.35rem; flex-wrap: wrap;">
+            <input type="number" id="ping_destino" value="110" min="0" max="65535" style="max-width: 140px;" placeholder="LoRa ID (0=Broadcast)">
             <button type="button" class="btn btn-outline" style="white-space: nowrap; padding: 0.65rem 1rem;" onclick="probarEnlaceLoRa()">
               📡 Probar Enlace LoRa
             </button>
+            <button type="button" class="btn btn-outline" style="white-space: nowrap; padding: 0.65rem 1rem;" onclick="escanearBroadcastLoRa()" title="Envía broadcast (ID 0) para detectar cualquier nodo en esta red">
+              🔍 Escanear Red (ID 0)
+            </button>
           </div>
-          <small class="hint">Env&iacute;a un paquete PING por radio al nodo seleccionado y mide RSSI/SNR de respuesta.</small>
+          <small class="hint">Env&iacute;a un paquete PING por radio al nodo seleccionado y mide RSSI/SNR de respuesta. Si usa ID 0 (Broadcast), cualquier nodo en la Red LoRa responder&aacute; con su direcci&oacute;n real.</small>
           <div id="lora-test-result" class="test-box"></div>
         </div>
       </div>
@@ -307,6 +310,11 @@ const char PAGINA_CONFIGURACION[] PROGMEM = R"rawliteral(<!DOCTYPE html>
         document.getElementById('pass').focus();
         mostrarToast('Red seleccionada: ' + ssid);
       }
+    }
+
+    function escanearBroadcastLoRa() {
+      document.getElementById('ping_destino').value = 0;
+      probarEnlaceLoRa();
     }
 
     async function probarEnlaceLoRa() {
