@@ -102,7 +102,7 @@ Para evitar modificar el código fuente al cambiar de red local, encargado de pr
 3. **Frontend Reactivo (JS):** Las vistas web inyectan automáticamente las IPs activas en `window.CONFIG_RED.ipRegistrador` y `window.CONFIG_RED.ipGateway`.
 4. **Firmware ESP32:** Los valores por defecto de fábrica residen en [`hardware/comun/configuracion_red.h`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/hardware/comun/configuracion_red.h).
 5. **Arquitectura para Alta Disponibilidad Cloud:**
-   * **Base de Datos Remota (Aiven / Railway / RDS):** La conexión en [`src/config/db.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/src/config/db.php) soporta puertos no estándar (`DB_PORT`) y modo SSL seguro (`DB_SSL`). Esto permite que múltiples desarrolladores y el Gateway sincronicen contra la misma nube sin depender de un XAMPP local.
+   * **Base de Datos Remota (Aiven / Railway / RDS):** La conexión en [`src/config/db.php`](file:///c:/Users/dfran/develop/proyectos-git/sisco-edu/src/config/db.php) soporta puertos no estándar (`DB_PORT`) y modo SSL seguro (`DB_SSL`). Esto permite que múltiples desarrolladores y el Gateway sincronicen contra la misma nube sin depender de un servidor local fijo (Laragon/XAMPP).
    * **Túnel Seguro (Cloudflare Tunnel):** Permite exponer el backend local hacia un dominio público con HTTPS (`https://sisco.institucion.edu.py`) sin abrir puertos en el router escolar ni exponer la red interna.
 
 ---

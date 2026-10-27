@@ -40,7 +40,7 @@ Interfaz para que el profesor desglose su materia en:
 ## 💻 4. Requerimientos Técnicos y Herramientas
 
 ### Software (Stack de Desarrollo)
-* **Servidor Local:** [XAMPP](https://www.apachefriends.org/) (Apache + MySQL).
+* **Servidor Local:** [Laragon](https://laragon.org/) (Recomendado) o [XAMPP](https://www.apachefriends.org/) (Apache + PHP 8.x).
 * **Backend:** PHP 8.x (Paradigma Orientado a Objetos).
 * **Frontend:** HTML5, JavaScript (Vanilla), CSS3 y [Tailwind CSS](https://tailwindcss.com/).
 * **Base de Datos:** MySQL (Diseño Relacional Normalizado).

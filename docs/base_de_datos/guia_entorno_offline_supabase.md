@@ -12,7 +12,7 @@ Frente a la inestabilidad de la conexión a Internet en la institución, SISCO-E
  [Hardware ESP32] (Registrador / Gateway / Aulas)
          │
          ▼
- [Servidor Local Apache / XAMPP] (192.168.100.X)
+ [Servidor Local Apache (Laragon / XAMPP)] (192.168.100.X)
          │
          ├──► MODO OFFLINE:  PostgreSQL Local / Supabase Local (127.0.0.1:54322 o 5432)
          │                   • Cero dependencia de Internet
@@ -122,4 +122,4 @@ Para continuar el desarrollo o realizar pruebas en una nueva laptop:
    ```cmd
    scripts\setup_offline.bat
    ```
-4. **Listo**: Tu Apache/XAMPP conectará inmediatamente en local, con todos los profesores, materias, aulas y configuraciones listas para operar sin tocar Internet.
+4. **Listo**: Tu servidor Apache (Laragon o XAMPP) conectará inmediatamente en local, con todos los profesores, materias, aulas y configuraciones listas para operar sin tocar Internet.

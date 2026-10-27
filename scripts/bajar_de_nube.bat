@@ -8,9 +8,13 @@ echo.
 echo Descargando datos desde la nube hacia la base de datos local...
 echo.
 
-set PHP_EXE=C:\xampp\php\php.exe
-if not exist "%PHP_EXE%" (
-    set PHP_EXE=php
+set PHP_EXE=php
+where php >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    set "PHP_EXE="
+    for /d %%D in (C:\laragon\bin\php\php-*) do if exist "%%D\php.exe" set "PHP_EXE=%%D\php.exe"
+    if not defined PHP_EXE if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
+    if not defined PHP_EXE set "PHP_EXE=php"
 )
 
 "%PHP_EXE%" "%~dp0bajar_nube_cli.php"
