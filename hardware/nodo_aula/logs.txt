@@ -1,0 +1,29 @@
+Prueba del commit: c1b04c7
+[DY50] cap=150 sec=3 baud=57600
+[LORA-AULA] PING recibido de Nodo ID 100 (RSSI: -29, SNR: 12). Respondiendo PONG...
+[LORA-AULA] Chunk 0 recibido de GW #100: sync=78 huella=75 aula=30 ci=6543218 tipo=estudiante total=24 hexLen=128
+[LORA-AULA] Sincronizando ID de Aula local con el Gateway: 18 -> 30
+[LORA-AULA] ACK0 emitido hacia el Gateway ID 100
+[LORA-AULA] Chunk 2/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 3/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 4/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 5/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 6/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 7/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 8/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 9/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 10/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 11/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 12/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 13/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 14/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 15/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 16/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 17/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 18/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 19/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 20/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 21/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 22/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 23/24 recibido de GW #100 y ACK emitido
+[LORA-AULA] Chunk 24/24 recibido de GW #100 y ACK emitido
