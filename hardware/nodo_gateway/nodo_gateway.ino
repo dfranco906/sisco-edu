@@ -1271,12 +1271,15 @@ bool esperarAckRemoto(int loraId, int chunk, unsigned long timeoutMs) {
   return false;
 }
 
+int ultimoChunkNackSolicitado = -1;
+
 bool enviarFragmentoConAck(int loraId, const String &trama, int chunk, unsigned long timeoutMs) {
   while (loraSerial.available()) loraSerial.read();
   enviarComandoLoRa(loraId, trama);
 
   const String esperado = "ACK" + String(chunk);
   const unsigned long inicio = millis();
+  ultimoChunkNackSolicitado = -1;
   bool okLocal = false;
   String ultimaLinea = "";
 
@@ -1308,8 +1311,26 @@ bool enviarFragmentoConAck(int loraId, const String &trama, int chunk, unsigned 
         int emisor = datos.substring(0, c1).toInt();
         String payload = (c3 > 0) ? datos.substring(c2 + 1, c3) : datos.substring(c2 + 1);
         payload.trim();
-        if ((loraId == 0 || emisor == loraId) && (payload == esperado || payload.indexOf(esperado) != -1)) {
-          return true;
+        if ((loraId == 0 || emisor == loraId)) {
+          // Si recibimos el ACK exacto esperado
+          if (payload == esperado || payload.indexOf(esperado) != -1) {
+            return true;
+          }
+          // Si el aula ya procesó y confirmó un chunk superior (ACK acumulativo)
+          if (payload.startsWith("ACK")) {
+            int ackNum = payload.substring(3).toInt();
+            if (ackNum >= chunk) {
+              Serial.printf("[LORA] ACK acumulativo recibido #%d (esperado ACK%d)\n", ackNum, chunk);
+              return true;
+            }
+          }
+          // Detección de NACK selectivo por fragmento faltante
+          if (payload.startsWith("NACK:")) {
+            int nackNum = payload.substring(5).toInt();
+            Serial.printf("[LORA] NACK selectivo recibido de Aula #%d para chunk #%d\n", emisor, nackNum);
+            ultimoChunkNackSolicitado = nackNum;
+            return false;
+          }
         }
       }
     }
@@ -1332,28 +1353,50 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
     Serial.println("[LORA] Cantidad de fragmentos invalida");
     return false;
   }
-  Serial.printf("[LORA] Transmitiendo Huella #%d a Aula ID %d (LoRa ID %d, %d fragmentos)...\n",
+  Serial.printf("[LORA] Transmitiendo Huella #%d a Aula ID %d (LoRa ID %d, %d fragmentos con ARQ selectivo)...\n",
                 idHuella, idAula, loraId, total);
-  for (int chunk = 0; chunk < total; ++chunk) {
+
+  int chunk = 0;
+  int reintentos = 0;
+
+  while (chunk < total) {
     const String datos = huella.substring(chunk * CHARS_POR_CHUNK, min((chunk + 1) * CHARS_POR_CHUNK, (int)huella.length()));
-    const String trama = chunk == 0
+    const String trama = (chunk == 0)
       ? "0:" + String(idSync) + ":" + String(idHuella) + ":" + String(idAula) + ":" + ci + ":" + tipo + ":" + String(total) + ":" + datos
       : String(chunk) + ":" + datos;
+
     if (trama.length() > 240) {
       Serial.println("[LORA] Trama excede limite RYLR998");
       return false;
     }
-    bool confirmado = false;
-    for (int intento = 0; intento < MAX_REINTENTOS && !confirmado; ++intento) {
-      confirmado = enviarFragmentoConAck(loraId, trama, chunk, 2800);
-      if (!confirmado) {
-        Serial.printf("[LORA] Fragmento %d/%d sin ACK; reintento %d/%d\n",
-                      chunk + 1, total, intento + 1, MAX_REINTENTOS);
-        delay(120);
-      }
+
+    bool confirmado = enviarFragmentoConAck(loraId, trama, chunk, 2800);
+
+    if (confirmado) {
+      reintentos = 0;
+      chunk++;
+      delay(20);
+      continue;
     }
-    if (!confirmado) {
-      Serial.printf("[LORA] Envio cancelado: sin ACK en fragmento %d (Destino LoRa ID %d)\n", chunk, loraId);
+
+    // Si el aula notificó NACK selectivo solicitando un fragmento anterior faltante:
+    if (ultimoChunkNackSolicitado >= 0 && ultimoChunkNackSolicitado < total) {
+      Serial.printf("[LORA] Aula solicito retransmision selectiva del chunk #%d (NACK)\n", ultimoChunkNackSolicitado);
+      chunk = ultimoChunkNackSolicitado;
+      reintentos = 0;
+      delay(40);
+      continue;
+    }
+
+    // Reintento ordinario por pérdida o falta de respuesta
+    reintentos++;
+    if (reintentos < MAX_REINTENTOS) {
+      Serial.printf("[LORA] Fragmento %d/%d sin ACK; reintento %d/%d hacia LoRa ID %d\n",
+                    chunk + 1, total, reintentos, MAX_REINTENTOS, loraId);
+      delay(120);
+    } else {
+      Serial.printf("[LORA] Envio cancelado: sin ACK en fragmento %d tras %d intentos (Destino LoRa ID %d)\n",
+                    chunk, MAX_REINTENTOS, loraId);
       if (!loraOk) {
         notificarPantallaTemporal("ERROR LORA GW", "Modulo local fallo", "Revise pines 16/17", 3500);
       } else {
@@ -1361,8 +1404,8 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
       }
       return false;
     }
-    delay(20);
   }
+
   Serial.printf("[LORA] Huella #%d enviada completa a LoRa ID %d; esperando confirmacion de almacenamiento del aula\n", idHuella, loraId);
   return true;
 }

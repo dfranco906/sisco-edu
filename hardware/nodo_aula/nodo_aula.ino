@@ -75,6 +75,8 @@ char huellaBuffer[HUELLA_TEMPLATE_HEX_CHARS + 1] = {};
 int ultimoIndiceProcesado = -1;
 int totalChunksEsperados = 0;
 size_t longitudHuellaHex = 0;
+uint32_t chunksRecibidosMask = 0;
+int intentosNackTimeout = 0;
 unsigned long tiempoUltimoChunk = 0;
 unsigned long tiempoPrimerChunk = 0;
 int idSyncActual = 0, idHuellaActual = 0, idAulaSyncActual = 0;
@@ -95,6 +97,7 @@ bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin);
 bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int targetAddr, int targetNetId, String &diagSalida, String &versionSalida);
 void enviarComandoLoRa(int destino, const String &payload);
 void enviarAckLoRa(int destino, int chunk);
+void enviarNackLoRa(int destino, int chunkFaltante);
 void atenderComandosLoRa();
 void verificarLecturaHuella();
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado);
@@ -377,12 +380,31 @@ void loop() {
     mostrarPantallaReposoAula();
   }
 
-  if (estadoSync == SYNC_RECIBIENDO && millis() - tiempoUltimoChunk > 5000) {
-    Serial.println("[SYNC] timeout de fragmentos");
-    notificarResultadoSync(false, 0, "TIMEOUT_CHUNKS");
-    limpiarSyncRecibida();
-    estadoSync = SYNC_IDLE;
-    mostrarPantallaReposoAula();
+  // Gestión de recepción de fragmentos LoRa con NACK selectivo y timeout resiliente
+  if (estadoSync == SYNC_RECIBIENDO) {
+    const unsigned long silencio = millis() - tiempoUltimoChunk;
+    if (silencio > 3500 && intentosNackTimeout < 2) {
+      intentosNackTimeout++;
+      tiempoUltimoChunk = millis(); // Breve ventana para que el Gateway responda al NACK
+      int faltante = -1;
+      for (int i = 0; i < totalChunksEsperados; ++i) {
+        if (!(chunksRecibidosMask & (1UL << i))) {
+          faltante = i;
+          break;
+        }
+      }
+      if (faltante >= 0) {
+        Serial.printf("[LORA-AULA] Silencio LoRa (3.5s). Pidiendo retransmision selectiva NACK:%d a GW #%d (intento %d/2)\n",
+                      faltante, gatewayEmisorId > 0 ? gatewayEmisorId : configGatewayId, intentosNackTimeout);
+        enviarNackLoRa(gatewayEmisorId > 0 ? gatewayEmisorId : configGatewayId, faltante);
+      }
+    } else if (silencio > 8000) {
+      Serial.println("[SYNC] Timeout definitivo de fragmentos tras reintentos NACK");
+      notificarResultadoSync(false, 0, "TIMEOUT_CHUNKS");
+      limpiarSyncRecibida();
+      estadoSync = SYNC_IDLE;
+      mostrarPantallaReposoAula();
+    }
   }
 
   if (estadoSync == SYNC_IDLE) {
@@ -478,6 +500,8 @@ void limpiarSyncRecibida() {
   ultimoIndiceProcesado = -1;
   totalChunksEsperados = 0;
   longitudHuellaHex = 0;
+  chunksRecibidosMask = 0;
+  intentosNackTimeout = 0;
   tiempoUltimoChunk = 0;
   tiempoPrimerChunk = 0;
   idSyncActual = idHuellaActual = idAulaSyncActual = 0;
@@ -642,6 +666,17 @@ void enviarAckLoRa(int destino, int chunk) {
   loraSerial.print("\r\n");
 }
 
+void enviarNackLoRa(int destino, int chunkFaltante) {
+  String stringNack = "NACK:" + String(chunkFaltante);
+  loraSerial.print("AT+SEND=");
+  loraSerial.print(destino);
+  loraSerial.print(",");
+  loraSerial.print(stringNack.length());
+  loraSerial.print(",");
+  loraSerial.print(stringNack);
+  loraSerial.print("\r\n");
+}
+
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado) {
   enviarComandoLoRa(configGatewayId, "AST:" + String(configIdAula) + ":" + ci + ":" + tipo + ":" + estado);
 }
@@ -758,10 +793,11 @@ void atenderComandosLoRa() {
     ci.toCharArray(ciSyncActual, sizeof(ciSyncActual));
     tipo.toCharArray(tipoSyncActual, sizeof(tipoSyncActual));
     memcpy(huellaBuffer, hex.c_str(), hex.length());
-    longitudHuellaHex = hex.length();
+    chunksRecibidosMask |= (1UL << 0);
     totalChunksEsperados = total;
     ultimoIndiceProcesado = 0;
     tiempoPrimerChunk = tiempoUltimoChunk = millis();
+    intentosNackTimeout = 0;
     estadoSync = SYNC_RECIBIENDO;
 
     enviarAckLoRa(emisor, 0);
@@ -771,11 +807,11 @@ void atenderComandosLoRa() {
   }
 
   if (estadoSync != SYNC_RECIBIENDO || chunk < 0 || chunk >= totalChunksEsperados) return;
-  if (chunk <= ultimoIndiceProcesado) {
-    enviarAckLoRa(emisor, chunk);
+  if (resto.length() != CHARS_POR_CHUNK) {
+    Serial.printf("[LORA-AULA] Chunk %d ignorado: longitud de datos inesperada (%u != %d)\n",
+                  chunk, (unsigned int)resto.length(), CHARS_POR_CHUNK);
     return;
   }
-  if (chunk != ultimoIndiceProcesado + 1 || resto.length() != CHARS_POR_CHUNK) return;
 
   const size_t offset = (size_t)chunk * CHARS_POR_CHUNK;
   if (offset + resto.length() > HUELLA_TEMPLATE_HEX_CHARS) {
@@ -784,15 +820,51 @@ void atenderComandosLoRa() {
     estadoSync = SYNC_IDLE;
     return;
   }
+
+  // Guardar fragmento de 128 caracteres HEX en su offset exacto (soporta llegada desordenada)
   memcpy(huellaBuffer + offset, resto.c_str(), resto.length());
-  longitudHuellaHex = offset + resto.length();
-  ultimoIndiceProcesado = chunk;
+  chunksRecibidosMask |= (1UL << chunk);
   tiempoUltimoChunk = millis();
-  enviarAckLoRa(emisor, chunk);
-  Serial.printf("[LORA-AULA] Chunk %d/%d recibido de GW #%d y ACK emitido\n", chunk + 1, totalChunksEsperados, emisor);
+  intentosNackTimeout = 0;
 
-  if (chunk != totalChunksEsperados - 1) return;
+  // Inspeccionar si existe algún fragmento faltante previo para emitir NACK selectivo
+  int primerFaltante = -1;
+  for (int i = 0; i < chunk; ++i) {
+    if (!(chunksRecibidosMask & (1UL << i))) {
+      primerFaltante = i;
+      break;
+    }
+  }
 
+  if (primerFaltante >= 0) {
+    Serial.printf("[LORA-AULA] Chunk %d recibido pero falta chunk #%d. Emitiendo NACK:%d selectivo a GW #%d\n",
+                  chunk, primerFaltante, primerFaltante, emisor);
+    enviarNackLoRa(emisor, primerFaltante);
+  } else {
+    // Calcular el fragmento contiguo más alto completado
+    int maxContiguo = chunk;
+    for (int i = chunk + 1; i < totalChunksEsperados; ++i) {
+      if (chunksRecibidosMask & (1UL << i)) {
+        maxContiguo = i;
+      } else {
+        break;
+      }
+    }
+    if (maxContiguo > ultimoIndiceProcesado) {
+      ultimoIndiceProcesado = maxContiguo;
+    }
+    enviarAckLoRa(emisor, maxContiguo);
+    Serial.printf("[LORA-AULA] Fragmento %d/%d procesado. ACK%d emitido a GW #%d\n",
+                  chunk + 1, totalChunksEsperados, maxContiguo, emisor);
+  }
+
+  // Comprobar si se completaron los 24 fragmentos (máscara 0x00FFFFFF)
+  const uint32_t mascaraCompleta = (totalChunksEsperados >= 32) ? 0xFFFFFFFF : ((1UL << totalChunksEsperados) - 1);
+  if (chunksRecibidosMask != mascaraCompleta) {
+    return;
+  }
+
+  longitudHuellaHex = HUELLA_TEMPLATE_HEX_CHARS;
   estadoSync = SYNC_PROCESANDO;
   msgOled("GUARDANDO", "En DY50");
   if (longitudHuellaHex != HUELLA_TEMPLATE_HEX_CHARS) {
