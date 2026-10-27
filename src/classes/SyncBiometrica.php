@@ -353,4 +353,101 @@ class SyncBiometrica {
             'limit'  => $limit ?? 100
         ]);
     }
+
+    /**
+     * Elimina un intento de sincronización individual (Solo para Administradores)
+     */
+    public function eliminar(int $idSync): bool {
+        $stmtSel = $this->conn->prepare("SELECT id_huella FROM {$this->table_name} WHERE id_sync = :id");
+        $stmtSel->execute([':id' => $idSync]);
+        $idHuella = $stmtSel->fetchColumn();
+
+        if (!$idHuella) {
+            return false;
+        }
+
+        $this->conn->beginTransaction();
+        try {
+            $stmtAula = $this->conn->prepare("DELETE FROM aula_huellas_sync WHERE id_sync = :id");
+            $stmtAula->execute([':id' => $idSync]);
+
+            $stmtSync = $this->conn->prepare("DELETE FROM {$this->table_name} WHERE id_sync = :id");
+            $stmtSync->execute([':id' => $idSync]);
+
+            $stmtCheck = $this->conn->prepare("
+                SELECT COUNT(*) FROM {$this->table_name} 
+                WHERE id_huella = :id_huella AND estado = 'PENDIENTE'
+            ");
+            $stmtCheck->execute([':id_huella' => $idHuella]);
+            $pendientesRestantes = (int)$stmtCheck->fetchColumn();
+
+            if ($pendientesRestantes === 0) {
+                $this->conn->prepare("
+                    UPDATE huellas_templates 
+                    SET pendiente_sync = 0 
+                    WHERE id_huella = :id_huella AND sensor_slot IS NOT NULL
+                ")->execute([':id_huella' => $idHuella]);
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Elimina múltiples intentos de sincronización seleccionados (Solo para Administradores)
+     */
+    public function eliminarMultiples(array $idsSync): int {
+        $validos = array_values(array_filter(array_map('intval', $idsSync), fn($v) => $v > 0));
+        if (empty($validos)) {
+            return 0;
+        }
+
+        $inClause = implode(',', array_fill(0, count($validos), '?'));
+
+        $this->conn->beginTransaction();
+        try {
+            $stmtSel = $this->conn->prepare("
+                SELECT DISTINCT id_huella FROM {$this->table_name} 
+                WHERE id_sync IN ({$inClause})
+            ");
+            $stmtSel->execute($validos);
+            $huellasInvolucradas = $stmtSel->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+            $stmtAula = $this->conn->prepare("DELETE FROM aula_huellas_sync WHERE id_sync IN ({$inClause})");
+            $stmtAula->execute($validos);
+
+            $stmtSync = $this->conn->prepare("DELETE FROM {$this->table_name} WHERE id_sync IN ({$inClause})");
+            $stmtSync->execute($validos);
+            $afectados = $stmtSync->rowCount();
+
+            foreach ($huellasInvolucradas as $idH) {
+                $stmtCheck = $this->conn->prepare("
+                    SELECT COUNT(*) FROM {$this->table_name} 
+                    WHERE id_huella = :id_huella AND estado = 'PENDIENTE'
+                ");
+                $stmtCheck->execute([':id_huella' => $idH]);
+                if ((int)$stmtCheck->fetchColumn() === 0) {
+                    $this->conn->prepare("
+                        UPDATE huellas_templates 
+                        SET pendiente_sync = 0 
+                        WHERE id_huella = :id_huella AND sensor_slot IS NOT NULL
+                    ")->execute([':id_huella' => $idH]);
+                }
+            }
+
+            $this->conn->commit();
+            return $afectados;
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
 }

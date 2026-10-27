@@ -7,6 +7,9 @@ require_once __DIR__ . '/../../../src/middleware/auth.php';
 // RBAC: Solo SuperAdmin, Administrador y Administracion
 verificarRol(['SuperAdmin', 'Administrador', 'Administracion']);
 
+$rolActual = $_SESSION['rol'] ?? '';
+$esAdmin = in_array($rolActual, ['Administrador', 'SuperAdmin'], true);
+
 $gatewayIp = defined('IP_ESP32_GATEWAY') ? IP_ESP32_GATEWAY : '';
 $gatewaySyncUrl = defined('GATEWAY_SYNC_URL') ? GATEWAY_SYNC_URL : ($gatewayIp ? "http://{$gatewayIp}/sync" : '');
 
@@ -160,6 +163,16 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     <span id="badge-contador-seleccionados" class="px-2 py-0.5 rounded-full text-xs font-extrabold bg-white/20 text-white">0</span>
                 </button>
 
+                <!-- Botón: Eliminar Seleccionadas (Solo Administrador) -->
+                <?php if ($esAdmin): ?>
+                <button type="button" id="btn-eliminar-seleccionadas" onclick="eliminarSeleccionadas()" disabled
+                        class="min-h-[44px] px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white disabled:text-slate-500 text-sm font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer disabled:cursor-not-allowed"
+                        title="Eliminar de la cola los intentos de sincronización seleccionados">
+                    <span>🗑️ Eliminar Seleccionadas</span>
+                    <span id="badge-contador-eliminar-seleccionados" class="px-2 py-0.5 rounded-full text-xs font-extrabold bg-white/20 text-white">0</span>
+                </button>
+                <?php endif; ?>
+
                 <!-- Botón: Enviar Todas las Pendientes -->
                 <button type="button" id="btn-enviar-todas" onclick="iniciarEnvioTodasPendientes()"
                         class="min-h-[44px] px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-sm font-extrabold rounded-xl shadow-md shadow-orange-500/20 hover:shadow-orange-500/30 transition flex items-center gap-2 cursor-pointer">
@@ -306,7 +319,9 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     const BASE = window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '';
     const API_LISTAR = `${BASE}/src/api/Gateway/listar_sync_pendientes.php`;
     const API_PROCESAR = `${BASE}/src/api/Gateway/procesar_sync_cola.php`;
+    const API_ELIMINAR = `${BASE}/src/api/Gateway/eliminar_sync.php`;
     const GATEWAY_IP = <?= json_encode($gatewayIp) ?>;
+    const ES_ADMIN = <?= $esAdmin ? 'true' : 'false' ?>;
 
     // Estado global de la vista
     let itemsCola = [];
@@ -528,12 +543,23 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
                     <!-- Acciones directas -->
                     <td class="p-4 text-center">
-                        <button type="button" onclick="enviarHuellaIndividual(${it.id_sync}, ${it.id_huella}, '${escapeHtml(it.nombre_completo || '')}', '${escapeHtml(it.aula_nombre || '')}')"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition hover:scale-105 cursor-pointer"
-                                title="Enviar inmediatamente al Gateway LoRa para este aula">
-                            <span>📡</span>
-                            <span>Enviar al Aula</span>
-                        </button>
+                        <div class="inline-flex items-center gap-1.5 justify-center">
+                            <button type="button" onclick="enviarHuellaIndividual(${it.id_sync}, ${it.id_huella}, '${escapeHtml(it.nombre_completo || '')}', '${escapeHtml(it.aula_nombre || '')}')"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition hover:scale-105 cursor-pointer"
+                                    title="Enviar inmediatamente al Gateway LoRa para este aula">
+                                <span>📡</span>
+                                <span>Enviar al Aula</span>
+                            </button>
+                            ${ES_ADMIN ? `
+                            <button type="button" onclick="eliminarIntentoIndividual(${it.id_sync}, '${escapeHtml(it.nombre_completo || '')}', '${escapeHtml(it.aula_nombre || '')}')"
+                                    class="inline-flex items-center justify-center p-2 text-rose-600 hover:text-white hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:hover:bg-rose-700 border border-rose-300 dark:border-rose-800 hover:border-transparent rounded-xl text-xs font-bold transition hover:scale-105 cursor-pointer"
+                                    title="Eliminar este intento de sincronización">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                            ` : ''}
+                        </div>
                     </td>
                 </tr>
             `;
@@ -624,6 +650,16 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 btn.classList.add('disabled:bg-slate-300', 'disabled:text-slate-500');
             }
         }
+
+        const btnEliminar = document.getElementById('btn-eliminar-seleccionadas');
+        const badgeEliminar = document.getElementById('badge-contador-eliminar-seleccionados');
+        if (badgeEliminar) badgeEliminar.textContent = cant;
+        if (btnEliminar) {
+            btnEliminar.disabled = cant === 0;
+            if (cant === 0) {
+                btnEliminar.classList.add('disabled:bg-slate-300', 'disabled:text-slate-500');
+            }
+        }
     }
 
     /**
@@ -696,6 +732,106 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 cargarColaSincronizacion();
             } else {
                 mostrarAlertaUI('error', res.message || 'Error al procesar el envío');
+            }
+        } catch (e) {
+            mostrarAlertaUI('error', 'Fallo de comunicación: ' + e.message);
+        }
+    };
+
+    /**
+     * ELIMINAR INDIVIDUAL: Solo administradores
+     */
+    window.eliminarIntentoIndividual = async function(idSync, persona, aula) {
+        if (!ES_ADMIN) {
+            mostrarAlertaUI('error', 'Solo los usuarios con rol de Administrador pueden eliminar intentos.');
+            return;
+        }
+
+        const confirmacion = async () => {
+            if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+                return await window.SISCO.confirm({
+                    title: '¿Eliminar intento de sincronización?',
+                    message: `¿Estás seguro de que deseas eliminar el intento #${idSync} para "${persona}" en el aula "${aula}"?`,
+                    confirmText: 'Sí, eliminar',
+                    cancelText: 'Cancelar'
+                });
+            }
+            return confirm(`¿Estás seguro de que deseas eliminar el intento #${idSync} para "${persona}" en el aula "${aula}"?`);
+        };
+
+        const aceptar = await confirmacion();
+        if (!aceptar) return;
+
+        try {
+            mostrarToast('info', `Eliminando intento #${idSync}...`);
+
+            const resp = await fetch(API_ELIMINAR, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ id_sync: idSync })
+            });
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                mostrarAlertaUI('success', res.message || 'Intento eliminado correctamente.');
+                seleccionados.delete(Number(idSync));
+                cargarColaSincronizacion();
+            } else {
+                mostrarAlertaUI('error', res.message || 'Error al eliminar el intento.');
+            }
+        } catch (e) {
+            mostrarAlertaUI('error', 'Fallo de comunicación: ' + e.message);
+        }
+    };
+
+    /**
+     * ELIMINAR SELECCIONADAS: Solo administradores
+     */
+    window.eliminarSeleccionadas = async function() {
+        if (!ES_ADMIN) {
+            mostrarAlertaUI('error', 'Solo los usuarios con rol de Administrador pueden eliminar intentos.');
+            return;
+        }
+
+        if (seleccionados.size === 0) {
+            mostrarAlertaUI('warning', 'Selecciona al menos una huella de la lista para eliminar.');
+            return;
+        }
+
+        const ids = Array.from(seleccionados);
+        const confirmacion = async () => {
+            if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+                return await window.SISCO.confirm({
+                    title: '¿Eliminar intentos seleccionados?',
+                    message: `¿Estás seguro de que deseas eliminar los ${ids.length} intentos de sincronización seleccionados?`,
+                    confirmText: 'Sí, eliminar seleccionados',
+                    cancelText: 'Cancelar'
+                });
+            }
+            return confirm(`¿Estás seguro de que deseas eliminar los ${ids.length} intentos de sincronización seleccionados?`);
+        };
+
+        const aceptar = await confirmacion();
+        if (!aceptar) return;
+
+        try {
+            mostrarToast('info', `Eliminando ${ids.length} intentos seleccionados...`);
+
+            const resp = await fetch(API_ELIMINAR, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ ids_sync: ids })
+            });
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                mostrarAlertaUI('success', res.message || 'Intentos eliminados correctamente.');
+                seleccionados.clear();
+                const chkTodos = document.getElementById('chk-seleccionar-todos');
+                if (chkTodos) chkTodos.checked = false;
+                cargarColaSincronizacion();
+            } else {
+                mostrarAlertaUI('error', res.message || 'Error al eliminar los intentos.');
             }
         } catch (e) {
             mostrarAlertaUI('error', 'Fallo de comunicación: ' + e.message);

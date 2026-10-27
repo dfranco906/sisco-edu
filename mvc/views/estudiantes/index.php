@@ -341,10 +341,20 @@ async function cargarEstudiantes(idGrado) {
     const metaBox = document.getElementById('info-grado-seleccionado');
     const tableContainer = document.getElementById('contenedor-tabla-estudiantes');
     const tbody = document.getElementById('tabla-estudiantes-body');
+    const fGrado = document.getElementById('filtro-grado');
+
+    // Si no se especifica idGrado, conservar el curso o filtro actualmente seleccionado
+    if (!idGrado) {
+        idGrado = fGrado?.value || '';
+    }
 
     if (!idGrado) {
         mostrarPromptVacio();
         return;
+    }
+
+    if (fGrado && idGrado && fGrado.value !== idGrado) {
+        fGrado.value = idGrado;
     }
 
     if (promptBox) promptBox.classList.add('hidden');
@@ -792,7 +802,8 @@ function abrirModalBiometriaEstudiante(idEstudiante) {
                         document.getElementById('mbe-feedback-spinner').classList.add('hidden');
                         document.getElementById('mbe-feedback-msg').textContent = '✓ ¡Huella guardada exitosamente en el servidor!\nAhora puede enviarla al aula usando el botón "2. Enviar al Aula".';
                     }
-                    cargarEstudiantes();
+                    const gradoActualReg = document.getElementById('filtro-grado')?.value || 'TODOS';
+                    await cargarEstudiantes(gradoActualReg);
                 } else if (res && !res.ok) {
                     if (feedbackBox) {
                         feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
@@ -840,7 +851,8 @@ function abrirModalBiometriaEstudiante(idEstudiante) {
                         document.getElementById('mbe-feedback-spinner').classList.add('hidden');
                         document.getElementById('mbe-feedback-msg').textContent = res.data?.message || '✓ ¡Huella encolada exitosamente para el aula!';
                     }
-                    cargarEstudiantes();
+                    const gradoActualEnv = document.getElementById('filtro-grado')?.value || 'TODOS';
+                    await cargarEstudiantes(gradoActualEnv);
                 } else {
                     if (feedbackBox) {
                         feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
@@ -883,7 +895,8 @@ async function enviarHuellaEstudianteDirecto(idEstudiante) {
 
         if (res && res.ok) {
             alert(res.data?.message || '✓ Huella encolada exitosamente para el aula.');
-            cargarEstudiantes();
+            const gradoActualDir = document.getElementById('filtro-grado')?.value || 'TODOS';
+            await cargarEstudiantes(gradoActualDir);
         } else {
             alert('Error al enviar huella: ' + (res?.message || 'Compruebe el estado del servidor.'));
         }

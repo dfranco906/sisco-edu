@@ -357,10 +357,20 @@ async function cargarProfesores(idGrado) {
     const metaBox = document.getElementById('info-grado-seleccionado');
     const tableContainer = document.getElementById('contenedor-tabla-profesores');
     const tbody = document.getElementById('tabla-profesores-body');
+    const fGrado = document.getElementById('filtro-grado');
+
+    // Si no se especifica idGrado, conservar el curso o filtro actualmente seleccionado
+    if (!idGrado) {
+        idGrado = fGrado?.value || '';
+    }
 
     if (!idGrado) {
         mostrarPromptVacio();
         return;
+    }
+
+    if (fGrado && idGrado && fGrado.value !== idGrado) {
+        fGrado.value = idGrado;
     }
 
     if (promptBox) promptBox.classList.add('hidden');
@@ -895,7 +905,8 @@ function abrirModalBiometriaProfesor(idProfesor) {
                         document.getElementById('mbp-feedback-spinner').classList.add('hidden');
                         document.getElementById('mbp-feedback-msg').textContent = '✓ ¡Huella guardada exitosamente en el servidor!\nAhora puede enviarla a las aulas usando el botón "2. Enviar a las Aulas".';
                     }
-                    cargarProfesores();
+                    const gradoActualReg = document.getElementById('filtro-grado')?.value || 'TODOS';
+                    await cargarProfesores(gradoActualReg);
                 } else if (res && !res.ok) {
                     if (feedbackBox) {
                         feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
@@ -942,7 +953,8 @@ function abrirModalBiometriaProfesor(idProfesor) {
                         document.getElementById('mbp-feedback-spinner').classList.add('hidden');
                         document.getElementById('mbp-feedback-msg').textContent = res.data?.message || '✓ ¡Huella encolada exitosamente para las aulas!';
                     }
-                    cargarProfesores();
+                    const gradoActualEnv = document.getElementById('filtro-grado')?.value || 'TODOS';
+                    await cargarProfesores(gradoActualEnv);
                 } else {
                     if (feedbackBox) {
                         feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
@@ -984,7 +996,8 @@ async function enviarHuellaProfesorDirecto(idProfesor) {
 
         if (res && res.ok) {
             alert(res.data?.message || '✓ Huella encolada exitosamente para las aulas.');
-            cargarProfesores();
+            const gradoActualDir = document.getElementById('filtro-grado')?.value || 'TODOS';
+            await cargarProfesores(gradoActualDir);
         } else {
             alert('Error al enviar huella: ' + (res?.message || 'Compruebe el estado del servidor.'));
         }
