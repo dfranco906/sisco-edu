@@ -66,6 +66,14 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     <span>←</span>
                     <span>Administración</span>
                 </a>
+
+                <?php if ($esAdmin): ?>
+                <button type="button" onclick="abrirModalResetearAula()" class="btn min-h-[46px] px-4 py-2.5 text-base font-bold rounded-2xl border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 transition flex items-center gap-2 cursor-pointer shadow-xs" title="Vaciar todas las huellas del sensor de un aula vía LoRa">
+                    <span>🧹</span>
+                    <span>Resetear Aula</span>
+                </button>
+                <?php endif; ?>
+
                 <button type="button" id="btn-refrescar-cola" onclick="cargarColaSincronizacion()" class="min-h-[46px] px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-base font-bold rounded-2xl border border-slate-300 dark:border-slate-700 transition flex items-center gap-2 cursor-pointer">
                     <svg id="icon-refresh" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -313,6 +321,91 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     </div>
 </div>
 
+<!-- Modal: Resetear / Vaciar Huellas de Aula (Solo Administradores) -->
+<div id="modal-resetear-aula" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-reset-titulo">
+    <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        
+        <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-rose-50/70 dark:bg-rose-950/40">
+            <div class="flex items-center gap-3.5">
+                <span class="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-300 text-xl font-black">
+                    🧹
+                </span>
+                <div>
+                    <h2 id="modal-reset-titulo" class="text-xl font-extrabold text-slate-900 dark:text-white">
+                        Resetear Huellas de Aula
+                    </h2>
+                    <p class="text-xs text-slate-600 dark:text-slate-400">
+                        Vaciado del sensor óptico DY50 y base de datos local
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="cerrarModalResetearAula()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer">
+                ✕
+            </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+            <!-- Aviso de impacto -->
+            <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs sm:text-sm text-amber-900 dark:text-amber-200 space-y-1.5 leading-relaxed">
+                <p class="font-extrabold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                    <span>⚠️</span>
+                    <span>Acción Destructiva en el Nodo de Aula:</span>
+                </p>
+                <p>
+                    Esta acción emitirá un comando LoRa al nodo para vaciar completamente los 200 slots del sensor óptico DY50 y limpiará sus sincronizaciones locales.
+                </p>
+                <p class="font-semibold text-emerald-800 dark:text-emerald-300">
+                    ✓ Las huellas originales de los estudiantes siguen a salvo en la base de datos central de SISCO-EDU para su futura reasignación.
+                </p>
+            </div>
+
+            <!-- Selector de Aula con Nodo LoRa -->
+            <div>
+                <label for="mra-select-aula" class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
+                    Seleccione el Aula a Resetear:
+                </label>
+                <select id="mra-select-aula" class="w-full px-4 py-3 text-base rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
+                    <option value="">Cargando aulas activas con LoRa...</option>
+                </select>
+            </div>
+
+            <!-- Opción Forzar en BD si está apagado -->
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="mra-chk-forzar" class="mt-0.5 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 dark:border-slate-600">
+                    <span class="text-xs text-slate-700 dark:text-slate-300">
+                        <b>Forzar vaciado en Base de Datos</b> aunque el aula esté apagada o no responda por LoRa (útil si el hardware fue retirado o reemplazado).
+                    </span>
+                </label>
+            </div>
+
+            <!-- Checkbox de confirmación obligatoria -->
+            <div>
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="mra-chk-confirmar" onchange="actualizarBtnResetModal()" class="mt-0.5 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 dark:border-slate-600">
+                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Confirmo que deseo vaciar las huellas del sensor de esta aula.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Mensaje de estado durante ejecución -->
+            <div id="mra-feedback" class="p-3 rounded-xl text-center text-xs font-bold hidden"></div>
+        </div>
+
+        <div class="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-end gap-3">
+            <button type="button" onclick="cerrarModalResetearAula()" class="btn btn-muted px-4 py-2.5 text-sm font-semibold rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer">
+                Cancelar
+            </button>
+            <button type="button" id="mra-btn-ejecutar" onclick="ejecutarResetAula()" disabled
+                    class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white disabled:text-slate-500 text-sm font-bold rounded-xl transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-md">
+                <span>🧹 Ejecutar Vaciado</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
 <script>
 (() => {
     // Endpoints relativos portables con BASE_URL
@@ -320,6 +413,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     const API_LISTAR = `${BASE}/src/api/Gateway/listar_sync_pendientes.php`;
     const API_PROCESAR = `${BASE}/src/api/Gateway/procesar_sync_cola.php`;
     const API_ELIMINAR = `${BASE}/src/api/Gateway/eliminar_sync.php`;
+    const API_RESETEAR_AULA = `${BASE}/src/api/Gateway/resetear_aula.php`;
+    const API_NODOS = `${BASE}/src/api/Nodos/listar_nodos.php`;
     const GATEWAY_IP = <?= json_encode($gatewayIp) ?>;
     const ES_ADMIN = <?= $esAdmin ? 'true' : 'false' ?>;
 
@@ -1030,6 +1125,131 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     window.cerrarModalProgreso = function() {
         const modal = document.getElementById('modal-progreso-cola');
         if (modal) modal.classList.add('hidden');
+    };
+
+    /**
+     * VACIADO / RESET REMOTO DE AULA (Solo Administradores)
+     */
+    window.abrirModalResetearAula = async function() {
+        if (!ES_ADMIN) {
+            mostrarAlertaUI('error', 'Solo los usuarios con rol de Administrador pueden resetear aulas.');
+            return;
+        }
+
+        const modal = document.getElementById('modal-resetear-aula');
+        const sel = document.getElementById('mra-select-aula');
+        const chkConf = document.getElementById('mra-chk-confirmar');
+        const chkForzar = document.getElementById('mra-chk-forzar');
+        const feedback = document.getElementById('mra-feedback');
+        const btn = document.getElementById('mra-btn-ejecutar');
+
+        if (chkConf) chkConf.checked = false;
+        if (chkForzar) chkForzar.checked = false;
+        if (feedback) feedback.className = 'hidden';
+        if (btn) btn.disabled = true;
+
+        if (sel) {
+            sel.innerHTML = '<option value="">Cargando aulas activas con nodo LoRa...</option>';
+        }
+
+        if (modal) modal.classList.remove('hidden');
+
+        try {
+            const resp = await fetch(API_NODOS);
+            const res = await resp.json();
+
+            if (res.status === 'success' && Array.isArray(res.data?.nodos)) {
+                const nodosAula = res.data.nodos.filter(n => n.tipo === 'AULA' && n.id_aula);
+                if (nodosAula.length === 0) {
+                    sel.innerHTML = '<option value="">No hay nodos de aula activos registrados</option>';
+                    return;
+                }
+
+                sel.innerHTML = '<option value="">Seleccione un aula para vaciar...</option>' +
+                    nodosAula.map(n => `
+                        <option value="${n.id_aula}" data-lora="${n.lora_id || ''}">
+                            ${escapeHtml(n.nombre_aula || 'Aula')} (ID: ${n.id_aula}, LoRa #${n.lora_id || 'S/N'}, ${escapeHtml(n.codigo_sala || '')})
+                        </option>
+                    `).join('');
+            } else {
+                sel.innerHTML = '<option value="">Error al cargar la lista de aulas</option>';
+            }
+        } catch (e) {
+            if (sel) sel.innerHTML = '<option value="">Error al conectar con el servidor</option>';
+        }
+    };
+
+    window.cerrarModalResetearAula = function() {
+        const modal = document.getElementById('modal-resetear-aula');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    window.actualizarBtnResetModal = function() {
+        const sel = document.getElementById('mra-select-aula');
+        const chkConf = document.getElementById('mra-chk-confirmar');
+        const btn = document.getElementById('mra-btn-ejecutar');
+        const aulaVal = parseInt(sel?.value || '0', 10);
+        if (btn) {
+            btn.disabled = !(aulaVal > 0 && chkConf?.checked);
+        }
+    };
+
+    document.getElementById('mra-select-aula')?.addEventListener('change', window.actualizarBtnResetModal);
+
+    window.ejecutarResetAula = async function() {
+        if (!ES_ADMIN) return;
+
+        const sel = document.getElementById('mra-select-aula');
+        const chkForzar = document.getElementById('mra-chk-forzar');
+        const btn = document.getElementById('mra-btn-ejecutar');
+        const feedback = document.getElementById('mra-feedback');
+
+        const idAula = parseInt(sel?.value || '0', 10);
+        const forzar = chkForzar ? chkForzar.checked : false;
+
+        if (!idAula) {
+            mostrarAlertaUI('warning', 'Seleccione un aula válida.');
+            return;
+        }
+
+        btn.disabled = true;
+        if (feedback) {
+            feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200';
+            feedback.textContent = '⏳ Enviando comando LoRa de vaciado al Aula... Por favor espere hasta 5 segundos.';
+        }
+
+        try {
+            const resp = await fetch(API_RESETEAR_AULA, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ id_aula: idAula, forzar: forzar })
+            });
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                if (feedback) {
+                    feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200';
+                    feedback.textContent = '✓ ' + (res.message || 'Aula reseteada exitosamente');
+                }
+                mostrarAlertaUI('success', res.message || 'Sensor de aula vaciado correctamente.');
+                setTimeout(() => {
+                    cerrarModalResetearAula();
+                    cargarColaSincronizacion();
+                }, 1400);
+            } else {
+                if (feedback) {
+                    feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
+                    feedback.textContent = '⚠ ' + (res.message || 'Error al resetear aula.');
+                }
+                btn.disabled = false;
+            }
+        } catch (e) {
+            if (feedback) {
+                feedback.className = 'p-3 rounded-xl text-center text-xs font-bold block bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200';
+                feedback.textContent = 'Fallo de comunicación: ' + e.message;
+            }
+            btn.disabled = false;
+        }
     };
 
     /**

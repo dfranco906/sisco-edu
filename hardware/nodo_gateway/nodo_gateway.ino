@@ -79,6 +79,7 @@ bool ejecutarComandoAT(HardwareSerial &serial, const String &cmd, String &respue
 bool sincronizarBaudRateRYLR(HardwareSerial &serial, int rxPin, int txPin);
 bool verificarYConfigurarLoRa(HardwareSerial &serial, int rxPin, int txPin, int targetAddr, int targetNetId, String &diagSalida, String &versionSalida);
 bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, int &rssi, int &snr, unsigned long timeoutMs = 2500);
+bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long timeoutMs = 4500);
 
 void conectarWifi();
 void iniciarModoAP();
@@ -764,6 +765,38 @@ void setup() {
     }
   });
 
+  // Endpoint de vaciado remoto del sensor de un aula (protegido por X-GATEWAY-KEY)
+  server.on("/clear_aula", HTTP_POST, []() {
+    Serial.printf("[HTTP] Solicitud de vaciado de aula recibida desde %s\n",
+                  server.client().remoteIP().toString().c_str());
+    if (server.header("X-GATEWAY-KEY") != configApiKey) {
+      Serial.println("[HTTP] Solicitud rechazada: clave de gateway invalida");
+      server.send(404, "application/json", "{\"status\":\"not_found\"}");
+      return;
+    }
+
+    int idAula = server.hasArg("id_aula") ? server.arg("id_aula").toInt() : 0;
+    int loraId = server.hasArg("lora_id") ? server.arg("lora_id").toInt() : 0;
+
+    if (idAula <= 0 || loraId <= 0) {
+      server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Faltan parametros id_aula y lora_id validos\"}");
+      return;
+    }
+
+    String detalle;
+    bool exito = vaciarSensorAulaLoRa(loraId, idAula, detalle, 4500);
+
+    DynamicJsonDocument doc(256);
+    doc["status"] = exito ? "success" : "error";
+    doc["id_aula"] = idAula;
+    doc["lora_id"] = loraId;
+    doc["message"] = detalle;
+
+    String json;
+    serializeJson(doc, json);
+    server.send(exito ? 200 : 502, "application/json", json);
+  });
+
   // Portal cautivo redirecciones
   server.on("/generate_204", handleRoot);
   server.on("/fwlink", handleRoot);
@@ -1098,6 +1131,61 @@ bool hacerPingLoRa(int loraId, int &emisorDetectado, String &payloadDetectado, i
     }
   }
   Serial.printf("[PING] Sin respuesta PONG de LoRa ID %d (+OK local=%s)\n", loraId, okLocal ? "SI" : "NO");
+  return false;
+}
+
+bool vaciarSensorAulaLoRa(int loraId, int idAula, String &mensaje, unsigned long timeoutMs) {
+  if (!loraOk) {
+    mensaje = "Modulo LoRa del Gateway en fallo de comunicacion AT";
+    return false;
+  }
+  while (loraSerial.available()) loraSerial.read();
+
+  Serial.printf("[CLEAR-AULA] Transmitiendo comando CLEAR a Aula ID %d (LoRa ID %d)...\n", idAula, loraId);
+  enviarComandoLoRa(loraId, "CMD:CLEAR:" + String(idAula));
+
+  const unsigned long inicio = millis();
+  notificarPantallaTemporal("VACIAR AULA", "Aula #" + String(idAula), "Espere ACK...", 2000);
+
+  while (millis() - inicio < timeoutMs) {
+    if (!loraSerial.available()) {
+      delay(4);
+      continue;
+    }
+    String linea = loraSerial.readStringUntil('\n');
+    linea.trim();
+    if (linea.length() == 0) continue;
+
+    if (linea.startsWith("+RCV=")) {
+      int c1 = linea.indexOf(',');
+      int c2 = linea.indexOf(',', c1 + 1);
+      int c3 = linea.indexOf(',', c2 + 1);
+      if (c1 > 0 && c2 > 0 && c3 > 0) {
+        int emisor = linea.substring(5, c1).toInt();
+        String payload = linea.substring(c2 + 1, c3);
+        payload.trim();
+
+        if (emisor == loraId || loraId == 0) {
+          if (payload.startsWith("CLEAR_OK")) {
+            Serial.printf("[CLEAR-AULA] Exito: Aula %d (Nodo %d) confirmo vaciado completo del sensor DY50\n", idAula, emisor);
+            mensaje = "Sensor DY50 y NVS vaciados exitosamente por el nodo de aula #" + String(emisor);
+            notificarPantallaTemporal("CLEAR AULA: OK", "Aula #" + String(idAula), "Sensor vaciado", 2500);
+            return true;
+          } else if (payload.startsWith("CLEAR_ERR")) {
+            String codErr = payload.substring(10);
+            Serial.printf("[CLEAR-AULA] Error reportado por Aula %d: %s\n", idAula, codErr.c_str());
+            mensaje = "El sensor DY50 del aula reporto error al vaciar: " + codErr;
+            notificarPantallaTemporal("CLEAR: ERROR", "Aula #" + String(idAula), codErr, 2500);
+            return false;
+          }
+        }
+      }
+    }
+  }
+
+  mensaje = "Tiempo de espera agotado (4.5s) sin respuesta de vaciado del Aula #" + String(idAula) + " (LoRa #" + String(loraId) + ")";
+  Serial.println("[CLEAR-AULA] " + mensaje);
+  notificarPantallaTemporal("CLEAR: TIMEOUT", "Sin respuesta", "Nodo #" + String(loraId), 2500);
   return false;
 }
 

@@ -45,6 +45,86 @@ class NodoEsp32 {
     }
 
     /**
+     * Obtiene el nodo LoRa activo vinculado a un aula específica.
+     */
+    public function obtenerPorAula(int $id_aula): ?array {
+        $sql = "SELECT n.*, a.nombre AS nombre_aula, COALESCE(a.codigo, a.codigo_sala) AS codigo_sala
+                FROM {$this->table_name} n
+                LEFT JOIN aulas a ON a.id_aula = n.id_aula
+                WHERE n.id_aula = :id_aula AND n.activo = 1
+                LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':id_aula' => $id_aula]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    /**
+     * Resetea / vacía las huellas registradas en un aula tanto a nivel de hardware (vía LoRa)
+     * como a nivel de base de datos (PostgreSQL).
+     */
+    public function resetearAulaHuellas(int $idAula, bool $forzar = false): array {
+        $nodo = $this->obtenerPorAula($idAula);
+        $nombreAula = $nodo['nombre_aula'] ?? "Aula #{$idAula}";
+        $loraId = !empty($nodo['lora_id']) ? (int)$nodo['lora_id'] : null;
+
+        $loraOk = false;
+        $mensajeLora = '';
+
+        if ($loraId && function_exists('solicitarVaciadoAulaGateway')) {
+            $respLora = solicitarVaciadoAulaGateway($idAula, $loraId);
+            $loraOk = $respLora['ok'];
+            $mensajeLora = $respLora['message'];
+        } else {
+            $mensajeLora = "No hay nodo LoRa asignado a esta aula.";
+        }
+
+        if (!$loraOk && !$forzar) {
+            return [
+                'ok'      => false,
+                'message' => "Fallo de comunicación LoRa con {$nombreAula}: {$mensajeLora}. Si el aula está apagada o fuera de servicio, puede usar la opción 'Forzar vaciado en BD'.",
+                'lora_ok' => false
+            ];
+        }
+
+        // Ejecutar limpieza en Base de Datos de forma atómica
+        $this->conn->beginTransaction();
+        try {
+            // 1. Desactivar mapeos biométricos de esa aula
+            $stmt1 = $this->conn->prepare("UPDATE biometric_mapping SET activo = 0 WHERE id_aula = :id_aula");
+            $stmt1->execute([':id_aula' => $idAula]);
+            $slotsAfectados = $stmt1->rowCount();
+
+            // 2. Eliminar registros de confirmación en aula_huellas_sync
+            $stmt2 = $this->conn->prepare("DELETE FROM aula_huellas_sync WHERE id_aula = :id_aula");
+            $stmt2->execute([':id_aula' => $idAula]);
+
+            // 3. Eliminar registros de sincronización pendientes o erróneos para este aula
+            $stmt3 = $this->conn->prepare("DELETE FROM sync_biometrica WHERE id_aula = :id_aula");
+            $stmt3->execute([':id_aula' => $idAula]);
+            $syncsBorradas = $stmt3->rowCount();
+
+            $this->conn->commit();
+
+            return [
+                'ok'               => true,
+                'message'          => "Aula '{$nombreAula}' reseteada correctamente. " . ($loraOk ? "Sensor DY50 vaciado por LoRa." : "Limpieza realizada en BD (forzada)."),
+                'id_aula'          => $idAula,
+                'lora_id'          => $loraId,
+                'lora_ok'          => $loraOk,
+                'slots_afectados'  => $slotsAfectados,
+                'syncs_eliminadas' => $syncsBorradas
+            ];
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Sugiere el siguiente ID LoRa correlativo disponible (ej. 101, 102...).
      */
     public function obtenerSiguienteLoraId(int $lora_red_id = 18): int {

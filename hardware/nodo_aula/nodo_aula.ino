@@ -693,6 +693,41 @@ void atenderComandosLoRa() {
     return;
   }
 
+  // COMANDO REMOTO DE RESET / VACIADO COMPLETO DEL SENSOR DE AULA
+  if (payload.startsWith("CMD:CLEAR:")) {
+    int idAulaDestino = payload.substring(10).toInt();
+    if (idAulaDestino == configIdAula || idAulaDestino == 0) {
+      Serial.printf("[LORA-AULA] Comando CLEAR recibido de Gateway #%d para Aula %d. Vaciando sensor DY50 y NVS...\n",
+                    emisor, configIdAula);
+      msgOled("RESET AULA", "Vaciando DY50...");
+
+      // 1. Vaciar memoria flash interna del sensor óptico DY50
+      uint8_t p = finger.emptyDatabase();
+      bool sensorVaciado = (p == FINGERPRINT_OK);
+
+      // 2. Limpiar base de datos local (RAM y NVS Preferences)
+      prefs.begin("dblocal", false);
+      prefs.clear();
+      prefs.end();
+      memset(dbLocal, 0, sizeof(dbLocal));
+
+      // 3. Responder al Gateway por LoRa
+      if (sensorVaciado) {
+        msgOled("RESET OK", "0 huellas DY50");
+        Serial.printf("[LORA-AULA] Sensor DY50 y NVS vaciados exitosamente para Aula %d\n", configIdAula);
+        enviarComandoLoRa(emisor, "CLEAR_OK:" + String(configIdAula));
+      } else {
+        msgOled("RESET ERROR", "Fallo DY50: " + String(p));
+        Serial.printf("[LORA-AULA] Error al vaciar sensor DY50 (codigo %d)\n", p);
+        enviarComandoLoRa(emisor, "CLEAR_ERR:" + String(configIdAula) + ":" + String(p));
+      }
+
+      delay(1500);
+      mostrarPantallaReposoAula();
+      return;
+    }
+  }
+
   const int sep = payload.indexOf(':');
   if (sep <= 0) return;
   const int chunk = payload.substring(0, sep).toInt();
