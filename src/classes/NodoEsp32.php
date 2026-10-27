@@ -205,7 +205,8 @@ class NodoEsp32 {
                        COUNT(s.id_sync) AS pendientes
                 FROM {$this->table_name} n
                 LEFT JOIN aulas a ON a.id_aula = n.id_aula
-                LEFT JOIN sync_biometrica s ON s.id_aula = n.id_aula AND s.estado = 'PENDIENTE'{$filterHuella}
+                INNER JOIN sync_biometrica s ON s.id_aula = n.id_aula AND s.estado = 'PENDIENTE'{$filterHuella}
+                INNER JOIN huellas_templates h ON h.id_huella = s.id_huella AND h.activo = 1
                 WHERE n.tipo = 'AULA' AND n.activo = 1 AND n.lora_id IS NOT NULL
                 GROUP BY n.id_aula, n.lora_id, n.lora_red_id, n.room_id, a.codigo_sala, a.nombre
                 HAVING COUNT(s.id_sync) > 0

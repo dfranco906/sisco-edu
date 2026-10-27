@@ -27,3 +27,77 @@ Prueba del commit: c1b04c7
 [LORA-AULA] Chunk 22/24 recibido de GW #100 y ACK emitido
 [LORA-AULA] Chunk 23/24 recibido de GW #100 y ACK emitido
 [LORA-AULA] Chunk 24/24 recibido de GW #100 y ACK emitido
+
+Nodo Gateway #100
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] API obtener_aulas_sync respondio HTTP -1
+[PING] Transmitiendo PING a LoRa ID 110...
+[PING] PONG recibido de Nodo 110! (Payload: PONG:18:110, RSSI: -29 dBm, SNR: 12 dB, RTT: 65 ms)
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[HTTP] Solicitud de sincronizacion recibida desde 192.168.100.52
+[SYNC DIRIGIDO] Huella ID 75 dirigida al Aula 30...
+[SYNC] Consultando huella para aula 30 (direccion LoRa 0, huella 75)
+[LORA] Transmitiendo Huella #75 a Aula ID 30 (LoRa ID 110, 24 fragmentos)...
+[LORA] Huella #75 enviada completa a LoRa ID 110; esperando confirmacion de almacenamiento del aula
+[LORA] Mensaje SYNCOK recibido del dispositivo 110
+[SYNC] Aula 30 confirmo huella 75 en slot 6 (CRC32=9399bfe0)
+[SYNC] Confirmacion de entrega enviada a la API (HTTP 500)
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
+[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...
+[SYNC] 1 aulas registradas en la base de datos
+[SYNC] Aula 3° CURSO BTI (ID 30, LoRa 110) tiene 2 huellas pendientes
+[SYNC] Consultando huella para aula 30 (direccion LoRa 110, huella 0)
+[SYNC] Aula 30: no hay sincronizacion pendiente valida
+[SYNC] Consulta dinamica finalizada
