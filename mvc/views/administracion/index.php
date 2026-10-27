@@ -113,7 +113,7 @@ try {
             </div>
             <div class="flex items-center gap-2 self-start md:self-auto text-base text-slate-600 dark:text-slate-400 font-medium">
                 <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                <span id="contador-modulos-visibles">12 módulos disponibles</span>
+                <span id="contador-modulos-visibles">13 módulos disponibles</span>
             </div>
         </div>
 
@@ -310,7 +310,7 @@ try {
                     <p class="text-base text-slate-600 dark:text-slate-400 mt-1">Nóminas de personas, espacios físicos e infraestructura técnica IoT</p>
                 </div>
                 <span class="text-sm font-bold px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    6 Módulos
+                    7 Módulos
                 </span>
             </div>
 
@@ -471,6 +471,31 @@ try {
                     <div class="mt-6">
                         <a href="<?= base_url('mvc/views/administracion/sync_biometrica.php') ?>" class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/60 hover:bg-amber-600 dark:hover:bg-amber-600 text-amber-800 dark:text-amber-300 hover:text-white dark:hover:text-white border border-amber-200 dark:border-amber-800/60 hover:border-amber-600 flex items-center justify-between text-base font-bold transition">
                             <span>Supervisar cola LoRa</span>
+                            <span class="text-lg group-hover:translate-x-1 transition-transform">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 13. Promoción de Cursos y Matrículas -->
+                <div class="card-modulo app-card p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 flex flex-col justify-between group hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-lg transition duration-200 bg-white dark:bg-slate-900"
+                     data-titulo="promocion de cursos cohortes cambio anio lectivo migracion huellas lora graduacion matriculas" data-desc="promocion anual de alumnos a grados superiores reasignacion automatica de aulas y migracion de huellas lora">
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800 group-hover:scale-105 transition-transform text-2xl font-bold">
+                                🎓
+                            </div>
+                            <span class="text-sm font-bold px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1.5">
+                                Anual & LoRa
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">Promoción de Cursos</h3>
+                        <p class="text-base text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
+                            Avanza cohortes de estudiantes al siguiente año lectivo, reasigna sus aulas y encola la migración de huellas LoRa.
+                        </p>
+                    </div>
+                    <div class="mt-6">
+                        <a href="<?= base_url('mvc/views/administracion/promociones.php') ?>" class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/60 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-indigo-800 dark:text-indigo-300 hover:text-white dark:hover:text-white border border-indigo-200 dark:border-indigo-800/60 hover:border-indigo-600 flex items-center justify-between text-base font-bold transition">
+                            <span>Gestionar promociones</span>
                             <span class="text-lg group-hover:translate-x-1 transition-transform">→</span>
                         </a>
                     </div>
