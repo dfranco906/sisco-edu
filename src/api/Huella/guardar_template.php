@@ -1,5 +1,7 @@
 <?php
+// src/api/Huella/guardar_template.php
 header("Content-Type: application/json; charset=UTF-8");
+
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/biometria.php';
@@ -9,9 +11,10 @@ $db = (new Database())->getConnection();
 $tipo = strtolower(trim($_POST['tipo_persona'] ?? $_POST['tipo_usuario'] ?? 'estudiante'));
 $template = trim($_POST['template'] ?? '');
 $crcRecibido = strtolower(trim($_POST['crc32'] ?? ''));
-$idRecibido = filter_input(INPUT_POST, 'id_persona', FILTER_VALIDATE_INT) ?: filter_input(INPUT_POST, 'id_estudiante', FILTER_VALIDATE_INT);
+$rawIdRecibido = $_POST['id_persona'] ?? $_POST['id_estudiante'] ?? $_POST['id_profesor'] ?? null;
+$idRecibido = filter_var($rawIdRecibido, FILTER_VALIDATE_INT) ?: null;
 $userIdRecibido = trim($_POST['user_id_global'] ?? '');
-$bytesRecibidos = filter_input(INPUT_POST, 'bytes', FILTER_VALIDATE_INT);
+$bytesRecibidos = isset($_POST['bytes']) ? filter_var($_POST['bytes'], FILTER_VALIDATE_INT) : null;
 
 // 1. Guard clause: Validación estricta del contrato biométrico (1536 bytes / 3072 HEX)
 if (!in_array($tipo, ['estudiante', 'profesor'], true)
@@ -33,35 +36,16 @@ if (preg_match('/\A[0-9a-f]{8}\z/D', $crcRecibido) !== 1
     exit;
 }
 
-function avisarGatewaySync(): bool {
-    if (!function_exists('curl_init') || !defined('GATEWAY_SYNC_URL') || empty(GATEWAY_SYNC_URL)) {
-        return false;
-    }
-    $ch = curl_init(GATEWAY_SYNC_URL);
-    if (!$ch) return false;
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => ['X-GATEWAY-KEY: ' . GATEWAY_API_KEY],
-        CURLOPT_TIMEOUT => 3,
-        CURLOPT_CONNECTTIMEOUT => 2
-    ]);
-    $respuesta = curl_exec($ch);
-    $codigo = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    return $respuesta !== false && $codigo >= 200 && $codigo < 300;
-}
-
 try {
     $tabla = $tipo === 'estudiante' ? 'estudiantes' : 'profesores';
     $idCampo = $tipo === 'estudiante' ? 'id_estudiante' : 'id_profesor';
 
     // 3. Localizar la persona a registrar
     if ($idRecibido) {
-        $stmt = $db->prepare("SELECT {$idCampo}, user_id_global" . ($tipo === 'estudiante' ? ', id_grado, id_aula' : '') . " FROM {$tabla} WHERE {$idCampo} = :id AND activo = 1 LIMIT 1");
+        $stmt = $db->prepare("SELECT {$idCampo}, user_id_global, nombre, apellido FROM {$tabla} WHERE {$idCampo} = :id AND activo = 1 LIMIT 1");
         $stmt->execute([':id' => $idRecibido]);
     } elseif ($userIdRecibido !== '') {
-        $stmt = $db->prepare("SELECT {$idCampo}, user_id_global" . ($tipo === 'estudiante' ? ', id_grado, id_aula' : '') . " FROM {$tabla} WHERE user_id_global = :uid AND activo = 1 LIMIT 1");
+        $stmt = $db->prepare("SELECT {$idCampo}, user_id_global, nombre, apellido FROM {$tabla} WHERE user_id_global = :uid AND activo = 1 LIMIT 1");
         $stmt->execute([':uid' => $userIdRecibido]);
     } else {
         http_response_code(400);
@@ -78,38 +62,7 @@ try {
 
     $idPersona = (int)$persona[$idCampo];
 
-    // 4. Resolver el aula física correspondiente al nodo LoRa destinatario
-    $idAula = filter_input(INPUT_POST, 'id_aula', FILTER_VALIDATE_INT);
-    if (!$idAula) {
-        if ($tipo === 'estudiante') {
-            if (!empty($persona['id_grado'])) {
-                $stmtAula = $db->prepare("SELECT id_aula FROM grados WHERE id_grado = :grado AND activo = 1 LIMIT 1");
-                $stmtAula->execute([':grado' => $persona['id_grado']]);
-                $idAula = (int)$stmtAula->fetchColumn();
-            }
-            if (!$idAula && !empty($persona['id_aula'])) {
-                $idAula = (int)$persona['id_aula'];
-            }
-        } else {
-            // Para profesores, asignar primera aula programada en sus horarios
-            $stmtAula = $db->prepare("
-                SELECT h.id_aula 
-                FROM horarios h 
-                INNER JOIN asignacion_docente ad ON ad.id_asignacion = h.id_asignacion 
-                WHERE ad.id_profesor = :profesor AND h.activo = 1 AND h.id_aula IS NOT NULL 
-                ORDER BY h.id_horario ASC LIMIT 1
-            ");
-            $stmtAula->execute([':profesor' => $idPersona]);
-            $idAula = (int)$stmtAula->fetchColumn();
-        }
-    }
-
-    // Aula predeterminada de laboratorio si no cuenta con asignación física previa
-    if (!$idAula) {
-        $idAula = 18;
-    }
-
-    // 5. Transacción atómica de guardado y encolado de sincronización
+    // 4. Momento 1: Transacción atómica de guardado y vinculación biométrica
     $db->beginTransaction();
 
     // Desactivar plantillas anteriores para mantener única la plantilla activa
@@ -128,10 +81,10 @@ try {
         ){$returningHuella}
     ");
     $stmtIns->execute([
-        ':uid' => $persona['user_id_global'],
-        ':id' => $idPersona,
+        ':uid'  => $persona['user_id_global'],
+        ':id'   => $idPersona,
         ':data' => strtolower($template),
-        ':crc' => $crcCalculado
+        ':crc'  => $crcCalculado
     ]);
     $idHuella = ($driver === 'pgsql') ? (int)$stmtIns->fetchColumn() : (int)$db->lastInsertId();
 
@@ -139,12 +92,11 @@ try {
     if ($tipo === 'estudiante') {
         $db->prepare("
             UPDATE estudiantes 
-            SET huella_id = :huella, huella_registrada = 1, pendiente_sync = 1, id_aula = COALESCE(:aula, id_aula)
+            SET huella_id = :huella, huella_registrada = 1, pendiente_sync = 1
             WHERE id_estudiante = :id
         ")->execute([
             ':huella' => $idHuella,
-            ':aula' => $idAula,
-            ':id' => $idPersona
+            ':id'     => $idPersona
         ]);
     } else {
         $db->prepare("
@@ -153,41 +105,25 @@ try {
             WHERE id_profesor = :id
         ")->execute([
             ':huella' => $idHuella,
-            ':id' => $idPersona
+            ':id'     => $idPersona
         ]);
     }
 
-    $returningSync = ($driver === 'pgsql') ? ' RETURNING id_sync' : '';
-
-    // Encolar en sync_biometrica para transporte LoRa hacia el nodo del aula
-    $stmtSync = $db->prepare("
-        INSERT INTO sync_biometrica (id_huella, id_aula, estado, intentos) 
-        VALUES (:huella, :aula, 'PENDIENTE', 0){$returningSync}
-    ");
-    $stmtSync->execute([
-        ':huella' => $idHuella,
-        ':aula' => $idAula
-    ]);
-    $idSync = ($driver === 'pgsql') ? (int)$stmtSync->fetchColumn() : (int)$db->lastInsertId();
-
     $db->commit();
-
-    // Notificar al Gateway para que inicie la descarga hacia el aula correspondiente
-    $gatewayAvisado = avisarGatewaySync();
 
     http_response_code(200);
     echo json_encode([
-        'status' => 'success',
-        'message' => 'Huella registrada correctamente. Encolada para sincronización LoRa al nodo del aula.',
-        'data' => [
-            'id_huella' => $idHuella,
-            'id_sync' => $idSync,
-            'id_aula' => $idAula,
-            'user_id_global' => $persona['user_id_global'],
-            'crc32' => $crcCalculado,
-            'gateway_avisado' => $gatewayAvisado
+        'status'  => 'success',
+        'message' => "Huella biométrica de {$persona['nombre']} {$persona['apellido']} registrada y guardada exitosamente.",
+        'data'    => [
+            'id_huella'       => $idHuella,
+            'id_persona'      => $idPersona,
+            'user_id_global'  => $persona['user_id_global'],
+            'tipo_usuario'    => $tipo,
+            'crc32'           => $crcCalculado
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
+
 } catch (Throwable $e) {
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();

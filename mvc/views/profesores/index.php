@@ -526,6 +526,13 @@ function renderizarTablaProfesores(lista) {
                             <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.99 7.132"></path></svg>
                             <span>Biometría</span>
                         </button>
+                        ${tieneHuella ? `
+                        <button type="button" onclick="enviarHuellaProfesorDirecto(${p.id_profesor})"
+                                class="btn bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-sm font-bold py-1.5 px-3 min-h-[38px] inline-flex items-center gap-1.5"
+                                title="Enviar huella a todas las aulas asignadas vía LoRa">
+                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                            <span>Enviar a Aulas</span>
+                        </button>` : ''}
                     </div>
                 </td>
 
@@ -561,6 +568,13 @@ function renderizarTablaProfesores(lista) {
 // 4. Búsqueda local predictiva
 document.addEventListener('DOMContentLoaded', () => {
     cargarEstructuraCascada();
+
+    // Actualización reactiva sin recargar página ante eventos biométricos
+    window.addEventListener('huellaRegistrada', () => {
+        const selG = document.getElementById('filtro-grado');
+        const val = selG ? selG.value : 'TODOS';
+        cargarProfesores(val || 'TODOS');
+    });
 
     const inputBusqueda = document.getElementById('busqueda-profesores-filtro');
     if (inputBusqueda) {
@@ -837,22 +851,32 @@ function abrirModalBiometriaProfesor(idProfesor) {
 
     const tieneHuella = (parseInt(prof.huella_registrada || 0) > 0) || (parseInt(prof.huella_id || 0) > 0);
     const badgeWrap = document.getElementById('mbp-badge-estado');
-    if (badgeWrap) {
-        badgeWrap.className = tieneHuella
-            ? 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-            : 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
-        badgeWrap.innerHTML = tieneHuella ? '✓ Huella Registrada' : '⚠️ Sin Huella Registrada';
-    }
+    const btnCaptura = document.getElementById('mbp-btn-iniciar-captura');
+    const btnEnviarAulas = document.getElementById('mbp-btn-enviar-aulas');
+
+    const actualizarEstadoModal = (registrada) => {
+        if (badgeWrap) {
+            badgeWrap.className = registrada
+                ? 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                : 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
+            badgeWrap.innerHTML = registrada ? '✓ Huella Registrada' : '⚠️ Sin Huella Registrada';
+        }
+        if (btnEnviarAulas) {
+            btnEnviarAulas.disabled = !registrada;
+        }
+    };
+
+    actualizarEstadoModal(tieneHuella);
 
     // Limpiar feedback anterior
     const feedbackBox = document.getElementById('mbp-feedback-box');
     if (feedbackBox) feedbackBox.classList.add('hidden');
 
-    const btnCaptura = document.getElementById('mbp-btn-iniciar-captura');
     if (btnCaptura) {
         btnCaptura.disabled = false;
         btnCaptura.onclick = async () => {
             btnCaptura.disabled = true;
+            if (btnEnviarAulas) btnEnviarAulas.disabled = true;
             if (feedbackBox) {
                 feedbackBox.className = 'p-4 rounded-2xl border border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-center space-y-2 block';
                 feedbackBox.classList.remove('hidden');
@@ -861,7 +885,24 @@ function abrirModalBiometriaProfesor(idProfesor) {
             }
 
             try {
-                await descargarYGuardarTemplate(prof.user_id_global, 'profesor');
+                const res = await descargarYGuardarTemplate(prof.user_id_global, 'profesor');
+                if (res && res.ok) {
+                    prof.huella_id = res.data?.id_huella || 1;
+                    prof.huella_registrada = 1;
+                    actualizarEstadoModal(true);
+                    if (feedbackBox) {
+                        feedbackBox.className = 'p-4 rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-center space-y-2 block';
+                        document.getElementById('mbp-feedback-spinner').classList.add('hidden');
+                        document.getElementById('mbp-feedback-msg').textContent = '✓ ¡Huella guardada exitosamente en el servidor!\nAhora puede enviarla a las aulas usando el botón "2. Enviar a las Aulas".';
+                    }
+                    cargarProfesores();
+                } else if (res && !res.ok) {
+                    if (feedbackBox) {
+                        feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
+                        document.getElementById('mbp-feedback-spinner').classList.add('hidden');
+                        document.getElementById('mbp-feedback-msg').textContent = 'Error: ' + (res?.message || 'No se pudo guardar la huella');
+                    }
+                }
             } catch (err) {
                 if (feedbackBox) {
                     feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
@@ -870,11 +911,86 @@ function abrirModalBiometriaProfesor(idProfesor) {
                 }
             } finally {
                 btnCaptura.disabled = false;
+                const tieneHuellaAhora = (parseInt(prof.huella_registrada || 0) > 0) || (parseInt(prof.huella_id || 0) > 0);
+                if (btnEnviarAulas) btnEnviarAulas.disabled = !tieneHuellaAhora;
+            }
+        };
+    }
+
+    if (btnEnviarAulas) {
+        btnEnviarAulas.onclick = async () => {
+            btnEnviarAulas.disabled = true;
+            if (btnCaptura) btnCaptura.disabled = true;
+            if (feedbackBox) {
+                feedbackBox.className = 'p-4 rounded-2xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-center space-y-2 block';
+                feedbackBox.classList.remove('hidden');
+                document.getElementById('mbp-feedback-spinner').classList.remove('hidden');
+                document.getElementById('mbp-feedback-msg').textContent = 'Encolando huella hacia los nodos de las aulas vía LoRa...';
+            }
+
+            try {
+                const res = await enviarHuellaAulas({
+                    idPersona: prof.id_profesor,
+                    userIdGlobal: prof.user_id_global,
+                    idHuella: prof.huella_id || null,
+                    tipoUsuario: 'profesor'
+                });
+
+                if (res && res.ok) {
+                    if (feedbackBox) {
+                        feedbackBox.className = 'p-4 rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-center space-y-2 block';
+                        document.getElementById('mbp-feedback-spinner').classList.add('hidden');
+                        document.getElementById('mbp-feedback-msg').textContent = res.data?.message || '✓ ¡Huella encolada exitosamente para las aulas!';
+                    }
+                    cargarProfesores();
+                } else {
+                    if (feedbackBox) {
+                        feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
+                        document.getElementById('mbp-feedback-spinner').classList.add('hidden');
+                        document.getElementById('mbp-feedback-msg').textContent = 'Error al enviar a aulas: ' + (res?.message || 'Error desconocido');
+                    }
+                }
+            } catch (err) {
+                if (feedbackBox) {
+                    feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
+                    document.getElementById('mbp-feedback-spinner').classList.add('hidden');
+                    document.getElementById('mbp-feedback-msg').textContent = 'Error: ' + err.message;
+                }
+            } finally {
+                btnEnviarAulas.disabled = false;
+                btnCaptura.disabled = false;
             }
         };
     }
 
     modal.classList.remove('hidden');
+}
+
+async function enviarHuellaProfesorDirecto(idProfesor) {
+    const prof = profesoresCargados.find(p => parseInt(p.id_profesor) === parseInt(idProfesor));
+    if (!prof) return;
+
+    if (!confirm(`¿Desea enviar la huella de ${prof.nombre} ${prof.apellido} a todas las aulas asignadas?`)) {
+        return;
+    }
+
+    try {
+        const res = await enviarHuellaAulas({
+            idPersona: prof.id_profesor,
+            userIdGlobal: prof.user_id_global,
+            idHuella: prof.huella_id || null,
+            tipoUsuario: 'profesor'
+        });
+
+        if (res && res.ok) {
+            alert(res.data?.message || '✓ Huella encolada exitosamente para las aulas.');
+            cargarProfesores();
+        } else {
+            alert('Error al enviar huella: ' + (res?.message || 'Compruebe el estado del servidor.'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
 }
 
 function cerrarModalBiometriaProfesor() {

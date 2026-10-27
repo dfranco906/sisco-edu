@@ -16,11 +16,14 @@ if (!in_array($accion, $accionesValidas, true)) {
 $ipRegistrador = defined('IP_ESP32_REGISTRADOR') ? IP_ESP32_REGISTRADOR : '192.168.100.39';
 $url = "http://{$ipRegistrador}/{$accion}";
 
+$timeoutEjecucion = ($accion === 'estado') ? 8 : 25;
+$timeoutConexion = 4;
+
 $ch = curl_init($url);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_TIMEOUT => ($accion === 'estado' ? 3 : 15),
-    CURLOPT_CONNECTTIMEOUT => 3,
+    CURLOPT_TIMEOUT => $timeoutEjecucion,
+    CURLOPT_CONNECTTIMEOUT => $timeoutConexion,
     CURLOPT_HTTPHEADER => ['Accept: application/json']
 ]);
 
