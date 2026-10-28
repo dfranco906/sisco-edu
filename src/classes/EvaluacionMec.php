@@ -34,10 +34,16 @@ class EvaluacionMec {
             INNER JOIN instrumentos_evaluativos ie ON ie.id_instrumento = p.id_instrumento
             LEFT JOIN profesores prof ON prof.id_profesor = p.id_profesor
             WHERE p.activo = 1
-              AND (p.es_institucional = 1 OR (:id_profesor IS NOT NULL AND p.id_profesor = :id_profesor))
         ";
 
-        $params = [':id_profesor' => $idProfesor];
+        $params = [];
+
+        if ($idProfesor !== null && $idProfesor > 0) {
+            $sql .= " AND (p.es_institucional = 1 OR p.id_profesor = :id_profesor)";
+            $params[':id_profesor'] = $idProfesor;
+        } else {
+            $sql .= " AND p.es_institucional = 1";
+        }
 
         if ($idInstrumento !== null && $idInstrumento > 0) {
             $sql .= " AND p.id_instrumento = :id_instrumento";
