@@ -106,9 +106,12 @@ unset($mat);
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <a href="<?= base_url('mvc/views/clases/panel.php') ?>" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
-                    🔴 Iniciar Clase en Vivo
+                <a href="<?= base_url('mvc/views/profesores/sesion_clase.php') ?>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                    ⚡ Iniciar Mi Sesión (MEC)
+                </a>
+                <a href="<?= base_url('mvc/views/evaluaciones/instrumentos.php') ?>" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                    <span>📋</span> Banco de Instrumentos
                 </a>
                 <a href="<?= base_url('mvc/views/planes_anuales/index.php') ?>" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-colors">
                     📖 Mis Planes Anuales
@@ -177,8 +180,8 @@ unset($mat);
 
                     <!-- Botones de Acción de la Materia -->
                     <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
-                        <a href="<?= base_url('mvc/views/clases/panel.php') ?>" class="flex-1 text-center py-2 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-600/20 dark:hover:bg-rose-600/30 text-rose-700 dark:text-rose-300 font-bold text-xs rounded-xl border border-rose-200 dark:border-transparent transition-colors">
-                            🔴 Dictar Clase
+                        <a href="<?= base_url('mvc/views/profesores/sesion_clase.php?id_grado=' . (int)$mat['id_grado']) ?>" class="flex-1 text-center py-2 px-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-600/20 dark:hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 font-bold text-xs rounded-xl border border-emerald-200 dark:border-transparent transition-colors">
+                            ⚡ Sesión en Vivo
                         </a>
                         <a href="<?= base_url('mvc/views/planes_anuales/index.php') ?>" class="flex-1 text-center py-2 px-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-600/20 dark:hover:bg-indigo-600/30 text-indigo-700 dark:text-indigo-300 font-semibold text-xs rounded-xl border border-indigo-200 dark:border-transparent transition-colors">
                             📖 Plan Anual

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 ?>
-<!-- Submodal 1: Ficha Integral del Docente (Información Secundaria) -->
+<!-- Submodal 1: Ficha Integral del Docente con Monitoreo en Tiempo Real (Paraguay) -->
 <div id="modal-detalle-profesor" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mdp-nombre-docente">
     <div class="app-modal-dialog max-w-3xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6 max-h-[92vh] overflow-y-auto">
         
@@ -32,6 +32,35 @@ declare(strict_types=1);
             <button type="button" onclick="cerrarModalDetalleProfesor()" class="app-modal-close text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-2" aria-label="Cerrar ficha">
                 ×
             </button>
+        </div>
+
+        <!-- BANNER DE MONITOREO EN TIEMPO REAL: HORARIO DE PARAGUAY & PRESENCIA BIOMÉTRICA -->
+        <div id="mdp-banner-tiempo-real" class="p-4 sm:p-5 rounded-2xl border transition-all duration-300 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <span id="mdp-realtime-icono" class="text-2xl shrink-0 mt-0.5">⏱️</span>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Monitoreo en Vivo (Hora Oficial Paraguay)
+                            </span>
+                            <span id="mdp-realtime-hora-servidor" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                                --:--:--
+                            </span>
+                        </div>
+                        <h5 id="mdp-realtime-titulo" class="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
+                            Consultando disponibilidad y horario...
+                        </h5>
+                        <p id="mdp-realtime-detalle" class="text-sm font-medium text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
+                            Verificando asignaciones lectivas del día de hoy...
+                        </p>
+                    </div>
+                </div>
+
+                <div id="mdp-realtime-badge-asistencia" class="shrink-0 hidden sm:block">
+                    <!-- Badge dinámico de huella -->
+                </div>
+            </div>
         </div>
 
         <!-- Bloque 1: Canales de Contacto y Acceso al Sistema -->
@@ -103,7 +132,7 @@ declare(strict_types=1);
                 </div>
             </div>
 
-            <!-- Tabla Detallada de Materias -->
+            <!-- Tabla Detallada de Materias con Estado en Vivo -->
             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-base">
@@ -112,13 +141,13 @@ declare(strict_types=1);
                                 <th class="py-3 px-4 text-left">Curso / Grado</th>
                                 <th class="py-3 px-4 text-left">Materia Asignada</th>
                                 <th class="py-3 px-4 text-center">Carga Horaria</th>
-                                <th class="py-3 px-4 text-center">Año Lectivo</th>
+                                <th class="py-3 px-4 text-left">Horario & Estado Actual (Paraguay)</th>
                             </tr>
                         </thead>
                         <tbody id="mdp-tabla-materias-body" class="divide-y divide-slate-100 dark:divide-slate-800">
                             <tr>
                                 <td colspan="4" class="p-6 text-center text-slate-500 font-medium">
-                                    Cargando distribución de materias...
+                                    Cargando distribución de materias y horarios en vivo...
                                 </td>
                             </tr>
                         </tbody>
@@ -127,20 +156,30 @@ declare(strict_types=1);
             </div>
         </div>
 
-        <!-- Bloque 3: Datos de Identidad Biométrica IoT -->
-        <div class="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <!-- Bloque 3: Acciones de Identidad Biométrica IoT (Centralizadas en la Ficha) -->
+        <div class="p-5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <span class="text-sm font-bold uppercase tracking-wider text-purple-900 dark:text-purple-300 block">
-                    Identificador Biométrico de Hardware (ESP32 / DY50)
+                    Gestión Biométrica de Hardware (ESP32 / DY50 / LoRa)
                 </span>
                 <span id="mdp-user-id-global" class="font-mono text-base font-bold text-slate-900 dark:text-white block mt-0.5">
                     PROF_-----
                 </span>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Capture la huella en el sensor de secretaría y elija a qué aulas transmitirla vía radiofrecuencia LoRa.
+                </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <!-- Botón 1: Capturar Huella en el Registrador -->
                 <button type="button" id="mdp-btn-abrir-biometria" class="btn btn-secondary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2">
                     <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.99 7.132"></path></svg>
                     <span>Configurar Huella</span>
+                </button>
+
+                <!-- Botón 2: Enviar a Aulas Selectivas -->
+                <button type="button" id="mdp-btn-enviar-aulas-ficha" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2 shadow-xs transition-colors">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                    <span>Enviar a Aulas</span>
                 </button>
             </div>
         </div>

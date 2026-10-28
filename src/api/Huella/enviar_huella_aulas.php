@@ -15,6 +15,17 @@ $rawAula = $_POST['id_aula'] ?? null;
 $idAulaManual = filter_var($rawAula, FILTER_VALIDATE_INT) ?: null;
 $rawHuella = $_POST['id_huella'] ?? null;
 $idHuellaManual = filter_var($rawHuella, FILTER_VALIDATE_INT) ?: null;
+$forzarReenvio = isset($_POST['forzar']) && ((string)$_POST['forzar'] === '1' || (string)$_POST['forzar'] === 'true');
+
+// Soporte para selección múltiple de aulas (array o cadena separada por comas)
+$aulasSeleccionadasIds = [];
+if (!empty($_POST['aulas_ids'])) {
+    if (is_array($_POST['aulas_ids'])) {
+        $aulasSeleccionadasIds = array_filter(array_map('intval', $_POST['aulas_ids']), fn($id) => $id > 0);
+    } elseif (is_string($_POST['aulas_ids'])) {
+        $aulasSeleccionadasIds = array_filter(array_map('intval', explode(',', $_POST['aulas_ids'])), fn($id) => $id > 0);
+    }
+}
 
 // 1. Guard clause: Parámetros básicos válidos
 if (!in_array($tipo, ['estudiante', 'profesor'], true)) {
@@ -97,7 +108,22 @@ try {
     // 4. Determinar aulas destino
     $aulasDestino = [];
 
-    if ($idAulaManual) {
+    if (!empty($aulasSeleccionadasIds)) {
+        // Aulas seleccionadas explícitamente desde el modal de selección de aulas
+        $inPlaceholders = implode(',', array_fill(0, count($aulasSeleccionadasIds), '?'));
+        $stmtSel = $db->prepare("SELECT id_aula, nombre, codigo_sala, codigo FROM aulas WHERE id_aula IN ({$inPlaceholders}) AND activo = 1 ORDER BY nombre ASC");
+        $stmtSel->execute(array_values($aulasSeleccionadasIds));
+        $aulasDestino = $stmtSel->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($aulasDestino)) {
+            http_response_code(404);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Ninguna de las aulas seleccionadas se encuentra activa.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    } elseif ($idAulaManual) {
         // Aula manual específica solicitada
         $stmtA = $db->prepare("SELECT id_aula, nombre, codigo_sala, codigo FROM aulas WHERE id_aula = :aula AND activo = 1 LIMIT 1");
         $stmtA->execute([':aula' => $idAulaManual]);
@@ -182,6 +208,13 @@ try {
         LIMIT 1
     ");
 
+    $stmtCheckHardware = $db->prepare("
+        SELECT id_aula_sync, slot_local, estado 
+        FROM aula_huellas_sync 
+        WHERE id_huella = :huella AND id_aula = :aula AND UPPER(estado) = 'CONFIRMADO'
+        LIMIT 1
+    ");
+
     $stmtUpdateSync = $db->prepare("
         UPDATE sync_biometrica 
         SET estado = 'PENDIENTE', intentos = 0, mensaje = NULL, fecha_actualizacion = NOW() 
@@ -197,11 +230,28 @@ try {
     ");
 
     $detallesAulas = [];
+    $aulasEncoladasEfectivas = [];
 
     foreach ($aulasDestino as $aula) {
         $idAulaActual = (int)$aula['id_aula'];
         $roomId = !empty($aula['codigo_sala']) ? $aula['codigo_sala'] : (!empty($aula['codigo']) ? $aula['codigo'] : null);
         $nombreAula = !empty($aula['nombre']) ? $aula['nombre'] : "Aula #{$idAulaActual}";
+
+        // Si no se fuerza reenvío, verificar si ya está confirmada en el sensor DY50 de esa aula
+        if (!$forzarReenvio) {
+            $stmtCheckHardware->execute([':huella' => $idHuella, ':aula' => $idAulaActual]);
+            $yaEnSensor = $stmtCheckHardware->fetch(PDO::FETCH_ASSOC);
+            if ($yaEnSensor) {
+                $detallesAulas[] = [
+                    'id_aula'     => $idAulaActual,
+                    'nombre'      => $nombreAula,
+                    'codigo_sala' => $roomId,
+                    'accion'      => 'omitido_ya_sincronizado',
+                    'slot_local'  => (int)$yaEnSensor['slot_local']
+                ];
+                continue;
+            }
+        }
 
         $stmtCheckSync->execute([
             ':huella' => $idHuella,
@@ -218,6 +268,7 @@ try {
                 'id_sync'     => (int)$syncExistente['id_sync'],
                 'accion'      => 'reencolado'
             ];
+            $aulasEncoladasEfectivas[] = $idAulaActual;
         } else {
             $stmtInsertSync->execute([
                 ':huella'  => $idHuella,
@@ -230,6 +281,7 @@ try {
                 'codigo_sala' => $roomId,
                 'accion'      => 'nuevo'
             ];
+            $aulasEncoladasEfectivas[] = $idAulaActual;
         }
     }
 
@@ -240,15 +292,21 @@ try {
     $db->commit();
 
     // 6. Notificar al Gateway LoRa para iniciar transmisión dirigida a las aulas
-    $aulaDestinoDirecto = (count($detallesAulas) === 1) ? (int)$detallesAulas[0]['id_aula'] : null;
-    $gatewayNotificado = avisarGatewaySync($idHuella, $aulaDestinoDirecto);
+    $aulaDestinoDirecto = (count($aulasEncoladasEfectivas) === 1) ? (int)$aulasEncoladasEfectivas[0] : null;
+    $gatewayNotificado = !empty($aulasEncoladasEfectivas) ? avisarGatewaySync($idHuella, $aulaDestinoDirecto) : false;
 
     $nombresAulasStr = implode(', ', array_map(fn($a) => $a['nombre'], $detallesAulas));
     $cantAulas = count($detallesAulas);
+    $cantEncoladas = count($aulasEncoladasEfectivas);
 
-    $msgGateway = $gatewayNotificado
-        ? " Gateway notificado para transmitir Huella #{$idHuella} vía LoRa."
-        : " Encolado en cola local (el Gateway sincronizará al consultar pendientes).";
+    $msgGateway = "";
+    if ($cantEncoladas === 0) {
+        $msgGateway = " Todas las aulas seleccionadas ya cuentan con la huella confirmada en el sensor DY50.";
+    } elseif ($gatewayNotificado) {
+        $msgGateway = " Gateway notificado para transmitir Huella #{$idHuella} vía LoRa a {$cantEncoladas} aula(s).";
+    } else {
+        $msgGateway = " Encolado en cola local (el Gateway sincronizará al consultar pendientes).";
+    }
 
     http_response_code(200);
     echo json_encode([

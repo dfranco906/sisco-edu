@@ -22,7 +22,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                         Gestión de Profesores
                     </h2>
                     <p class="text-base text-slate-600 dark:text-slate-400 mt-1">
-                        Nómina docente institucional, asignación curricular y control biométrico.
+                        Nómina docente institucional, asignación curricular y control biométrico en tiempo real.
                     </p>
                 </div>
             </div>
@@ -34,7 +34,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 <span>+ Nuevo Profesor</span>
             </button>
 
-            <button type="button" onclick="abrirModalImportarProfesores(document.getElementById('filtro-grado')?.value)" class="btn btn-secondary text-base font-semibold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2" title="Importar profesores desde archivo CSV / Excel">
+            <button type="button" onclick="abrirModalImportarProfesores()" class="btn btn-secondary text-base font-semibold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2" title="Importar profesores desde archivo CSV / Excel">
                 <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 <span>Importar</span>
             </button>
@@ -55,8 +55,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
     </div>
 
-    <!-- Filtros en cascada: Turno -> Nivel -> Bachillerato -> Grado/Curso (Tipografía Grande) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+    <!-- Filtros de Nómina: Turno, Ciclo / Nivel y Bachillerato (Sin depender de Grado/Curso) -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
             <label for="filtro-turno" class="block text-sm sm:text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 1. Turno
@@ -84,62 +84,39 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </select>
         </div>
 
-        <div>
-            <label for="filtro-grado" class="block text-sm sm:text-base font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-2">
-                4. Grado o Curso *
-            </label>
-            <select id="filtro-grado" class="app-input w-full text-base font-bold py-2.5 px-3 rounded-xl min-h-[46px] border-purple-400 dark:border-purple-500 focus:border-purple-600">
-                <option value="">Seleccione grado o curso...</option>
-                <option value="TODOS">-- Ver todos los profesores --</option>
-            </select>
+        <div class="flex items-end">
+            <button type="button" onclick="limpiarFiltrosNomina()" class="btn btn-secondary w-full text-base font-semibold py-2.5 px-4 min-h-[46px] inline-flex items-center justify-center gap-2" title="Restablecer filtros de búsqueda">
+                <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>Limpiar Filtros</span>
+            </button>
         </div>
     </div>
 
-    <!-- Tira de Metadatos del Grado Seleccionado -->
-    <div id="info-grado-seleccionado" class="hidden p-5 rounded-3xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 flex flex-wrap items-center justify-between gap-4 text-base">
+    <!-- Tira de Metadatos de la Nómina Docente Institucional -->
+    <div id="info-grado-seleccionado" class="p-5 rounded-3xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/60 flex flex-wrap items-center justify-between gap-4 text-base">
         <div class="flex flex-wrap items-center gap-3">
             <span class="font-bold text-purple-900 dark:text-purple-200 text-lg flex items-center gap-2">
-                <span id="meta-grado-nombre" class="font-extrabold text-xl text-purple-900 dark:text-purple-100">3° BTI</span>
+                <span id="meta-grado-nombre" class="font-extrabold text-xl text-purple-900 dark:text-purple-100">Nómina General de Docentes</span>
             </span>
             <span class="text-slate-300 dark:text-slate-700">•</span>
-            <span class="text-slate-700 dark:text-slate-300 font-medium">Aula: <strong id="meta-grado-aula" class="text-slate-900 dark:text-white font-bold">-</strong></span>
-            <span class="text-slate-300 dark:text-slate-700">•</span>
-            <span class="text-slate-700 dark:text-slate-300 font-medium">Turno: <strong id="meta-grado-turno" class="text-slate-900 dark:text-white font-bold">-</strong></span>
+            <span class="text-slate-700 dark:text-slate-300 font-medium">Búsqueda directa e institucional</span>
         </div>
 
         <div class="flex items-center gap-3 flex-wrap">
             <div class="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-800 font-semibold text-slate-800 dark:text-slate-200 text-base">
-                Docentes: <span id="meta-total-profesores" class="font-extrabold text-purple-700 dark:text-purple-300">0</span>
+                Docentes Registrados: <span id="meta-total-profesores" class="font-extrabold text-purple-700 dark:text-purple-300">0</span>
             </div>
             <div class="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-800 font-semibold text-slate-800 dark:text-slate-200 text-base">
                 Con Huella: <span id="meta-total-huellas" class="font-extrabold text-emerald-600 dark:text-emerald-400">0</span>
             </div>
             <div class="px-3.5 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-800 font-semibold text-slate-800 dark:text-slate-200 text-base">
-                Con Asignación: <span id="meta-total-asignaciones" class="font-extrabold text-blue-600 dark:text-blue-400">0</span>
+                Con Cátedra: <span id="meta-total-asignaciones" class="font-extrabold text-blue-600 dark:text-blue-400">0</span>
             </div>
         </div>
     </div>
 
-    <!-- Estado Inicial / Prompt de Selección (cuando NO se ha elegido curso) -->
-    <div id="prompt-seleccion-grado" class="p-10 sm:p-14 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div class="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center justify-center mx-auto text-3xl font-bold border border-purple-200 dark:border-purple-800">
-            🔍
-        </div>
-        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-            Seleccioná un grado o curso para consultar la nómina docente
-        </h3>
-        <p class="text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
-            Filtrá por turno, ciclo o bachillerato en los selectores superiores para consultar el equipo de profesores de ese curso específico.
-        </p>
-        <div class="pt-2">
-            <button type="button" onclick="cargarProfesores('TODOS')" class="btn btn-secondary text-base py-3 px-6 font-bold inline-flex items-center gap-2 min-h-[46px] shadow-sm">
-                <span>Ver todos los profesores del colegio</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Contenedor Principal de la Tabla / Lista de Profesores -->
-    <div id="contenedor-tabla-profesores" class="hidden space-y-4">
+    <!-- Contenedor Principal de la Tabla / Lista de Profesores (Siempre Visible Directamente) -->
+    <div id="contenedor-tabla-profesores" class="space-y-4">
         
         <!-- Barra de búsqueda local y conteo accesible -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -147,7 +124,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </span>
-                <input type="text" id="busqueda-profesores-filtro" placeholder="Buscar por nombre, apellido o cédula..."
+                <input type="text" id="busqueda-profesores-filtro" placeholder="Buscar por nombre, apellido, cédula o materia..."
                        class="app-input w-full pl-11 pr-4 py-3 text-base rounded-2xl min-h-[46px]">
             </div>
 
@@ -169,7 +146,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                         </tr>
                     </thead>
                     <tbody id="tabla-profesores-body" class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <!-- Filas dinámicas -->
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-base text-slate-500 font-semibold">
+                                Cargando nómina de profesores...
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -179,6 +160,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
     <!-- Modales Modulares Incluidos -->
     <?php require_once __DIR__ . '/modal_detalle_profesor.php'; ?>
+    <?php require_once __DIR__ . '/modal_enviar_huella_aulas.php'; ?>
     <?php require_once __DIR__ . '/modal_biometria_profesor.php'; ?>
     <?php require_once __DIR__ . '/modal_crear_profesor.php'; ?>
     <?php require_once __DIR__ . '/modal_editar_profesor.php'; ?>
@@ -193,6 +175,7 @@ let catalogoGrados = [];
 let catalogoMaterias = [];
 let profesoresCargados = [];
 let profesorSeleccionadoActivo = null;
+let aulasDocenteParaSync = [];
 
 function getBaseUrl() {
     return (window.BASE_URL || '').replace(/\/+$/, '');
@@ -214,8 +197,8 @@ function obtenerIniciales(nombre, apellido) {
     return (n + a) || 'PR';
 }
 
-// 1. Cargar catálogo de grados y materias para filtros y selectores
-async function cargarEstructuraCascada() {
+// 1. Cargar catálogo para selectores de filtros y modales
+async function cargarCatalogosEstructura() {
     try {
         const [resG, resM] = await Promise.all([
             fetch(`${getBaseUrl()}/src/api/Grado/leer_grados.php`),
@@ -228,107 +211,53 @@ async function cargarEstructuraCascada() {
         catalogoGrados = jsonG.data || [];
         catalogoMaterias = jsonM.data || [];
 
-        inicializarSelectoresCascada();
+        inicializarSelectoresFiltro();
         poblarSelectoresModales();
     } catch (e) {
         console.error("Error cargando estructuras de grados o materias:", e);
     }
 }
 
-function inicializarSelectoresCascada() {
+function inicializarSelectoresFiltro() {
     const fTurno = document.getElementById('filtro-turno');
     const fNivel = document.getElementById('filtro-nivel');
     const fBachi = document.getElementById('filtro-bachillerato');
-    const fGrado = document.getElementById('filtro-grado');
 
-    if (!fTurno || !fNivel || !fBachi || !fGrado) return;
+    if (!fTurno || !fNivel || !fBachi) return;
 
     // Poblar Turnos únicos
     const turnos = [...new Map(catalogoGrados.filter(g => g.id_turno).map(g => [g.id_turno, g.turno])).entries()];
     fTurno.innerHTML = '<option value="">Todos los turnos</option>' +
         turnos.map(([id, nom]) => `<option value="${id}">${nom}</option>`).join('');
 
-    // Listeners
-    fTurno.addEventListener('change', actualizarNivelesCascada);
-    fNivel.addEventListener('change', actualizarBachilleratosCascada);
-    fBachi.addEventListener('change', actualizarGradosCascada);
-    fGrado.addEventListener('change', (e) => {
-        const idG = e.target.value;
-        if (idG) {
-            cargarProfesores(idG);
-        } else {
-            mostrarPromptVacio();
-        }
-    });
+    // Poblar Niveles únicos
+    const niveles = [...new Map(catalogoGrados.filter(g => g.id_nivel).map(g => [g.id_nivel, g.nivel])).entries()];
+    fNivel.innerHTML = '<option value="">Todos los ciclos</option>' +
+        niveles.map(([id, nom]) => `<option value="${id}">${nom}</option>`).join('');
 
-    actualizarNivelesCascada();
+    // Poblar Bachilleratos únicos
+    const bachis = [...new Map(catalogoGrados.filter(g => g.id_bachillerato && g.bachillerato !== 'N/A').map(g => [g.id_bachillerato, g.bachillerato])).entries()];
+    fBachi.innerHTML = '<option value="">Todos / Sin bachillerato</option>' +
+        bachis.map(([id, nom]) => `<option value="${id}">${nom}</option>`).join('');
+
+    // Listeners instantáneos en memoria (CERO consultas adicionales a la BD)
+    fTurno.addEventListener('change', aplicarFiltrosLocales);
+    fNivel.addEventListener('change', aplicarFiltrosLocales);
+    fBachi.addEventListener('change', aplicarFiltrosLocales);
 }
 
-function actualizarNivelesCascada() {
-    const fTurno = document.getElementById('filtro-turno');
-    const fNivel = document.getElementById('filtro-nivel');
-    const turnoVal = fTurno?.value || '';
-
-    let filtrados = catalogoGrados;
-    if (turnoVal) {
-        filtrados = filtrados.filter(g => String(g.id_turno) === String(turnoVal));
-    }
-
-    const niveles = [...new Map(filtrados.filter(g => g.id_nivel).map(g => [g.id_nivel, g.nivel])).entries()];
-    if (fNivel) {
-        fNivel.innerHTML = '<option value="">Todos los ciclos</option>' +
-            niveles.map(([id, nom]) => `<option value="${id}">${nom}</option>`).join('');
-    }
-
-    actualizarBachilleratosCascada();
-}
-
-function actualizarBachilleratosCascada() {
+function limpiarFiltrosNomina() {
     const fTurno = document.getElementById('filtro-turno');
     const fNivel = document.getElementById('filtro-nivel');
     const fBachi = document.getElementById('filtro-bachillerato');
+    const fBusq = document.getElementById('busqueda-profesores-filtro');
 
-    const turnoVal = fTurno?.value || '';
-    const nivelVal = fNivel?.value || '';
+    if (fTurno) fTurno.value = '';
+    if (fNivel) fNivel.value = '';
+    if (fBachi) fBachi.value = '';
+    if (fBusq) fBusq.value = '';
 
-    let filtrados = catalogoGrados;
-    if (turnoVal) filtrados = filtrados.filter(g => String(g.id_turno) === String(turnoVal));
-    if (nivelVal) filtrados = filtrados.filter(g => String(g.id_nivel) === String(nivelVal));
-
-    const bachis = [...new Map(filtrados.filter(g => g.id_bachillerato && g.bachillerato !== 'N/A').map(g => [g.id_bachillerato, g.bachillerato])).entries()];
-    if (fBachi) {
-        fBachi.innerHTML = '<option value="">Todos / Sin bachillerato</option>' +
-            bachis.map(([id, nom]) => `<option value="${id}">${nom}</option>`).join('');
-    }
-
-    actualizarGradosCascada();
-}
-
-function actualizarGradosCascada() {
-    const fTurno = document.getElementById('filtro-turno');
-    const fNivel = document.getElementById('filtro-nivel');
-    const fBachi = document.getElementById('filtro-bachillerato');
-    const fGrado = document.getElementById('filtro-grado');
-
-    const turnoVal = fTurno?.value || '';
-    const nivelVal = fNivel?.value || '';
-    const bachiVal = fBachi?.value || '';
-
-    let filtrados = catalogoGrados;
-    if (turnoVal) filtrados = filtrados.filter(g => String(g.id_turno) === String(turnoVal));
-    if (nivelVal) filtrados = filtrados.filter(g => String(g.id_nivel) === String(nivelVal));
-    if (bachiVal) filtrados = filtrados.filter(g => String(g.id_bachillerato) === String(bachiVal));
-
-    if (fGrado) {
-        const valorPrevio = fGrado.value;
-        fGrado.innerHTML = '<option value="">Seleccione grado o curso...</option>' +
-            '<option value="TODOS">-- Ver todos los profesores --</option>' +
-            filtrados.map(g => `<option value="${g.id_grado}">${g.nombre} (${g.turno || 'Sin turno'})</option>`).join('');
-
-        if (valorPrevio && Array.from(fGrado.options).some(o => o.value === valorPrevio)) {
-            fGrado.value = valorPrevio;
-        }
-    }
+    aplicarFiltrosLocales();
 }
 
 function poblarSelectoresModales() {
@@ -351,69 +280,19 @@ function poblarSelectoresModales() {
     if (selImportMateria) selImportMateria.innerHTML = '<option value="">Detectar desde el archivo</option>' + optsMaterias.replace('<option value="">Seleccionar materia...</option>', '');
 }
 
-// 2. Cargar nómina de profesores (On-Demand)
-async function cargarProfesores(idGrado) {
-    const promptBox = document.getElementById('prompt-seleccion-grado');
-    const metaBox = document.getElementById('info-grado-seleccionado');
-    const tableContainer = document.getElementById('contenedor-tabla-profesores');
+// 2. Cargar nómina completa de profesores (UNA SOLA CONSULTA OPTIMIZADA)
+async function cargarProfesores() {
     const tbody = document.getElementById('tabla-profesores-body');
-    const fGrado = document.getElementById('filtro-grado');
-
-    // Si no se especifica idGrado, conservar el curso o filtro actualmente seleccionado
-    if (!idGrado) {
-        idGrado = fGrado?.value || '';
-    }
-
-    if (!idGrado) {
-        mostrarPromptVacio();
-        return;
-    }
-
-    if (fGrado && idGrado && fGrado.value !== idGrado) {
-        fGrado.value = idGrado;
-    }
-
-    if (promptBox) promptBox.classList.add('hidden');
-    if (metaBox) metaBox.classList.remove('hidden');
-    if (tableContainer) tableContainer.classList.remove('hidden');
-
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-base text-slate-500 font-semibold">Cargando nómina de profesores...</td></tr>';
     }
 
-    // Actualizar metadatos del encabezado
-    if (idGrado === 'TODOS') {
-        document.getElementById('meta-grado-nombre').textContent = 'Todos los Docentes del Colegio';
-        document.getElementById('meta-grado-aula').textContent = 'Todas las aulas';
-        document.getElementById('meta-grado-turno').textContent = 'Todos los turnos';
-    } else {
-        const gradoInfo = catalogoGrados.find(g => String(g.id_grado) === String(idGrado));
-        if (gradoInfo) {
-            document.getElementById('meta-grado-nombre').textContent = gradoInfo.nombre;
-            document.getElementById('meta-grado-aula').textContent = gradoInfo.aula || 'Sin aula';
-            document.getElementById('meta-grado-turno').textContent = gradoInfo.turno || 'Sin turno';
-        }
-    }
-
     try {
-        let params = [];
-        if (idGrado !== 'TODOS') {
-            params.push(`id_grado=${encodeURIComponent(idGrado)}`);
-        } else {
-            const fTurno = document.getElementById('filtro-turno')?.value;
-            const fNivel = document.getElementById('filtro-nivel')?.value;
-            const fBachi = document.getElementById('filtro-bachillerato')?.value;
-            if (fTurno) params.push(`id_turno=${encodeURIComponent(fTurno)}`);
-            if (fNivel) params.push(`id_nivel=${encodeURIComponent(fNivel)}`);
-            if (fBachi) params.push(`id_bachillerato=${encodeURIComponent(fBachi)}`);
-        }
-
-        const qs = params.length > 0 ? `?${params.join('&')}` : '';
-        const res = await fetch(`${getBaseUrl()}/src/api/Profesor/leer_profesores.php${qs}`);
+        const res = await fetch(`${getBaseUrl()}/src/api/Profesor/leer_profesores.php`);
         const json = await res.json();
         profesoresCargados = json.data || [];
 
-        // Actualizar contadores
+        // Actualizar contadores superiores institucionales
         const total = profesoresCargados.length;
         const huellas = profesoresCargados.filter(p => parseInt(p.huella_registrada || 0) > 0 || parseInt(p.huella_id || 0) > 0).length;
         const asignados = profesoresCargados.filter(p => parseInt(p.total_asignaciones || 0) > 0).length;
@@ -422,7 +301,7 @@ async function cargarProfesores(idGrado) {
         document.getElementById('meta-total-huellas').textContent = String(huellas);
         document.getElementById('meta-total-asignaciones').textContent = String(asignados);
 
-        renderizarTablaProfesores(profesoresCargados);
+        aplicarFiltrosLocales();
     } catch (err) {
         console.error("Error al cargar profesores:", err);
         if (tbody) {
@@ -431,17 +310,40 @@ async function cargarProfesores(idGrado) {
     }
 }
 
-function mostrarPromptVacio() {
-    const promptBox = document.getElementById('prompt-seleccion-grado');
-    const metaBox = document.getElementById('info-grado-seleccionado');
-    const tableContainer = document.getElementById('contenedor-tabla-profesores');
+// 3. Filtrado local reactivo en memoria (CERO latencia, CERO consultas repetidas)
+function aplicarFiltrosLocales() {
+    const fTurno = document.getElementById('filtro-turno')?.value || '';
+    const fNivel = document.getElementById('filtro-nivel')?.value || '';
+    const fBachi = document.getElementById('filtro-bachillerato')?.value || '';
+    const q = (document.getElementById('busqueda-profesores-filtro')?.value || '').trim().toLowerCase();
 
-    if (promptBox) promptBox.classList.remove('hidden');
-    if (metaBox) metaBox.classList.add('hidden');
-    if (tableContainer) tableContainer.classList.add('hidden');
+    let filtrados = profesoresCargados;
+
+    if (fTurno) {
+        filtrados = filtrados.filter(p => (p.turnos_ids || '').split(',').includes(String(fTurno)));
+    }
+    if (fNivel) {
+        filtrados = filtrados.filter(p => (p.niveles_ids || '').split(',').includes(String(fNivel)));
+    }
+    if (fBachi) {
+        filtrados = filtrados.filter(p => (p.bachilleratos_ids || '').split(',').includes(String(fBachi)));
+    }
+
+    if (q) {
+        filtrados = filtrados.filter(p => {
+            const nom = (p.nombre || '').toLowerCase();
+            const ape = (p.apellido || '').toLowerCase();
+            const ci = (p.cedula_identidad || '').toLowerCase();
+            const email = (p.email || '').toLowerCase();
+            const mat = (p.asignaciones_resumen || '').toLowerCase();
+            return nom.includes(q) || ape.includes(q) || ci.includes(q) || email.includes(q) || mat.includes(q);
+        });
+    }
+
+    renderizarTablaProfesores(filtrados);
 }
 
-// 3. Renderizar Tabla de Profesores (Rediseñada para Máxima Legibilidad)
+// 4. Renderizar Tabla de Profesores (Columna Biometría Limpia y Botones Centralizados en Ficha)
 function renderizarTablaProfesores(lista) {
     const tbody = document.getElementById('tabla-profesores-body');
     const cntFilt = document.getElementById('contador-filtrados');
@@ -467,18 +369,18 @@ function renderizarTablaProfesores(lista) {
     tbody.innerHTML = lista.map(p => {
         const tieneHuella = (parseInt(p.huella_registrada || 0) > 0) || (parseInt(p.huella_id || 0) > 0);
         
-        // Badge Biométrico de Alto Contraste (>= 15px)
+        // Estado Biométrico Estricto: Solo dos estados limpios (WCAG AAA)
         const huellaBadge = tieneHuella
             ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                <span>Huella Vinculada</span>
+                <span>Huella vinculada</span>
                </span>`
             : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                 <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 <span>Sin registrar</span>
                </span>`;
 
-        // Resumen sintético de asignaciones (Primer Plano)
+        // Resumen de asignaciones
         const totalAsig = parseInt(p.total_asignaciones || 0);
         let asignacionesResumenHtml = '';
         if (totalAsig > 0) {
@@ -488,7 +390,7 @@ function renderizarTablaProfesores(lista) {
                         📚 ${totalAsig} ${totalAsig === 1 ? 'materia asignada' : 'materias asignadas'}
                     </span>
                     <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})" class="block text-sm font-bold text-purple-700 dark:text-purple-400 hover:underline">
-                        Ver cursos y horarios →
+                        Ver cursos, horarios y estado en vivo →
                     </button>
                 </div>
             `;
@@ -526,32 +428,17 @@ function renderizarTablaProfesores(lista) {
                     ${asignacionesResumenHtml}
                 </td>
 
-                <!-- Columna 3: Estado Biométrico -->
+                <!-- Columna 3: Estado Biométrico Exclusivo (Sin botones que saturen la tabla) -->
                 <td class="py-4 px-5">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        ${huellaBadge}
-                        <button type="button" onclick="abrirModalBiometriaProfesor(${p.id_profesor})"
-                                class="btn btn-secondary text-sm font-bold py-1.5 px-3 min-h-[38px] inline-flex items-center gap-1.5"
-                                title="Gestionar registro biométrico en el sensor ESP32">
-                            <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.99 7.132"></path></svg>
-                            <span>Biometría</span>
-                        </button>
-                        ${tieneHuella ? `
-                        <button type="button" onclick="enviarHuellaProfesorDirecto(${p.id_profesor})"
-                                class="btn bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-sm font-bold py-1.5 px-3 min-h-[38px] inline-flex items-center gap-1.5"
-                                title="Enviar huella a todas las aulas asignadas vía LoRa">
-                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                            <span>Enviar a Aulas</span>
-                        </button>` : ''}
-                    </div>
+                    ${huellaBadge}
                 </td>
 
-                <!-- Columna 4: Acciones Principales con Objetivos Táctiles Grandes -->
+                <!-- Columna 4: Acciones Principales -->
                 <td class="py-4 px-5 text-right whitespace-nowrap">
                     <div class="inline-flex items-center gap-2 justify-end">
                         <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})"
                                 class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
-                                title="Ver ficha integral, contactos y materias completas">
+                                title="Ver ficha integral, horarios en vivo y gestión biométrica">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             <span>Ver Ficha</span>
                         </button>
@@ -575,36 +462,20 @@ function renderizarTablaProfesores(lista) {
     }).join('');
 }
 
-// 4. Búsqueda local predictiva
+// 5. Inicialización de la Página
 document.addEventListener('DOMContentLoaded', () => {
-    cargarEstructuraCascada();
+    cargarCatalogosEstructura();
+    cargarProfesores();
 
-    // Actualización reactiva sin recargar página ante eventos biométricos
+    // Actualización reactiva ante eventos biométricos
     window.addEventListener('huellaRegistrada', () => {
-        const selG = document.getElementById('filtro-grado');
-        const val = selG ? selG.value : 'TODOS';
-        cargarProfesores(val || 'TODOS');
+        cargarProfesores();
     });
 
     const inputBusqueda = document.getElementById('busqueda-profesores-filtro');
     if (inputBusqueda) {
-        inputBusqueda.addEventListener('input', (e) => {
-            const q = (e.target.value || '').trim().toLowerCase();
-            if (!q) {
-                renderizarTablaProfesores(profesoresCargados);
-                return;
-            }
-
-            const filtrados = profesoresCargados.filter(p => {
-                const nom = (p.nombre || '').toLowerCase();
-                const ape = (p.apellido || '').toLowerCase();
-                const ci = (p.cedula_identidad || '').toLowerCase();
-                const email = (p.email || '').toLowerCase();
-                const mat = (p.asignaciones_resumen || '').toLowerCase();
-                return nom.includes(q) || ape.includes(q) || ci.includes(q) || email.includes(q) || mat.includes(q);
-            });
-
-            renderizarTablaProfesores(filtrados);
+        inputBusqueda.addEventListener('input', () => {
+            aplicarFiltrosLocales();
         });
     }
 
@@ -630,10 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cerrarModalCrearProfesor();
                 formCrear.reset();
-
-                const selG = document.getElementById('filtro-grado');
-                const val = selG ? selG.value : 'TODOS';
-                cargarProfesores(val || 'TODOS');
+                await cargarProfesores();
             } catch (err) {
                 alert("Error al registrar profesor: " + err.message);
             } finally {
@@ -663,10 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 cerrarModalEditarProfesor();
-
-                const selG = document.getElementById('filtro-grado');
-                const val = selG ? selG.value : 'TODOS';
-                cargarProfesores(val || 'TODOS');
+                await cargarProfesores();
             } catch (err) {
                 alert("Error al actualizar profesor: " + err.message);
             } finally {
@@ -677,10 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// CONTROLADORES DE SUBMODALES
+// CONTROLADOR DE SUBMODAL 1: FICHA DEL DOCENTE
 // ==========================================
-
-// Submodal 1: Ficha Integral del Docente
 async function abrirModalDetalleProfesor(idProfesor) {
     const prof = profesoresCargados.find(p => parseInt(p.id_profesor) === parseInt(idProfesor));
     if (!prof) return;
@@ -715,10 +578,10 @@ async function abrirModalDetalleProfesor(idProfesor) {
         const limpio = prof.celular.replace(/\D/g, '');
         if (linkWhatsApp) linkWhatsApp.href = `https://wa.me/595${limpio.startsWith('0') ? limpio.substring(1) : limpio}`;
         if (linkTel) linkTel.href = `tel:${prof.celular}`;
-        celularAcciones.classList.remove('hidden');
+        if (celularAcciones) celularAcciones.classList.remove('hidden');
     } else {
         celularTexto.textContent = 'Sin teléfono registrado';
-        celularAcciones.classList.add('hidden');
+        if (celularAcciones) celularAcciones.classList.add('hidden');
     }
 
     // Contacto: Email
@@ -753,15 +616,22 @@ async function abrirModalDetalleProfesor(idProfesor) {
     const btnBio = document.getElementById('mdp-btn-abrir-biometria');
     if (btnBio) {
         btnBio.onclick = () => {
-            cerrarModalDetalleProfesor();
             abrirModalBiometriaProfesor(prof.id_profesor);
+        };
+    }
+
+    const btnEnviarAulas = document.getElementById('mdp-btn-enviar-aulas-ficha');
+    if (btnEnviarAulas) {
+        btnEnviarAulas.disabled = !tieneHuella;
+        btnEnviarAulas.onclick = () => {
+            abrirModalEnviarHuellaAulas(prof.id_profesor);
         };
     }
 
     modal.classList.remove('hidden');
 
-    // Cargar materias detalladas vía API
-    await cargarMateriasFichaDocente(prof.id_profesor, prof.asignaciones_resumen);
+    // Cargar estado en tiempo real (Paraguay) y materias
+    await cargarEstadoTiempoRealFicha(prof.id_profesor);
 }
 
 function cerrarModalDetalleProfesor() {
@@ -769,24 +639,61 @@ function cerrarModalDetalleProfesor() {
     if (modal) modal.classList.add('hidden');
 }
 
-async function cargarMateriasFichaDocente(idProfesor, resumenFallback) {
+// 6. Consultar estado en vivo de Paraguay y asignaciones
+async function cargarEstadoTiempoRealFicha(idProfesor) {
+    const bannerBox = document.getElementById('mdp-banner-tiempo-real');
+    const iconoElem = document.getElementById('mdp-realtime-icono');
+    const horaElem = document.getElementById('mdp-realtime-hora-servidor');
+    const tituloElem = document.getElementById('mdp-realtime-titulo');
+    const detalleElem = document.getElementById('mdp-realtime-detalle');
+    const badgeAsistElem = document.getElementById('mdp-realtime-badge-asistencia');
     const tbody = document.getElementById('mdp-tabla-materias-body');
     const cntBadge = document.getElementById('mdp-total-materias-cnt');
-    if (!tbody) return;
 
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="4" class="p-6 text-center text-slate-500 font-medium">
-                Consultando materias y horarios asignados...
-            </td>
-        </tr>
-    `;
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500 font-medium">Consultando materias y horario en vivo (Paraguay)...</td></tr>`;
+    }
 
     try {
-        const res = await fetch(`${getBaseUrl()}/src/api/Asignaciones/leer_asignaciones.php?id_profesor=${encodeURIComponent(idProfesor)}`);
+        const res = await fetch(`${getBaseUrl()}/src/api/Profesor/estado_actual_profesor.php?id_profesor=${encodeURIComponent(idProfesor)}`);
         const json = await res.json();
-        const asignaciones = json.data || [];
 
+        if (!res.ok || json.status !== 'success') {
+            throw new Error(json.message || "Error al obtener estado actual");
+        }
+
+        const data = json.data;
+        const ind = data.indicador_tiempo_real || {};
+        const serv = data.servidor_paraguay || {};
+        const asist = data.asistencia_hoy || {};
+        const asignaciones = data.asignaciones || [];
+
+        // 1. Actualizar banner de tiempo real
+        if (bannerBox && ind.clase_css) {
+            bannerBox.className = `p-4 sm:p-5 rounded-2xl border transition-all duration-300 ${ind.clase_css}`;
+        }
+        if (iconoElem) iconoElem.textContent = ind.icono || '⏱️';
+        if (horaElem) horaElem.textContent = `${serv.dia_semana || ''} ${serv.hora || ''} (Paraguay)`;
+        if (tituloElem) tituloElem.textContent = ind.titulo || 'Estado de Jornada';
+        if (detalleElem) detalleElem.textContent = ind.mensaje || 'Información de cátedra.';
+
+        // Badge de asistencia biométrica en banner
+        if (badgeAsistElem) {
+            if (ind.tipo === 'EN_CLASE') {
+                badgeAsistElem.innerHTML = asist.con_huella
+                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 text-white font-extrabold text-sm shadow-xs">
+                        ✓ Huella Marcada (${asist.hora_marcacion || ''})
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 text-white font-extrabold text-sm shadow-xs animate-bounce">
+                        ⚠️ Sin Marcar Huella
+                       </span>`;
+                badgeAsistElem.classList.remove('hidden');
+            } else {
+                badgeAsistElem.classList.add('hidden');
+            }
+        }
+
+        // 2. Actualizar tabla de materias
         if (cntBadge) cntBadge.textContent = String(asignaciones.length);
 
         if (asignaciones.length === 0) {
@@ -801,50 +708,243 @@ async function cargarMateriasFichaDocente(idProfesor, resumenFallback) {
             return;
         }
 
-        tbody.innerHTML = asignaciones.map(a => `
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                <td class="py-3.5 px-4 font-bold text-base text-slate-900 dark:text-white">
-                    ${escapeHtml(a.grado || 'Sin curso')}
-                </td>
-                <td class="py-3.5 px-4 text-base text-slate-800 dark:text-slate-200 font-medium">
-                    ${escapeHtml(a.materia || 'Sin materia')}
-                </td>
-                <td class="py-3.5 px-4 text-center font-mono font-bold text-base text-purple-700 dark:text-purple-300">
-                    ${a.carga_horaria ? `${a.carga_horaria} hs/sem` : 'Cátedra estándar'}
-                </td>
-                <td class="py-3.5 px-4 text-center font-semibold text-base text-slate-700 dark:text-slate-300">
-                    ${escapeHtml(String(a.anho_lectivo || a['año_lectivo'] || '2026'))}
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = asignaciones.map(a => {
+            const horariosTxt = (a.horarios && a.horarios.length > 0)
+                ? a.horarios.map(h => `${h.dia_semana} ${h.hora_inicio}-${h.hora_fin}`).join(' | ')
+                : 'Sin horario fijado';
 
-    } catch (e) {
-        console.warn("Fallo al obtener detalle de asignaciones vía API, usando resumen:", e);
-        if (resumenFallback && resumenFallback.trim()) {
-            const mats = resumenFallback.split(',').map(m => m.trim());
-            if (cntBadge) cntBadge.textContent = String(mats.length);
-            tbody.innerHTML = mats.map(m => `
-                <tr>
-                    <td colspan="4" class="py-3.5 px-4 text-base text-slate-800 dark:text-slate-200 font-medium">
-                        📌 ${escapeHtml(m)}
+            return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                    <td class="py-3.5 px-4 font-bold text-base text-slate-900 dark:text-white">
+                        <div>${escapeHtml(a.grado)} ${a.seccion ? `(${escapeHtml(a.seccion)})` : ''}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(a.aula)}</div>
                     </td>
-                </tr>
-            `).join('');
-        } else {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="4" class="p-6 text-center text-rose-500 font-bold">
-                        No se pudieron cargar las materias asignadas.
+                    <td class="py-3.5 px-4 text-base text-slate-800 dark:text-slate-200 font-medium">
+                        ${escapeHtml(a.materia)} ${a.materia_codigo ? `<span class="text-xs text-slate-400">(${escapeHtml(a.materia_codigo)})</span>` : ''}
+                    </td>
+                    <td class="py-3.5 px-4 text-center font-mono font-bold text-base text-purple-700 dark:text-purple-300">
+                        ${a.carga_horaria ? `${a.carga_horaria} hs/sem` : 'Estándar'}
+                    </td>
+                    <td class="py-3.5 px-4 text-left">
+                        <div class="space-y-1">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs sm:text-sm ${a.badge_class}">
+                                ${escapeHtml(a.estado_texto)}
+                            </span>
+                            <div class="text-xs font-mono text-slate-500 dark:text-slate-400">
+                                Horario: ${escapeHtml(horariosTxt)}
+                            </div>
+                        </div>
                     </td>
                 </tr>
             `;
+        }).join('');
+
+    } catch (e) {
+        console.error("Error al cargar estado en tiempo real:", e);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-rose-500 font-bold">Error al sincronizar estado de horarios del docente: ${escapeHtml(e.message)}</td></tr>`;
         }
     }
 }
 
-// Submodal 2: Asistente de Huella Biométrica
+// ==========================================
+// CONTROLADOR DE SUBMODAL 2: ENVÍO SELECTIVO A AULAS
+// ==========================================
+async function abrirModalEnviarHuellaAulas(idProfesor) {
+    const prof = profesoresCargados.find(p => parseInt(p.id_profesor) === parseInt(idProfesor)) || profesorSeleccionadoActivo;
+    if (!prof) return;
+
+    profesorSeleccionadoActivo = prof;
+    const modal = document.getElementById('modal-enviar-huella-aulas');
+    if (!modal) return;
+
+    document.getElementById('meha-nombre-docente').textContent = `${prof.nombre} ${prof.apellido}`;
+    document.getElementById('meha-cedula-docente').textContent = prof.cedula_identidad || 'Sin CI';
+
+    const feedbackBox = document.getElementById('meha-feedback-box');
+    if (feedbackBox) feedbackBox.classList.add('hidden');
+
+    const listaContenedor = document.getElementById('meha-lista-aulas-contenedor');
+    if (listaContenedor) {
+        listaContenedor.innerHTML = '<div class="p-8 text-center text-base text-slate-500 font-semibold">Consultando estado de huella en las aulas...</div>';
+    }
+
+    modal.classList.remove('hidden');
+
+    try {
+        const res = await fetch(`${getBaseUrl()}/src/api/Huella/aulas_profesor_sync.php?id_profesor=${encodeURIComponent(idProfesor)}&todas=1`);
+        const json = await res.json();
+
+        if (!res.ok || json.status !== 'success') {
+            throw new Error(json.message || "Error al obtener aulas del profesor");
+        }
+
+        const data = json.data;
+        const resumen = data.resumen || {};
+        aulasDocenteParaSync = data.aulas || [];
+
+        document.getElementById('meha-total-aulas').textContent = String(resumen.total_aulas || 0);
+        document.getElementById('meha-total-sincronizadas').textContent = String(resumen.sincronizadas || 0);
+        document.getElementById('meha-total-pendientes').textContent = String(resumen.pendientes || 0);
+        document.getElementById('meha-total-faltantes').textContent = String(resumen.faltantes || 0);
+
+        renderizarListaAulasParaEnvio();
+    } catch (e) {
+        console.error("Error al cargar aulas para sincronización:", e);
+        if (listaContenedor) {
+            listaContenedor.innerHTML = `<div class="p-8 text-center text-base text-rose-600 font-bold">Error: ${escapeHtml(e.message)}</div>`;
+        }
+    }
+}
+
+function renderizarListaAulasParaEnvio() {
+    const contenedor = document.getElementById('meha-lista-aulas-contenedor');
+    if (!contenedor) return;
+
+    if (aulasDocenteParaSync.length === 0) {
+        contenedor.innerHTML = '<div class="p-8 text-center text-slate-500 font-semibold">No se encontraron aulas activas para sincronizar.</div>';
+        return;
+    }
+
+    contenedor.innerHTML = aulasDocenteParaSync.map(aula => {
+        const estaSincronizada = (aula.estado_sync === 'SINCRONIZADO');
+        const estaPendiente = (aula.estado_sync === 'PENDIENTE');
+        const estaError = (aula.estado_sync === 'ERROR');
+
+        // Badge de estado de sincronización
+        let badgeHtml = '';
+        if (estaSincronizada) {
+            badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                ✓ En Sensor DY50 ${aula.slot_local ? `(Slot #${aula.slot_local})` : ''}
+            </span>`;
+        } else if (estaPendiente) {
+            badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                ⏳ En Cola LoRa
+            </span>`;
+        } else if (estaError) {
+            badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-900 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                ⚠️ Error Previo
+            </span>`;
+        } else {
+            badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+                ⚪ No enviada
+            </span>`;
+        }
+
+        // Marcar por defecto las que faltan o tienen error, desmarcar las ya sincronizadas
+        const checked = (!estaSincronizada && !estaPendiente) ? 'checked' : '';
+
+        return `
+            <label class="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer select-none transition-colors">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" class="check-aula-envio w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500" value="${aula.id_aula}" ${checked}>
+                    <div>
+                        <div class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>${escapeHtml(aula.nombre)}</span>
+                            ${aula.asignada ? '<span class="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 font-bold">Cátedra Asignada</span>' : ''}
+                        </div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            ${escapeHtml(aula.grados || 'Sin curso')} • Materia: ${escapeHtml(aula.materias || '-')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-right shrink-0">
+                    ${badgeHtml}
+                </div>
+            </label>
+        `;
+    }).join('');
+}
+
+function marcarTodasAulasEnvio(marcar) {
+    document.querySelectorAll('.check-aula-envio').forEach(chk => {
+        chk.checked = marcar;
+    });
+}
+
+function seleccionarSoloFaltantesAulas() {
+    document.querySelectorAll('.check-aula-envio').forEach(chk => {
+        const idA = parseInt(chk.value);
+        const aula = aulasDocenteParaSync.find(a => a.id_aula === idA);
+        chk.checked = aula && aula.estado_sync !== 'SINCRONIZADO' && aula.estado_sync !== 'PENDIENTE';
+    });
+}
+
+async function ejecutarEnvioAulasSeleccionadas() {
+    const seleccionadas = Array.from(document.querySelectorAll('.check-aula-envio:checked')).map(c => parseInt(c.value));
+    if (seleccionadas.length === 0) {
+        alert("Seleccioná al menos un aula destino para transmitir la huella.");
+        return;
+    }
+
+    const prof = profesorSeleccionadoActivo;
+    if (!prof) return;
+
+    const forzar = document.getElementById('meha-check-forzar')?.checked ? '1' : '0';
+    const btn = document.getElementById('meha-btn-enviar-seleccionadas');
+    const feedbackBox = document.getElementById('meha-feedback-box');
+    const spinner = document.getElementById('meha-feedback-spinner');
+    const msg = document.getElementById('meha-feedback-msg');
+
+    if (btn) btn.disabled = true;
+    if (feedbackBox) {
+        feedbackBox.className = 'p-4 rounded-2xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-center space-y-2 block';
+        feedbackBox.classList.remove('hidden');
+        if (spinner) spinner.classList.remove('hidden');
+        if (msg) msg.textContent = `Encolando huella hacia ${seleccionadas.length} aula(s) seleccionadas...`;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('id_persona', prof.id_profesor);
+        formData.append('user_id_global', prof.user_id_global || '');
+        formData.append('tipo_usuario', 'profesor');
+        formData.append('aulas_ids', seleccionadas.join(','));
+        formData.append('forzar', forzar);
+
+        const res = await fetch(`${getBaseUrl()}/src/api/Huella/enviar_huella_aulas.php`, {
+            method: 'POST',
+            body: formData
+        });
+        const json = await res.json();
+
+        if (!res.ok || json.status !== 'success') {
+            throw new Error(json.message || "Error al encolar huella");
+        }
+
+        if (feedbackBox) {
+            feedbackBox.className = 'p-4 rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-center space-y-2 block';
+            if (spinner) spinner.classList.add('hidden');
+            if (msg) msg.textContent = `✓ ${json.message}`;
+        }
+
+        // Recargar datos del modal tras breve intervalo
+        setTimeout(() => {
+            abrirModalEnviarHuellaAulas(prof.id_profesor);
+        }, 1500);
+
+    } catch (e) {
+        if (feedbackBox) {
+            feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
+            if (spinner) spinner.classList.add('hidden');
+            if (msg) msg.textContent = `Error: ${e.message}`;
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+function cerrarModalEnviarHuellaAulas() {
+    const modal = document.getElementById('modal-enviar-huella-aulas');
+    if (modal) modal.classList.add('hidden');
+}
+
+// ==========================================
+// CONTROLADOR DE SUBMODAL 3: BIOMETRÍA REGISTRADOR
+// ==========================================
 function abrirModalBiometriaProfesor(idProfesor) {
-    const prof = profesoresCargados.find(p => parseInt(p.id_profesor) === parseInt(idProfesor));
+    const prof = profesoresCargados.find(p => parseInt(p.id_profesor) === parseInt(idProfesor)) || profesorSeleccionadoActivo;
     if (!prof) return;
 
     profesorSeleccionadoActivo = prof;
@@ -854,7 +954,6 @@ function abrirModalBiometriaProfesor(idProfesor) {
     document.getElementById('mbp-nombre-docente').textContent = `${prof.nombre} ${prof.apellido}`;
     document.getElementById('mbp-cedula-docente').textContent = prof.cedula_identidad || 'Sin CI';
 
-    // IP del registrador desde configuración centralizada
     const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "";
     const ipElem = document.getElementById('mbp-ip-nodo');
     if (ipElem) ipElem.textContent = ipESP32 || 'Configurado en el servidor';
@@ -878,7 +977,6 @@ function abrirModalBiometriaProfesor(idProfesor) {
 
     actualizarEstadoModal(tieneHuella);
 
-    // Limpiar feedback anterior
     const feedbackBox = document.getElementById('mbp-feedback-box');
     if (feedbackBox) feedbackBox.classList.add('hidden');
 
@@ -903,10 +1001,9 @@ function abrirModalBiometriaProfesor(idProfesor) {
                     if (feedbackBox) {
                         feedbackBox.className = 'p-4 rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-center space-y-2 block';
                         document.getElementById('mbp-feedback-spinner').classList.add('hidden');
-                        document.getElementById('mbp-feedback-msg').textContent = '✓ ¡Huella guardada exitosamente en el servidor!\nAhora puede enviarla a las aulas usando el botón "2. Enviar a las Aulas".';
+                        document.getElementById('mbp-feedback-msg').textContent = '✓ ¡Huella guardada exitosamente en el servidor!\nAhora puede elegir a qué aulas enviarla.';
                     }
-                    const gradoActualReg = document.getElementById('filtro-grado')?.value || 'TODOS';
-                    await cargarProfesores(gradoActualReg);
+                    await cargarProfesores();
                 } else if (res && !res.ok) {
                     if (feedbackBox) {
                         feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
@@ -929,81 +1026,13 @@ function abrirModalBiometriaProfesor(idProfesor) {
     }
 
     if (btnEnviarAulas) {
-        btnEnviarAulas.onclick = async () => {
-            btnEnviarAulas.disabled = true;
-            if (btnCaptura) btnCaptura.disabled = true;
-            if (feedbackBox) {
-                feedbackBox.className = 'p-4 rounded-2xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-center space-y-2 block';
-                feedbackBox.classList.remove('hidden');
-                document.getElementById('mbp-feedback-spinner').classList.remove('hidden');
-                document.getElementById('mbp-feedback-msg').textContent = 'Encolando huella hacia los nodos de las aulas vía LoRa...';
-            }
-
-            try {
-                const res = await enviarHuellaAulas({
-                    idPersona: prof.id_profesor,
-                    userIdGlobal: prof.user_id_global,
-                    idHuella: prof.huella_id || null,
-                    tipoUsuario: 'profesor'
-                });
-
-                if (res && res.ok) {
-                    if (feedbackBox) {
-                        feedbackBox.className = 'p-4 rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-center space-y-2 block';
-                        document.getElementById('mbp-feedback-spinner').classList.add('hidden');
-                        document.getElementById('mbp-feedback-msg').textContent = res.data?.message || '✓ ¡Huella encolada exitosamente para las aulas!';
-                    }
-                    const gradoActualEnv = document.getElementById('filtro-grado')?.value || 'TODOS';
-                    await cargarProfesores(gradoActualEnv);
-                } else {
-                    if (feedbackBox) {
-                        feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
-                        document.getElementById('mbp-feedback-spinner').classList.add('hidden');
-                        document.getElementById('mbp-feedback-msg').textContent = 'Error al enviar a aulas: ' + (res?.message || 'Error desconocido');
-                    }
-                }
-            } catch (err) {
-                if (feedbackBox) {
-                    feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-center space-y-2 block';
-                    document.getElementById('mbp-feedback-spinner').classList.add('hidden');
-                    document.getElementById('mbp-feedback-msg').textContent = 'Error: ' + err.message;
-                }
-            } finally {
-                btnEnviarAulas.disabled = false;
-                btnCaptura.disabled = false;
-            }
+        btnEnviarAulas.onclick = () => {
+            cerrarModalBiometriaProfesor();
+            abrirModalEnviarHuellaAulas(prof.id_profesor);
         };
     }
 
     modal.classList.remove('hidden');
-}
-
-async function enviarHuellaProfesorDirecto(idProfesor) {
-    const prof = profesoresCargados.find(p => parseInt(p.id_profesor) === parseInt(idProfesor));
-    if (!prof) return;
-
-    if (!confirm(`¿Desea enviar la huella de ${prof.nombre} ${prof.apellido} a todas las aulas asignadas?`)) {
-        return;
-    }
-
-    try {
-        const res = await enviarHuellaAulas({
-            idPersona: prof.id_profesor,
-            userIdGlobal: prof.user_id_global,
-            idHuella: prof.huella_id || null,
-            tipoUsuario: 'profesor'
-        });
-
-        if (res && res.ok) {
-            alert(res.data?.message || '✓ Huella encolada exitosamente para las aulas.');
-            const gradoActualDir = document.getElementById('filtro-grado')?.value || 'TODOS';
-            await cargarProfesores(gradoActualDir);
-        } else {
-            alert('Error al enviar huella: ' + (res?.message || 'Compruebe el estado del servidor.'));
-        }
-    } catch (e) {
-        alert('Error: ' + e.message);
-    }
 }
 
 function cerrarModalBiometriaProfesor() {
@@ -1014,13 +1043,6 @@ function cerrarModalBiometriaProfesor() {
 // Modales Crear y Editar
 function abrirModalCrearProfesor() {
     const modal = document.getElementById('modal-crear-profesor');
-    const fGrado = document.getElementById('filtro-grado');
-    const selModal = document.getElementById('modal-crear-grado-select');
-
-    if (selModal && fGrado && fGrado.value && fGrado.value !== 'TODOS') {
-        selModal.value = fGrado.value;
-    }
-
     if (modal) modal.classList.remove('hidden');
 }
 
@@ -1069,9 +1091,7 @@ async function desactivarProfesor(idProfesor, nombre) {
             throw new Error(json.message || "Error al desactivar");
         }
 
-        const selG = document.getElementById('filtro-grado');
-        const val = selG ? selG.value : 'TODOS';
-        cargarProfesores(val || 'TODOS');
+        await cargarProfesores();
     } catch (err) {
         alert("Error al desactivar profesor: " + err.message);
     }
@@ -1079,13 +1099,11 @@ async function desactivarProfesor(idProfesor, nombre) {
 
 // Exportar nómina actual con filtros activos
 function exportarNominaActual() {
-    const fGrado = document.getElementById('filtro-grado')?.value || '';
     const fTurno = document.getElementById('filtro-turno')?.value || '';
     const fNivel = document.getElementById('filtro-nivel')?.value || '';
     const fBachi = document.getElementById('filtro-bachillerato')?.value || '';
 
     let params = [];
-    if (fGrado && fGrado !== 'TODOS') params.push(`id_grado=${encodeURIComponent(fGrado)}`);
     if (fTurno) params.push(`id_turno=${encodeURIComponent(fTurno)}`);
     if (fNivel) params.push(`id_nivel=${encodeURIComponent(fNivel)}`);
     if (fBachi) params.push(`id_bachillerato=${encodeURIComponent(fBachi)}`);

@@ -2109,6 +2109,20 @@ bool pedirSyncAula(int idAula, int loraId, int idHuella) {
     confirmarSync(idSync, "ERROR", "AULA_SIN_LORA_ID");
     return false;
   }
+
+  // Pre-verificación de salud LoRa: Si el nodo de aula está apagado o caído, se evita la ráfaga de 24 fragmentos
+  int emisorPing = 0, rssiPing = 0, snrPing = 0;
+  String payloadPing = "";
+  Serial.printf("[SYNC] Verificando conectividad con Aula %d (LoRa ID %d) mediante Ping previo...\n", idAula, loraIdFinal);
+  if (!hacerPingLoRa(loraIdFinal, emisorPing, payloadPing, rssiPing, snrPing, 1500)) {
+    Serial.printf("[SYNC-ALERTA] Aula %d (LoRa ID %d) NO RESPONDE (Nodo caido / fuera de rango). Omitiendo envio.\n", idAula, loraIdFinal);
+    notificarPantallaTemporal("NODO CAIDO", "Aula " + String(idAula) + " Offline", "LoRa #" + String(loraIdFinal), 3000);
+    confirmarSync(idSync, "ERROR", "NODO_AULA_CAIDO (Sin respuesta Ping)");
+    return false; // Salta inmediatamente a la siguiente aula de la cola sin trabarse
+  }
+
+  Serial.printf("[SYNC] Aula %d (LoRa ID %d) ACTIVA (RSSI: %d dBm, SNR: %d dB). Procediendo con transmision...\n",
+                idAula, loraIdFinal, rssiPing, snrPing);
   notificarPantallaTemporal("SYNC LORA", "Aula: " + String(idAula) + " (CI: " + ci + ")", "LoRa #" + String(loraIdFinal) + " H#" + String(idHuellaObtenida), 3500);
   if (!enviarHuellaPorLoRa(loraIdFinal, idSync, idHuellaObtenida, idAula, ci, tipo, huella)) {
     Serial.printf("[SYNC] Aula %d (LoRa ID %d): fallo el enlace LoRa\n", idAula, loraIdFinal);

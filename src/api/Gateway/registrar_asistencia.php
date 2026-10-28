@@ -48,10 +48,60 @@ try {
     $horaActual = substr($timestamp, 11, 8);
     $nodoOrigen = 'NODO_AULA_' . $id_aula;
 
-    // 2. Detección automática de la clase activa en el aula y lección del día
+    // 2. Detección de clase activa y validación de coincidencia de aula (Anti-Fraude Cruzado)
     $claseModel = new ClaseDiaria($db);
     $claseActiva = $claseModel->obtenerOCrearClaseActiva($id_aula, $timestamp);
     $idHorario = $claseActiva ? (int)($claseActiva['id_horario'] ?? null) : null;
+    $discrepanciaAula = false;
+    $aulaEsperadaInfo = null;
+
+    if ($tipo === 'profesor') {
+        $id_profesor = (int)$persona['id_profesor'];
+        $diaSemanaNum = (int)date('w', strtotime($timestamp));
+        $diaInfo = ClaseDiaria::obtenerDiaEspanol($diaSemanaNum);
+
+        // Consultar dónde debería estar dictando el profesor según su horario lectivo activo
+        $stmtHorarioEsperado = $db->prepare("
+            SELECT h.id_horario, h.id_aula, a.nombre AS aula_nombre, m.nombre AS materia_nombre, g.nombre AS grado_nombre, h.hora_inicio, h.hora_fin
+            FROM horarios h
+            INNER JOIN asignacion_docente ad ON ad.id_asignacion = h.id_asignacion AND ad.activo = 1
+            LEFT JOIN aulas a ON a.id_aula = h.id_aula
+            LEFT JOIN materias m ON m.id_materia = ad.id_materia
+            LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, ad.id_grado)
+            WHERE ad.id_profesor = :id_profesor
+              AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
+              AND :hora BETWEEN (h.hora_inicio - INTERVAL '20 minutes') AND (h.hora_fin + INTERVAL '15 minutes')
+              AND h.activo = 1
+            ORDER BY h.hora_inicio ASC
+            LIMIT 1
+        ");
+        $stmtHorarioEsperado->execute([
+            ':id_profesor' => $id_profesor,
+            ':dia1' => $diaInfo['con_tilde'],
+            ':dia2' => $diaInfo['sin_tilde'],
+            ':hora' => $horaActual
+        ]);
+        $horarioEsperado = $stmtHorarioEsperado->fetch(PDO::FETCH_ASSOC);
+
+        if ($horarioEsperado) {
+            $idAulaEsperada = (int)$horarioEsperado['id_aula'];
+            if ($idAulaEsperada > 0 && $idAulaEsperada !== $id_aula) {
+                // Alerta de seguridad: El docente marcó huella en un aula ajena a la que le correspondía impartir cátedra
+                $discrepanciaAula = true;
+                $estado = 'DISCREPANCIA_AULA';
+                $nodoOrigen = 'NODO_AULA_' . $id_aula . '_DISCREPANCIA_ESPERADA_' . $idAulaEsperada;
+                $aulaEsperadaInfo = [
+                    'id_aula_esperada' => $idAulaEsperada,
+                    'aula_esperada' => $horarioEsperado['aula_nombre'] ?: "Aula #{$idAulaEsperada}",
+                    'materia' => $horarioEsperado['materia_nombre'],
+                    'grado' => $horarioEsperado['grado_nombre'],
+                    'horario' => substr($horarioEsperado['hora_inicio'], 0, 5) . ' - ' . substr($horarioEsperado['hora_fin'], 0, 5)
+                ];
+            } else {
+                $idHorario = (int)$horarioEsperado['id_horario'];
+            }
+        }
+    }
 
     // 3. Registro de asistencia con control estricto anti-duplicación por día
     if ($tipo === 'estudiante') {
@@ -78,6 +128,10 @@ try {
             $idHorario,
             false // forzar_actualizacion = false
         );
+
+        if ($discrepanciaAula && $aulaEsperadaInfo) {
+            $resAsistencia['mensaje'] = "⚠️ Alerta de Discrepancia: El docente marcó en Aula #{$id_aula}, pero tiene cátedra asignada en {$aulaEsperadaInfo['aula_esperada']} ({$aulaEsperadaInfo['materia']}). Registro auditado como DISCREPANCIA_AULA.";
+        }
     }
 
     $esDuplicado = !empty($resAsistencia['duplicado']);
@@ -101,6 +155,8 @@ try {
     echo json_encode([
         "status" => "success",
         "duplicado" => $esDuplicado,
+        "discrepancia_aula" => $discrepanciaAula,
+        "aula_esperada" => $aulaEsperadaInfo,
         "message" => $resAsistencia['mensaje'] ?? "Asistencia biométrica procesada correctamente",
         "data" => [
             "persona" => [

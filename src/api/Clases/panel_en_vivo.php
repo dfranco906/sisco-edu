@@ -1,5 +1,6 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
+require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../classes/ClaseDiaria.php';
 

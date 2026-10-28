@@ -111,6 +111,9 @@ class Profesor {
                     STRING_AGG(DISTINCT CASE WHEN m.nombre IS NOT NULL THEN CONCAT(m.nombre, ' (', COALESCE(g.nombre, 'Sin curso'), ')') ELSE NULL END, ', ') AS asignaciones_resumen,
                     STRING_AGG(DISTINCT g.nombre, ', ') AS grados_resumen,
                     STRING_AGG(DISTINCT m.nombre, ', ') AS materias_resumen,
+                    STRING_AGG(DISTINCT CAST(g.id_turno AS TEXT), ',') AS turnos_ids,
+                    STRING_AGG(DISTINCT CAST(g.id_nivel AS TEXT), ',') AS niveles_ids,
+                    STRING_AGG(DISTINCT CAST(g.id_bachillerato AS TEXT), ',') AS bachilleratos_ids,
                     COUNT(DISTINCT ht.id_huella) AS huella_registrada,
                     MAX(ht.id_huella) AS huella_id
                   FROM profesores p
