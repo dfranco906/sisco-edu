@@ -1,116 +1,121 @@
 <!-- Modal Accesible: Asignación Granular de Alcance Operativo (Turnos, Niveles, Bachilleratos y Cursos) -->
-<div id="modal-alcance-usuario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-alcance-titulo">
-    <div class="relative w-full max-w-4xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+<div id="modal-alcance-usuario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-alcance-titulo">
+    <div class="relative w-full max-w-5xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
-        <!-- Header -->
-        <div class="flex items-center justify-between p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80">
+        <!-- Header Accesible -->
+        <div class="flex items-center justify-between p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90">
             <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-3xl font-black shadow-xs shrink-0 border border-indigo-200 dark:border-indigo-800">
                     🎯
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h2 id="modal-alcance-titulo" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h2 id="modal-alcance-titulo" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                             Alcance Operativo de Usuario
                         </h2>
-                        <span id="alcance-usuario-rol" class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
+                        <span id="alcance-usuario-rol" class="px-3 py-1 rounded-xl text-sm font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                             Rol
                         </span>
                     </div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                        Definí los turnos, niveles, bachilleratos y cursos que <strong id="alcance-usuario-nombre" class="text-slate-900 dark:text-slate-200">---</strong> tiene autorizados para gestionar.
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-1">
+                        Definí los turnos, niveles y cursos que <strong id="alcance-usuario-nombre" class="text-slate-900 dark:text-slate-100 font-extrabold">---</strong> tiene autorizados para operar.
                     </p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarModalAlcanceUsuario()" class="w-10 h-10 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center text-xl font-bold transition focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer" aria-label="Cerrar modal">
+            <button type="button" onclick="cerrarModalAlcanceUsuario()" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer" aria-label="Cerrar modal alcance">
                 ✕
             </button>
         </div>
 
-        <!-- Banner informativo explicativo -->
-        <div class="px-6 py-3 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/80 dark:border-amber-900/40 text-xs sm:text-sm text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-            <span class="text-base shrink-0">🛡️</span>
+        <!-- Banner informativo explicativo con tipografía grande y contraste -->
+        <div class="p-4 sm:p-5 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/40 text-base text-amber-950 dark:text-amber-200 flex items-start gap-3.5">
+            <span class="text-2xl shrink-0">🛡️</span>
             <div>
-                <strong>Segmentación Granular de Responsabilidades:</strong>
-                El usuario solo podrá visualizar y operar (asistencias, clases en vivo, calificaciones, planes anuales y estudiantes) en los cursos marcados aquí. Los administradores globales sin restricción y el SuperAdmin conservan acceso general.
+                <strong class="font-extrabold text-amber-900 dark:text-amber-100">Segmentación Granular de Responsabilidades:</strong>
+                <span>El usuario solo podrá visualizar y operar (asistencias, clases en vivo, calificaciones, planes anuales y expedientes de estudiantes) en los cursos marcados aquí. Los administradores globales y el SuperAdmin conservan acceso general.</span>
             </div>
         </div>
 
         <!-- Cuerpo del Modal -->
-        <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+        <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1 text-base">
             
             <!-- Barra de Filtros en Lote y Búsqueda Rápida -->
-            <div class="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+            <div class="space-y-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border-2 border-slate-200 dark:border-slate-800">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="relative flex-1">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-lg">
                             🔍
                         </span>
-                        <input type="text" id="alcance-filtro-busqueda" placeholder="Filtrar cursos por nombre, sección, turno o bachillerato..." 
-                               class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="alcance-filtro-busqueda" placeholder="Filtrar cursos por nombre, sección, turno, aula o bachillerato..." 
+                               class="app-input w-full pl-11 pr-4 py-3 text-base rounded-2xl min-h-[48px] border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="marcarTodosLosCursos(true)" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 transition">
-                            ✓ Marcar Todos
+                    <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+                        <button type="button" onclick="marcarTodosLosCursos(true)" class="min-h-[44px] px-4 py-2 text-base font-bold rounded-xl bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200 border-2 border-emerald-300 dark:border-emerald-800 shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>✓</span>
+                            <span>Marcar Todos</span>
                         </button>
-                        <button type="button" onclick="marcarTodosLosCursos(false)" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 hover:bg-rose-200 transition">
-                            ✕ Desmarcar Todos
+                        <button type="button" onclick="marcarTodosLosCursos(false)" class="min-h-[44px] px-4 py-2 text-base font-bold rounded-xl bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-900 dark:text-rose-200 border-2 border-rose-300 dark:border-rose-800 shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <span>✕</span>
+                            <span>Desmarcar Todos</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Botones de Marcado en Bloque por Turno, Nivel y Bachillerato -->
-                <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700/60 text-xs">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-bold text-slate-600 dark:text-slate-400">Turnos:</span>
-                        <div id="alcance-botones-turnos" class="flex items-center gap-1.5 flex-wrap">
-                            <span class="text-slate-400 italic">Cargando...</span>
+                <!-- Botones Accesibles de Marcado en Bloque por Turno, Nivel y Bachillerato -->
+                <div class="space-y-3 pt-3 border-t-2 border-slate-200 dark:border-slate-700/60 text-base">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 min-w-[120px]">Turnos:</span>
+                        <div id="alcance-botones-turnos" class="flex items-center gap-2 flex-wrap">
+                            <span class="text-slate-400 italic">Cargando turnos...</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-bold text-slate-600 dark:text-slate-400">Niveles:</span>
-                        <div id="alcance-botones-niveles" class="flex items-center gap-1.5 flex-wrap">
-                            <span class="text-slate-400 italic">Cargando...</span>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 min-w-[120px]">Ciclos / Niveles:</span>
+                        <div id="alcance-botones-niveles" class="flex items-center gap-2 flex-wrap">
+                            <span class="text-slate-400 italic">Cargando niveles...</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-bold text-slate-600 dark:text-slate-400">Bachilleratos:</span>
-                        <div id="alcance-botones-bachilleratos" class="flex items-center gap-1.5 flex-wrap">
-                            <span class="text-slate-400 italic">Cargando...</span>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 min-w-[120px]">Bachilleratos:</span>
+                        <div id="alcance-botones-bachilleratos" class="flex items-center gap-2 flex-wrap">
+                            <span class="text-slate-400 italic">Cargando bachilleratos...</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Contenedor de Cursos con Estado de Carga -->
-            <div id="alcance-estado-cargando" class="py-12 text-center text-slate-500">
-                <div class="inline-block animate-spin text-3xl mb-2">⏳</div>
-                <p class="text-sm font-semibold">Cargando estructura institucional de cursos y alcances...</p>
+            <div id="alcance-estado-cargando" class="py-14 text-center text-slate-500">
+                <div class="inline-block animate-spin text-4xl mb-3">⏳</div>
+                <p class="text-lg font-bold text-slate-700 dark:text-slate-300">Cargando estructura institucional de cursos y alcances...</p>
             </div>
 
-            <div id="alcance-lista-cursos" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- Grid de Cursos (Tarjetas con tipografía grande y contraste WCAG 2.1 AA) -->
+            <div id="alcance-lista-cursos" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 <!-- Se inyectan dinámicamente las tarjetas de cursos -->
             </div>
 
-            <div id="alcance-sin-resultados" class="hidden py-8 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
-                <span class="text-3xl block mb-2">🔍</span>
-                <p class="text-sm font-medium">No se encontraron cursos que coincidan con la búsqueda.</p>
+            <!-- Estado Vacío en Búsqueda -->
+            <div id="alcance-sin-resultados" class="hidden py-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700">
+                <span class="text-4xl block mb-2">🔍</span>
+                <p class="text-lg font-bold text-slate-800 dark:text-slate-200">No se encontraron cursos coincidentes</p>
+                <p class="text-base text-slate-600 dark:text-slate-400 mt-1">Modificá el término de búsqueda para ver más cursos.</p>
             </div>
 
         </div>
 
-        <!-- Footer / Botones de Acción -->
-        <div class="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                <span>Asignados: <strong id="alcance-contador-seleccionados" class="text-indigo-600 dark:text-indigo-400 font-extrabold text-base">0</strong> de <span id="alcance-contador-total">0</span> cursos institucionales</span>
+        <!-- Footer Accesible con Conteo en Vivo y Botones Grandes (min-h-[46px]) -->
+        <div class="p-4 sm:p-6 border-t-2 border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-base text-slate-700 dark:text-slate-300 flex items-center gap-2.5">
+                <span class="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span>
+                <span>Asignados: <strong id="alcance-contador-seleccionados" class="text-indigo-700 dark:text-indigo-300 font-black text-xl">0</strong> de <span id="alcance-contador-total" class="font-extrabold text-slate-900 dark:text-white">0</span> cursos institucionales</span>
             </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button type="button" onclick="cerrarModalAlcanceUsuario()" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm transition">
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end flex-wrap">
+                <button type="button" onclick="cerrarModalAlcanceUsuario()" class="btn btn-secondary w-full sm:w-auto text-base font-semibold py-2.5 px-6 min-h-[46px]">
                     Cancelar
                 </button>
-                <button type="button" id="btn-guardar-alcance" onclick="guardarAlcanceUsuario()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
-                    <span id="alcance-btn-icono">💾</span>
+                <button type="button" id="btn-guardar-alcance" onclick="guardarAlcanceUsuario()" class="btn btn-primary w-full sm:w-auto text-base font-bold py-2.5 px-6 min-h-[46px] shadow-sm inline-flex items-center justify-center gap-2 cursor-pointer">
+                    <span id="alcance-btn-icono" class="text-lg">💾</span>
                     <span id="alcance-btn-texto">Guardar Alcance Operativo</span>
                 </button>
             </div>
@@ -123,6 +128,20 @@
 (function() {
     let usuarioActualId = 0;
     let datosAlcance = null;
+
+    function getBaseUrl() {
+        return (window.BASE_URL || '').replace(/\/+$/, '');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
     window.abrirModalAlcanceUsuario = async function(idUsuario, nombreCompleto, rol) {
         usuarioActualId = idUsuario;
@@ -142,7 +161,7 @@
         modal.classList.remove('hidden');
 
         try {
-            const url = window.BASE_URL ? window.BASE_URL + 'src/api/Usuario/obtener_alcance.php?id_usuario=' + idUsuario : 'src/api/Usuario/obtener_alcance.php?id_usuario=' + idUsuario;
+            const url = `${getBaseUrl()}/src/api/Usuario/obtener_alcance.php?id_usuario=${encodeURIComponent(idUsuario)}`;
             const res = await fetch(url);
             const respuesta = await res.json();
 
@@ -154,7 +173,11 @@
             renderizarEstructuraAlcance(datosAlcance);
         } catch (err) {
             console.error('Error al abrir modal de alcance:', err);
-            alert('⚠️ ' + err.message);
+            if (window.Toast) {
+                window.Toast.error(err.message || 'Error al cargar los alcances.');
+            } else {
+                alert('⚠️ ' + err.message);
+            }
             cerrarModalAlcanceUsuario();
         }
     };
@@ -176,13 +199,13 @@
         const nivelesDiv = document.getElementById('alcance-botones-niveles');
         const bachiDiv = document.getElementById('alcance-botones-bachilleratos');
 
-        // Render Botones Turnos
+        // Render Botones Turnos (Pills accesibles con min-h-[40px] y text-base)
         turnosDiv.innerHTML = '';
         (data.turnos || []).forEach(t => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-indigo-100 hover:text-indigo-800 text-slate-700 dark:text-slate-300 font-medium transition cursor-pointer';
-            btn.textContent = t.nombre;
+            btn.className = 'pill-filtro px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:hover:bg-indigo-950/70 dark:hover:text-indigo-200 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5';
+            btn.innerHTML = `<span>🌅 ${escapeHtml(t.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(t.grados || []).length}</span>`;
             btn.title = 'Alternar todos los cursos de: ' + t.nombre;
             btn.onclick = () => alternarGrupoGrados(t.grados);
             turnosDiv.appendChild(btn);
@@ -193,8 +216,8 @@
         (data.niveles || []).forEach(n => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-indigo-100 hover:text-indigo-800 text-slate-700 dark:text-slate-300 font-medium transition cursor-pointer';
-            btn.textContent = n.nombre;
+            btn.className = 'pill-filtro px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:hover:bg-indigo-950/70 dark:hover:text-indigo-200 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5';
+            btn.innerHTML = `<span>📚 ${escapeHtml(n.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(n.grados || []).length}</span>`;
             btn.title = 'Alternar todos los cursos de: ' + n.nombre;
             btn.onclick = () => alternarGrupoGrados(n.grados);
             nivelesDiv.appendChild(btn);
@@ -205,8 +228,8 @@
         (data.bachilleratos || []).forEach(b => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-indigo-100 hover:text-indigo-800 text-slate-700 dark:text-slate-300 font-medium transition cursor-pointer';
-            btn.textContent = b.nombre;
+            btn.className = 'pill-filtro px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:hover:bg-indigo-950/70 dark:hover:text-indigo-200 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5';
+            btn.innerHTML = `<span>🎓 ${escapeHtml(b.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(b.grados || []).length}</span>`;
             btn.title = 'Alternar todos los cursos de: ' + b.nombre;
             btn.onclick = () => alternarGrupoGrados(b.grados);
             bachiDiv.appendChild(btn);
@@ -218,9 +241,9 @@
 
         cursos.forEach(c => {
             const card = document.createElement('label');
-            card.className = `curso-card flex items-start gap-3 p-3 rounded-xl border-2 transition cursor-pointer select-none ${
+            card.className = `curso-card flex items-start gap-3.5 p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer select-none ${
                 c.asignado 
-                    ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/30' 
+                    ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/80 dark:bg-indigo-950/50 shadow-xs ring-2 ring-indigo-500/20' 
                     : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
             }`;
             card.dataset.idGrado = c.id_grado;
@@ -231,22 +254,22 @@
 
             card.innerHTML = `
                 <input type="checkbox" value="${c.id_grado}" ${c.asignado ? 'checked' : ''} 
-                       class="check-grado mt-1 h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                       class="check-grado w-6 h-6 rounded-lg text-indigo-600 border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 cursor-pointer mt-0.5 shrink-0">
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-1">
-                        <strong class="text-sm font-bold text-slate-900 dark:text-white truncate">
-                            ${c.grado_nombre} "${c.seccion || 'U'}"
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <strong class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate">
+                            ${escapeHtml(c.grado_nombre)} "${escapeHtml(c.seccion || 'U')}"
                         </strong>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            ${c.aula_nombre || 'Sin aula'}
+                        <span class="text-sm px-2.5 py-1 rounded-lg font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            🚪 ${escapeHtml(c.aula_nombre || 'Sin aula')}
                         </span>
                     </div>
-                    <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px]">
-                        <span class="px-1.5 py-0.2 rounded font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                            🌅 ${c.turno_nombre || 'Sin turno'}
+                    <div class="mt-2 flex items-center gap-2 flex-wrap text-sm">
+                        <span class="px-2.5 py-1 rounded-lg font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                            🌅 ${escapeHtml(c.turno_nombre || 'Sin turno')}
                         </span>
-                        <span class="px-1.5 py-0.2 rounded font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            📚 ${c.bachillerato_nombre || 'General'}
+                        <span class="px-2.5 py-1 rounded-lg font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
+                            📚 ${escapeHtml(c.bachillerato_nombre || 'General')}
                         </span>
                     </div>
                 </div>
@@ -267,22 +290,23 @@
     function actualizarEstiloTarjeta(card, isChecked) {
         if (isChecked) {
             card.classList.remove('border-slate-200', 'dark:border-slate-800', 'bg-white', 'dark:bg-slate-900');
-            card.classList.add('border-indigo-500', 'bg-indigo-50/60', 'dark:bg-indigo-950/30');
+            card.classList.add('border-indigo-600', 'dark:border-indigo-500', 'bg-indigo-50/80', 'dark:bg-indigo-950/50', 'shadow-xs', 'ring-2', 'ring-indigo-500/20');
         } else {
-            card.classList.remove('border-indigo-500', 'bg-indigo-50/60', 'dark:bg-indigo-950/30');
+            card.classList.remove('border-indigo-600', 'dark:border-indigo-500', 'bg-indigo-50/80', 'dark:bg-indigo-950/50', 'shadow-xs', 'ring-2', 'ring-indigo-500/20');
             card.classList.add('border-slate-200', 'dark:border-slate-800', 'bg-white', 'dark:bg-slate-900');
         }
     }
 
     function actualizarContador() {
         const seleccionados = document.querySelectorAll('.check-grado:checked').length;
+        const total = document.querySelectorAll('.check-grado').length;
         document.getElementById('alcance-contador-seleccionados').textContent = seleccionados;
+        document.getElementById('alcance-contador-total').textContent = total;
     }
 
     window.marcarTodosLosCursos = function(marcar) {
         const cards = document.querySelectorAll('.curso-card');
         cards.forEach(card => {
-            // Si está visible por el filtro de búsqueda
             if (card.style.display !== 'none') {
                 const chk = card.querySelector('.check-grado');
                 if (chk) {
@@ -297,7 +321,6 @@
     function alternarGrupoGrados(idsGradosGrupo) {
         if (!Array.isArray(idsGradosGrupo) || idsGradosGrupo.length === 0) return;
         
-        // Ver si la mayoría ya están marcados para decidir si marcamos o desmarcamos
         let marcados = 0;
         idsGradosGrupo.forEach(id => {
             const chk = document.querySelector(`.curso-card[data-id-grado="${id}"] .check-grado`);
@@ -363,7 +386,7 @@
         txt.textContent = 'Guardando cambios...';
 
         try {
-            const url = window.BASE_URL ? window.BASE_URL + 'src/api/Usuario/guardar_alcance.php' : 'src/api/Usuario/guardar_alcance.php';
+            const url = `${getBaseUrl()}/src/api/Usuario/guardar_alcance.php`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -380,7 +403,12 @@
                 throw new Error(data.message || 'Error al guardar alcance.');
             }
 
-            alert(`✅ ${data.message} (${data.data.total_asignados} cursos asignados)`);
+            if (window.Toast) {
+                window.Toast.success(`${data.message} (${data.data.total_asignados} cursos asignados)`, 'Alcance Guardado');
+            } else {
+                alert(`✅ ${data.message} (${data.data.total_asignados} cursos asignados)`);
+            }
+
             cerrarModalAlcanceUsuario();
             
             // Si existe la función de recargar tabla, la ejecutamos
@@ -389,7 +417,11 @@
             }
         } catch (err) {
             console.error('Error al guardar alcance:', err);
-            alert('❌ ' + err.message);
+            if (window.Toast) {
+                window.Toast.error(err.message || 'No se pudo guardar el alcance.', 'Error');
+            } else {
+                alert('❌ ' + err.message);
+            }
         } finally {
             btn.disabled = false;
             btn.classList.remove('opacity-70', 'cursor-not-allowed');

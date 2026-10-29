@@ -8,7 +8,7 @@ require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 
-<main class="app-main flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 text-base">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-8 w-full space-y-6 text-base">
 
     <!-- Encabezado Principal y Barra de Acciones Accesibles -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
@@ -158,14 +158,14 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
         <!-- Tabla Rediseñada: Fuentes Grandes (>= 16px / 12 pt) y Revelación Progresiva -->
         <div class="app-table-wrap rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-base">
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-base border-collapse">
                     <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 text-sm sm:text-base font-bold uppercase tracking-wider">
                         <tr>
-                            <th class="py-4 px-5 text-left">Estudiante & Cédula</th>
-                            <th class="py-4 px-5 text-left">Curso & Matrícula</th>
-                            <th class="py-4 px-5 text-left">Estado Biométrico</th>
-                            <th class="py-4 px-5 text-right">Acciones</th>
+                            <th scope="col" class="py-4 px-5 text-left min-w-[240px]">Estudiante & Cédula</th>
+                            <th scope="col" class="py-4 px-5 text-left min-w-[180px]">Curso & Matrícula</th>
+                            <th scope="col" class="py-4 px-5 text-left min-w-[160px]">Estado Biométrico</th>
+                            <th scope="col" class="py-4 px-5 text-right min-w-[260px]">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-estudiantes-body" class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -500,8 +500,8 @@ function renderizarTablaEstudiantes(lista) {
                 </td>
 
                 <!-- Columna 4: Acciones Principales con Objetivos Táctiles Grandes -->
-                <td class="py-4 px-5 text-right whitespace-nowrap">
-                    <div class="inline-flex items-center gap-2 justify-end">
+                <td class="py-4 px-5 text-right">
+                    <div class="flex items-center gap-2 justify-end flex-wrap">
                         <button type="button" onclick="abrirModalDetalleEstudiante(${est.id_estudiante})"
                                 class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
                                 title="Ver ficha integral, tutores y expediente">

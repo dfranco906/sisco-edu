@@ -8,7 +8,7 @@ require_once __DIR__ . '/../layouts/header.php';
 require_once __DIR__ . '/../layouts/sidebar.php';
 ?>
 
-<main class="app-main flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 text-base">
+<main class="app-main flex-1 p-4 sm:p-6 lg:p-8 w-full space-y-6 text-base">
 
     <!-- Navegación de Migas de Pan (Breadcrumbs) -->
     <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium" aria-label="Breadcrumb">
