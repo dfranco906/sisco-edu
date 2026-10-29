@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once __DIR__ . '/../../config/db.php';
@@ -6,25 +8,29 @@ require_once __DIR__ . '/../../classes/Usuario.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+    echo json_encode(["status" => "error", "message" => "Método no permitido"]);
     exit;
 }
 
 try {
+    $rawInput = file_get_contents('php://input');
+    $json = json_decode($rawInput, true);
+    $data = is_array($json) ? array_merge($_POST, $json) : $_POST;
+
     $db = (new Database())->getConnection();
     $usuario = new Usuario($db);
 
-    $usuario->nombre = $_POST['nombre'] ?? null;
-    $usuario->apellido = $_POST['apellido'] ?? null;
-    $usuario->usuario = $_POST['usuario'] ?? null;
-    $usuario->email = $_POST['email'] ?? null;
-    $usuario->celular = $_POST['celular'] ?? null;
-    $usuario->password = $_POST['password'] ?? null;
-    $usuario->rol = $_POST['rol'] ?? null;
+    $usuario->nombre = trim((string)($data['nombre'] ?? ''));
+    $usuario->apellido = trim((string)($data['apellido'] ?? ''));
+    $usuario->usuario = trim((string)($data['usuario'] ?? ''));
+    $usuario->email = trim((string)($data['email'] ?? ''));
+    $usuario->celular = trim((string)($data['celular'] ?? ''));
+    $usuario->password = (string)($data['password'] ?? '');
+    $usuario->rol = trim((string)($data['rol'] ?? ''));
 
-    if (!$usuario->nombre || !$usuario->apellido || !$usuario->usuario || !$usuario->email || !$usuario->celular || !$usuario->password || !$usuario->rol) {
+    if (empty($usuario->nombre) || empty($usuario->apellido) || empty($usuario->usuario) || empty($usuario->password) || empty($usuario->rol)) {
         http_response_code(400);
-        echo json_encode(["status" => "error", "message" => "Datos incompletos"]);
+        echo json_encode(["status" => "error", "message" => "Campos obligatorios incompletos (Nombre, Apellido, Usuario, Contraseña y Rol)"]);
         exit;
     }
 
@@ -32,13 +38,17 @@ try {
 
     if ($resultado) {
         http_response_code(201);
+        echo json_encode([
+            "status" => "success",
+            "message" => "Usuario creado exitosamente",
+            "data" => ["id_usuario" => $usuario->id_usuario]
+        ]);
+    } else {
+        http_response_code(422);
+        echo json_encode(["status" => "error", "message" => "Error al registrar el usuario en el sistema"]);
     }
-
-    echo json_encode([
-        "status" => $resultado ? "success" : "error",
-        "message" => $resultado ? "Usuario creado correctamente" : "Error al crear usuario"
-    ]);
 } catch (Throwable $e) {
-    echo json_encode(["status" => "error", "message" => "Error interno", "debug" => $e->getMessage()]);
+    error_log("Error en crear_usuario.php: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(["status" => "error", "message" => "Error interno al crear usuario"]);
 }
-?>

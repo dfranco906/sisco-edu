@@ -117,16 +117,30 @@ class Usuario {
     }
 
     public function actualizar(): bool {
-        $query = "UPDATE " . $this->table_name . "
-                  SET nombre=:nombre,
-                      apellido=:apellido,
-                      usuario=:usuario,
-                      email=:email,
-                      celular=:celular,
-                      rol=:rol
-                  WHERE id_usuario=:id_usuario";
-
-        $stmt = $this->conn->prepare($query);
+        if (!empty($this->password)) {
+            $hashed = password_hash((string)$this->password, PASSWORD_DEFAULT);
+            $query = "UPDATE " . $this->table_name . "
+                      SET nombre=:nombre,
+                          apellido=:apellido,
+                          usuario=:usuario,
+                          email=:email,
+                          celular=:celular,
+                          rol=:rol,
+                          password=:password
+                      WHERE id_usuario=:id_usuario";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":password", $hashed);
+        } else {
+            $query = "UPDATE " . $this->table_name . "
+                      SET nombre=:nombre,
+                          apellido=:apellido,
+                          usuario=:usuario,
+                          email=:email,
+                          celular=:celular,
+                          rol=:rol
+                      WHERE id_usuario=:id_usuario";
+            $stmt = $this->conn->prepare($query);
+        }
 
         $stmt->bindParam(":nombre", $this->nombre);
         $stmt->bindParam(":apellido", $this->apellido);
