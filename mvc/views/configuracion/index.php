@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../../../src/config/app.php';
 require_once __DIR__ . '/../../../src/middleware/auth.php';
 
-// RBAC: Solo SuperAdmin y Administración pueden acceder a la configuración del sistema
-verificarRol(['SuperAdmin', 'Administracion', 'Administrador']);
+// RBAC: Exclusivo para SuperAdmin (parámetros de red IoT, claves LoRa y enlace institucional)
+verificarRol(['SuperAdmin']);
 
 $localConfigFile = __DIR__ . '/../../../config.local.php';
 $localConfig = file_exists($localConfigFile) ? (include $localConfigFile) : [];

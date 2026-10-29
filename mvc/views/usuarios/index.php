@@ -53,4 +53,9 @@ $urlVolver = "mvc/views/administracion/index.php";
 $idCampo = "id_usuario";
 $camposEditar = ["nombre", "apellido", "usuario", "email", "celular", "rol"];
 
+// Modal granular para segmentar turnos, niveles, bachilleratos y cursos por usuario
+ob_start();
+require_once __DIR__ . '/modal_alcance_usuario.php';
+$modalExtraHtml = ob_get_clean();
+
 require_once __DIR__ . '/../partials/table_page.php';

@@ -3,12 +3,14 @@ header("Content-Type: application/json; charset=UTF-8");
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../classes/ClaseDiaria.php';
+require_once __DIR__ . '/../../classes/AlcanceUsuario.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $rol = $_SESSION['rol'] ?? '';
+$idUsuarioSesion = (int)($_SESSION['id_usuario'] ?? 0);
 $id_profesor = null;
 if ($rol === 'Profesor' && !empty($_SESSION['id_profesor'])) {
     $id_profesor = (int)$_SESSION['id_profesor'];
@@ -21,6 +23,18 @@ $solo_clase = isset($_GET['solo_clase']) && (string)$_GET['solo_clase'] === '1';
 
 try {
     $db = (new Database())->getConnection();
+
+    // Segmentación granular de permisos para Coordinadores y Administradores
+    $gradosPermitidos = AlcanceUsuario::obtenerGradosPermitidos($db, $idUsuarioSesion, $rol);
+    if ($gradosPermitidos !== null && $id_grado !== null && !in_array($id_grado, $gradosPermitidos, true)) {
+        http_response_code(403);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Acceso restringido: no tiene autorización sobre este curso."
+        ]);
+        exit;
+    }
+
     $claseModel = new ClaseDiaria($db);
 
     $clase = null;
@@ -78,15 +92,33 @@ try {
         $stmtGrados->execute([':id_profesor' => $id_profesor]);
         $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
     } else {
-        $stmtGrados = $db->query("
-            SELECT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
-                   aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
-            FROM grados g
-            LEFT JOIN aulas aul ON aul.id_aula = g.id_aula
-            WHERE g.activo = 1
-            ORDER BY g.nombre ASC
-        ");
-        $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
+        if ($gradosPermitidos !== null) {
+            if (empty($gradosPermitidos)) {
+                $grados = [];
+            } else {
+                $placeholders = implode(',', array_fill(0, count($gradosPermitidos), '?'));
+                $stmtGrados = $db->prepare("
+                    SELECT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
+                           aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
+                    FROM grados g
+                    LEFT JOIN aulas aul ON aul.id_aula = g.id_aula
+                    WHERE g.activo = 1 AND g.id_grado IN ($placeholders)
+                    ORDER BY g.nombre ASC
+                ");
+                $stmtGrados->execute($gradosPermitidos);
+                $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } else {
+            $stmtGrados = $db->query("
+                SELECT g.id_grado, g.nombre, g.seccion, g.id_aula, g.id_turno, g.id_nivel, g.id_bachillerato,
+                       aul.nombre AS aula_nombre, aul.ubicacion AS aula_ubicacion
+                FROM grados g
+                LEFT JOIN aulas aul ON aul.id_aula = g.id_aula
+                WHERE g.activo = 1
+                ORDER BY g.nombre ASC
+            ");
+            $grados = $stmtGrados->fetchAll(PDO::FETCH_ASSOC);
+        }
     }
 
     http_response_code(200);

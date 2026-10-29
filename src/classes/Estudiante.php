@@ -132,9 +132,23 @@ class Estudiante {
         ];
     }
 
-    public function leer(?int $id_grado = null, ?int $id_turno = null, ?int $id_nivel = null, ?int $id_bachillerato = null): PDOStatement {
+    public function leer(?int $id_grado = null, ?int $id_turno = null, ?int $id_nivel = null, ?int $id_bachillerato = null, ?array $ids_grados_permitidos = null): PDOStatement {
         $params = [];
         $where = "WHERE e.activo = 1";
+
+        if ($ids_grados_permitidos !== null) {
+            if (empty($ids_grados_permitidos)) {
+                $where .= " AND 1 = 0";
+            } else {
+                $placeholders = [];
+                foreach ($ids_grados_permitidos as $idx => $idG) {
+                    $pKey = ":egp_" . $idx;
+                    $placeholders[] = $pKey;
+                    $params[$pKey] = (int)$idG;
+                }
+                $where .= " AND e.id_grado IN (" . implode(',', $placeholders) . ")";
+            }
+        }
 
         if ($id_grado !== null && $id_grado > 0) {
             $where .= " AND e.id_grado = :id_grado";

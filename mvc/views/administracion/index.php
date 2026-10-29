@@ -420,7 +420,8 @@ try {
                     </div>
                 </div>
 
-                <!-- 11. Configuración IoT & Red -->
+                <!-- 11. Configuración IoT & Red (Exclusivo SuperAdmin) -->
+                <?php if (($_SESSION['rol'] ?? '') === 'SuperAdmin'): ?>
                 <div class="card-modulo app-card p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 flex flex-col justify-between group hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition duration-200 bg-white dark:bg-slate-900"
                      data-titulo="configuracion red iot esp32 registrador lora gateway nube" data-desc="parametros dinamicos de red nodos esp32 registradores gateway lora y conectividad">
                     <div>
@@ -447,6 +448,7 @@ try {
                         </a>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- 12. Sincronización Biométrica LoRa -->
                 <div class="card-modulo app-card p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 flex flex-col justify-between group hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-lg transition duration-200 bg-white dark:bg-slate-900"

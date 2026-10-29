@@ -141,6 +141,11 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
             fila += `
     <td class="p-3"><div class="table-actions">
+        ${(typeof window.abrirModalAlcanceUsuario === 'function' && item.id_usuario && (item.rol === 'Coordinador' || item.rol === 'Administrador' || item.rol === 'Administracion')) ? `
+        <button type="button" onclick="abrirModalAlcanceUsuario(${item.id_usuario}, '${(item.nombre || '').replace(/'/g, "\\'")} ${(item.apellido || '').replace(/'/g, "\\'")}', '${item.rol}')"
+                class="btn btn-primary btn-sm inline-flex items-center gap-1 font-semibold" title="Asignar turnos, niveles, bachilleratos y cursos de operación">
+            🎯 Alcance
+        </button>` : ""}
         ${item.id_tutor ? `
         <button type="button" onclick="abrirVincularTutorDesdeTabla(${item.id_tutor})"
                 class="btn btn-secondary btn-sm inline-flex items-center gap-1 font-semibold" title="Vincular estudiantes o hermanos a este tutor">

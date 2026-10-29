@@ -30,7 +30,26 @@ class Grado {
         ]);
     }
 
-    public function leer(?int $id_profesor = null): PDOStatement {
+    public function leer(?int $id_profesor = null, ?array $ids_grados_permitidos = null): PDOStatement {
+        if ($ids_grados_permitidos !== null && empty($ids_grados_permitidos)) {
+            // Alcance restringido sin cursos asignados: retorna conjunto vacío
+            $stmt = $this->conn->prepare("SELECT g.id_grado FROM grados g WHERE 1 = 0");
+            $stmt->execute();
+            return $stmt;
+        }
+
+        $params = [];
+        $filtroPermitidos = "";
+        if ($ids_grados_permitidos !== null) {
+            $placeholders = [];
+            foreach ($ids_grados_permitidos as $idx => $idG) {
+                $pKey = ":gp_" . $idx;
+                $placeholders[] = $pKey;
+                $params[$pKey] = (int)$idG;
+            }
+            $filtroPermitidos = " AND g.id_grado IN (" . implode(',', $placeholders) . ") ";
+        }
+
         if ($id_profesor !== null) {
             $stmt = $this->conn->prepare("
                 SELECT DISTINCT
@@ -53,9 +72,11 @@ class Grado {
                 LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
                 INNER JOIN asignacion_docente ad ON ad.id_grado = g.id_grado
                 WHERE g.activo = 1 AND ad.id_profesor = :id_profesor AND ad.activo = 1
+                {$filtroPermitidos}
                 ORDER BY g.nombre ASC
             ");
-            $stmt->execute([':id_profesor' => $id_profesor]);
+            $params[':id_profesor'] = $id_profesor;
+            $stmt->execute($params);
             return $stmt;
         }
 
@@ -79,9 +100,10 @@ class Grado {
             LEFT JOIN niveles_academicos n ON g.id_nivel = n.id_nivel
             LEFT JOIN bachilleratos b ON g.id_bachillerato = b.id_bachillerato
             WHERE g.activo = 1
+            {$filtroPermitidos}
             ORDER BY COALESCE(g.id_nivel, 99) ASC, g.nombre ASC
         ");
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt;
     }
 

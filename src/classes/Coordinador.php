@@ -64,18 +64,25 @@ class Coordinador {
 
         $params = [':fecha' => $fecha];
 
-        if (!$esAdmin) {
+        if ($rol === 'SuperAdmin') {
+            $sql .= " WHERE g.activo = 1 ORDER BY g.nombre ASC";
+        } else {
+            // Para Coordinadores y Administradores segmentados, filtramos por los cursos asignados
             $sqlCheck = "SELECT COUNT(*) FROM coordinador_grados WHERE id_usuario = :id_usuario AND activo = 1";
             $stmtCheck = $this->conn->prepare($sqlCheck);
             $stmtCheck->execute([':id_usuario' => $id_usuario]);
-            if ((int)$stmtCheck->fetchColumn() > 0) {
+            $tieneAsignacion = ((int)$stmtCheck->fetchColumn() > 0);
+
+            if ($tieneAsignacion) {
                 $sql .= " JOIN coordinador_grados cg ON cg.id_grado = g.id_grado WHERE cg.id_usuario = :id_usuario AND cg.activo = 1 AND g.activo = 1 ORDER BY g.nombre ASC";
                 $params[':id_usuario'] = $id_usuario;
             } else {
-                $sql .= " WHERE g.activo = 1 ORDER BY g.nombre ASC";
+                if ($rol === 'Coordinador') {
+                    $sql .= " WHERE 1 = 0";
+                } else {
+                    $sql .= " WHERE g.activo = 1 ORDER BY g.nombre ASC";
+                }
             }
-        } else {
-            $sql .= " WHERE g.activo = 1 ORDER BY g.nombre ASC";
         }
 
         $stmt = $this->conn->prepare($sql);
