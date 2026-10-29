@@ -7,6 +7,7 @@
     let grados = [];
     let asignaciones = [];
     let horariosGrado = [];
+    let recesosGrado = [];
     let gradoSeleccionado = null;
     let vistaActual = "grilla";
     let intervaloEnVivo = null;
@@ -286,6 +287,7 @@
     function limpiarVistaHorarios() {
         gradoSeleccionado = null;
         horariosGrado = [];
+        recesosGrado = [];
         $("#info-grado-seleccionado")?.classList.add("hidden");
         $("#grilla-tabla-wrap")?.classList.add("hidden");
         $("#lista-tabla-wrap")?.classList.add("hidden");
@@ -317,9 +319,16 @@
         if (listaWrap) listaWrap.classList.add("hidden");
 
         try {
-            const url = `${config.apiHorarios}?id_grado=${encodeURIComponent(idGrado)}`;
-            const respuesta = await obtenerJson(url);
-            horariosGrado = datosDe(respuesta);
+            const urlHorarios = `${config.apiHorarios}?id_grado=${encodeURIComponent(idGrado)}`;
+            const urlRecesos = config.apiRecesos ? `${config.apiRecesos}?modo=curso&id_grado=${encodeURIComponent(idGrado)}` : null;
+
+            const [respHorarios, respRecesos] = await Promise.all([
+                obtenerJson(urlHorarios),
+                urlRecesos ? obtenerJson(urlRecesos).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
+            ]);
+
+            horariosGrado = datosDe(respHorarios);
+            recesosGrado = datosDe(respRecesos);
 
             actualizarTiraMetadatos();
             renderGrillaMatriz();
@@ -367,11 +376,15 @@
     // ==========================================
     // Generación de la Matriz Semanal (Grilla Horaria)
     // ==========================================
-    function calcularSlotsAtomicos(horarios) {
+    function calcularSlotsAtomicos(horarios, recesos = []) {
         const puntosSet = new Set();
         horarios.forEach((h) => {
             if (h.hora_inicio) puntosSet.add(horaCorta(h.hora_inicio));
             if (h.hora_fin) puntosSet.add(horaCorta(h.hora_fin));
+        });
+        recesos.forEach((r) => {
+            if (r.hora_inicio) puntosSet.add(horaCorta(r.hora_inicio));
+            if (r.hora_fin) puntosSet.add(horaCorta(r.hora_fin));
         });
 
         const puntosOrdenados = Array.from(puntosSet).sort((a, b) => a.localeCompare(b));
@@ -398,7 +411,7 @@
                     horaCorta(h.hora_fin) >= slot.fin
             );
 
-            // Se considera receso si tiene materia explícita "RECESO" o si es un espacio intersticial sin clases
+            // Se considera receso en la columna lateral si tiene materia explícita "RECESO" o si no hay ninguna clase real en toda la semana
             const esReceso = tieneMateriaReceso || !tieneAlgunaClaseReal;
 
             if (esReceso) {
@@ -468,7 +481,7 @@
         theadRow.innerHTML = headerHtml;
 
         // Calcular Slots Atómicos
-        const slots = calcularSlotsAtomicos(horariosGrado);
+        const slots = calcularSlotsAtomicos(horariosGrado, recesosGrado);
         if (slots.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-muted">Sin intervalos registrados.</td></tr>';
             return;
@@ -544,7 +557,40 @@
                         </td>
                     `;
                 } else {
-                    if (slot.esReceso) {
+                    // Verificar si existe un receso institucional determinista para este día
+                    const recesoInicio = recesosGrado.find((r) =>
+                        (r.dia_semana === dia || r.dia_semana === "Todos") &&
+                        horaCorta(r.hora_inicio) === slot.inicio
+                    );
+
+                    if (recesoInicio) {
+                        const finRec = horaCorta(recesoInicio.hora_fin);
+                        const endRecSlotIdx = slots.findIndex((sl) => sl.fin === finRec);
+                        let spanRec = 1;
+
+                        if (endRecSlotIdx >= sIdx) {
+                            spanRec = (endRecSlotIdx - sIdx) + 1;
+                        } else {
+                            spanRec = slots.filter((sl, idx) => idx >= sIdx && sl.inicio < finRec).length || 1;
+                        }
+
+                        for (let k = 1; k < spanRec; k++) {
+                            celdasOcupadas[dia].add(sIdx + k);
+                        }
+
+                        bodyHtml += `
+                            <td rowspan="${spanRec}" class="matrix-empty-cell">
+                                <div class="matrix-subject-card is-receso-card">
+                                    <div class="matrix-subject-name text-amber-800 dark:text-amber-300 font-extrabold text-xs">
+                                        ☕ ${escapar(recesoInicio.nombre || "RECESO")}
+                                    </div>
+                                    <div class="text-[0.65rem] text-amber-700/80 dark:text-amber-400/80 mt-0.5 font-semibold">
+                                        ${escapar(horaCorta(recesoInicio.hora_inicio))} - ${escapar(horaCorta(recesoInicio.hora_fin))}
+                                    </div>
+                                </div>
+                            </td>
+                        `;
+                    } else if (slot.esReceso) {
                         bodyHtml += `
                             <td class="matrix-empty-cell">
                                 <div class="matrix-subject-card is-receso-card">

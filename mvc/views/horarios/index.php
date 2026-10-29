@@ -537,6 +537,7 @@ if (!empty($_GET['ref'])) {
 <script>
 window.HORARIOS_CONFIG = <?= json_encode([
     'apiHorarios' => base_url('src/api/Horario/leer_horarios.php'),
+    'apiRecesos' => base_url('src/api/Horario/leer_recesos.php'),
     'apiGrados' => base_url('src/api/Grado/leer_grados.php'),
     'apiAsignaciones' => base_url('src/api/Asignaciones/leer_asignaciones.php'),
     'apiDesactivar' => base_url('src/api/Horario/desactivar_horario.php'),

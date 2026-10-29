@@ -151,7 +151,56 @@ class ClaseDiaria {
             return null;
         }
 
-        // 2. Determinar si hay clase activa o si nos encontramos en receso/pausa/previo
+        // 2. Determinar si existe un Receso Institucional determinista activo en este momento
+        $idGradoEfectivo = ($id_grado !== null && $id_grado > 0) ? $id_grado : (!empty($horariosDia[0]['id_grado']) ? (int)$horariosDia[0]['id_grado'] : null);
+        if ($idGradoEfectivo !== null) {
+            require_once __DIR__ . '/RecesoInstitucional.php';
+            $recesoModel = new RecesoInstitucional($this->conn);
+            $recesoActivo = $recesoModel->obtenerRecesoActivoParaGrado($idGradoEfectivo, $diaInfo['con_tilde'], $hora);
+            if ($recesoActivo !== null) {
+                $materiaAnt = null;
+                $materiaSig = null;
+                $hIniRec = substr($recesoActivo['hora_inicio'], 0, 8);
+                $hFinRec = substr($recesoActivo['hora_fin'], 0, 8);
+
+                foreach ($horariosDia as $hd) {
+                    $ini = substr($hd['hora_inicio'], 0, 8);
+                    $fin = substr($hd['hora_fin'], 0, 8);
+                    if ($fin <= $hIniRec) {
+                        $materiaAnt = $hd;
+                    }
+                    if ($ini >= $hFinRec && $materiaSig === null) {
+                        $materiaSig = $hd;
+                    }
+                }
+
+                return [
+                    'id_clase' => 0,
+                    'en_receso' => true,
+                    'estado_tiempo' => 'EN_RECESO',
+                    'receso_nombre' => $recesoActivo['nombre'],
+                    'minutos_restantes' => $recesoActivo['minutos_restantes'],
+                    'hora_inicio_receso' => $recesoActivo['hora_inicio_corta'],
+                    'hora_fin_receso' => $recesoActivo['hora_fin_corta'],
+                    'hora_inicio_proxima' => $materiaSig ? substr($materiaSig['hora_inicio'], 0, 5) : $recesoActivo['hora_fin_corta'],
+                    'grado_nombre' => $horariosDia[0]['grado_nombre'] ?? '',
+                    'aula_nombre' => $horariosDia[0]['aula_nombre'] ?? '',
+                    'materia_anterior' => $materiaAnt ? [
+                        'materia_nombre' => $materiaAnt['materia_nombre'],
+                        'profesor_nombre' => trim(($materiaAnt['profesor_nombre'] ?? '') . ' ' . ($materiaAnt['profesor_apellido'] ?? '')),
+                        'hora_fin' => substr($materiaAnt['hora_fin'], 0, 5)
+                    ] : null,
+                    'materia_siguiente' => $materiaSig ? [
+                        'materia_nombre' => $materiaSig['materia_nombre'],
+                        'profesor_nombre' => trim(($materiaSig['profesor_nombre'] ?? '') . ' ' . ($materiaSig['profesor_apellido'] ?? '')),
+                        'hora_inicio' => substr($materiaSig['hora_inicio'], 0, 5)
+                    ] : null,
+                    'mensaje' => $recesoActivo['mensaje']
+                ];
+            }
+        }
+
+        // 3. Determinar si hay clase activa o si nos encontramos en receso/pausa/previo según horarios cargados
         $horarioActivo = null;
         $materiaAnterior = null;
         $materiaSiguiente = null;

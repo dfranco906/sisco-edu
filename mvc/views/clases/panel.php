@@ -190,7 +190,7 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
                 <span class="text-3xl sm:text-4xl flex-shrink-0">☕</span>
                 <div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <h3 class="text-xl sm:text-2xl font-black text-teal-950 dark:text-teal-100">
+                        <h3 id="receso-titulo" class="text-xl sm:text-2xl font-black text-teal-950 dark:text-teal-100">
                             En Receso / Intervalo Institucional
                         </h3>
                         <span class="px-3 py-0.5 rounded-full text-xs font-black uppercase bg-teal-200 dark:bg-teal-900 text-teal-900 dark:text-teal-200">
@@ -774,11 +774,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 enRecesoBanner.classList.remove('hidden');
 
                 const rec = data.receso;
+                const recTit = document.getElementById('receso-titulo');
                 const recDet = document.getElementById('receso-detalle');
                 const recAnt = document.getElementById('receso-materia-ant');
                 const recSig = document.getElementById('receso-materia-sig');
                 const recMin = document.getElementById('receso-cuenta-min');
 
+                if (recTit) recTit.textContent = rec.receso_nombre || 'En Receso / Intervalo Institucional';
                 if (recDet) recDet.textContent = rec.mensaje || 'En pausa activa institucional.';
                 if (recAnt) {
                     recAnt.textContent = rec.materia_anterior 
