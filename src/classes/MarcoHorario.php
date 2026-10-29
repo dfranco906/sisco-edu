@@ -79,26 +79,30 @@ class MarcoHorario {
         $diaInfo = self::normalizarDia($dia_semana ?? (int)date('w'));
         $hora = $hora_actual ? substr($hora_actual, 0, 8) : date('H:i:s');
 
-        // 2. Consulta jerárquica ponderada
+        // 2. Consulta jerárquica ponderada (Curso específico > Bachillerato+Nivel > Bachillerato > Nivel > General Turno)
         $sqlMarco = "
-            SELECT m.id_marco, m.dia_semana, m.id_turno, m.id_nivel, m.id_bachillerato,
+            SELECT m.id_marco, m.dia_semana, m.id_turno, m.id_nivel, m.id_bachillerato, m.id_grado,
                    m.hora_apertura, m.hora_inicio, m.tolerancia_minutos, m.hora_cierre,
                    m.descripcion, m.activo,
                    t.nombre AS turno_nombre,
                    n.nombre AS nivel_nombre,
                    COALESCE(b.nombre, 'General') AS bachillerato_nombre,
-                   COALESCE(b.codigo, 'GEN') AS bachillerato_codigo
+                   COALESCE(b.codigo, 'GEN') AS bachillerato_codigo,
+                   g.nombre AS grado_nombre
             FROM public.marcos_horarios_institucionales m
             LEFT JOIN public.turnos t ON m.id_turno = t.id_turno
             LEFT JOIN public.niveles_academicos n ON m.id_nivel = n.id_nivel
             LEFT JOIN public.bachilleratos b ON m.id_bachillerato = b.id_bachillerato
+            LEFT JOIN public.grados g ON m.id_grado = g.id_grado
             WHERE m.activo = 1
               AND (m.dia_semana = :dia1 OR m.dia_semana = :dia2)
               AND m.id_turno = :id_turno
+              AND (m.id_grado = :id_grado OR m.id_grado IS NULL)
               AND (m.id_nivel = :id_nivel OR m.id_nivel IS NULL)
               AND (m.id_bachillerato = :id_bachi OR m.id_bachillerato IS NULL)
             ORDER BY 
               (CASE 
+                 WHEN m.id_grado = :id_grado THEN 5
                  WHEN m.id_bachillerato = :id_bachi AND m.id_nivel = :id_nivel THEN 4
                  WHEN m.id_bachillerato = :id_bachi THEN 3
                  WHEN m.id_nivel = :id_nivel THEN 2
@@ -112,6 +116,7 @@ class MarcoHorario {
             ':dia1' => $diaInfo['con_tilde'],
             ':dia2' => $diaInfo['sin_tilde'],
             ':id_turno' => $idTurno,
+            ':id_grado' => $id_grado,
             ':id_nivel' => $idNivel,
             ':id_bachi' => $idBachi
         ]);
@@ -119,6 +124,33 @@ class MarcoHorario {
 
         if (!$marco) {
             return null;
+        }
+
+        // Protección inteligente y adaptabilidad:
+        // Si el curso tiene clases programadas para este día cuya última hora_fin sobrepasa la hora de cierre del marco,
+        // ajustamos dinámicamente la hora_cierre a la finalización real de las clases del curso.
+        try {
+            $stmtMax = $this->conn->prepare("
+                SELECT MAX(h.hora_fin) AS max_fin
+                FROM public.horarios h
+                LEFT JOIN public.asignacion_docente a ON h.id_asignacion = a.id_asignacion
+                LEFT JOIN public.materias mat ON a.id_materia = mat.id_materia
+                WHERE (h.id_grado = :id_grado OR a.id_grado = :id_grado)
+                  AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
+                  AND h.activo = 1
+                  AND (mat.nombre IS NULL OR UPPER(mat.nombre) != 'RECESO')
+            ");
+            $stmtMax->execute([
+                ':id_grado' => $id_grado,
+                ':dia1' => $diaInfo['con_tilde'],
+                ':dia2' => $diaInfo['sin_tilde']
+            ]);
+            $maxFin = $stmtMax->fetchColumn();
+            if ($maxFin && strtotime($maxFin) > strtotime($marco['hora_cierre'])) {
+                $marco['hora_cierre'] = substr((string)$maxFin, 0, 8);
+            }
+        } catch (Throwable $e) {
+            error_log("[MarcoHorario::resolverMarcoParaCurso] Error al consultar hora_fin máxima para grado {$id_grado}: " . $e->getMessage());
         }
 
         // 3. Cálculos dinámicos de ventana y estado
@@ -177,7 +209,7 @@ class MarcoHorario {
     /**
      * Lista todos los marcos horarios registrados con filtros opcionales
      */
-    public function listar(?int $id_turno = null, ?int $id_nivel = null, ?int $id_bachillerato = null, ?string $dia_semana = null): array {
+    public function listar(?int $id_turno = null, ?int $id_nivel = null, ?int $id_bachillerato = null, ?string $dia_semana = null, ?int $id_grado = null): array {
         $where = ["m.activo = 1"];
         $params = [];
 
@@ -192,6 +224,10 @@ class MarcoHorario {
         if ($id_bachillerato !== null && $id_bachillerato > 0) {
             $where[] = "m.id_bachillerato = :id_bachi";
             $params[':id_bachi'] = $id_bachillerato;
+        }
+        if ($id_grado !== null && $id_grado > 0) {
+            $where[] = "m.id_grado = :id_grado";
+            $params[':id_grado'] = $id_grado;
         }
         if (!empty($dia_semana)) {
             $diaInfo = self::normalizarDia($dia_semana);
@@ -213,6 +249,8 @@ class MarcoHorario {
                 m.id_bachillerato,
                 COALESCE(b.nombre, 'Educación General (Todos)') AS bachillerato_nombre,
                 COALESCE(b.codigo, 'GEN') AS bachillerato_codigo,
+                m.id_grado,
+                g.nombre AS grado_nombre,
                 m.hora_apertura,
                 m.hora_inicio,
                 m.tolerancia_minutos,
@@ -224,6 +262,7 @@ class MarcoHorario {
             LEFT JOIN public.turnos t ON m.id_turno = t.id_turno
             LEFT JOIN public.niveles_academicos n ON m.id_nivel = n.id_nivel
             LEFT JOIN public.bachilleratos b ON m.id_bachillerato = b.id_bachillerato
+            LEFT JOIN public.grados g ON m.id_grado = g.id_grado
             WHERE {$whereClause}
             ORDER BY 
               CASE m.dia_semana 
@@ -238,6 +277,7 @@ class MarcoHorario {
                 ELSE 7 
               END,
               t.nombre ASC,
+              COALESCE(g.nombre, '') ASC,
               COALESCE(b.codigo, '') ASC
         ";
 
@@ -258,6 +298,7 @@ class MarcoHorario {
         $idTurno = (int)($datos['id_turno'] ?? 0);
         $idNivel = !empty($datos['id_nivel']) ? (int)$datos['id_nivel'] : null;
         $idBachi = !empty($datos['id_bachillerato']) ? (int)$datos['id_bachillerato'] : null;
+        $idGrado = !empty($datos['id_grado']) ? (int)$datos['id_grado'] : null;
 
         $horaApertura = trim((string)($datos['hora_apertura'] ?? '06:45:00'));
         $horaInicio = trim((string)($datos['hora_inicio'] ?? '07:00:00'));
@@ -282,6 +323,7 @@ class MarcoHorario {
                     id_turno = :id_turno,
                     id_nivel = :id_nivel,
                     id_bachillerato = :id_bachi,
+                    id_grado = :id_grado,
                     hora_apertura = :apertura,
                     hora_inicio = :inicio,
                     tolerancia_minutos = :tolerancia,
@@ -295,6 +337,7 @@ class MarcoHorario {
                 ':id_turno' => $idTurno,
                 ':id_nivel' => $idNivel,
                 ':id_bachi' => $idBachi,
+                ':id_grado' => $idGrado,
                 ':apertura' => $horaApertura,
                 ':inicio' => $horaInicio,
                 ':tolerancia' => $tolerancia,
@@ -307,10 +350,10 @@ class MarcoHorario {
 
         $stmt = $this->conn->prepare("
             INSERT INTO public.marcos_horarios_institucionales
-                (dia_semana, id_turno, id_nivel, id_bachillerato, hora_apertura, hora_inicio, tolerancia_minutos, hora_cierre, descripcion, activo)
+                (dia_semana, id_turno, id_nivel, id_bachillerato, id_grado, hora_apertura, hora_inicio, tolerancia_minutos, hora_cierre, descripcion, activo)
             VALUES
-                (:dia, :id_turno, :id_nivel, :id_bachi, :apertura, :inicio, :tolerancia, :cierre, :desc, 1)
-            ON CONFLICT (dia_semana, id_turno, COALESCE(id_nivel, 0), COALESCE(id_bachillerato, 0))
+                (:dia, :id_turno, :id_nivel, :id_bachi, :id_grado, :apertura, :inicio, :tolerancia, :cierre, :desc, 1)
+            ON CONFLICT (dia_semana, id_turno, COALESCE(id_nivel, 0), COALESCE(id_bachillerato, 0), COALESCE(id_grado, 0)) WHERE activo = 1
             DO UPDATE SET
                 hora_apertura = EXCLUDED.hora_apertura,
                 hora_inicio = EXCLUDED.hora_inicio,
@@ -326,6 +369,7 @@ class MarcoHorario {
             ':id_turno' => $idTurno,
             ':id_nivel' => $idNivel,
             ':id_bachi' => $idBachi,
+            ':id_grado' => $idGrado,
             ':apertura' => $horaApertura,
             ':inicio' => $horaInicio,
             ':tolerancia' => $tolerancia,

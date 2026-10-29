@@ -157,8 +157,26 @@ class ClaseDiaria {
         $materiaSiguiente = null;
 
         foreach ($horariosDia as $hd) {
+            $esRecesoExplicito = (strtoupper(trim((string)($hd['materia_nombre'] ?? ''))) === 'RECESO');
             $hIni = substr($hd['hora_inicio'], 0, 8);
             $hFin = substr($hd['hora_fin'], 0, 8);
+
+            if ($esRecesoExplicito) {
+                if ($hora >= $hIni && $hora < $hFin) {
+                    $minutosRestantes = max(0, (int)ceil((strtotime($hFin) - strtotime($hora)) / 60));
+                    return [
+                        'id_clase' => 0,
+                        'en_receso' => true,
+                        'estado_tiempo' => 'EN_RECESO',
+                        'minutos_restantes' => $minutosRestantes,
+                        'hora_inicio_proxima' => substr($hFin, 0, 5),
+                        'grado_nombre' => $hd['grado_nombre'] ?? '',
+                        'aula_nombre' => $hd['aula_nombre'] ?? '',
+                        'mensaje' => "En receso o pausa institucional (faltan {$minutosRestantes} min para la siguiente clase)."
+                    ];
+                }
+                continue;
+            }
 
             if ($hora >= $hIni && $hora < $hFin) {
                 $horarioActivo = $hd;

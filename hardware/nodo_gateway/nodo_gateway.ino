@@ -108,6 +108,7 @@ void encolarSyncErr(const String &payload, int rssi = 0, int snr = 0);
 void despacharColaAsistencias();
 void despacharColaSync();
 void confirmarSyncHttp(int idSync, const String &estado, const String &mensaje);
+void verificarCierreAulasServidor();
 
 void pantalla(const String &linea1, const String &linea2 = "", const String &linea3 = "");
 void mostrarEstadoGatewayOnline();
@@ -1106,6 +1107,7 @@ void tareaRedCore0(void *pvParameters) {
 
   unsigned long ultimoReintentoWifi = 0;
   unsigned long ultimoSondeoSyncAuto = 0;
+  unsigned long ultimoChequeoCierreAulas = 0;
   wl_status_t ultimoEstadoWifi = WiFi.status();
 
   for (;;) {
@@ -1147,6 +1149,12 @@ void tareaRedCore0(void *pvParameters) {
         ultimoSondeoSyncAuto = millis();
         Serial.println("[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...");
         pedirSyncPendiente();
+      }
+
+      // 7. Verificación periódica de cierre institucional de aulas y reset diario (cada 5 minutos)
+      if (estadoWifi == WL_CONNECTED && (millis() - ultimoChequeoCierreAulas >= 300000)) {
+        ultimoChequeoCierreAulas = millis();
+        verificarCierreAulasServidor();
       }
     }
 
@@ -2182,6 +2190,66 @@ void confirmarSync(int idSync, const String &estado, const String &mensaje) {
   confirmarSyncHttp(idSync, estado, mensaje);
 }
 
+void verificarCierreAulasServidor() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[CIERRE-AULAS] Omitido: Wi-Fi desconectado");
+    return;
+  }
+
+  Serial.println("[CIERRE-AULAS] Consultando aulas con jornada finalizada a la API...");
+  HTTPClient http;
+  const String url = configBaseUrl + "src/api/Gateway/verificar_cierre_aulas.php";
+  if (!http.begin(url)) {
+    Serial.println("[CIERRE-AULAS] Error inicializando HTTP para verificar_cierre_aulas.php");
+    return;
+  }
+  http.addHeader("X-GATEWAY-KEY", configApiKey);
+  http.setTimeout(4500);
+
+  const int codigo = http.GET();
+  if (codigo != 200) {
+    Serial.printf("[CIERRE-AULAS] API verificar_cierre_aulas respondio HTTP %d\n", codigo);
+    http.end();
+    return;
+  }
+
+  const String respuesta = http.getString();
+  http.end();
+
+  DynamicJsonDocument doc(4096);
+  if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") {
+    Serial.println("[CIERRE-AULAS] Respuesta JSON no valida del servidor");
+    return;
+  }
+
+  const String fecha = doc["fecha"].as<String>();
+  JsonArray cerradas = doc["aulas_cerradas"].as<JsonArray>();
+
+  if (cerradas.size() == 0) {
+    Serial.println("[CIERRE-AULAS] Ninguna aula activa requiere reset diario en este momento.");
+    return;
+  }
+
+  Serial.printf("[CIERRE-AULAS] %u aulas han finalizado su jornada escolar. Emitiendo CMD:RESET_DIA...\n", cerradas.size());
+
+  for (JsonObject a : cerradas) {
+    const int idAula = a["id_aula"] | 0;
+    const String nombre = a["nombre"].as<String>();
+    if (idAula <= 0) continue;
+
+    String cmd = "CMD:RESET_DIA:" + String(idAula) + ":" + fecha;
+    String cmdFirmado = SeguridadLoRa::firmar(cmd, CLAVE_API_GATEWAY);
+
+    if (mutexLoRa != NULL) xSemaphoreTakeRecursive(mutexLoRa, portMAX_DELAY);
+    enviarComandoLoRa(0, cmdFirmado); // Transmisión broadcast LoRa para asegurar recepción del aula
+    if (mutexLoRa != NULL) xSemaphoreGiveRecursive(mutexLoRa);
+
+    Serial.printf("[CIERRE-AULAS] Emitido CMD:RESET_DIA para Aula #%d (%s, Fecha: %s)\n",
+                  idAula, nombre.c_str(), fecha.c_str());
+    vTaskDelay(pdMS_TO_TICKS(150));
+  }
+}
+
 void atenderMensajesLoRa() {
   if (mutexLoRa != NULL) {
     if (xSemaphoreTakeRecursive(mutexLoRa, pdMS_TO_TICKS(5)) != pdTRUE) return;
@@ -2220,6 +2288,11 @@ void atenderMensajesLoRa() {
     encolarSyncOk(payload, rssi, snr);
   } else if (payload.startsWith("SYNCERR:")) {
     encolarSyncErr(payload, rssi, snr);
+  } else if (payload.startsWith("RESET_DIA_OK:")) {
+    int idAula = campo(payload, 2).toInt();
+    String fecha = campo(payload, 3);
+    Serial.printf("[LORA-CORE1] Aula #%d confirmo RESET_DIA_OK para fecha '%s'\n", idAula, fecha.c_str());
+    notificarPantallaTemporal("RESET DIA OK", "Aula #" + String(idAula), fecha, 2500);
   } else if (payload.startsWith("PING")) {
     int emisor = linea.substring(5, c1).toInt();
     Serial.printf("[LORA-CORE1] PING recibido de Nodo ID %d. Respondiendo PONG...\n", emisor);

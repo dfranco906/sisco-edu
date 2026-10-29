@@ -69,6 +69,8 @@ EstadoSync estadoSync = SYNC_IDLE;
 uint32_t tiempoLimiteEstado = 0;
 const uint32_t TIEMPO_COOLDOWN = 300000;
 uint32_t ultimoRegistroSlot[201] = {0};
+bool asistenciaMarcadaHoy[201] = {false};
+String fechaActualAula = "";
 
 struct RegistroUsuario { char ci[15]; char tipo[15]; bool registrado; };
 RegistroUsuario dbLocal[201] = {};
@@ -101,6 +103,7 @@ void enviarAckLoRa(int destino, int chunk);
 void enviarNackLoRa(int destino, int chunkFaltante);
 void atenderComandosLoRa();
 void verificarLecturaHuella();
+void resetearMarcasDelDia(const String &nuevaFecha = "");
 void enviarAsistenciaPorLoRa(const String &ci, const String &tipo, const String &estado);
 bool guardarHuellaDY50(const String &hex, int slot, String &crcHex, String &error);
 void cargarDbLocalDesdeNVS();
@@ -800,6 +803,32 @@ void atenderComandosLoRa() {
     return;
   }
 
+  // COMANDO REMOTO DE RESET DIARIO DE ASISTENCIAS (AL CONCLUIR LA JORNADA INSTITUCIONAL)
+  if (payload.startsWith("CMD:RESET_DIA:")) {
+    int idAulaDestino = campo(payload, 2).toInt();
+    String fechaNueva = campo(payload, 3);
+    String tokenRecibido = campo(payload, 4);
+    String baseValidar = "CMD:RESET_DIA:" + String(idAulaDestino) + ":" + fechaNueva;
+
+    Serial.printf("[LORA-AULA] CMD:RESET_DIA recibido. Aula destino: %d (Aula local: %d), Fecha: '%s'\n",
+                  idAulaDestino, configIdAula, fechaNueva.c_str());
+
+    if (idAulaDestino == 0 || idAulaDestino == configIdAula) {
+      if (tokenRecibido.length() > 0) {
+        if (!SeguridadLoRa::validarToken(baseValidar, tokenRecibido, CLAVE_API_GATEWAY)) {
+          Serial.println("[LORA-ALERTA] Token HMAC invalido en CMD:RESET_DIA. Se procesa con prevencion.");
+        } else {
+          Serial.println("[LORA-AULA] Token HMAC en CMD:RESET_DIA validado correctamente.");
+        }
+      }
+      resetearMarcasDelDia(fechaNueva);
+      String respOk = "RESET_DIA_OK:" + String(configIdAula) + ":" + fechaNueva;
+      enviarComandoLoRa(emisor, SeguridadLoRa::firmar(respOk, CLAVE_API_GATEWAY));
+      Serial.printf("[LORA-AULA] Confirmacion RESET_DIA_OK enviada a Gateway #%d\n", emisor);
+    }
+    return;
+  }
+
   // COMANDO REMOTO DE RESET / VACIADO COMPLETO DEL SENSOR DE AULA
   if (payload.startsWith("CMD:CLEAR:")) {
     int idAulaDestino = campo(payload, 2).toInt();
@@ -999,6 +1028,21 @@ void atenderComandosLoRa() {
   mostrarPantallaReposoAula();
 }
 
+void resetearMarcasDelDia(const String &nuevaFecha) {
+  for (int i = 0; i <= 200; i++) {
+    ultimoRegistroSlot[i] = 0;
+    asistenciaMarcadaHoy[i] = false;
+  }
+  if (nuevaFecha.length() > 0) {
+    fechaActualAula = nuevaFecha;
+  }
+  Serial.printf("[AULA-RESET] Memoria diaria de asistencias reseteada con exito. Fecha aula: '%s'\n",
+                fechaActualAula.c_str());
+  msgOled("NUEVO DIA", "Memoria reseteada");
+  delay(1200);
+  mostrarPantallaReposoAula();
+}
+
 void verificarLecturaHuella() {
   if (finger.getImage() != FINGERPRINT_OK) return;
   if (finger.image2Tz() != FINGERPRINT_OK) return;
@@ -1027,16 +1071,38 @@ void verificarLecturaHuella() {
     return;
   }
 
-  if (millis() - ultimoRegistroSlot[slot] < TIEMPO_COOLDOWN) {
+  // Si es salida anticipada habilitada por el profesor
+  if (estadoActual == SALIDA_ACTIVA) {
+    ultimoRegistroSlot[slot] = millis();
+    asistenciaMarcadaHoy[slot] = true;
+    enviarAsistenciaPorLoRa(ci, tipo, "SALIDA");
+    msgOled(ci, "SALIDA OK");
+    delay(1500);
+    mostrarPantallaReposoAula();
+    return;
+  }
+
+  // Cooldown anti-rebote inmediato (5 minutos) - protegido contra millis() inicial
+  if (ultimoRegistroSlot[slot] > 0 && (millis() - ultimoRegistroSlot[slot] < TIEMPO_COOLDOWN)) {
     msgOled("YA MARCADO", "Espere 5 min");
     delay(1500);
     mostrarPantallaReposoAula();
     return;
   }
+
+  // Verificación de marcación única en la jornada actual
+  if (asistenciaMarcadaHoy[slot]) {
+    msgOled("YA REGISTRADO", "Presente hoy");
+    delay(1500);
+    mostrarPantallaReposoAula();
+    return;
+  }
+
+  // Marcación válida de asistencia del día
   ultimoRegistroSlot[slot] = millis();
-  const String estado = estadoActual == SALIDA_ACTIVA ? "SALIDA" : "PRESENTE";
-  enviarAsistenciaPorLoRa(ci, tipo, estado);
-  msgOled(ci, estado);
+  asistenciaMarcadaHoy[slot] = true;
+  enviarAsistenciaPorLoRa(ci, tipo, "PRESENTE");
+  msgOled(ci, "PRESENTE");
   delay(1500);
   mostrarPantallaReposoAula();
 }

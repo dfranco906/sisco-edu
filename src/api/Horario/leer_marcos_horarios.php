@@ -16,9 +16,10 @@ try {
     $idTurno = filter_input(INPUT_GET, 'id_turno', FILTER_VALIDATE_INT) ?: null;
     $idNivel = filter_input(INPUT_GET, 'id_nivel', FILTER_VALIDATE_INT) ?: null;
     $idBachillerato = filter_input(INPUT_GET, 'id_bachillerato', FILTER_VALIDATE_INT) ?: null;
+    $idGrado = filter_input(INPUT_GET, 'id_grado', FILTER_VALIDATE_INT) ?: null;
     $diaSemana = !empty($_GET['dia_semana']) ? trim((string)$_GET['dia_semana']) : null;
 
-    $marcos = $marcoModel->listar($idTurno, $idNivel, $idBachillerato, $diaSemana);
+    $marcos = $marcoModel->listar($idTurno, $idNivel, $idBachillerato, $diaSemana, $idGrado);
 
     echo json_encode([
         "status" => "success",

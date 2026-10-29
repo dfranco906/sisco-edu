@@ -11,12 +11,14 @@ $rol = $_SESSION['rol'] ?? '';
 $turnos = [];
 $niveles = [];
 $bachilleratos = [];
+$grados = [];
 
 try {
     $db = (new Database())->getConnection();
     $turnos = $db->query("SELECT id_turno, nombre FROM public.turnos WHERE activo = 1 ORDER BY id_turno ASC")->fetchAll(PDO::FETCH_ASSOC);
     $niveles = $db->query("SELECT id_nivel, nombre FROM public.niveles_academicos WHERE activo = 1 ORDER BY id_nivel ASC")->fetchAll(PDO::FETCH_ASSOC);
     $bachilleratos = $db->query("SELECT id_bachillerato, nombre, codigo FROM public.bachilleratos WHERE activo = 1 ORDER BY id_bachillerato ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $grados = $db->query("SELECT g.id_grado, g.nombre, t.nombre AS turno_nombre FROM public.grados g LEFT JOIN public.turnos t ON g.id_turno = t.id_turno WHERE g.activo = 1 ORDER BY g.nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     error_log("Error cargando catálogos para marcos horarios: " . $e->getMessage());
 }
@@ -244,6 +246,19 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 </div>
             </div>
 
+            <div>
+                <label for="marco-grado" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Curso / Grado Específico (Opcional — Máxima Prioridad de Salida)
+                </label>
+                <select id="marco-grado" name="id_grado" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-semibold">
+                    <option value="">Aplica a todo el bachillerato / nivel seleccionado</option>
+                    <?php foreach ($grados as $g): ?>
+                        <option value="<?= $g['id_grado'] ?>"><?= htmlspecialchars($g['nombre']) ?> (<?= htmlspecialchars($g['turno_nombre'] ?? 'Sin turno') ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">Ideal para cursos con salida extendida variable (ej. 1° BTI Viernes 14:10, 2° BTI Martes 16:00, 3° BTI Lunes/Jueves 15:30).</span>
+            </div>
+
             <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3">
                 <span class="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
                     Horarios de la Jornada
@@ -377,10 +392,16 @@ window.BASE_URL = "<?= base_url('') ?>";
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
 
-            const esEspecial = m.id_bachillerato !== null;
-            const bachiBadge = esEspecial 
-                ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">⭐ ${m.bachillerato_codigo || m.bachillerato_nombre}</span>` 
-                : `<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">General</span>`;
+            let bachiBadge = '';
+            if (m.id_grado && m.grado_nombre) {
+                bachiBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-100 text-purple-900 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-800">🎯 Curso: ${m.grado_nombre}</span>`;
+            } else if (m.id_bachillerato) {
+                bachiBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">⭐ ${m.bachillerato_codigo || m.bachillerato_nombre}</span>`;
+            } else if (m.id_nivel) {
+                bachiBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">${m.nivel_nombre}</span>`;
+            } else {
+                bachiBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">General Turno</span>`;
+            }
 
             tr.innerHTML = `
                 <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
@@ -452,6 +473,7 @@ window.BASE_URL = "<?= base_url('') ?>";
         document.getElementById('marco-turno').selectedIndex = 0;
         document.getElementById('marco-nivel').value = '';
         document.getElementById('marco-bachi').value = '';
+        document.getElementById('marco-grado').value = '';
         document.getElementById('marco-apertura').value = '06:45';
         document.getElementById('marco-inicio').value = '07:00';
         document.getElementById('marco-tolerancia').value = '15';
@@ -468,6 +490,7 @@ window.BASE_URL = "<?= base_url('') ?>";
         document.getElementById('marco-turno').value = m.id_turno;
         document.getElementById('marco-nivel').value = m.id_nivel || '';
         document.getElementById('marco-bachi').value = m.id_bachillerato || '';
+        document.getElementById('marco-grado').value = m.id_grado || '';
         document.getElementById('marco-apertura').value = m.hora_apertura.substring(0, 5);
         document.getElementById('marco-inicio').value = m.hora_inicio.substring(0, 5);
         document.getElementById('marco-tolerancia').value = m.tolerancia_minutos;

@@ -392,12 +392,14 @@
                     horaCorta(h.hora_fin) >= slot.fin
             );
 
-            const tieneAlgunaClase = horarios.some(
-                (h) => horaCorta(h.hora_inicio) <= slot.inicio && horaCorta(h.hora_fin) >= slot.fin
+            const tieneAlgunaClaseReal = horarios.some(
+                (h) => (h.materia || "").toUpperCase() !== "RECESO" &&
+                    horaCorta(h.hora_inicio) <= slot.inicio &&
+                    horaCorta(h.hora_fin) >= slot.fin
             );
 
-            const esBreveReceso = (!tieneAlgunaClase && slot.inicio >= "09:30" && slot.fin <= "11:00");
-            const esReceso = tieneMateriaReceso || esBreveReceso;
+            // Se considera receso si tiene materia explícita "RECESO" o si es un espacio intersticial sin clases
+            const esReceso = tieneMateriaReceso || !tieneAlgunaClaseReal;
 
             if (esReceso) {
                 slot.badge = "RECESO";

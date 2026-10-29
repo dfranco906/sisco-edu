@@ -1,3 +1,7 @@
+// Estado global para el registro actualmente en edición en cualquier vista CRUD
+let itemEditando = null;
+window.itemEditando = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     const btnCrear = document.getElementById("btn-crear");
     const modalCrear = document.getElementById("modal-crear");
@@ -10,8 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelarEditar = document.getElementById("cancelar-editar");
     const formEditar = document.getElementById("form-editar");
     const mensajeEditar = document.getElementById("mensaje-editar");
-
-    let itemEditando = null;
 
     if (btnCrear && modalCrear) {
         btnCrear.addEventListener("click", () => {
@@ -99,8 +101,12 @@ document.addEventListener("DOMContentLoaded", () => {
         formEditar.onsubmit = async (e) => {
             e.preventDefault();
 
+            const registro = itemEditando || window.itemEditando;
             const formData = new FormData(formEditar);
-            formData.append(window.ID_CAMPO, itemEditando[window.ID_CAMPO]);
+            
+            if (window.ID_CAMPO && registro && registro[window.ID_CAMPO] !== undefined) {
+                formData.set(window.ID_CAMPO, registro[window.ID_CAMPO]);
+            }
 
             mensajeEditar.innerHTML = "Actualizando...";
             mensajeEditar.className = "text-blue-600 font-semibold mb-3";
@@ -169,6 +175,7 @@ async function cargarSelects() {
 
 window.editarRegistro = function(item) {
     itemEditando = item;
+    window.itemEditando = item;
 
     const modal = document.getElementById("modal-editar");
     const campos = document.getElementById("campos-editar");
@@ -178,6 +185,10 @@ window.editarRegistro = function(item) {
 
     if (mensaje) mensaje.innerHTML = "";
     campos.innerHTML = "";
+
+    if (window.ID_CAMPO && item && item[window.ID_CAMPO] !== undefined) {
+        campos.innerHTML += `<input type="hidden" name="${window.ID_CAMPO}" value="${item[window.ID_CAMPO]}">`;
+    }
 
     const camposEditables = window.CAMPOS_EDITAR || [];
     const formCampos = window.FORM_CAMPOS || [];
