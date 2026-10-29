@@ -449,11 +449,11 @@ function renderizarTablaEstudiantes(lista) {
         const tieneHuella = parseInt(est.huella_registrada || 0) > 0 || parseInt(est.huella_id || 0) > 0;
         const totalTut = parseInt(est.total_tutores || 0);
 
-        // Badge Biométrico de Alto Contraste (>= 15px)
+        // Badge Biométrico de Alto Contraste (>= 15px) - Exacto al de Profesores
         const huellaBadge = tieneHuella
             ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                <span>Huella Vinculada</span>
+                <span>Huella vinculada</span>
                </span>`
             : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                 <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -494,24 +494,9 @@ function renderizarTablaEstudiantes(lista) {
                     </div>
                 </td>
 
-                <!-- Columna 3: Estado Biométrico -->
+                <!-- Columna 3: Estado Biométrico Exclusivo (Sin botones que saturen la tabla) -->
                 <td class="py-4 px-5">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        ${huellaBadge}
-                        <button type="button" onclick="abrirModalBiometriaEstudiante(${est.id_estudiante})"
-                                class="btn btn-secondary text-sm font-bold py-1.5 px-3 min-h-[38px] inline-flex items-center gap-1.5"
-                                title="Gestionar registro biométrico en el sensor ESP32">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.99 7.132"></path></svg>
-                            <span>Biometría</span>
-                        </button>
-                        ${tieneHuella ? `
-                        <button type="button" onclick="enviarHuellaEstudianteDirecto(${est.id_estudiante})"
-                                class="btn bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-sm font-bold py-1.5 px-3 min-h-[38px] inline-flex items-center gap-1.5"
-                                title="Enviar huella al aula asignada vía LoRa">
-                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                            <span>Enviar a Aula</span>
-                        </button>` : ''}
-                    </div>
+                    ${huellaBadge}
                 </td>
 
                 <!-- Columna 4: Acciones Principales con Objetivos Táctiles Grandes -->
@@ -728,6 +713,20 @@ function abrirModalDetalleEstudiante(idEstudiante) {
             cerrarModalDetalleEstudiante();
             abrirModalBiometriaEstudiante(est.id_estudiante);
         };
+    }
+
+    // Botón Enviar a Aula (Disponible en la ficha si la huella ya está registrada)
+    const btnEnviarAula = document.getElementById('mde-btn-enviar-aula');
+    if (btnEnviarAula) {
+        if (tieneHuella) {
+            btnEnviarAula.classList.remove('hidden');
+            btnEnviarAula.onclick = () => {
+                cerrarModalDetalleEstudiante();
+                enviarHuellaEstudianteDirecto(est.id_estudiante);
+            };
+        } else {
+            btnEnviarAula.classList.add('hidden');
+        }
     }
 
     modal.classList.remove('hidden');

@@ -100,10 +100,14 @@ declare(strict_types=1);
                     EST_-----
                 </span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5 flex-wrap">
                 <button type="button" id="mde-btn-abrir-biometria" class="btn btn-secondary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2">
                     <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0a8 8 0 00.99 7.132"></path></svg>
                     <span>Gestionar Huella</span>
+                </button>
+                <button type="button" id="mde-btn-enviar-aula" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-2 shadow-xs transition-colors hidden" title="Enviar huella al aula asignada vía LoRa">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                    <span>Enviar a Aula</span>
                 </button>
             </div>
         </div>
