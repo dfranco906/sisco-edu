@@ -38,22 +38,67 @@
                 </div>
             </div>
 
-            <!-- Hardware y Nodos IoT -->
-            <div class="p-5 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800/70 flex items-start gap-4">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 flex items-center justify-center text-xl shrink-0 font-bold">
-                    📡
-                </div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Nodos IoT y Biometría</h3>
-                    <p class="text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
-                        Enrolamiento de huellas en Secretaría vía ESP32 Registrador. Transmisión de eventos hacia las aulas coordinadas por radiofrecuencia LoRa RYLR998.
-                    </p>
-                    <div class="mt-3">
-                        <a href="<?= base_url('mvc/views/configuracion/index.php') ?>" class="inline-flex items-center gap-1.5 text-base font-bold text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 hover:underline">
-                            <span>Ver parámetros de red en Configuración</span>
-                            <span>→</span>
-                        </a>
+            <!-- Hardware y Nodos IoT con Diagnóstico en Tiempo Real -->
+            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/80 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 flex items-center justify-center text-xl shrink-0 font-bold">
+                            📡
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Nodos de Hardware e Infraestructura IoT</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">Estado de comunicación con los microcontroladores ESP32 en red local</p>
+                        </div>
                     </div>
+                    <button type="button" id="btn-diag-test-todos" onclick="ejecutarDiagnosticoHardwareModal()" class="min-h-[42px] px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer self-start sm:self-auto">
+                        <span>⚡</span>
+                        <span>Probar Conexiones Ahora</span>
+                    </button>
+                </div>
+
+                <!-- Tarjeta 1: ESP32 Registrador -->
+                <div id="card-diag-registrador" class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all space-y-2">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">👆</span>
+                            <span class="font-extrabold text-base text-slate-900 dark:text-white">ESP32 Registrador (DY50 Secretaría)</span>
+                        </div>
+                        <span id="badge-diag-registrador" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+                            Pendiente de prueba
+                        </span>
+                    </div>
+                    <div class="text-sm font-mono text-slate-600 dark:text-slate-400">
+                        IP configurada: <strong class="text-slate-900 dark:text-white font-bold" id="diag-ip-reg"><?= defined('IP_ESP32_REGISTRADOR') ? IP_ESP32_REGISTRADOR : '192.168.100.39' ?></strong>:80
+                    </div>
+                    <div id="msg-diag-registrador" class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Haga clic en "Probar Conexiones Ahora" para verificar si el nodo está encendido y accesible.
+                    </div>
+                </div>
+
+                <!-- Tarjeta 2: ESP32 Gateway LoRa -->
+                <div id="card-diag-gateway" class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all space-y-2">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">📶</span>
+                            <span class="font-extrabold text-base text-slate-900 dark:text-white">ESP32 Gateway LoRa (Concentrador RYLR998)</span>
+                        </div>
+                        <span id="badge-diag-gateway" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+                            Pendiente de prueba
+                        </span>
+                    </div>
+                    <div class="text-sm font-mono text-slate-600 dark:text-slate-400">
+                        IP configurada: <strong class="text-slate-900 dark:text-white font-bold" id="diag-ip-gw"><?= defined('IP_ESP32_GATEWAY') ? IP_ESP32_GATEWAY : '192.168.100.137' ?></strong>:80
+                    </div>
+                    <div id="msg-diag-gateway" class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Haga clic en "Probar Conexiones Ahora" para verificar si el concentrador LoRa está en línea.
+                    </div>
+                </div>
+
+                <div class="pt-1 flex justify-end">
+                    <a href="<?= base_url('mvc/views/configuracion/index.php') ?>" class="inline-flex items-center gap-1.5 text-sm font-bold text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 hover:underline">
+                        <span>Configurar parámetros de red y nodos LoRa</span>
+                        <span>→</span>
+                    </a>
                 </div>
             </div>
 
@@ -108,6 +153,86 @@ function cerrarModalDiagnostico() {
     if (modal) {
         modal.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
+    }
+}
+
+async function ejecutarDiagnosticoHardwareModal() {
+    const btn = document.getElementById('btn-diag-test-todos');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span><span>Probando...</span>';
+    }
+
+    const testNodo = async (tipo, cardId, badgeId, msgId) => {
+        const card = document.getElementById(cardId);
+        const badge = document.getElementById(badgeId);
+        const msg = document.getElementById(msgId);
+
+        if (badge) {
+            badge.className = "px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-900 border border-blue-300 animate-pulse";
+            badge.textContent = "Conectando...";
+        }
+        if (msg) {
+            msg.className = "text-sm font-medium text-slate-500 dark:text-slate-400";
+            msg.textContent = "Verificando disponibilidad de socket en puerto 80...";
+        }
+
+        try {
+            const baseUrl = (window.BASE_URL || '/').replace(/\/+$/, '');
+            const resp = await fetch(`${baseUrl}/src/api/Configuracion/probar_conexion.php?tipo=${encodeURIComponent(tipo)}`);
+            const res = await resp.json();
+
+            const estaOnline = Boolean(res.online === true || (res.status === 'success' && res.data?.online === true));
+
+            if (estaOnline) {
+                const latencia = (res.latencia_ms || res.data?.latencia_ms) ? ` (${res.latencia_ms || res.data?.latencia_ms} ms)` : '';
+                if (card) {
+                    card.className = "p-4 rounded-xl border-2 border-emerald-400 dark:border-emerald-700 bg-emerald-50/70 dark:bg-emerald-950/30 transition-all space-y-2";
+                }
+                if (badge) {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700";
+                    badge.innerHTML = `🟢 ONLINE${latencia}`;
+                }
+                if (msg) {
+                    msg.className = "text-sm font-semibold text-emerald-900 dark:text-emerald-200";
+                    msg.textContent = res.message || 'Nodo activo y respondiendo.';
+                }
+            } else {
+                if (card) {
+                    card.className = "p-4 rounded-xl border-2 border-rose-400 dark:border-rose-700 bg-rose-50/70 dark:bg-rose-950/30 transition-all space-y-2";
+                }
+                if (badge) {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-rose-100 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200 border border-rose-300 dark:border-rose-700";
+                    badge.innerHTML = "🔴 OFFLINE";
+                }
+                if (msg) {
+                    msg.className = "text-sm font-medium text-rose-900 dark:text-rose-200";
+                    msg.textContent = res.message || 'Dispositivo fuera de línea o sin respuesta.';
+                }
+            }
+        } catch (e) {
+            if (card) {
+                card.className = "p-4 rounded-xl border-2 border-rose-400 dark:border-rose-700 bg-rose-50/70 dark:bg-rose-950/30 transition-all space-y-2";
+            }
+            if (badge) {
+                badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-rose-100 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200 border border-rose-300 dark:border-rose-700";
+                badge.innerHTML = "🔴 ERROR";
+            }
+            if (msg) {
+                msg.className = "text-sm font-medium text-rose-900 dark:text-rose-200";
+                msg.textContent = "Error al contactar la API: " + e.message;
+            }
+        }
+    };
+
+    await Promise.all([
+        testNodo('registrador', 'card-diag-registrador', 'badge-diag-registrador', 'msg-diag-registrador'),
+        testNodo('gateway', 'card-diag-gateway', 'badge-diag-gateway', 'msg-diag-gateway')
+    ]);
+
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔄</span><span>Repetir Prueba</span>';
     }
 }
 </script>

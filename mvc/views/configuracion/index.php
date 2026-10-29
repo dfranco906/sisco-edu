@@ -209,14 +209,21 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     </div>
 
                     <!-- IP o Dominio del Servidor -->
-                    <div class="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200/80 space-y-2">
-                        <label for="ip_servidor" class="font-extrabold text-base text-slate-900 block">
-                            IP o Hostname del Servidor Backend
-                        </label>
+                    <div class="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200/80 space-y-2.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label for="ip_servidor" class="font-extrabold text-base text-slate-900">
+                                IP o Hostname del Servidor Backend
+                            </label>
+                            <button type="button" onclick="probarConexion('servidor')" id="btn-test-servidor" class="min-h-[42px] px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-sm font-bold rounded-xl border border-slate-300 shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span>🖥️</span>
+                                <span>Probar Conexión</span>
+                            </button>
+                        </div>
                         <input type="text" id="ip_servidor" name="ip_servidor" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 font-mono text-base font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs" placeholder="192.168.100.109" required>
                         <p class="text-sm text-slate-600 leading-relaxed font-medium">
                             Dirección IP en red local del colegio o dominio configurado mediante túnel seguro (ej. Cloudflare Tunnel).
                         </p>
+                        <div id="status-servidor" class="hidden mt-3 text-sm p-3 rounded-xl border-2 font-mono font-semibold"></div>
                     </div>
 
                     <!-- URL Base Forzada -->
@@ -758,38 +765,86 @@ document.getElementById('btn-guardar-todo')?.addEventListener('click', () => {
     guardarConfiguraciones();
 });
 
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
 async function probarConexion(tipo) {
-    const ipInput = document.getElementById(tipo === 'registrador' ? 'ip_registrador' : 'ip_gateway');
-    const statusDiv = document.getElementById(tipo === 'registrador' ? 'status-registrador' : 'status-gateway');
-    const btn = document.getElementById(tipo === 'registrador' ? 'btn-test-registrador' : 'btn-test-gateway');
+    let inputId = 'ip_registrador';
+    let statusId = 'status-registrador';
+    let btnId = 'btn-test-registrador';
+
+    if (tipo === 'gateway') {
+        inputId = 'ip_gateway';
+        statusId = 'status-gateway';
+        btnId = 'btn-test-gateway';
+    } else if (tipo === 'servidor') {
+        inputId = 'ip_servidor';
+        statusId = 'status-servidor';
+        btnId = 'btn-test-servidor';
+    }
+
+    const ipInput = document.getElementById(inputId);
+    const statusDiv = document.getElementById(statusId);
+    const btn = document.getElementById(btnId);
 
     const ip = ipInput ? ipInput.value.trim() : '';
 
-    statusDiv.className = "mt-3 text-sm p-3 rounded-xl border-2 font-mono font-semibold bg-blue-50 text-blue-900 border-blue-200 block";
-    statusDiv.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Conectando con ${ip || 'dispositivo'}...`;
-    btn.disabled = true;
+    if (statusDiv) {
+        statusDiv.className = "mt-3 text-sm sm:text-base p-4 rounded-2xl border-2 font-mono font-semibold bg-blue-50 text-blue-900 border-blue-300 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-800 block shadow-xs";
+        statusDiv.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Realizando prueba de conexión con <strong>${escapeHtml(ip || 'dispositivo')}</strong>...`;
+    }
+    if (btn) btn.disabled = true;
 
     try {
         const url = `${API_TEST}?tipo=${encodeURIComponent(tipo)}&ip=${encodeURIComponent(ip)}`;
         const resp = await fetch(url);
         const res = await resp.json();
 
-        if (res.status === 'success') {
-            const latencia = res.data?.latencia_ms ? ` (${res.data.latencia_ms} ms)` : '';
-            statusDiv.className = "mt-3 text-sm p-3 rounded-xl border-2 font-mono font-semibold bg-emerald-50 text-emerald-950 border-emerald-300 block";
-            statusDiv.innerHTML = `🟢 <strong>ONLINE${latencia}:</strong> ${res.message}`;
-            if (window.Toast) Toast.success(`Dispositivo en línea${latencia}`, "Ping Exitoso");
-        } else {
-            statusDiv.className = "mt-3 text-sm p-3 rounded-xl border-2 font-mono font-semibold bg-rose-50 text-rose-950 border-rose-300 block";
-            statusDiv.innerHTML = `🔴 <strong>OFFLINE:</strong> ${res.message}`;
-            if (window.Toast) Toast.warning(res.message, "Sin Respuesta");
+        // Estado estricto de conectividad (debe reportar online: true)
+        const estaOnline = Boolean(res.online === true || (res.status === 'success' && res.data?.online === true));
+
+        if (statusDiv) {
+            if (estaOnline) {
+                const latencia = (res.latencia_ms || res.data?.latencia_ms) ? ` (${res.latencia_ms || res.data?.latencia_ms} ms)` : '';
+                statusDiv.className = "mt-3 text-sm sm:text-base p-4 rounded-2xl border-2 font-mono font-semibold bg-emerald-50 text-emerald-950 border-emerald-400 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800 block shadow-xs";
+                statusDiv.innerHTML = `<div class="flex items-start gap-3">
+                    <span class="text-2xl shrink-0">🟢</span>
+                    <div>
+                        <div class="font-black text-emerald-900 dark:text-emerald-200 text-base">ONLINE${latencia}</div>
+                        <div class="text-sm font-medium text-emerald-800 dark:text-emerald-300 mt-1">${escapeHtml(res.message || 'Dispositivo en línea')}</div>
+                    </div>
+                </div>`;
+                if (window.Toast) Toast.success(`Dispositivo en línea${latencia}`, "Ping Exitoso");
+            } else {
+                statusDiv.className = "mt-3 text-sm sm:text-base p-4 rounded-2xl border-2 font-mono font-semibold bg-rose-50 text-rose-950 border-rose-400 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-800 block shadow-xs";
+                statusDiv.innerHTML = `<div class="flex items-start gap-3">
+                    <span class="text-2xl shrink-0">🔴</span>
+                    <div>
+                        <div class="font-black text-rose-900 dark:text-rose-200 text-base">OFFLINE: Dispositivo Inaccesible</div>
+                        <div class="text-sm font-medium text-rose-800 dark:text-rose-300 mt-1">${escapeHtml(res.message || 'No se pudo conectar con el dispositivo')}</div>
+                    </div>
+                </div>`;
+                if (window.Toast) Toast.error(res.message || 'Dispositivo fuera de línea', "Nodo Desconectado");
+            }
         }
     } catch (e) {
-        statusDiv.className = "mt-3 text-sm p-3 rounded-xl border-2 font-mono font-semibold bg-rose-50 text-rose-950 border-rose-300 block";
-        statusDiv.innerHTML = `🔴 <strong>ERROR:</strong> ${e.message}`;
+        if (statusDiv) {
+            statusDiv.className = "mt-3 text-sm sm:text-base p-4 rounded-2xl border-2 font-mono font-semibold bg-rose-50 text-rose-950 border-rose-400 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-800 block shadow-xs";
+            statusDiv.innerHTML = `<div class="flex items-start gap-3">
+                <span class="text-2xl shrink-0">🔴</span>
+                <div>
+                    <div class="font-black text-rose-900 dark:text-rose-200 text-base">ERROR DE COMUNICACIÓN</div>
+                    <div class="text-sm font-medium text-rose-800 dark:text-rose-300 mt-1">${escapeHtml(e.message)}</div>
+                </div>
+            </div>`;
+        }
         if (window.Toast) Toast.error(e.message, "Fallo de Red");
     } finally {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
     }
 }
 
