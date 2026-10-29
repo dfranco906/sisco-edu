@@ -228,95 +228,128 @@ if (!empty($_GET['ref'])) {
 </main>
 
 <!-- Modal: Detalle / Metadatos de Materia -->
-<div id="modal-detalle-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden" role="dialog" aria-modal="true" aria-labelledby="detalle-materia-nombre">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
-        <!-- Header -->
-        <div class="p-6 sm:p-7 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
-            <div>
-                <span id="detalle-badge-dia" class="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-black bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 uppercase tracking-wider mb-2">
-                    Lunes
-                </span>
-                <h3 id="detalle-materia-nombre" class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                    Materia
-                </h3>
-                <p id="detalle-horario-tiempo" class="text-sm sm:text-base font-bold text-slate-500 dark:text-slate-400 font-mono mt-1">
-                    07:00 - 08:20
-                </p>
-            </div>
-            <button type="button" class="w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" data-close-modal="modal-detalle-horario" aria-label="Cerrar modal">&times;</button>
-        </div>
-
-        <!-- Body -->
-        <div class="p-6 sm:p-7 space-y-4 text-base">
-            <!-- Profesor -->
-            <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-2xl shrink-0 shadow-sm">
-                    👨‍🏫
+<div id="modal-detalle-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="detalle-materia-nombre">
+    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-3xl lg:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <!-- Header Accesible y Prominente -->
+        <div class="p-5 sm:p-6 lg:p-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-start justify-between gap-4 shrink-0">
+            <div class="flex items-start gap-4 min-w-0">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-3xl font-black shrink-0 border border-indigo-200 dark:border-indigo-800 shadow-xs">
+                    📅
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Profesor asignado</p>
-                    <p id="detalle-profesor-nombre" class="font-black text-slate-900 dark:text-white text-base sm:text-lg truncate mt-0.5">Docente</p>
-                    <p id="detalle-profesor-ci" class="text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5">C.I.: -</p>
-                </div>
-            </div>
-
-            <!-- Aula y Ubicación -->
-            <div class="grid grid-cols-2 gap-3">
-                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                    <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Aula</p>
-                    <p id="detalle-aula-nombre" class="font-black text-slate-900 dark:text-white text-base sm:text-lg mt-0.5 truncate">Aula</p>
-                    <p id="detalle-aula-codigo" class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate"></p>
-                </div>
-                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                    <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ubicación</p>
-                    <p id="detalle-aula-ubicacion" class="font-black text-slate-900 dark:text-white text-base sm:text-lg mt-0.5 truncate">Ubicación</p>
-                </div>
-            </div>
-
-            <!-- Estudiantes Matriculados -->
-            <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xl shrink-0">
-                        👥
+                    <div class="flex items-center gap-2.5 flex-wrap mb-1.5">
+                        <span id="detalle-badge-dia" class="inline-flex items-center px-3.5 py-1 rounded-xl text-sm font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 uppercase tracking-wider">
+                            Lunes
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-sm font-mono font-bold bg-slate-200/70 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700">
+                            ⏱️ <span id="detalle-horario-tiempo">07:00 a 08:20</span>
+                        </span>
                     </div>
-                    <div>
-                        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Estudiantes Matriculados</p>
-                        <p id="detalle-total-estudiantes" class="font-black text-base text-slate-900 dark:text-white mt-0.5">Sin estudiantes</p>
+                    <h3 id="detalle-materia-nombre" class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight truncate">
+                        Materia
+                    </h3>
+                    <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-0.5">
+                        Configuración curricular y distribución horaria en la cátedra escolar.
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors shrink-0" data-close-modal="modal-detalle-horario" aria-label="Cerrar modal">&times;</button>
+        </div>
+
+        <!-- Body con Scroll Independiente y Grid Responsivo 2 Columnas en Desktop -->
+        <div class="p-5 sm:p-6 lg:p-7 overflow-y-auto flex-1 space-y-5 text-base">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
+                
+                <!-- Tarjeta 1: Profesor Asignado -->
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/80 flex items-start gap-4 shadow-xs">
+                    <div class="w-13 h-13 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center justify-center text-2xl shrink-0 border border-purple-200 dark:border-purple-800 shadow-2xs">
+                        👨‍🏫
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-purple-800 dark:text-purple-300 block mb-1">
+                            Docente Asignado
+                        </span>
+                        <p id="detalle-profesor-nombre" class="font-black text-slate-900 dark:text-white text-base sm:text-lg truncate">Docente</p>
+                        <p id="detalle-profesor-ci" class="text-sm font-mono font-semibold text-slate-600 dark:text-slate-400 mt-1">C.I.: -</p>
                     </div>
                 </div>
-                <span id="detalle-badge-estudiantes" class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
-                    Activos
-                </span>
-            </div>
 
-            <!-- Grado / Curso -->
-            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Grado / Curso</p>
-                    <p id="detalle-grado-nombre" class="font-black text-slate-900 dark:text-white text-base sm:text-lg mt-0.5">1° BTI</p>
+                <!-- Tarjeta 2: Grado y Turno -->
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/80 flex items-start justify-between gap-4 shadow-xs">
+                    <div class="flex items-start gap-4 min-w-0">
+                        <div class="w-13 h-13 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-2xl shrink-0 border border-blue-200 dark:border-blue-800 shadow-2xs">
+                            🏫
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-blue-800 dark:text-blue-300 block mb-1">
+                                Grado / Curso
+                            </span>
+                            <p id="detalle-grado-nombre" class="font-black text-slate-900 dark:text-white text-base sm:text-lg truncate">1° BTI</p>
+                            <span id="detalle-turno-nombre" class="inline-flex items-center gap-1 text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-lg bg-blue-100 text-blue-900 dark:bg-blue-900/60 dark:text-blue-200 border border-blue-200 dark:border-blue-800 mt-1">
+                                Mañana
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <span id="detalle-turno-nombre" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    Mañana
-                </span>
+
+                <!-- Tarjeta 3: Aula y Ubicación Física -->
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/80 flex items-start gap-4 shadow-xs">
+                    <div class="w-13 h-13 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-2xl shrink-0 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                        🚪
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2 flex-wrap mb-1">
+                            <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                                Aula Asignada
+                            </span>
+                            <span id="detalle-aula-codigo" class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"></span>
+                        </div>
+                        <p id="detalle-aula-nombre" class="font-black text-slate-900 dark:text-white text-base sm:text-lg truncate">Aula</p>
+                        <p id="detalle-aula-ubicacion" class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1 truncate">
+                            📍 Ubicación
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 4: Estudiantes Matriculados -->
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700/80 flex items-start justify-between gap-4 shadow-xs">
+                    <div class="flex items-start gap-4 min-w-0">
+                        <div class="w-13 h-13 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-2xl shrink-0 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                            👥
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-indigo-800 dark:text-indigo-300 block mb-1">
+                                Estudiantes Matriculados
+                            </span>
+                            <p id="detalle-total-estudiantes" class="font-black text-base sm:text-lg text-slate-900 dark:text-white truncate">Sin estudiantes</p>
+                            <span id="detalle-badge-estudiantes" class="inline-flex items-center text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mt-1">
+                                Activos
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+        <!-- Footer Accesible y Fijo (Siempre visible en el viewport) -->
+        <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t-2 border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
             <div>
                 <?php if (!$esDocente): ?>
-                <button id="btn-detalle-desactivar" type="button" class="min-h-[44px] px-4 py-2 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-xl text-sm font-bold border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer">
-                    Desactivar horario
+                <button id="btn-detalle-desactivar" type="button" class="btn btn-danger w-full sm:w-auto min-h-[46px] px-5 py-2.5 text-base font-bold shadow-xs inline-flex items-center justify-center gap-2 cursor-pointer" title="Desactivar este bloque horario">
+                    <span>🗑️</span>
+                    <span>Desactivar horario</span>
                 </button>
                 <?php endif; ?>
             </div>
-            <div class="flex items-center gap-3">
-                <button type="button" data-close-modal="modal-detalle-horario" class="min-h-[44px] px-5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold transition-colors cursor-pointer">
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end flex-wrap">
+                <button type="button" data-close-modal="modal-detalle-horario" class="btn btn-secondary w-full sm:w-auto min-h-[46px] px-6 py-2.5 text-base font-semibold cursor-pointer">
                     Cerrar
                 </button>
                 <?php if (!$esDocente): ?>
-                <button id="btn-detalle-editar" type="button" class="min-h-[44px] px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-extrabold shadow-sm transition-all cursor-pointer active:scale-95">
-                    Editar horario
+                <button id="btn-detalle-editar" type="button" class="btn btn-primary w-full sm:w-auto min-h-[46px] px-6 py-2.5 text-base font-bold shadow-sm inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95" title="Editar parámetros y asignación del horario">
+                    <span>✏️</span>
+                    <span>Editar horario</span>
                 </button>
                 <?php endif; ?>
             </div>
@@ -325,85 +358,87 @@ if (!empty($_GET['ref'])) {
 </div>
 
 <!-- Modal: Crear Horario -->
-<div id="modal-crear-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-150 p-6 sm:p-8">
-        <div class="flex items-start justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+<div id="modal-crear-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
+    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 shrink-0">
             <div>
-                <h3 id="titulo-crear-horario" class="text-2xl font-black text-slate-900 dark:text-white">Crear horario de clase</h3>
+                <h3 id="titulo-crear-horario" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Crear horario de clase</h3>
                 <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">El aula se asigna automáticamente según el grado seleccionado.</p>
             </div>
-            <button type="button" class="w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" data-close-modal="modal-crear-horario" aria-label="Cerrar modal">&times;</button>
+            <button type="button" class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors shrink-0" data-close-modal="modal-crear-horario" aria-label="Cerrar modal">&times;</button>
         </div>
 
-        <div id="mensaje-crear-horario" class="mb-4" aria-live="polite"></div>
+        <form id="form-crear-horario" data-api="<?= base_url('src/api/Horario/crear_horario.php') ?>" class="flex flex-col flex-1 overflow-hidden">
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+                <div id="mensaje-crear-horario" class="mb-4" aria-live="polite"></div>
 
-        <form id="form-crear-horario" data-api="<?= base_url('src/api/Horario/crear_horario.php') ?>">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <div>
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Grado / Curso *
-                    </label>
-                    <select name="id_grado" id="crear-id-grado" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
-                        <option value="">Cargando grados...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Aula asignada
-                    </label>
-                    <input id="crear-id-aula" type="text" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-base font-semibold cursor-not-allowed"
-                           placeholder="Seleccione un grado" readonly aria-readonly="true">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Se obtiene automáticamente desde el grado.</span>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Materia y Docente Asignado *
-                    </label>
-                    <select name="id_asignacion" id="crear-id-asignacion" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
-                        <option value="">Seleccione primero un grado</option>
-                    </select>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Muestra exclusivamente las asignaciones docentes del grado seleccionado.</span>
-                </div>
-
-                <div>
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Día de la Semana *
-                    </label>
-                    <select name="dia_semana" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
-                        <option value="">Seleccione un día</option>
-                        <option value="Lunes">Lunes</option>
-                        <option value="Martes">Martes</option>
-                        <option value="Miércoles">Miércoles</option>
-                        <option value="Jueves">Jueves</option>
-                        <option value="Viernes">Viernes</option>
-                        <option value="Sábado">Sábado</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
                         <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                            Hora Inicio *
+                            Grado / Curso *
                         </label>
-                        <input name="hora_inicio" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        <select name="id_grado" id="crear-id-grado" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                            <option value="">Cargando grados...</option>
+                        </select>
                     </div>
 
                     <div>
                         <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                            Hora Fin *
+                            Aula asignada
                         </label>
-                        <input name="hora_fin" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        <input id="crear-id-aula" type="text" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-base font-semibold cursor-not-allowed"
+                               placeholder="Seleccione un grado" readonly aria-readonly="true">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Se obtiene automáticamente desde el grado.</span>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                            Materia y Docente Asignado *
+                        </label>
+                        <select name="id_asignacion" id="crear-id-asignacion" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                            <option value="">Seleccione primero un grado</option>
+                        </select>
+                        <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Muestra exclusivamente las asignaciones docentes del grado seleccionado.</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                            Día de la Semana *
+                        </label>
+                        <select name="dia_semana" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                            <option value="">Seleccione un día</option>
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option>
+                            <option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                            <option value="Sábado">Sábado</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                Hora Inicio *
+                            </label>
+                            <input name="hora_inicio" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                Hora Fin *
+                            </label>
+                            <input name="hora_fin" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                <button type="button" data-close-modal="modal-crear-horario" class="min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 shrink-0">
+                <button type="button" data-close-modal="modal-crear-horario" class="btn btn-secondary min-h-[46px] px-5 py-2.5 rounded-xl text-base font-semibold cursor-pointer">
                     Cancelar
                 </button>
-                <button id="guardar-horario" type="submit" class="min-h-[48px] px-6 py-2.5 rounded-xl text-sm sm:text-base font-extrabold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                <button id="guardar-horario" type="submit" class="btn btn-primary min-h-[46px] px-6 py-2.5 rounded-xl text-base font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                     <span>💾</span> Guardar horario
                 </button>
             </div>
@@ -412,80 +447,82 @@ if (!empty($_GET['ref'])) {
 </div>
 
 <!-- Modal: Editar Horario -->
-<div id="modal-editar-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-editar-horario">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-150 p-6 sm:p-8">
-        <div class="flex items-start justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+<div id="modal-editar-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-editar-horario">
+    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 shrink-0">
             <div>
-                <h3 id="titulo-editar-horario" class="text-2xl font-black text-slate-900 dark:text-white">Editar horario de clase</h3>
+                <h3 id="titulo-editar-horario" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Editar horario de clase</h3>
                 <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">Al cambiar el grado también se actualiza su aula.</p>
             </div>
-            <button type="button" class="w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" data-close-modal="modal-editar-horario" aria-label="Cerrar modal">&times;</button>
+            <button type="button" class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors shrink-0" data-close-modal="modal-editar-horario" aria-label="Cerrar modal">&times;</button>
         </div>
 
-        <div id="mensaje-editar-horario" class="mb-4" aria-live="polite"></div>
-
-        <form id="form-editar-horario" data-api="<?= base_url('src/api/Horario/actualizar_horario.php') ?>">
+        <form id="form-editar-horario" data-api="<?= base_url('src/api/Horario/actualizar_horario.php') ?>" class="flex flex-col flex-1 overflow-hidden">
             <input type="hidden" name="id_horario" id="editar-id-horario">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <div>
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Grado / Curso *
-                    </label>
-                    <select name="id_grado" id="editar-id-grado" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required></select>
-                </div>
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+                <div id="mensaje-editar-horario" class="mb-4" aria-live="polite"></div>
 
-                <div>
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Aula asignada
-                    </label>
-                    <input id="editar-id-aula" type="text" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-base font-semibold cursor-not-allowed" readonly aria-readonly="true">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">El aula se actualiza según el grado seleccionado.</span>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Materia y Docente Asignado *
-                    </label>
-                    <select name="id_asignacion" id="editar-id-asignacion" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required></select>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Muestra exclusivamente las asignaciones docentes del grado seleccionado.</span>
-                </div>
-
-                <div>
-                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                        Día de la Semana *
-                    </label>
-                    <select name="dia_semana" id="editar-dia-semana" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
-                        <option value="Lunes">Lunes</option>
-                        <option value="Martes">Martes</option>
-                        <option value="Miércoles">Miércoles</option>
-                        <option value="Jueves">Jueves</option>
-                        <option value="Viernes">Viernes</option>
-                        <option value="Sábado">Sábado</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
                         <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                            Hora Inicio *
+                            Grado / Curso *
                         </label>
-                        <input name="hora_inicio" id="editar-hora-inicio" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        <select name="id_grado" id="editar-id-grado" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required></select>
                     </div>
 
                     <div>
                         <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                            Hora Fin *
+                            Aula asignada
                         </label>
-                        <input name="hora_fin" id="editar-hora-fin" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        <input id="editar-id-aula" type="text" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-base font-semibold cursor-not-allowed" readonly aria-readonly="true">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">El aula se actualiza según el grado seleccionado.</span>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                            Materia y Docente Asignado *
+                        </label>
+                        <select name="id_asignacion" id="editar-id-asignacion" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required></select>
+                        <span class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">Muestra exclusivamente las asignaciones docentes del grado seleccionado.</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                            Día de la Semana *
+                        </label>
+                        <select name="dia_semana" id="editar-dia-semana" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option>
+                            <option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                            <option value="Sábado">Sábado</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                Hora Inicio *
+                            </label>
+                            <input name="hora_inicio" id="editar-hora-inicio" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                Hora Fin *
+                            </label>
+                            <input name="hora_fin" id="editar-hora-fin" type="time" class="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" required>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                <button type="button" data-close-modal="modal-editar-horario" class="min-h-[48px] px-5 py-2.5 rounded-xl text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 shrink-0">
+                <button type="button" data-close-modal="modal-editar-horario" class="btn btn-secondary min-h-[46px] px-5 py-2.5 rounded-xl text-base font-semibold cursor-pointer">
                     Cancelar
                 </button>
-                <button id="actualizar-horario" type="submit" class="min-h-[48px] px-6 py-2.5 rounded-xl text-sm sm:text-base font-extrabold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                <button id="actualizar-horario" type="submit" class="btn btn-primary min-h-[46px] px-6 py-2.5 rounded-xl text-base font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                     <span>💾</span> Guardar cambios
                 </button>
             </div>
