@@ -314,10 +314,11 @@ class ClaseDiaria {
                    e.user_id_global, e.huella_id,
                    CONCAT(e.nombre, ' ', e.apellido) AS nombre_completo,
                    COALESCE(ae.hora_marcacion, ae.hora) AS hora_marcacion,
-                   COALESCE(ae.estado, 'AUSENTE') AS estado_asistencia,
+                   ae.id_asistencia_estudiante,
+                   COALESCE(ae.estado, 'PENDIENTE') AS estado_asistencia,
                    ae.tipo_registro,
                    ae.nodo_origen,
-                   (CASE WHEN ae.id_asistencia_estudiante IS NOT NULL AND ae.estado != 'AUSENTE' THEN 1 ELSE 0 END) AS presente
+                   (CASE WHEN ae.id_asistencia_estudiante IS NOT NULL AND UPPER(ae.estado) = 'PRESENTE' THEN 1 ELSE 0 END) AS presente
             FROM estudiantes e
             LEFT JOIN asistencias_estudiantes ae 
                    ON ae.id_estudiante = e.id_estudiante 
@@ -334,7 +335,8 @@ class ClaseDiaria {
         $ausentes = [];
 
         foreach ($estudiantes as $est) {
-            if ((int)$est['presente'] === 1 && $est['estado_asistencia'] !== 'AUSENTE') {
+            $estadoUpper = strtoupper($est['estado_asistencia'] ?? 'PENDIENTE');
+            if ((int)$est['presente'] === 1 && $estadoUpper === 'PRESENTE') {
                 $presentes[] = $est;
             } else {
                 $ausentes[] = $est;

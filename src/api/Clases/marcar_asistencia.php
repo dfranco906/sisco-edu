@@ -101,36 +101,72 @@ try {
         }
     }
 
-    // 3. Caso de Reversión a AUSENTE
+    // 3. Caso de Marcación / Reversión a AUSENTE
     if ($estado === 'AUSENTE') {
-        if (!$existente || $existente['estado'] === 'AUSENTE') {
+        if ($existente) {
+            if ($existente['estado'] === 'AUSENTE') {
+                http_response_code(200);
+                echo json_encode([
+                    "status" => "success",
+                    "message" => "La persona ya se encuentra registrada como AUSENTE",
+                    "data" => ["estado" => "AUSENTE"]
+                ]);
+                exit;
+            }
+
+            // Si llegó aquí con un registro previo activo, ya se validó que es MANUAL y que el usuario es Administrador
+            $sqlAus = ($tipo_persona === 'estudiante')
+                ? "UPDATE asistencias_estudiantes SET estado = 'AUSENTE', tipo_registro = 'MANUAL', nodo_origen = 'PANEL_CLASE_EN_VIVO', fecha_registro = CURRENT_TIMESTAMP WHERE id_asistencia_estudiante = :id"
+                : "UPDATE asistencias_profesores SET estado = 'AUSENTE', tipo_registro = 'MANUAL', nodo_origen = 'PANEL_CLASE_EN_VIVO', fecha_registro = CURRENT_TIMESTAMP WHERE id_asistencia_profesor = :id";
+            
+            $stmtAus = $db->prepare($sqlAus);
+            $stmtAus->execute([':id' => $existente['id']]);
+
             http_response_code(200);
             echo json_encode([
                 "status" => "success",
-                "message" => "La persona ya se encuentra en estado AUSENTE",
-                "data" => ["estado" => "AUSENTE"]
+                "message" => "Asistencia revertida a AUSENTE correctamente por el Administrador",
+                "data" => [
+                    "tipo_persona" => $tipo_persona,
+                    "id_persona" => $tipo_persona === 'estudiante' ? $id_estudiante : $id_profesor,
+                    "estado" => "AUSENTE",
+                    "fecha" => $fecha
+                ]
             ]);
             exit;
         }
 
-        // Si llegó aquí con un registro previo activo, ya se validó que es MANUAL y que el usuario es Administrador
-        $sqlAus = ($tipo_persona === 'estudiante')
-            ? "UPDATE asistencias_estudiantes SET estado = 'AUSENTE', tipo_registro = 'MANUAL', nodo_origen = 'PANEL_CLASE_EN_VIVO', fecha_registro = CURRENT_TIMESTAMP WHERE id_asistencia_estudiante = :id"
-            : "UPDATE asistencias_profesores SET estado = 'AUSENTE', tipo_registro = 'MANUAL', nodo_origen = 'PANEL_CLASE_EN_VIVO', fecha_registro = CURRENT_TIMESTAMP WHERE id_asistencia_profesor = :id";
-        
-        $stmtAus = $db->prepare($sqlAus);
-        $stmtAus->execute([':id' => $existente['id']]);
+        // Si NO existía registro previo, es una marcación inicial de AUSENTE durante la llamada de lista
+        if ($tipo_persona === 'estudiante') {
+            $resultado = $claseModel->registrarAsistenciaEstudiante(
+                $id_estudiante,
+                $fecha,
+                $hora,
+                'AUSENTE',
+                'MANUAL',
+                'PANEL_CLASE_EN_VIVO',
+                $id_horario,
+                true
+            );
+        } else {
+            $resultado = $claseModel->registrarAsistenciaProfesor(
+                $id_profesor,
+                $fecha,
+                $hora,
+                'AUSENTE',
+                'MANUAL',
+                'PANEL_CLASE_EN_VIVO',
+                $id_horario,
+                true
+            );
+        }
 
-        http_response_code(200);
+        $httpCode = $resultado['exito'] ? 200 : 422;
+        http_response_code($httpCode);
         echo json_encode([
-            "status" => "success",
-            "message" => "Asistencia revertida a AUSENTE correctamente por el Administrador",
-            "data" => [
-                "tipo_persona" => $tipo_persona,
-                "id_persona" => $tipo_persona === 'estudiante' ? $id_estudiante : $id_profesor,
-                "estado" => "AUSENTE",
-                "fecha" => $fecha
-            ]
+            "status" => $resultado['exito'] ? "success" : "error",
+            "message" => $resultado['mensaje'] ?? "Marcado como AUSENTE correctamente",
+            "data" => $resultado
         ]);
         exit;
     }

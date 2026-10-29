@@ -50,6 +50,19 @@
      */
     function showToast(tipo, mensaje, titulo = null, duracion = 4000) {
         const container = getOrCreateToastContainer();
+
+        // Evitar saturación visual en pantalla: mantener como máximo 2 toasts activos simultáneamente
+        const activos = container.querySelectorAll(".toast-item:not(.toast-closing)");
+        if (activos.length >= 2) {
+            const masViejo = activos[0];
+            masViejo.classList.add("toast-closing");
+            setTimeout(() => {
+                if (masViejo.parentNode) {
+                    masViejo.parentNode.removeChild(masViejo);
+                }
+            }, 180);
+        }
+
         const toast = document.createElement("div");
         toast.className = `toast-item toast-${tipo}`;
         toast.setAttribute("role", tipo === "error" ? "alert" : "status");

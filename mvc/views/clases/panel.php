@@ -353,7 +353,7 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
                     <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
                         <div class="flex items-center gap-2.5">
                             <span class="w-3.5 h-3.5 rounded-full bg-rose-500"></span>
-                            <h3 class="font-black text-slate-900 dark:text-white text-lg">Estudiantes Ausentes</h3>
+                            <h3 class="font-black text-slate-900 dark:text-white text-lg">Estudiantes Ausentes / Por Llamar</h3>
                         </div>
                         <span id="badge-count-ausentes" class="px-3 py-1 rounded-full text-sm font-extrabold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800">0</span>
                     </div>
@@ -542,6 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let realtimeChannel = null;
     let modalPersonaData = null;
     let previosPresentesIds = null;
+    const marcadosManualmenteRecientes = new Set();
 
     let todosGrados = [];
     let turnosData = [];
@@ -873,14 +874,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('badge-count-presentes').textContent = metricas.presentes || 0;
         document.getElementById('badge-count-ausentes').textContent = metricas.ausentes || 0;
 
-        // Detección proactiva de nuevas marcaciones en aula física (Live Feedback)
+        // Detección proactiva de nuevas marcaciones en aula física (Live Feedback por Biometría)
         const actualesPresentesIds = new Set((clase.estudiantes_presentes || []).map(e => e.id_estudiante));
         if (previosPresentesIds !== null) {
-            const nuevos = (clase.estudiantes_presentes || []).filter(e => !previosPresentesIds.has(e.id_estudiante));
+            const nuevos = (clase.estudiantes_presentes || []).filter(e => {
+                if (previosPresentesIds.has(e.id_estudiante)) return false;
+                // Si fue marcado manualmente por este usuario en esta sesión, ya se mostró confirmación de 1.5s
+                if (marcadosManualmenteRecientes.has(e.id_estudiante)) {
+                    marcadosManualmenteRecientes.delete(e.id_estudiante);
+                    return false;
+                }
+                // Si el registro fue manual, no disparar aviso de detección biométrica en aula
+                if (e.tipo_registro === 'MANUAL') {
+                    return false;
+                }
+                return true;
+            });
             if (nuevos.length > 0 && window.Toast) {
                 nuevos.forEach(n => {
-                    const origenTxt = n.tipo_registro === 'MANUAL' ? 'Registro Manual' : 'Nodo del Aula';
-                    Toast.info(`👆 ${n.nombre_completo} marcó asistencia (${n.hora_marcacion || ''}) vía ${origenTxt}`, "Marcación en Aula");
+                    Toast.info(`👆 ${n.nombre_completo} marcó asistencia (${n.hora_marcacion || ''}) vía Sensor del Aula`, "Marcación Biométrica", 3000);
                 });
             }
         }
@@ -970,34 +982,69 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // Estudiantes Ausentes
+        // Estudiantes Ausentes / Por Llamar
         const listaAusentes = document.getElementById('lista-ausentes');
         if (clase.estudiantes_ausentes && clase.estudiantes_ausentes.length > 0) {
             listaAusentes.innerHTML = clase.estudiantes_ausentes.map(e => {
+                const estado = (e.estado_asistencia || 'PENDIENTE').toUpperCase();
+                let badgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
+                let estadoTxt = '⚪ Pendiente de Llamada';
+                let cardStyle = 'border-2 border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70';
+                let avatarIcon = '👤';
+
+                if (estado === 'AUSENTE') {
+                    badgeClass = 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800';
+                    estadoTxt = '🔴 Ausente Registrado';
+                    cardStyle = 'border-2 border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-50/80 dark:hover:bg-rose-950/30';
+                    avatarIcon = '🔴';
+                } else if (estado === 'TARDANZA') {
+                    badgeClass = 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
+                    estadoTxt = '🟡 Tardanza Registrada';
+                    cardStyle = 'border-2 border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50/80 dark:hover:bg-amber-950/30';
+                    avatarIcon = '🟡';
+                } else if (estado === 'JUSTIFICADO') {
+                    badgeClass = 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800';
+                    estadoTxt = '🔵 Falta Justificada';
+                    cardStyle = 'border-2 border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-50/80 dark:hover:bg-blue-950/30';
+                    avatarIcon = '🔵';
+                }
+
+                const badgeOrigen = (e.tipo_registro === 'MANUAL')
+                    ? '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">✍️ MANUAL</span>'
+                    : '';
+
                 const accionesAusenteHtml = PUEDE_MARCAR ? `
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button type="button" data-id="${e.id_estudiante}" class="btn-marcar-presente-rapido min-h-[40px] px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="Marcar PRESENTE manualmente">
                             <span>✓</span> Presente
                         </button>
-                        <button type="button" data-id="${e.id_estudiante}" data-nombre="${encodeURIComponent(e.nombre_completo)}" data-ci="${e.cedula_identidad}" class="btn-abrir-modal-estudiante min-h-[40px] w-10 flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-300 rounded-xl text-base font-bold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer" title="Opciones avanzadas (Tardanza / Justificado)">
+                        <button type="button" data-id="${e.id_estudiante}" data-nombre="${encodeURIComponent(e.nombre_completo)}" data-ci="${e.cedula_identidad}" data-estado="${estado}" data-tipo-registro="${e.tipo_registro || ''}" class="btn-abrir-modal-estudiante min-h-[40px] w-10 flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-300 rounded-xl text-base font-bold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer" title="Opciones avanzadas (Ausente / Tardanza / Justificado)">
                             ⋯
                         </button>
                     </div>
                 ` : `
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-extrabold bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
-                            🔴 AUSENTE
+                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-extrabold ${badgeClass}">
+                            ${estadoTxt}
                         </span>
                     </div>
                 `;
 
                 return `
-                    <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 transition-colors">
+                    <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl ${cardStyle} transition-colors">
                         <div class="flex items-center gap-3 min-w-0">
-                            <span class="text-xl text-slate-400 flex-shrink-0">👤</span>
+                            <span class="text-xl flex-shrink-0">${avatarIcon}</span>
                             <div class="truncate">
                                 <span class="font-bold text-slate-800 dark:text-slate-200 text-base block truncate">${e.nombre_completo}</span>
-                                <span class="text-sm text-slate-500 dark:text-slate-400 font-mono mt-0.5 block">CI: ${e.cedula_identidad}</span>
+                                <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                                    <span>CI: ${e.cedula_identidad}</span>
+                                    <span>•</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold ${badgeClass}">
+                                        ${estadoTxt}
+                                    </span>
+                                    ${badgeOrigen}
+                                    ${e.hora_marcacion ? `<span class="text-xs text-slate-500 font-mono">(${e.hora_marcacion})</span>` : ''}
+                                </div>
                             </div>
                         </div>
                         ${accionesAusenteHtml}
@@ -1009,13 +1056,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Listeners para marcar rápido como PRESENTE
                 listaAusentes.querySelectorAll('.btn-marcar-presente-rapido').forEach(btn => {
                     btn.addEventListener('click', (ev) => {
-                        const idEst = ev.currentTarget.getAttribute('data-id');
+                        const idEst = parseInt(ev.currentTarget.getAttribute('data-id'));
+                        marcadosManualmenteRecientes.add(idEst);
+                        if (previosPresentesIds) previosPresentesIds.add(idEst);
+
                         fetch(API_MARCAR, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 tipo_persona: 'estudiante',
-                                id_estudiante: parseInt(idEst),
+                                id_estudiante: idEst,
                                 fecha: clase.fecha,
                                 estado: 'PRESENTE',
                                 id_horario: clase.id_horario || null
@@ -1024,14 +1074,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         .then(r => r.json())
                         .then(res => {
                             if (res.status === 'success') {
-                                if (window.Toast) Toast.success(res.message || "Estudiante marcado como PRESENTE", "Asistencia Registrada");
+                                if (window.Toast) Toast.success(res.message || "Estudiante marcado como PRESENTE", "Asistencia Registrada", 1500);
                                 refrescarPanel(true);
                             } else {
-                                if (window.Toast) Toast.error(res.message || "Error al registrar asistencia");
+                                marcadosManualmenteRecientes.delete(idEst);
+                                if (window.Toast) Toast.error(res.message || "Error al registrar asistencia", "Error", 2500);
                             }
                         })
                         .catch(err => {
-                            if (window.Toast) Toast.error(err.message);
+                            marcadosManualmenteRecientes.delete(idEst);
+                            if (window.Toast) Toast.error(err.message, "Error", 2500);
                         });
                     });
                 });
@@ -1040,14 +1092,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 listaAusentes.querySelectorAll('.btn-abrir-modal-estudiante').forEach(btn => {
                     btn.addEventListener('click', (ev) => {
                         const b = ev.currentTarget;
+                        const estadoEst = b.getAttribute('data-estado') || 'PENDIENTE';
                         abrirModalAjuste({
                             tipo_persona: 'estudiante',
                             id_persona: parseInt(b.getAttribute('data-id')),
                             nombre: decodeURIComponent(b.getAttribute('data-nombre')),
                             ci: b.getAttribute('data-ci'),
-                            estado_actual: 'AUSENTE',
-                            tipo_registro: null,
-                            es_modificacion: false
+                            estado_actual: estadoEst,
+                            tipo_registro: b.getAttribute('data-tipo-registro') || null,
+                            es_modificacion: (estadoEst !== 'PENDIENTE' && estadoEst !== 'AUSENTE')
                         });
                     });
                 });
@@ -1055,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             listaAusentes.innerHTML = `
                 <div class="p-8 text-center text-emerald-600 dark:text-emerald-400 text-base font-bold">
-                    🎉 ¡100% de asistencia! No hay estudiantes ausentes.
+                    🎉 ¡100% de asistencia! No hay estudiantes ausentes pendientes.
                 </div>
             `;
         }
@@ -1123,8 +1176,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const optAusente = document.getElementById('opt-estado-ausente');
         if (optAusente) {
-            // Reversión a AUSENTE está reservada a Administradores
-            if (ES_ADMIN) {
+            // Reversión de una asistencia ya activa (PRESENTE/TARDANZA/JUSTIFICADO) a AUSENTE está reservada a Administradores.
+            // Si el estudiante estaba PENDIENTE o AUSENTE (llamada de lista), profesores, coordinadores y administradores pueden marcar AUSENTE libremente.
+            const esReversionEstricta = persona.es_modificacion && persona.estado_actual && persona.estado_actual !== 'AUSENTE' && persona.estado_actual !== 'PENDIENTE';
+            if (!esReversionEstricta || ES_ADMIN) {
                 optAusente.classList.remove('hidden');
                 const inp = optAusente.querySelector('input');
                 if (inp) inp.disabled = false;
@@ -1135,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const estadoActual = (persona.estado_actual && persona.estado_actual !== 'AUSENTE') ? persona.estado_actual.toUpperCase() : 'PRESENTE';
+        const estadoActual = (persona.estado_actual && persona.estado_actual !== 'PENDIENTE') ? persona.estado_actual.toUpperCase() : 'PRESENTE';
         const radios = document.querySelectorAll('input[name="modal_estado_asistencia"]');
         radios.forEach(r => {
             r.checked = (r.value === estadoActual);
@@ -1178,8 +1233,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkedRadio = document.querySelector('input[name="modal_estado_asistencia"]:checked');
             const nuevoEstado = checkedRadio ? checkedRadio.value : 'PRESENTE';
 
-            if (nuevoEstado === 'AUSENTE' && !ES_ADMIN) {
-                if (window.Toast) Toast.warning("Solo los administradores pueden revertir una asistencia a AUSENTE.");
+            const esReversionEstricta = modalPersonaData.es_modificacion && modalPersonaData.estado_actual && modalPersonaData.estado_actual !== 'AUSENTE' && modalPersonaData.estado_actual !== 'PENDIENTE';
+            if (nuevoEstado === 'AUSENTE' && esReversionEstricta && !ES_ADMIN) {
+                if (window.Toast) Toast.warning("Solo los administradores pueden revertir una asistencia ya confirmada a AUSENTE.", "Acceso Restringido", 2000);
                 return;
             }
 
@@ -1193,6 +1249,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 id_horario: currentClaseData.id_horario || null
             };
 
+            if (modalPersonaData && modalPersonaData.id_persona) {
+                const idPers = parseInt(modalPersonaData.id_persona);
+                marcadosManualmenteRecientes.add(idPers);
+                if (previosPresentesIds && nuevoEstado === 'PRESENTE') {
+                    previosPresentesIds.add(idPers);
+                }
+            }
+
             btnConfirmarModalAjuste.disabled = true;
             btnConfirmarModalAjuste.innerHTML = '<span>⏳</span> Guardando...';
 
@@ -1205,10 +1269,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => {
                 if (res.status === 'success') {
                     cerrarModalAjuste();
-                    if (window.Toast) Toast.success(res.message || "Asistencia guardada correctamente", "Asistencia Manual");
+                    if (window.Toast) Toast.success(res.message || "Asistencia guardada correctamente", "Asistencia Registrada", 1500);
                     refrescarPanel(true);
                 } else {
-                    if (window.Toast) Toast.error(res.message || "Error al actualizar asistencia", "Error");
+                    if (window.Toast) Toast.error(res.message || "Error al actualizar asistencia", "Error", 2500);
                     else alert(res.message);
                 }
             })
@@ -1354,6 +1418,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnMarcarTodos.textContent = "Marcando a todos...";
 
             const promises = ausentes.map(e => {
+                marcadosManualmenteRecientes.add(e.id_estudiante);
+                if (previosPresentesIds) previosPresentesIds.add(e.id_estudiante);
                 return fetch(API_MARCAR, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1369,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             Promise.all(promises)
                 .then(() => {
-                    if (window.Toast) Toast.success(`Se marcaron ${ausentes.length} estudiantes como PRESENTES`, "Marcación Masiva");
+                    if (window.Toast) Toast.success(`Se marcaron ${ausentes.length} estudiantes como PRESENTES`, "Marcación Masiva", 1500);
                     refrescarPanel(true);
                 })
                 .catch(err => {
