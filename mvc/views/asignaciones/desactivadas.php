@@ -11,40 +11,40 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     <div class="max-w-7xl mx-auto space-y-8">
 
         <!-- Breadcrumb Accesible -->
-        <nav class="flex items-center gap-2 text-base text-slate-600 font-medium" aria-label="Migas de pan">
-            <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="hover:text-blue-600 transition flex items-center gap-1.5 focus:outline-none focus:underline">
-                <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <nav class="flex items-center gap-2 text-base text-slate-600 dark:text-slate-400 font-medium" aria-label="Migas de pan">
+            <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 focus:outline-none focus:underline">
+                <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
                 Inicio
             </a>
-            <span class="text-slate-400">/</span>
-            <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="hover:text-blue-600 transition font-medium focus:outline-none focus:underline">
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition font-medium focus:outline-none focus:underline">
                 Administración
             </a>
-            <span class="text-slate-400">/</span>
-            <a href="<?= base_url('mvc/views/asignaciones/index.php') ?>" class="hover:text-blue-600 transition font-medium focus:outline-none focus:underline">
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <a href="<?= base_url('mvc/views/asignaciones/index.php') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition font-medium focus:outline-none focus:underline">
                 Asignaciones Docentes
             </a>
-            <span class="text-slate-400">/</span>
-            <span class="text-slate-900 font-bold">Inactivas</span>
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <span class="text-slate-900 dark:text-white font-bold">Inactivas</span>
         </nav>
 
         <!-- Cabecera de Página Accesible -->
-        <div class="app-page-header p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="app-page-header p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-2 flex-wrap">
-                    <span class="px-3.5 py-1 text-sm font-extrabold rounded-full bg-rose-100 text-rose-900 border border-rose-200 uppercase tracking-wide">
+                    <span class="px-3.5 py-1 text-sm font-extrabold rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-300 border border-rose-200 dark:border-rose-800 uppercase tracking-wide">
                         Papelera de Cátedras
                     </span>
-                    <span class="text-base text-slate-600 font-medium hidden sm:inline">
+                    <span class="text-base text-slate-600 dark:text-slate-400 font-medium hidden sm:inline">
                         Asignaciones Fuera de Servicio
                     </span>
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                     Asignaciones Inactivas
                 </h1>
-                <p class="text-base sm:text-lg text-slate-700 mt-2 max-w-3xl leading-relaxed">
+                <p class="text-base sm:text-lg text-slate-700 dark:text-slate-300 mt-2 max-w-3xl leading-relaxed">
                     Lista de cátedras docentes que fueron dadas de baja. Podés restaurarlas a la lista activa o eliminarlas definitivamente si no tienen horarios asociados.
                 </p>
             </div>
@@ -58,7 +58,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
 
         <!-- Barra de Búsqueda Predictiva en Tiempo Real -->
-        <div class="bg-white p-5 rounded-2xl border-2 border-slate-200/90 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="relative w-full md:max-w-xl">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,22 +66,22 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     </svg>
                 </span>
                 <input type="text" id="input-busqueda-desactivadas" placeholder="Buscar por docente, materia o curso..."
-                       class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 font-semibold bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                       class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 dark:text-white font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition"
                        aria-label="Buscar asignación desactivada">
-                <button type="button" id="btn-limpiar-busqueda-desactivadas" onclick="limpiarBusquedaDesactivadas()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 hidden text-lg font-bold" aria-label="Limpiar búsqueda">
+                <button type="button" id="btn-limpiar-busqueda-desactivadas" onclick="limpiarBusquedaDesactivadas()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hidden text-lg font-bold cursor-pointer" aria-label="Limpiar búsqueda">
                     ✕
                 </button>
             </div>
-            <div class="flex items-center gap-2 self-start md:self-auto text-base text-slate-700 font-bold">
+            <div class="flex items-center gap-2 self-start md:self-auto text-base text-slate-700 dark:text-slate-300 font-bold">
                 <span class="w-3 h-3 rounded-full bg-rose-500"></span>
                 <span id="contador-desactivadas-visibles">Cargando asignaciones inactivas...</span>
             </div>
         </div>
 
         <!-- Tabla Accesible de Asignaciones Inactivas -->
-        <div class="overflow-x-auto rounded-3xl border-2 border-slate-200/90 bg-white shadow-sm">
+        <div class="overflow-x-auto rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
             <table class="w-full text-left text-base" id="tabla-desactivadas">
-                <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-sm border-b-2 border-slate-200">
+                <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase font-bold text-sm border-b-2 border-slate-200 dark:border-slate-700">
                     <tr>
                         <th class="p-5">Docente & Materia</th>
                         <th class="p-5">Curso / Grado & Turno</th>
@@ -90,9 +90,9 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                         <th class="p-5 text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tbody-desactivadas" class="divide-y divide-slate-200 text-slate-800">
+                <tbody id="tbody-desactivadas" class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
                     <tr>
-                        <td colspan="5" class="p-12 text-center text-slate-500 font-medium">
+                        <td colspan="5" class="p-12 text-center text-slate-500 dark:text-slate-400 font-medium">
                             Consultando asignaciones inactivas...
                         </td>
                     </tr>
@@ -101,10 +101,10 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         </div>
 
         <!-- Estado Vacío cuando no hay asignaciones inactivas o no hay coincidencias -->
-        <div id="empty-desactivadas" class="hidden p-14 text-center rounded-3xl bg-white border-2 border-slate-200 shadow-sm space-y-4">
+        <div id="empty-desactivadas" class="hidden p-14 text-center rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <span class="text-5xl block">🎉</span>
-            <h3 class="text-2xl font-bold text-slate-900">No hay asignaciones docentes inactivas</h3>
-            <p class="text-base text-slate-600 max-w-md mx-auto">
+            <h3 class="text-2xl font-bold text-slate-900 dark:text-white">No hay asignaciones docentes inactivas</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                 Todas las cátedras y asignaciones se encuentran activas en el período escolar actual.
             </p>
             <a href="<?= base_url('mvc/views/asignaciones/index.php') ?>" class="btn btn-primary inline-flex items-center min-h-[46px] px-6 text-base font-bold rounded-2xl">
@@ -210,19 +210,19 @@ function filtrarDesactivadas() {
         const anio = a.anho_lectivo || a['año_lectivo'] || 2026;
 
         return `
-            <tr class="hover:bg-slate-50/90 transition-colors opacity-90">
+            <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors opacity-90">
                 <!-- Columna 1: Docente & Materia -->
                 <td class="p-5">
                     <div class="space-y-1">
-                        <span class="text-lg font-bold text-slate-800 block">
+                        <span class="text-lg font-bold text-slate-800 dark:text-white block">
                             ${profNombre}
                         </span>
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 text-sm font-bold">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-bold">
                                 <span>📚</span>
                                 <span>${matNombre}</span>
                             </span>
-                            ${profCi ? `<span class="text-sm text-slate-500">${profCi}</span>` : ''}
+                            ${profCi ? `<span class="text-sm text-slate-500 dark:text-slate-400">${profCi}</span>` : ''}
                         </div>
                     </div>
                 </td>
@@ -230,10 +230,10 @@ function filtrarDesactivadas() {
                 <!-- Columna 2: Curso / Grado & Turno -->
                 <td class="p-5">
                     <div class="space-y-1">
-                        <span class="text-base font-bold text-slate-700 block">
+                        <span class="text-base font-bold text-slate-700 dark:text-slate-200 block">
                             ${gradoNombre}${seccion}
                         </span>
-                        <span class="px-2.5 py-0.5 rounded-lg text-sm font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                        <span class="px-2.5 py-0.5 rounded-lg text-sm font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             ${turno || 'Turno Regular'}
                         </span>
                     </div>
@@ -241,14 +241,14 @@ function filtrarDesactivadas() {
 
                 <!-- Columna 3: Carga Horaria -->
                 <td class="p-5">
-                    <span class="text-base font-bold text-slate-700">
+                    <span class="text-base font-bold text-slate-700 dark:text-slate-300">
                         ${carga} hs cátedra
                     </span>
                 </td>
 
                 <!-- Columna 4: Año Lectivo -->
                 <td class="p-5">
-                    <span class="text-base font-bold font-mono text-slate-600">
+                    <span class="text-base font-bold font-mono text-slate-600 dark:text-slate-400">
                         ${anio}
                     </span>
                 </td>
@@ -258,14 +258,14 @@ function filtrarDesactivadas() {
                     <div class="flex items-center justify-end gap-2.5 flex-wrap">
                         <!-- Restaurar -->
                         <button type="button" onclick="restaurarAsignacion(${a.id_asignacion}, '${profNombre} - ${matNombre}')"
-                                class="min-h-[44px] px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-base font-bold rounded-xl border border-emerald-300 shadow-2xs transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                class="min-h-[44px] px-4 py-2 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 text-base font-bold rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-2xs transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                             <span>♻️</span>
                             <span>Restaurar</span>
                         </button>
 
                         <!-- Eliminar Definitivamente -->
                         <button type="button" onclick="eliminarAsignacionDefinitivamente(${a.id_asignacion}, '${profNombre} - ${matNombre}')"
-                                class="min-h-[44px] px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-900 text-base font-bold rounded-xl border border-rose-300 shadow-2xs transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                                class="min-h-[44px] px-4 py-2 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 text-base font-bold rounded-xl border border-rose-300 dark:border-rose-800 shadow-2xs transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
                             <span>🗑️</span>
                             <span>Eliminar</span>
                         </button>

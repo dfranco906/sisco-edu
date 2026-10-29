@@ -1,23 +1,23 @@
 <!-- Submodal Accesible: Editar Asignación Docente -->
-<div id="modal-editar-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-editar-asig-titulo">
-    <div class="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+<div id="modal-editar-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-editar-asig-titulo">
+    <div class="relative w-full max-w-2xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Cabecera del Submodal -->
-        <div class="flex items-center justify-between p-6 sm:p-7 border-b border-slate-200 bg-slate-50/80">
+        <div class="flex items-center justify-between p-6 sm:p-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 shrink-0">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0 border border-amber-200 dark:border-amber-800">
                     ✏️
                 </div>
                 <div>
-                    <h2 id="modal-editar-asig-titulo" class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 id="modal-editar-asig-titulo" class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                         Modificar Asignación Docente
                     </h2>
-                    <p class="text-base text-slate-600 mt-0.5">
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-0.5">
                         Actualizá el curso, materia, docente asignado o carga horaria
                     </p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarModalEditarAsignacion()" class="w-12 h-12 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-amber-500" aria-label="Cerrar modal">
+            <button type="button" onclick="cerrarModalEditarAsignacion()" class="w-12 h-12 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer" aria-label="Cerrar modal">
                 ✕
             </button>
         </div>
@@ -30,34 +30,34 @@
                 
                 <!-- Grado / Curso -->
                 <div>
-                    <label for="editar-asig-grado" class="block text-base font-bold text-slate-800 mb-1.5">
+                    <label for="editar-asig-grado" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Curso / Grado Destino <span class="text-rose-600">*</span>
                     </label>
                     <select id="editar-asig-grado" name="id_grado" required
-                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
+                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
                         <option value="">Seleccione el curso o grado...</option>
                     </select>
                 </div>
 
                 <!-- Materia / Asignatura -->
                 <div>
-                    <label for="editar-asig-materia" class="block text-base font-bold text-slate-800 mb-1.5">
+                    <label for="editar-asig-materia" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Materia / Asignatura <span class="text-rose-600">*</span>
                     </label>
                     <select id="editar-asig-materia" name="id_materia" required
-                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
+                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
                         <option value="">Seleccione la materia curricular...</option>
                     </select>
-                    <p class="text-sm text-slate-500 mt-1">Podés seleccionar cualquiera de las materias disponibles en la malla.</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Podés seleccionar cualquiera de las materias disponibles en la malla.</p>
                 </div>
 
                 <!-- Profesor Responsable -->
                 <div>
-                    <label for="editar-asig-profesor" class="block text-base font-bold text-slate-800 mb-1.5">
+                    <label for="editar-asig-profesor" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Docente Responsable <span class="text-rose-600">*</span>
                     </label>
                     <select id="editar-asig-profesor" name="id_profesor" required
-                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
+                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
                         <option value="">Seleccione el docente...</option>
                     </select>
                 </div>
@@ -65,31 +65,38 @@
                 <!-- Fila: Carga Horaria y Año Lectivo -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="editar-asig-carga" class="block text-base font-bold text-slate-800 mb-1.5">
+                        <label for="editar-asig-carga" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                             Carga Semanal (Horas Cátedra) <span class="text-rose-600">*</span>
                         </label>
                         <input type="number" id="editar-asig-carga" name="carga_horaria" min="1" max="40" required
-                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
-                        <p class="text-sm text-slate-600 mt-1">Horas cátedra semanales dictadas en este curso.</p>
+                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Horas cátedra semanales dictadas en este curso.</p>
                     </div>
 
                     <div>
-                        <label for="editar-asig-anio" class="block text-base font-bold text-slate-800 mb-1.5">
+                        <label for="editar-asig-anio" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                             Año Lectivo <span class="text-rose-600">*</span>
                         </label>
                         <input type="number" id="editar-asig-anio" name="año_lectivo" min="2020" max="2035" required
-                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
+                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-xs">
                     </div>
                 </div>
 
             </div>
 
             <!-- Pie del Submodal -->
-            <div class="p-5 sm:p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
-                <button type="button" onclick="cerrarModalEditarAsignacion()" class="btn btn-muted min-h-[48px] px-6 text-base font-bold rounded-xl">
+            <div class="p-5 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="cerrarModalEditarAsignacion()" class="btn btn-muted min-h-[48px] px-6 text-base font-bold rounded-xl cursor-pointer">
                     Cancelar
                 </button>
-                <button type="submit" id="btn-submit-editar-asignacion" class="btn btn-primary min-h-[48px] px-8 text-base font-bold rounded-xl bg-amber-600 hover:bg-amber-700 shadow-xs">
+                <button type="submit" id="btn-submit-editar-asignacion" class="btn btn-primary min-h-[48px] px-8 text-base font-bold rounded-xl bg-amber-600 hover:bg-amber-700 shadow-xs cursor-pointer">
+                    Actualizar Asignación
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
                     Actualizar Asignación
                 </button>
             </div>

@@ -265,55 +265,63 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 </main>
 
 <!-- Modal de Confirmación de Promoción -->
-<div id="modal-confirmacion" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="modal-confirmacion-titulo">
-    <div class="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
+<div id="modal-confirmacion" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 hidden" role="dialog" aria-modal="true" aria-labelledby="modal-confirmacion-titulo">
+    <div class="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl font-bold shrink-0">
-                🎓
+        <!-- Header -->
+        <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-start justify-between gap-4 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl font-bold shrink-0 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                    🎓
+                </div>
+                <div class="min-w-0">
+                    <h3 id="modal-confirmacion-titulo" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
+                        Confirmar Promoción de Cohorte
+                    </h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        Verifique los detalles antes de aplicar los cambios en la base de datos.
+                    </p>
+                </div>
             </div>
-            <div>
-                <h3 id="modal-confirmacion-titulo" class="text-xl font-extrabold text-slate-900 dark:text-white">
-                    Confirmar Promoción de Cohorte
-                </h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400">
-                    Verifique los detalles antes de aplicar los cambios en la base de datos.
-                </p>
-            </div>
+            <button type="button" onclick="cerrarModalConfirmacion()" class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors shrink-0" aria-label="Cerrar modal">&times;</button>
         </div>
 
-        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm space-y-3">
-            <div class="flex justify-between">
-                <span class="text-slate-500 dark:text-slate-400 font-medium">Grado Origen:</span>
-                <span id="resumen-origen" class="font-bold text-slate-900 dark:text-white">--</span>
+        <!-- Body con scroll -->
+        <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5 text-base">
+            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 space-y-3.5">
+                <div class="flex justify-between items-center text-base">
+                    <span class="text-slate-600 dark:text-slate-400 font-medium">Grado Origen:</span>
+                    <span id="resumen-origen" class="font-black text-slate-900 dark:text-white text-lg">--</span>
+                </div>
+                <div class="flex justify-between items-center text-base">
+                    <span class="text-slate-600 dark:text-slate-400 font-medium">Destino:</span>
+                    <span id="resumen-destino" class="font-black text-indigo-600 dark:text-indigo-400 text-lg">--</span>
+                </div>
+                <div class="flex justify-between items-center text-base">
+                    <span class="text-slate-600 dark:text-slate-400 font-medium">Año Lectivo:</span>
+                    <span id="resumen-anho" class="font-black text-slate-900 dark:text-white text-lg">--</span>
+                </div>
+                <div class="flex justify-between items-center text-base pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <span class="text-slate-600 dark:text-slate-400 font-medium">Estudiantes a promover:</span>
+                    <span id="resumen-total-estudiantes" class="font-black text-slate-900 dark:text-white text-xl">0</span>
+                </div>
+                <div class="flex justify-between items-center text-base">
+                    <span class="text-slate-600 dark:text-slate-400 font-medium">Huellas a encolar en LoRa:</span>
+                    <span id="resumen-total-huellas" class="font-black text-amber-600 dark:text-amber-400 text-xl">0</span>
+                </div>
             </div>
-            <div class="flex justify-between">
-                <span class="text-slate-500 dark:text-slate-400 font-medium">Destino:</span>
-                <span id="resumen-destino" class="font-bold text-indigo-600 dark:text-indigo-400">--</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-slate-500 dark:text-slate-400 font-medium">Año Lectivo:</span>
-                <span id="resumen-anho" class="font-bold text-slate-900 dark:text-white">--</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-slate-500 dark:text-slate-400 font-medium">Estudiantes a promover:</span>
-                <span id="resumen-total-estudiantes" class="font-bold text-slate-900 dark:text-white">0</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-slate-500 dark:text-slate-400 font-medium">Huellas a encolar en LoRa:</span>
-                <span id="resumen-total-huellas" class="font-bold text-amber-600 dark:text-amber-400">0</span>
-            </div>
+
+            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 p-4 rounded-2xl">
+                ⚠️ <strong>Aviso Importante:</strong> Esta acción actualizará los registros de los alumnos seleccionados, reasignará su aula correspondiente e insertará las huellas en la cola de distribución LoRa del gateway.
+            </p>
         </div>
 
-        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            ⚠️ <strong>Aviso:</strong> Esta acción actualizará los registros de los alumnos seleccionados, reasignará su aula correspondiente e insertará las huellas en la cola de distribución LoRa del gateway.
-        </p>
-
-        <div class="flex justify-end gap-3 pt-2">
-            <button type="button" onclick="cerrarModalConfirmacion()" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <!-- Footer fijo -->
+        <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 shrink-0">
+            <button type="button" onclick="cerrarModalConfirmacion()" class="btn btn-secondary min-h-[46px] px-5 py-2.5 rounded-xl text-base font-semibold cursor-pointer">
                 Cancelar
             </button>
-            <button type="button" id="btn-ejecutar-confirmado" onclick="ejecutarPromocion()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold shadow-sm transition flex items-center gap-2">
+            <button type="button" id="btn-ejecutar-confirmado" onclick="ejecutarPromocion()" class="btn btn-primary min-h-[46px] px-6 py-2.5 rounded-xl text-base font-bold shadow-sm flex items-center gap-2 cursor-pointer active:scale-95">
                 <span id="spinner-ejecutar" class="hidden animate-spin">⏳</span>
                 <span>Confirmar y Promover</span>
             </button>
@@ -323,28 +331,30 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 </div>
 
 <!-- Modal de Resultado / Éxito -->
-<div id="modal-resultado" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
-    <div class="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 text-center">
+<div id="modal-resultado" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 hidden" role="dialog" aria-modal="true">
+    <div class="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         
-        <div class="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-3xl font-bold mx-auto">
-            ✅
+        <div class="p-6 sm:p-8 overflow-y-auto flex-1 text-center space-y-6">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-3xl font-bold mx-auto border border-emerald-200 dark:border-emerald-800 shadow-sm">
+                ✅
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">
+                    Promoción Exitosa
+                </h3>
+                <p id="txt-resultado-mensaje" class="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Los estudiantes fueron promovidos y las huellas biométricas se encolaron exitosamente.
+                </p>
+            </div>
         </div>
 
-        <div class="space-y-2">
-            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">
-                Promoción Exitosa
-            </h3>
-            <p id="txt-resultado-mensaje" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Los estudiantes fueron promovidos y las huellas biométricas se encolaron exitosamente.
-            </p>
-        </div>
-
-        <div class="flex flex-col gap-2 pt-2">
-            <a href="<?= base_url('mvc/views/administracion/sync_biometrica.php') ?>" class="w-full py-3 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition flex items-center justify-center gap-2">
+        <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2.5 shrink-0">
+            <a href="<?= base_url('mvc/views/administracion/sync_biometrica.php') ?>" class="w-full min-h-[46px] py-3 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition flex items-center justify-center gap-2 text-base shadow-sm">
                 <span>📡</span>
                 <span>Ver Cola LoRa de Huellas</span>
             </a>
-            <button type="button" onclick="cerrarModalResultado()" class="w-full py-2.5 px-5 rounded-2xl border border-slate-300 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <button type="button" onclick="cerrarModalResultado()" class="btn btn-secondary w-full min-h-[46px] py-2.5 px-5 rounded-2xl text-base font-semibold">
                 Continuar en Promociones
             </button>
         </div>
@@ -499,20 +509,20 @@ function renderizarTablaEstudiantes(lista) {
                </span>`;
 
         return `
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                <td class="p-3 text-center">
-                    <input type="checkbox" value="${e.id_estudiante}" class="check-estudiante w-4 h-4 rounded text-indigo-600 border-slate-300 cursor-pointer" onchange="actualizarContadorSeleccion()">
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="p-4 text-center">
+                    <input type="checkbox" value="${e.id_estudiante}" class="check-estudiante w-5 h-5 rounded text-indigo-600 border-slate-300 dark:border-slate-600 cursor-pointer" onchange="actualizarContadorSeleccion()">
                 </td>
-                <td class="p-3 font-semibold text-slate-900 dark:text-white">
+                <td class="p-4 font-bold text-base text-slate-900 dark:text-white">
                     ${e.apellido}, ${e.nombre}
                 </td>
-                <td class="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                <td class="p-4 font-mono text-sm font-semibold text-slate-700 dark:text-slate-300">
                     ${e.cedula_identidad || 'S/N'}
                 </td>
-                <td class="p-3 text-center">
+                <td class="p-4 text-center">
                     ${badgeHuella}
                 </td>
-                <td class="p-3 text-slate-600 dark:text-slate-400">
+                <td class="p-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
                     ${e.aula_nombre || 'Sin aula'}
                 </td>
             </tr>

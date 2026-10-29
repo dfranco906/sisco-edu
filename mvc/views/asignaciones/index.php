@@ -11,51 +11,51 @@ require_once __DIR__ . '/../layouts/sidebar.php';
     <div class="max-w-7xl mx-auto space-y-8">
 
         <!-- Breadcrumb Accesible -->
-        <nav class="flex items-center gap-2 text-base text-slate-600 font-medium" aria-label="Migas de pan">
-            <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="hover:text-blue-600 transition flex items-center gap-1.5 focus:outline-none focus:underline">
-                <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <nav class="flex items-center gap-2 text-base text-slate-600 dark:text-slate-400 font-medium" aria-label="Migas de pan">
+            <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 focus:outline-none focus:underline">
+                <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
                 Inicio
             </a>
-            <span class="text-slate-400">/</span>
-            <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="hover:text-blue-600 transition font-medium focus:outline-none focus:underline">
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition font-medium focus:outline-none focus:underline">
                 Administración
             </a>
-            <span class="text-slate-400">/</span>
-            <span class="text-slate-900 font-bold">Asignaciones Docentes</span>
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <span class="text-slate-900 dark:text-white font-bold">Asignaciones Docentes</span>
         </nav>
 
         <!-- Cabecera de Página Accesible -->
-        <div class="app-page-header p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="app-page-header p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-2 flex-wrap">
-                    <span class="px-3.5 py-1 text-sm font-extrabold rounded-full bg-blue-100 text-blue-900 border border-blue-200 uppercase tracking-wide">
+                    <span class="px-3.5 py-1 text-sm font-extrabold rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-800 uppercase tracking-wide">
                         Malla & Cátedras
                     </span>
-                    <span class="text-base text-slate-600 font-medium hidden sm:inline">
+                    <span class="text-base text-slate-600 dark:text-slate-400 font-medium hidden sm:inline">
                         Distribución Jerárquica por Docentes y Ciclos
                     </span>
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                     Gestión de Asignaciones Docentes
                 </h1>
-                <p class="text-base sm:text-lg text-slate-700 mt-2 max-w-3xl leading-relaxed">
+                <p class="text-base sm:text-lg text-slate-700 dark:text-slate-300 mt-2 max-w-3xl leading-relaxed">
                     Visualizá la carga horaria semanal consolidada por profesor y organizá las cátedras por ciclos formativos de manera transparente y eficiente.
                 </p>
             </div>
 
             <!-- Botonera de Acción Primaria -->
             <div class="flex flex-wrap items-center gap-3 shrink-0">
-                <button type="button" onclick="abrirModalCrearAsignacion()" class="min-h-[48px] px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold rounded-2xl shadow-sm transition flex items-center gap-2.5 focus:outline-none focus:ring-4 focus:ring-blue-200">
+                <button type="button" onclick="abrirModalCrearAsignacion()" class="min-h-[48px] px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-base font-bold rounded-2xl shadow-sm transition flex items-center gap-2.5 focus:outline-none focus:ring-4 focus:ring-blue-200 cursor-pointer active:scale-95">
                     <span class="text-xl font-bold">+</span>
                     <span>Registrar Asignación</span>
                 </button>
-                <a href="<?= base_url('mvc/views/asignaciones/desactivadas.php') ?>" class="btn btn-muted min-h-[48px] px-5 py-2.5 text-base font-semibold rounded-2xl border border-slate-300">
+                <a href="<?= base_url('mvc/views/asignaciones/desactivadas.php') ?>" class="btn btn-muted min-h-[48px] px-5 py-2.5 text-base font-semibold rounded-2xl border border-slate-300 dark:border-slate-700 flex items-center gap-2">
                     <span>🗑️</span>
                     <span>Asignaciones Inactivas</span>
                 </a>
-                <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="btn btn-muted min-h-[48px] px-5 py-2.5 text-base font-semibold rounded-2xl">
+                <a href="<?= base_url('mvc/views/administracion/index.php') ?>" class="btn btn-secondary min-h-[48px] px-5 py-2.5 text-base font-semibold rounded-2xl">
                     ← Volver
                 </a>
             </div>
@@ -64,52 +64,52 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         <!-- Franja de Indicadores Métricos (KPI Strip) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <!-- Total Docentes Asignados -->
-            <div class="p-6 rounded-3xl bg-blue-50/70 border-2 border-blue-200 shadow-xs flex items-center justify-between">
+            <div class="p-6 rounded-3xl bg-blue-50/70 dark:bg-blue-950/40 border-2 border-blue-200 dark:border-blue-900/60 shadow-xs flex items-center justify-between">
                 <div>
-                    <span class="text-sm font-extrabold uppercase tracking-wider text-blue-900">Docentes con Cátedra</span>
-                    <div id="kpi-total-profesores" class="text-4xl font-black text-slate-900 mt-2">0</div>
-                    <p class="text-sm text-slate-600 mt-0.5">Profesores con horas activas</p>
+                    <span class="text-sm font-extrabold uppercase tracking-wider text-blue-900 dark:text-blue-300">Docentes con Cátedra</span>
+                    <div id="kpi-total-profesores" class="text-4xl font-black text-slate-900 dark:text-white mt-2">0</div>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Profesores con horas activas</p>
                 </div>
                 <span class="text-4xl">🧑‍🏫</span>
             </div>
 
             <!-- Total Asignaciones -->
-            <div class="p-6 rounded-3xl bg-indigo-50/70 border-2 border-indigo-200 shadow-xs flex items-center justify-between">
+            <div class="p-6 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-900/60 shadow-xs flex items-center justify-between">
                 <div>
-                    <span class="text-sm font-extrabold uppercase tracking-wider text-indigo-900">Asignaciones / Cátedras</span>
-                    <div id="kpi-total-asignaciones" class="text-4xl font-black text-slate-900 mt-2">0</div>
-                    <p class="text-sm text-slate-600 mt-0.5">Total de materias distribuidas</p>
+                    <span class="text-sm font-extrabold uppercase tracking-wider text-indigo-900 dark:text-indigo-300">Asignaciones / Cátedras</span>
+                    <div id="kpi-total-asignaciones" class="text-4xl font-black text-slate-900 dark:text-white mt-2">0</div>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Total de materias distribuidas</p>
                 </div>
                 <span class="text-4xl">📋</span>
             </div>
 
             <!-- Horas Cátedra Totales -->
-            <div class="p-6 rounded-3xl bg-emerald-50/70 border-2 border-emerald-200 shadow-xs flex items-center justify-between">
+            <div class="p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-200 dark:border-emerald-900/60 shadow-xs flex items-center justify-between">
                 <div>
-                    <span class="text-sm font-extrabold uppercase tracking-wider text-emerald-900">Horas Cátedra Semanales</span>
-                    <div id="kpi-total-horas" class="text-4xl font-black text-slate-900 mt-2">0</div>
-                    <p class="text-sm text-slate-600 mt-0.5">Carga horaria total sumada</p>
+                    <span class="text-sm font-extrabold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">Horas Cátedra Semanales</span>
+                    <div id="kpi-total-horas" class="text-4xl font-black text-slate-900 dark:text-white mt-2">0</div>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Carga horaria total sumada</p>
                 </div>
                 <span class="text-4xl">⏱️</span>
             </div>
 
             <!-- Cursos Cubiertos -->
-            <div class="p-6 rounded-3xl bg-amber-50/70 border-2 border-amber-200 shadow-xs flex items-center justify-between">
+            <div class="p-6 rounded-3xl bg-amber-50/70 dark:bg-amber-950/40 border-2 border-amber-200 dark:border-amber-900/60 shadow-xs flex items-center justify-between">
                 <div>
-                    <span class="text-sm font-extrabold uppercase tracking-wider text-amber-900">Cursos / Secciones</span>
-                    <div id="kpi-total-cursos" class="text-4xl font-black text-slate-900 mt-2">0</div>
-                    <p class="text-sm text-slate-600 mt-0.5">Cursos con materias activas</p>
+                    <span class="text-sm font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-300">Cursos / Secciones</span>
+                    <div id="kpi-total-cursos" class="text-4xl font-black text-slate-900 dark:text-white mt-2">0</div>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Cursos con materias activas</p>
                 </div>
                 <span class="text-4xl">🏫</span>
             </div>
         </div>
 
-        <!-- Barra de Controles: Búsqueda, Botones Fijos de Agrupación (Docente / Ciclo) y Filtros -->
-        <div class="bg-white p-6 rounded-3xl border-2 border-slate-200/90 shadow-sm space-y-5">
+        <!-- Barra de Controles: Búsqueda, Botones Fijos de Agrupación (Docente / Ciclo), Selector de Tamaño y Filtros -->
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm space-y-5">
             <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
                 
                 <!-- Búsqueda en Tiempo Real -->
-                <div class="relative flex-1 min-w-[280px]">
+                <div class="relative flex-1 min-w-[260px]">
                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -117,24 +117,24 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     </span>
                     <input type="text" id="input-busqueda-asignacion"
                            placeholder="Buscar por profesor, cédula, materia o curso..."
-                           class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 font-semibold bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                           class="w-full min-h-[48px] pl-12 pr-10 py-3 text-base text-slate-900 dark:text-white font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition"
                            aria-label="Buscar asignación">
                     <button type="button" id="btn-limpiar-busqueda-asignacion" onclick="limpiarBusquedaAsignacion()"
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 hidden text-lg font-bold"
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hidden text-lg font-bold cursor-pointer"
                             aria-label="Limpiar búsqueda">
                         ✕
                     </button>
                 </div>
 
-                <!-- Botones Fijos de Agrupación Solicitados: 'Docente' y 'Ciclo' -->
+                <!-- Botones de Agrupación, Selector de Escala y Año Lectivo -->
                 <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-sm font-extrabold uppercase tracking-wider text-slate-500 mr-1 hidden sm:inline">
+                    <span class="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1 hidden sm:inline">
                         Modo de Vista:
                     </span>
 
                     <!-- Botón Fijo: Docente -->
                     <button type="button" id="btn-modo-docente" onclick="establecerModoPrincipal('docente')"
-                            class="min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-blue-600 text-white border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                            class="min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-blue-600 text-white border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-200 cursor-pointer"
                             title="Agrupar las asignaciones por profesor responsable">
                         <span>🧑‍🏫</span>
                         <span>Docente</span>
@@ -142,26 +142,34 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
                     <!-- Botón Fijo: Ciclo (Toggle para activar/desactivar agrupación por ciclo) -->
                     <button type="button" id="btn-toggle-ciclo" onclick="alternarAgrupacionCiclo()"
-                            class="min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200"
+                            class="min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200 cursor-pointer"
                             title="Activar o desactivar la agrupación por ciclos académicos">
                         <span>🏫</span>
                         <span>Ciclo</span>
-                        <span id="badge-estado-ciclo" class="px-2 py-0.5 rounded-lg text-xs font-black uppercase bg-slate-300 text-slate-800">
+                        <span id="badge-estado-ciclo" class="px-2 py-0.5 rounded-lg text-xs font-black uppercase bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                             Off
                         </span>
                     </button>
 
                     <!-- Botón para Expandir/Colapsar Todos -->
                     <button type="button" id="btn-toggle-expandir" onclick="alternarExpandirTodos()"
-                            class="min-h-[48px] px-4 py-2.5 rounded-2xl text-base font-bold bg-white text-slate-700 border-2 border-slate-300 hover:bg-slate-50 transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                            class="min-h-[48px] px-4 py-2.5 rounded-2xl text-base font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
                             title="Expandir o colapsar todas las tarjetas de profesores">
                         <span id="icono-expandir-todos">↕️</span>
                         <span id="texto-expandir-todos">Expandir todos</span>
                     </button>
 
-                    <!-- Selector de Año Lectivo Optimizado (Consulta solo lo necesario a la BD) -->
+                    <!-- Selector de Escala Visual (11pt | 12pt | 13pt) Enlazado Globalmente -->
+                    <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-2xs" role="group" aria-label="Selector de escala de texto">
+                        <span class="text-xs font-black uppercase text-slate-500 dark:text-slate-400 px-2 hidden md:inline">Vista:</span>
+                        <button type="button" data-font-size="11pt" class="btn-font-scale min-h-[38px] px-3 py-1.5 text-xs font-black rounded-xl transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Tamaño 11pt - Compacta">11pt</button>
+                        <button type="button" data-font-size="12pt" class="btn-font-scale min-h-[38px] px-3 py-1.5 text-xs font-black rounded-xl transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Tamaño 12pt - Estándar">12pt</button>
+                        <button type="button" data-font-size="13pt" class="btn-font-scale min-h-[38px] px-3 py-1.5 text-xs font-black rounded-xl transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Tamaño 13pt - Grande">13pt</button>
+                    </div>
+
+                    <!-- Selector de Año Lectivo Optimizado -->
                     <select id="filtro-anio-asignacion" onchange="cambiarAnhoLectivo()"
-                            class="min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-extrabold bg-slate-50 border-2 border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-extrabold bg-slate-50 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="2026" selected>Año Lectivo 2026</option>
                         <option value="2025">Año Lectivo 2025</option>
                         <option value="2024">Año Lectivo 2024</option>
@@ -172,26 +180,26 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
 
             <!-- Barra de Filtros Rápidos por Ciclo (Visible solo cuando 'Ciclo' está activado) -->
-            <div id="franja-filtro-ciclos" class="hidden pt-3 border-t border-slate-200/90 flex flex-wrap items-center gap-2 animate-in fade-in duration-150">
-                <span class="text-sm font-extrabold uppercase tracking-wider text-slate-600 mr-2">
+            <div id="franja-filtro-ciclos" class="hidden pt-3 border-t border-slate-200/90 dark:border-slate-800 flex flex-wrap items-center gap-2 animate-in fade-in duration-150">
+                <span class="text-sm font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400 mr-2">
                     Filtrar Ciclo:
                 </span>
                 <button type="button" onclick="filtrarPorCicloSeleccionado(null)" id="btn-ciclo-todos"
-                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-extrabold bg-blue-600 text-white border border-blue-600 transition">
+                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-extrabold bg-blue-600 text-white border border-blue-600 transition cursor-pointer">
                     Todos los ciclos
                 </button>
                 <button type="button" onclick="filtrarPorCicloSeleccionado('EEB3')" id="btn-ciclo-eeb3"
-                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-800 border border-slate-300 hover:bg-slate-200 transition">
+                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
                     EEB - 3° Ciclo (7°, 8°, 9°)
                 </button>
                 <button type="button" onclick="filtrarPorCicloSeleccionado('NM')" id="btn-ciclo-nm"
-                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-800 border border-slate-300 hover:bg-slate-200 transition">
+                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
                     Nivel Medio / Bachilleratos (1°, 2°, 3°)
                 </button>
             </div>
 
             <!-- Contador de Docentes y Asignaciones Visibles -->
-            <div class="flex items-center justify-between text-base text-slate-700 font-bold pt-1">
+            <div class="flex items-center justify-between text-base text-slate-700 dark:text-slate-300 font-bold pt-1">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
                     <span id="contador-asignaciones-visibles">Cargando datos...</span>
@@ -205,21 +213,21 @@ require_once __DIR__ . '/../layouts/sidebar.php';
         <!-- Contenedor Principal de Docentes Agrupados (Tarjetas / Acordeones Accesibles) -->
         <div id="contenedor-docentes-asignaciones" class="space-y-5">
             <!-- Skeleton / Estado de Carga -->
-            <div class="p-12 text-center rounded-3xl bg-white border-2 border-slate-200 shadow-sm space-y-3">
+            <div class="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="animate-spin inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                <p class="text-lg font-bold text-slate-700">Cargando y agrupando asignaciones docentes...</p>
-                <p class="text-sm text-slate-500">Consultando distribución horaria por ciclo institucional</p>
+                <p class="text-lg font-bold text-slate-700 dark:text-slate-200">Cargando y agrupando asignaciones docentes...</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Consultando distribución horaria por ciclo institucional</p>
             </div>
         </div>
 
         <!-- Estado Vacío cuando no hay coincidencias -->
-        <div id="empty-busqueda-asignaciones" class="hidden p-14 text-center rounded-3xl bg-white border-2 border-slate-200 shadow-sm space-y-4">
+        <div id="empty-busqueda-asignaciones" class="hidden p-14 text-center rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <span class="text-5xl block">🔍</span>
-            <h3 class="text-2xl font-bold text-slate-900">No encontramos asignaciones con esos criterios</h3>
-            <p class="text-base text-slate-600 max-w-md mx-auto">
+            <h3 class="text-2xl font-bold text-slate-900 dark:text-white">No encontramos asignaciones con esos criterios</h3>
+            <p class="text-base text-slate-600 dark:text-slate-400 max-w-md mx-auto">
                 Probá modificando la búsqueda, seleccionando otro año lectivo o limpiá los filtros aplicados.
             </p>
-            <button type="button" onclick="limpiarBusquedaAsignacion()" class="btn btn-primary min-h-[46px] px-6 text-base font-bold rounded-2xl">
+            <button type="button" onclick="limpiarBusquedaAsignacion()" class="btn btn-primary min-h-[46px] px-6 text-base font-bold rounded-2xl cursor-pointer">
                 Restablecer lista completa
             </button>
         </div>
@@ -258,10 +266,10 @@ async function cargarAsignaciones() {
 
     if (contenedor) {
         contenedor.innerHTML = `
-            <div class="p-12 text-center rounded-3xl bg-white border-2 border-slate-200 shadow-sm space-y-3">
+            <div class="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="animate-spin inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                <p class="text-lg font-bold text-slate-700">Cargando asignaciones docentes...</p>
-                <p class="text-sm text-slate-500">Consultando asignaciones para el período seleccionado</p>
+                <p class="text-lg font-bold text-slate-700 dark:text-slate-200">Cargando asignaciones docentes...</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Consultando asignaciones para el período seleccionado</p>
             </div>
         `;
     }
@@ -277,7 +285,7 @@ async function cargarAsignaciones() {
 
         if (json.status !== 'success' || !Array.isArray(json.data)) {
             if (contenedor) {
-                contenedor.innerHTML = `<div class="p-10 text-center text-rose-600 font-bold bg-white rounded-3xl border-2 border-rose-200">Error al cargar asignaciones: ${json.message || 'Respuesta inválida'}</div>`;
+                contenedor.innerHTML = `<div class="p-10 text-center text-rose-600 dark:text-rose-400 font-bold bg-white dark:bg-slate-900 rounded-3xl border-2 border-rose-200 dark:border-rose-900">Error al cargar asignaciones: ${json.message || 'Respuesta inválida'}</div>`;
             }
             return;
         }
@@ -294,7 +302,7 @@ async function cargarAsignaciones() {
     } catch (e) {
         console.error("Error cargando asignaciones:", e);
         if (contenedor) {
-            contenedor.innerHTML = `<div class="p-10 text-center text-rose-600 font-bold bg-white rounded-3xl border-2 border-rose-200">Error de conexión al cargar la lista de asignaciones.</div>`;
+            contenedor.innerHTML = `<div class="p-10 text-center text-rose-600 dark:text-rose-400 font-bold bg-white dark:bg-slate-900 rounded-3xl border-2 border-rose-200 dark:border-rose-900">Error de conexión al cargar la lista de asignaciones.</div>`;
         }
     }
 }
@@ -546,7 +554,7 @@ function renderizarDocentesAgrupados() {
         let pillsCiclos = '';
         doc.ciclosMap.forEach(c => {
             const esMedio = c.codigo === 'NM' || c.nombre.toLowerCase().includes('medio');
-            const pillClass = esMedio ? 'bg-purple-100 text-purple-900 border-purple-200' : 'bg-blue-100 text-blue-900 border-blue-200';
+            const pillClass = esMedio ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-900 dark:text-purple-300 border-purple-200 dark:border-purple-800' : 'bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border-blue-200 dark:border-blue-800';
             pillsCiclos += `
                 <span class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-sm font-extrabold border ${pillClass}">
                     <span>${esMedio ? '🎓' : '🏫'}</span>
@@ -556,11 +564,11 @@ function renderizarDocentesAgrupados() {
         });
 
         html += `
-            <div class="docente-card bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm overflow-hidden transition-all hover:border-slate-300">
+            <div class="docente-card bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
                 
                 <!-- Cabecera de la Tarjeta del Docente (Botón Accesible de Acordeón) -->
                 <div onclick="toggleDocenteCard(${doc.id_profesor})"
-                     class="p-5 sm:p-6 bg-slate-50/70 hover:bg-slate-100/80 cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition select-none"
+                     class="p-5 sm:p-6 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100/80 dark:hover:bg-slate-800 cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition select-none"
                      role="button" tabindex="0" aria-expanded="${isExpanded}">
                     
                     <!-- Lado Izquierdo: Avatar y Datos del Docente -->
@@ -569,13 +577,13 @@ function renderizarDocentesAgrupados() {
                             ${avatar.iniciales}
                         </div>
                         <div class="min-w-0">
-                            <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug truncate">
+                            <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug truncate">
                                 ${doc.nombre}
                             </h3>
-                            <div class="flex items-center gap-2 mt-0.5 text-base text-slate-600 font-semibold">
+                            <div class="flex items-center gap-2 mt-0.5 text-base text-slate-600 dark:text-slate-400 font-semibold">
                                 ${doc.ci ? `<span>C.I. ${doc.ci}</span>` : '<span>Sin documento</span>'}
-                                <span class="text-slate-400">•</span>
-                                <span class="text-slate-700">${cantCatedras} ${cantCatedras === 1 ? 'materia' : 'materias'} asignadas</span>
+                                <span class="text-slate-400 dark:text-slate-600">•</span>
+                                <span class="text-slate-700 dark:text-slate-300">${cantCatedras} ${cantCatedras === 1 ? 'materia' : 'materias'} asignadas</span>
                             </div>
                         </div>
                     </div>
@@ -584,13 +592,13 @@ function renderizarDocentesAgrupados() {
                     <div class="flex flex-wrap items-center gap-3 self-start lg:self-auto">
                         
                         <!-- Píldora de Horas Cátedra Semanales Totales -->
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-50 border-2 border-indigo-200 shadow-2xs">
-                            <span class="text-xl font-black text-indigo-900">${doc.total_horas} hs</span>
-                            <span class="text-xs font-black uppercase text-indigo-700">cátedra/sem</span>
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border-2 border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                            <span class="text-xl font-black text-indigo-900 dark:text-indigo-300">${doc.total_horas} hs</span>
+                            <span class="text-xs font-black uppercase text-indigo-700 dark:text-indigo-400">cátedra/sem</span>
                         </div>
 
                         <!-- Cursos a su cargo -->
-                        <span class="px-3.5 py-1.5 rounded-xl bg-slate-200 text-slate-800 text-sm font-extrabold">
+                        <span class="px-3.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-extrabold border border-slate-300 dark:border-slate-700">
                             ${cantCursos} ${cantCursos === 1 ? 'curso' : 'cursos'}
                         </span>
 
@@ -601,14 +609,14 @@ function renderizarDocentesAgrupados() {
 
                         <!-- Botón de Acción Rápida: Asignar a este profesor -->
                         <button type="button" onclick="event.stopPropagation(); abrirModalCrearAsignacion({ id_profesor: ${doc.id_profesor} })"
-                                class="min-h-[44px] px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-sm font-extrabold border border-blue-200 transition shadow-2xs flex items-center gap-1.5 focus:outline-none"
+                                class="min-h-[44px] px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-sm font-extrabold border border-blue-200 dark:border-blue-800 transition shadow-2xs flex items-center gap-1.5 focus:outline-none cursor-pointer"
                                 title="Agregar nueva cátedra a este profesor">
                             <span>+</span>
                             <span class="hidden md:inline">Asignar Materia</span>
                         </button>
 
                         <!-- Icono Chevron Expandir/Colapsar -->
-                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 font-bold transition-transform duration-200 docente-card-chevron ${isExpanded ? 'rotate-180' : ''}"
+                        <div class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold transition-transform duration-200 docente-card-chevron ${isExpanded ? 'rotate-180' : ''}"
                              id="docente-chevron-${doc.id_profesor}">
                             ▼
                         </div>
@@ -618,7 +626,7 @@ function renderizarDocentesAgrupados() {
                 </div>
 
                 <!-- Cuerpo Desplegable de la Tarjeta (Listado de Cátedras) -->
-                <div id="docente-body-${doc.id_profesor}" class="docente-card-body ${isExpanded ? '' : 'hidden'} border-t-2 border-slate-200">
+                <div id="docente-body-${doc.id_profesor}" class="docente-card-body ${isExpanded ? '' : 'hidden'} border-t-2 border-slate-200 dark:border-slate-800">
                     ${renderizarContenidoDocente(doc)}
                 </div>
 
@@ -645,10 +653,10 @@ function renderizarContenidoDocente(doc) {
             }
 
             const esMedio = ciclo.codigo === 'NM' || ciclo.nombre.toLowerCase().includes('medio');
-            const headerColor = esMedio ? 'bg-purple-50/80 border-purple-200 text-purple-900' : 'bg-blue-50/80 border-blue-200 text-blue-900';
+            const headerColor = esMedio ? 'bg-purple-50/80 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/70 text-purple-900 dark:text-purple-300' : 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/70 text-blue-900 dark:text-blue-300';
 
             ciclosHtml += `
-                <div class="p-4 sm:p-6 space-y-4 border-b last:border-b-0 border-slate-200">
+                <div class="p-4 sm:p-6 space-y-4 border-b last:border-b-0 border-slate-200 dark:border-slate-800">
                     
                     <!-- Encabezado de la Sección del Ciclo -->
                     <div class="flex items-center justify-between p-3.5 rounded-2xl border ${headerColor}">
@@ -659,15 +667,15 @@ function renderizarContenidoDocente(doc) {
                                 <span class="text-xs font-bold uppercase opacity-80">${ciclo.asignaciones.length} ${ciclo.asignaciones.length === 1 ? 'materia' : 'materias'} en este ciclo</span>
                             </div>
                         </div>
-                        <div class="px-3.5 py-1 rounded-xl bg-white border border-slate-300 font-black text-sm">
+                        <div class="px-3.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-black text-sm text-slate-800 dark:text-slate-200">
                             Subtotal: ${ciclo.horas} hs cátedra
                         </div>
                     </div>
 
                     <!-- Tabla de Cátedras en este Ciclo -->
-                    <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
                         <table class="w-full text-left text-base">
-                            <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-xs sm:text-sm border-b border-slate-200">
+                            <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase font-bold text-xs sm:text-sm border-b border-slate-200 dark:border-slate-800">
                                 <tr>
                                     <th class="p-4">Materia / Asignatura</th>
                                     <th class="p-4">Curso / Grado & Bachillerato</th>
@@ -676,7 +684,7 @@ function renderizarContenidoDocente(doc) {
                                     <th class="p-4 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-200 text-slate-800 bg-white">
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900">
                                 ${ciclo.asignaciones.map(a => renderizarFilaCatedra(a, doc)).join('')}
                             </tbody>
                         </table>
@@ -686,15 +694,15 @@ function renderizarContenidoDocente(doc) {
             `;
         });
 
-        return ciclosHtml || '<p class="p-6 text-slate-500 font-medium">No hay cátedras en el ciclo seleccionado.</p>';
+        return ciclosHtml || '<p class="p-6 text-slate-500 dark:text-slate-400 font-medium">No hay cátedras en el ciclo seleccionado.</p>';
 
     } else {
         // Renderizar tabla continua
         return `
             <div class="p-4 sm:p-6">
-                <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+                <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
                     <table class="w-full text-left text-base">
-                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-xs sm:text-sm border-b border-slate-200">
+                        <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase font-bold text-xs sm:text-sm border-b border-slate-200 dark:border-slate-800">
                             <tr>
                                 <th class="p-4">Materia / Asignatura</th>
                                 <th class="p-4">Curso / Grado & Bachillerato</th>
@@ -704,7 +712,7 @@ function renderizarContenidoDocente(doc) {
                                 <th class="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200 text-slate-800 bg-white">
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900">
                             ${doc.asignaciones.map(a => renderizarFilaCatedra(a, doc, true)).join('')}
                         </tbody>
                     </table>
@@ -727,44 +735,44 @@ function renderizarFilaCatedra(a, doc, incluirColumnaCiclo = false) {
     const cicloNom = a.nivel_nombre || 'Sin ciclo';
 
     return `
-        <tr class="hover:bg-slate-50/80 transition-colors">
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
             <!-- Materia -->
             <td class="p-4">
                 <div class="flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-base shrink-0">
+                    <span class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg shrink-0 border border-blue-200 dark:border-blue-800">
                         📚
                     </span>
-                    <span class="text-base font-extrabold text-slate-900">${matNombre}</span>
+                    <span class="text-base font-extrabold text-slate-900 dark:text-white">${matNombre}</span>
                 </div>
             </td>
 
             <!-- Curso y Bachillerato -->
             <td class="p-4">
                 <div>
-                    <span class="text-base font-bold text-slate-800 block">${gradoNombre}${seccion}</span>
-                    ${bach ? `<span class="text-xs font-semibold text-slate-500 block truncate max-w-xs">${bach}</span>` : ''}
+                    <span class="text-base font-bold text-slate-800 dark:text-slate-200 block">${gradoNombre}${seccion}</span>
+                    ${bach ? `<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 block truncate max-w-xs">${bach}</span>` : ''}
                 </div>
             </td>
 
             <!-- Ciclo (si está visible en tabla continua) -->
             ${incluirColumnaCiclo ? `
                 <td class="p-4">
-                    <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 text-xs font-extrabold">
+                    <span class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-extrabold">
                         ${cicloNom}
                     </span>
                 </td>
             ` : ''}
 
             <!-- Turno -->
-            <td class="p-4 text-slate-600 font-semibold text-sm">
-                <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+            <td class="p-4 text-slate-600 dark:text-slate-400 font-semibold text-sm">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     ${turno}
                 </span>
             </td>
 
             <!-- Carga Horaria -->
             <td class="p-4">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 font-extrabold text-sm">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-300 font-extrabold text-sm">
                     <span>⏱️</span>
                     <span>${carga} hs</span>
                 </span>
@@ -774,19 +782,19 @@ function renderizarFilaCatedra(a, doc, incluirColumnaCiclo = false) {
             <td class="p-4 text-right">
                 <div class="flex items-center justify-end gap-2 flex-wrap">
                     <button type="button" onclick="abrirModalDetalleAsignacion(${a.id_asignacion})"
-                            class="min-h-[40px] px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 text-sm font-bold rounded-xl border border-blue-200 transition shadow-2xs flex items-center gap-1"
+                            class="min-h-[40px] px-3.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-sm font-bold rounded-xl border border-blue-200 dark:border-blue-800 transition shadow-2xs flex items-center gap-1 cursor-pointer"
                             title="Ver detalles, horarios y alumnos matriculados">
                         <span>📋</span>
                         <span>Detalles</span>
                     </button>
                     <button type="button" onclick="abrirModalEditarAsignacionPorId(${a.id_asignacion})"
-                            class="min-h-[40px] px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-sm font-bold rounded-xl border border-amber-200 transition shadow-2xs flex items-center gap-1"
+                            class="min-h-[40px] px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 text-sm font-bold rounded-xl border border-amber-200 dark:border-amber-800 transition shadow-2xs flex items-center gap-1 cursor-pointer"
                             title="Modificar asignación">
                         <span>✏️</span>
                         <span>Editar</span>
                     </button>
                     <button type="button" onclick="desactivarAsignacion(${a.id_asignacion}, '${(doc.nombre).replace(/'/g, "\\'")} - ${(matNombre).replace(/'/g, "\\'")}')"
-                            class="min-h-[40px] px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 text-sm font-bold rounded-xl border border-rose-200 transition shadow-2xs flex items-center gap-1"
+                            class="min-h-[40px] px-3.5 py-1.5 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-800 dark:text-rose-300 text-sm font-bold rounded-xl border border-rose-200 dark:border-rose-800 transition shadow-2xs flex items-center gap-1 cursor-pointer"
                             title="Dar de baja esta cátedra">
                         <span>🗑️</span>
                         <span>Desactivar</span>

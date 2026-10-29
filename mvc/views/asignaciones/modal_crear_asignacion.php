@@ -1,23 +1,23 @@
 <!-- Submodal Accesible: Registrar Nueva Asignación Docente -->
-<div id="modal-crear-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-crear-asig-titulo">
-    <div class="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+<div id="modal-crear-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-crear-asig-titulo">
+    <div class="relative w-full max-w-2xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Cabecera del Submodal -->
-        <div class="flex items-center justify-between p-6 sm:p-7 border-b border-slate-200 bg-slate-50/80">
+        <div class="flex items-center justify-between p-6 sm:p-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 shrink-0">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-2xl font-bold shadow-xs shrink-0 border border-blue-200 dark:border-blue-800">
                     ✍️
                 </div>
                 <div>
-                    <h2 id="modal-crear-asig-titulo" class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h2 id="modal-crear-asig-titulo" class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                         Registrar Asignación Docente
                     </h2>
-                    <p class="text-base text-slate-600 mt-0.5">
+                    <p class="text-base text-slate-600 dark:text-slate-400 mt-0.5">
                         Vinculá un docente a una asignatura, curso y carga horaria semanal
                     </p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarModalCrearAsignacion()" class="w-12 h-12 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Cerrar modal">
+            <button type="button" onclick="cerrarModalCrearAsignacion()" class="w-12 h-12 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" aria-label="Cerrar modal">
                 ✕
             </button>
         </div>
@@ -28,33 +28,33 @@
                 
                 <!-- Grado / Curso -->
                 <div>
-                    <label for="crear-asig-grado" class="block text-base font-bold text-slate-800 mb-1.5">
+                    <label for="crear-asig-grado" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Curso / Grado Destino <span class="text-rose-600">*</span>
                     </label>
                     <select id="crear-asig-grado" name="id_grado" required
-                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
+                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
                         <option value="">Seleccione el curso o grado...</option>
                     </select>
                 </div>
 
                 <!-- Materia / Asignatura -->
                 <div>
-                    <label for="crear-asig-materia" class="block text-base font-bold text-slate-800 mb-1.5">
+                    <label for="crear-asig-materia" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Materia / Asignatura <span class="text-rose-600">*</span>
                     </label>
                     <select id="crear-asig-materia" name="id_materia" required
-                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
+                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
                         <option value="">Seleccione la materia curricular...</option>
                     </select>
                 </div>
 
                 <!-- Profesor Responsable -->
                 <div>
-                    <label for="crear-asig-profesor" class="block text-base font-bold text-slate-800 mb-1.5">
+                    <label for="crear-asig-profesor" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Docente Responsable <span class="text-rose-600">*</span>
                     </label>
                     <select id="crear-asig-profesor" name="id_profesor" required
-                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
+                            class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
                         <option value="">Seleccione el docente...</option>
                     </select>
                 </div>
@@ -62,30 +62,30 @@
                 <!-- Fila: Carga Horaria y Año Lectivo -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="crear-asig-carga" class="block text-base font-bold text-slate-800 mb-1.5">
+                        <label for="crear-asig-carga" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                             Carga Semanal (Horas Cátedra) <span class="text-rose-600">*</span>
                         </label>
                         <input type="number" id="crear-asig-carga" name="carga_horaria" min="1" max="40" value="4" required
                                placeholder="Ej: 4"
-                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
-                        <p class="text-sm text-slate-600 mt-1">Horas cátedra semanales en este curso.</p>
+                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Horas cátedra semanales en este curso.</p>
                     </div>
 
                     <div>
-                        <label for="crear-asig-anio" class="block text-base font-bold text-slate-800 mb-1.5">
+                        <label for="crear-asig-anio" class="block text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                             Año Lectivo <span class="text-rose-600">*</span>
                         </label>
                         <input type="number" id="crear-asig-anio" name="año_lectivo" min="2020" max="2035" value="<?= date('Y') ?>" required
-                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
-                        <p class="text-sm text-slate-600 mt-1">Período lectivo de la cátedra.</p>
+                               class="w-full min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs">
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Período lectivo de la cátedra.</p>
                     </div>
                 </div>
 
                 <!-- Nota Informativa Automática de Matrículas -->
-                <div class="p-5 rounded-2xl bg-blue-50/80 border-2 border-blue-200 flex items-start gap-3.5">
+                <div class="p-5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border-2 border-blue-200 dark:border-blue-800/80 flex items-start gap-3.5">
                     <span class="text-2xl mt-0.5">ℹ️</span>
-                    <div class="text-sm sm:text-base text-slate-700 leading-relaxed">
-                        <strong class="text-blue-900 block font-bold mb-0.5">Matriculación Automática:</strong>
+                    <div class="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <strong class="text-blue-900 dark:text-blue-300 block font-bold mb-0.5">Matriculación Automática:</strong>
                         Al registrar esta asignación, todos los estudiantes activos en el curso se vincularán automáticamente a la lista de clase de esta materia para el año lectivo indicado.
                     </div>
                 </div>
@@ -93,11 +93,18 @@
             </div>
 
             <!-- Pie del Submodal -->
-            <div class="p-5 sm:p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
-                <button type="button" onclick="cerrarModalCrearAsignacion()" class="btn btn-muted min-h-[48px] px-6 text-base font-bold rounded-xl">
+            <div class="p-5 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="cerrarModalCrearAsignacion()" class="btn btn-muted min-h-[48px] px-6 text-base font-bold rounded-xl cursor-pointer">
                     Cancelar
                 </button>
-                <button type="submit" id="btn-submit-crear-asignacion" class="btn btn-primary min-h-[48px] px-8 text-base font-bold rounded-xl shadow-xs">
+                <button type="submit" id="btn-submit-crear-asignacion" class="btn btn-primary min-h-[48px] px-8 text-base font-bold rounded-xl shadow-xs cursor-pointer">
+                    Guardar Asignación
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
                     Guardar Asignación
                 </button>
             </div>

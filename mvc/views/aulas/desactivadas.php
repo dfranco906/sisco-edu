@@ -1,5 +1,7 @@
 <?php
-$titulo = "Aulas desactivadas";
+$titulo = "Aulas Desactivadas";
+$icono = "🏢";
+$subtitulo = "Historial de aulas y espacios físicos archivados o inactivos.";
 $api = "src/api/Aula/leer_aulas_desactivadas.php";
 $columnas = ["id_aula", "nombre", "codigo", "piso", "ubicacion", "activo"];
 
