@@ -32,71 +32,8 @@ if (!in_array($ext, ['csv', 'txt'])) {
     exit;
 }
 
-function parsearCsvEstudiantes(string $tmpPath): array {
-    $handle = fopen($tmpPath, 'r');
-    if (!$handle) return [];
-
-    $primeraLinea = fgets($handle);
-    if ($primeraLinea === false) {
-        fclose($handle);
-        return [];
-    }
-
-    $conteoPuntoComa = substr_count($primeraLinea, ';');
-    $conteoComa = substr_count($primeraLinea, ',');
-    $conteoTab = substr_count($primeraLinea, "\t");
-
-    $delimitador = ';';
-    if ($conteoComa > $conteoPuntoComa && $conteoComa > $conteoTab) {
-        $delimitador = ',';
-    } elseif ($conteoTab > $conteoPuntoComa && $conteoTab > $conteoComa) {
-        $delimitador = "\t";
-    }
-
-    rewind($handle);
-
-    $cabecerasRaw = fgetcsv($handle, 0, $delimitador);
-    if (!$cabecerasRaw) {
-        fclose($handle);
-        return [];
-    }
-
-    $cabeceras = [];
-    foreach ($cabecerasRaw as $c) {
-        $cNorm = trim((string)$c);
-        $cNorm = preg_replace('/^\xEF\xBB\xBF/', '', $cNorm); // Quitar BOM
-        $cNorm = mb_strtolower($cNorm);
-        $cNorm = str_replace([' ', '_', '-', '/', '.'], '', $cNorm);
-        $cabeceras[] = $cNorm;
-    }
-
-    $filas = [];
-    while (($datos = fgetcsv($handle, 0, $delimitador)) !== false) {
-        if (count(array_filter($datos)) === 0) continue;
-        $filaAsoc = [];
-        foreach ($cabeceras as $i => $col) {
-            $val = trim((string)($datos[$i] ?? ''));
-            if (in_array($col, ['cedula', 'cedulaidentidad', 'ci', 'documento', 'ceduladeidentidad'])) {
-                $filaAsoc['cedula_identidad'] = $val;
-            } elseif (in_array($col, ['nombre', 'nombres'])) {
-                $filaAsoc['nombre'] = $val;
-            } elseif (in_array($col, ['apellido', 'apellidos'])) {
-                $filaAsoc['apellido'] = $val;
-            } elseif (in_array($col, ['grado', 'curso', 'gradocurso'])) {
-                $filaAsoc['grado'] = $val;
-            } else {
-                $filaAsoc[$col] = $val;
-            }
-        }
-        $filas[] = $filaAsoc;
-    }
-
-    fclose($handle);
-    return $filas;
-}
-
 try {
-    $filas = parsearCsvEstudiantes($tmpPath);
+    $filas = Estudiante::parsearCsv($tmpPath);
 
     if (empty($filas)) {
         http_response_code(422);

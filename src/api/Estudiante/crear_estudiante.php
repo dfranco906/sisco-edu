@@ -8,9 +8,10 @@ try {
     $db = (new Database())->getConnection();
     $estudiante = new Estudiante($db);
 
-    $estudiante->nombre = $_POST['nombre'] ?? null;
-    $estudiante->apellido = $_POST['apellido'] ?? null;
-    $estudiante->cedula_identidad = $_POST['cedula_identidad'] ?? null;
+    $estudiante->nombre = trim((string)($_POST['nombre'] ?? ''));
+    $estudiante->apellido = trim((string)($_POST['apellido'] ?? ''));
+    $cedulaRaw = trim((string)($_POST['cedula_identidad'] ?? ''));
+    $estudiante->cedula_identidad = preg_replace('/[^0-9a-zA-Z]/', '', $cedulaRaw);
     $estudiante->id_grado = !empty($_POST['id_grado']) ? (int)$_POST['id_grado'] : null;
     $estudiante->user_id_global = $_POST['user_id_global'] ?? ('EST_' . uniqid() . '_' . random_int(100, 999));
 

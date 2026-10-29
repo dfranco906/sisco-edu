@@ -36,18 +36,20 @@ class Estudiante {
 
         $stmtMatricula = $this->conn->prepare("
             INSERT INTO matriculas (id_estudiante, id_grado, id_materia, id_asignacion, anho_lectivo, activo)
-            VALUES (:id_estudiante, :id_grado, :id_materia, :id_asignacion, 2026, 1)
+            VALUES (:id_estudiante, :id_grado, :id_materia, :id_asignacion, :anho, 1)
             ON CONFLICT (id_estudiante, id_materia, anho_lectivo)
             DO UPDATE SET id_grado = EXCLUDED.id_grado, id_asignacion = EXCLUDED.id_asignacion, activo = 1
         ");
 
+        $anho = (int)date('Y');
         $total = 0;
         foreach ($materias as $m) {
             $ok = $stmtMatricula->execute([
                 ':id_estudiante' => $id_estudiante,
                 ':id_grado' => $id_grado,
                 ':id_materia' => (int)$m['id_materia'],
-                ':id_asignacion' => !empty($m['id_asignacion']) ? (int)$m['id_asignacion'] : null
+                ':id_asignacion' => !empty($m['id_asignacion']) ? (int)$m['id_asignacion'] : null,
+                ':anho' => $anho
             ]);
             if ($ok) $total++;
         }
@@ -115,7 +117,11 @@ class Estudiante {
             $idNuevo = (int)$stmt->fetchColumn();
             $this->id_estudiante = $idNuevo;
             if (!empty($this->id_grado)) {
-                $matriculadas = $this->matricularEnMateriasDeGrado($idNuevo, (int)$this->id_grado);
+                try {
+                    $matriculadas = $this->matricularEnMateriasDeGrado($idNuevo, (int)$this->id_grado);
+                } catch (Throwable $eMat) {
+                    error_log("Advertencia matriculando estudiante {$idNuevo} en grado {$this->id_grado}: " . $eMat->getMessage());
+                }
             }
         }
 
@@ -256,7 +262,11 @@ class Estudiante {
         $ok = $stmt->execute($params);
 
         if ($ok && !empty($this->id_grado)) {
-            $this->matricularEnMateriasDeGrado((int)$this->id_estudiante, (int)$this->id_grado);
+            try {
+                $this->matricularEnMateriasDeGrado((int)$this->id_estudiante, (int)$this->id_grado);
+            } catch (Throwable $eMat) {
+                error_log("Advertencia matriculando al actualizar estudiante {$this->id_estudiante}: " . $eMat->getMessage());
+            }
         }
 
         return $ok;
@@ -330,6 +340,108 @@ class Estudiante {
     }
 
     /**
+     * Normaliza los encabezados de columnas de un archivo CSV para tolerancia a tildes, mayúsculas y símbolos.
+     */
+    public static function normalizarEncabezado(string $str): string {
+        $str = trim($str);
+        $str = preg_replace('/^\xEF\xBB\xBF/', '', $str); // Quitar BOM
+        $str = mb_strtolower($str, 'UTF-8');
+        $unwanted = [
+            'á'=>'a', 'é'=>'e', 'í'=>'i', 'ó'=>'o', 'ú'=>'u',
+            'à'=>'a', 'è'=>'e', 'ì'=>'i', 'ò'=>'o', 'ù'=>'u',
+            'ä'=>'a', 'ë'=>'e', 'ï'=>'i', 'ö'=>'o', 'ü'=>'u',
+            'ñ'=>'n', '°'=>'', 'º'=>'', 'nro'=>'', 'num'=>''
+        ];
+        $str = strtr($str, $unwanted);
+        return str_replace([' ', '_', '-', '/', '.', '#', ':', ';', '(', ')', '"', "'"], '', $str);
+    }
+
+    /**
+     * Parsea un archivo CSV detectando automáticamente el delimitador y mapeando las columnas esperadas.
+     */
+    public static function parsearCsv(string $tmpPath): array {
+        $handle = fopen($tmpPath, 'r');
+        if (!$handle) return [];
+
+        $primeraLinea = fgets($handle);
+        if ($primeraLinea === false) {
+            fclose($handle);
+            return [];
+        }
+
+        $conteoPuntoComa = substr_count($primeraLinea, ';');
+        $conteoComa = substr_count($primeraLinea, ',');
+        $conteoTab = substr_count($primeraLinea, "\t");
+
+        $delimitador = ';';
+        if ($conteoComa > $conteoPuntoComa && $conteoComa > $conteoTab) {
+            $delimitador = ',';
+        } elseif ($conteoTab > $conteoPuntoComa && $conteoTab > $conteoComa) {
+            $delimitador = "\t";
+        }
+
+        rewind($handle);
+
+        $cabecerasRaw = fgetcsv($handle, 0, $delimitador);
+        if (!$cabecerasRaw) {
+            fclose($handle);
+            return [];
+        }
+
+        $cabeceras = [];
+        foreach ($cabecerasRaw as $c) {
+            $cabeceras[] = self::normalizarEncabezado((string)$c);
+        }
+
+        $filas = [];
+        while (($datos = fgetcsv($handle, 0, $delimitador)) !== false) {
+            if (count(array_filter($datos)) === 0) continue;
+            $filaAsoc = [];
+            $nombreCompletoAux = '';
+
+            foreach ($cabeceras as $i => $col) {
+                $val = trim((string)($datos[$i] ?? ''));
+                if (in_array($col, ['cedula', 'cedulaidentidad', 'ci', 'documento', 'ceduladeidentidad', 'ndocumento', 'numerodocumento', 'identificacion', 'doc', 'ncedula', 'nrocedula', 'documentonro'])) {
+                    $filaAsoc['cedula_identidad'] = preg_replace('/[^0-9a-zA-Z]/', '', $val);
+                } elseif (in_array($col, ['nombre', 'nombres', 'primernombre'])) {
+                    $filaAsoc['nombre'] = $val;
+                } elseif (in_array($col, ['apellido', 'apellidos', 'primerapellido'])) {
+                    $filaAsoc['apellido'] = $val;
+                } elseif (in_array($col, ['grado', 'curso', 'gradocurso', 'seccion', 'cursoseccion', 'aula'])) {
+                    $filaAsoc['grado'] = $val;
+                } elseif (in_array($col, ['alumno', 'estudiante', 'nombreyapellido', 'nombresyapellidos', 'nombrecompleto', 'apellidosynombres', 'apellidoynombre'])) {
+                    $nombreCompletoAux = $val;
+                } else {
+                    $filaAsoc[$col] = $val;
+                }
+            }
+
+            // Si el archivo tenía una sola columna con el nombre completo y no venían separados
+            if ((empty($filaAsoc['nombre']) || empty($filaAsoc['apellido'])) && !empty($nombreCompletoAux)) {
+                $partes = preg_split('/\s+/', $nombreCompletoAux, -1, PREG_SPLIT_NO_EMPTY);
+                if (count($partes) === 1) {
+                    $filaAsoc['nombre'] = $partes[0];
+                    $filaAsoc['apellido'] = '.';
+                } elseif (count($partes) === 2) {
+                    $filaAsoc['nombre'] = $partes[0];
+                    $filaAsoc['apellido'] = $partes[1];
+                } elseif (count($partes) === 3) {
+                    $filaAsoc['nombre'] = $partes[0];
+                    $filaAsoc['apellido'] = $partes[1] . ' ' . $partes[2];
+                } elseif (count($partes) >= 4) {
+                    $filaAsoc['nombre'] = $partes[0] . ' ' . $partes[1];
+                    $filaAsoc['apellido'] = implode(' ', array_slice($partes, 2));
+                }
+            }
+
+            $filas[] = $filaAsoc;
+        }
+
+        fclose($handle);
+        return $filas;
+    }
+
+    /**
      * Importación masiva por lotes de estudiantes desde archivo CSV / tabular.
      * Es idempotente: si la cédula ya existe, actualiza los datos y rematricula si cambia de grado.
      */
@@ -381,13 +493,15 @@ class Estudiante {
         foreach ($filas as $idx => $fila) {
             $numFila = $idx + 2; // Considerando cabecera en fila 1
 
-            $cedula = trim((string)($fila['cedula_identidad'] ?? $fila['cedula'] ?? $fila['ci'] ?? ''));
+            $cedulaRaw = trim((string)($fila['cedula_identidad'] ?? $fila['cedula'] ?? $fila['ci'] ?? ''));
+            $cedula = preg_replace('/[^0-9a-zA-Z]/', '', $cedulaRaw);
             $nombre = trim((string)($fila['nombre'] ?? $fila['nombres'] ?? ''));
             $apellido = trim((string)($fila['apellido'] ?? $fila['apellidos'] ?? ''));
             $gradoInput = trim((string)($fila['grado'] ?? $fila['curso'] ?? ''));
 
             if (empty($cedula)) {
-                $errores[] = "Fila #{$numFila}: Cédula de identidad ausente o vacía.";
+                $nombreMuestra = trim("{$nombre} {$apellido}");
+                $errores[] = "Fila #{$numFila}" . ($nombreMuestra ? " ({$nombreMuestra})" : "") . ": Cédula de identidad ausente o vacía.";
                 continue;
             }
             if (empty($nombre) || empty($apellido)) {
@@ -425,8 +539,12 @@ class Estudiante {
                         ':id' => $idEst
                     ]);
 
-                    if ($idGrado && $idGrado !== (int)$existente['id_grado']) {
-                        $this->matricularEnMateriasDeGrado($idEst, $idGrado);
+                    if ($idGrado) {
+                        try {
+                            $this->matricularEnMateriasDeGrado($idEst, $idGrado);
+                        } catch (Throwable $eMat) {
+                            error_log("Advertencia actualizando matriculas estudiante {$idEst}: " . $eMat->getMessage());
+                        }
                     }
                     $actualizados++;
                 } else {
@@ -451,13 +569,17 @@ class Estudiante {
                     $idNuevo = (int)$stmtInsert->fetchColumn();
 
                     if ($idNuevo && $idGrado) {
-                        $this->matricularEnMateriasDeGrado($idNuevo, $idGrado);
+                        try {
+                            $this->matricularEnMateriasDeGrado($idNuevo, $idGrado);
+                        } catch (Throwable $eMat) {
+                            error_log("Advertencia matriculando nuevo estudiante {$idNuevo}: " . $eMat->getMessage());
+                        }
                     }
                     $creados++;
                 }
             } catch (Throwable $e) {
                 error_log("Error importando fila #{$numFila} (CI: {$cedula}): " . $e->getMessage());
-                $errores[] = "Fila #{$numFila} (CI: {$cedula}): Error al registrar en base de datos.";
+                $errores[] = "Fila #{$numFila} (CI: {$cedula}): " . $e->getMessage();
             }
         }
 
