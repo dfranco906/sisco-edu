@@ -55,35 +55,58 @@ class ClaseDiaria {
 
         // Si es profesor y no se indicó grado ni aula, resolver grado y aula de hoy
         if ($id_profesor !== null && !$id_grado && !$id_aula) {
-            $sqlProfHoy = "SELECT COALESCE(h.id_grado, a.id_grado) AS id_grado, COALESCE(h.id_aula, g.id_aula) AS id_aula
+            $sqlProfHoy = "SELECT COALESCE(h.id_grado, a.id_grado) AS id_grado, COALESCE(h.id_aula, g.id_aula) AS id_aula,
+                                  h.hora_inicio, h.hora_fin
                            FROM horarios h
                            JOIN asignacion_docente a ON a.id_asignacion = h.id_asignacion AND a.activo = 1
                            LEFT JOIN grados g ON g.id_grado = COALESCE(h.id_grado, a.id_grado)
                            WHERE a.id_profesor = :id_profesor
                              AND (h.dia_semana = :dia1 OR h.dia_semana = :dia2)
                              AND h.activo = 1
-                           ORDER BY (CASE 
-                                        WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
-                                        ELSE 1
-                                     END), h.hora_inicio ASC
-                           LIMIT 1";
+                           ORDER BY h.hora_inicio ASC";
             $stmtPH = $this->conn->prepare($sqlProfHoy);
             $stmtPH->execute([
                 ':id_profesor' => $id_profesor,
                 ':dia1' => $diaInfo['con_tilde'],
-                ':dia2' => $diaInfo['sin_tilde'],
-                ':hora' => $hora
+                ':dia2' => $diaInfo['sin_tilde']
             ]);
-            $rowProf = $stmtPH->fetch(PDO::FETCH_ASSOC);
-            if ($rowProf) {
-                $id_grado = (int)$rowProf['id_grado'] ?: null;
-                $id_aula = (int)$rowProf['id_aula'] ?: null;
-            } else {
+            $filasProf = $stmtPH->fetchAll(PDO::FETCH_ASSOC);
+            if (empty($filasProf)) {
                 return null;
             }
+
+            // Prioridad 1: Clase activa en el minuto actual
+            $filaSeleccionada = null;
+            foreach ($filasProf as $fp) {
+                $iniP = substr($fp['hora_inicio'], 0, 8);
+                $finP = substr($fp['hora_fin'], 0, 8);
+                if ($hora >= $iniP && $hora < $finP) {
+                    $filaSeleccionada = $fp;
+                    break;
+                }
+            }
+
+            // Prioridad 2: Si está en receso o antes de clases, la siguiente próxima
+            if (!$filaSeleccionada) {
+                foreach ($filasProf as $fp) {
+                    $iniP = substr($fp['hora_inicio'], 0, 8);
+                    if ($hora < $iniP) {
+                        $filaSeleccionada = $fp;
+                        break;
+                    }
+                }
+            }
+
+            // Prioridad 3: La última del día
+            if (!$filaSeleccionada) {
+                $filaSeleccionada = end($filasProf);
+            }
+
+            $id_grado = (int)$filaSeleccionada['id_grado'] ?: null;
+            $id_aula = (int)$filaSeleccionada['id_aula'] ?: null;
         }
 
-        // 1. Buscar horario activo correspondiente al día y hora para el grado o aula especificado
+        // 1. Obtener todos los horarios programados para este grado/aula/profesor hoy ordenados cronológicamente
         $sqlHorario = "SELECT h.*, 
                               a.id_profesor, a.id_materia, a.id_grado, a.carga_horaria,
                               p.nombre AS profesor_nombre, p.apellido AS profesor_apellido, p.cedula_identidad AS profesor_ci,
@@ -102,8 +125,7 @@ class ClaseDiaria {
 
         $paramsH = [
             ':dia1' => $diaInfo['con_tilde'],
-            ':dia2' => $diaInfo['sin_tilde'],
-            ':hora' => $hora
+            ':dia2' => $diaInfo['sin_tilde']
         ];
 
         if ($id_grado !== null && $id_grado > 0) {
@@ -119,21 +141,106 @@ class ClaseDiaria {
             $paramsH[':id_profesor'] = $id_profesor;
         }
 
-        $sqlHorario .= " ORDER BY (CASE 
-                                     WHEN :hora BETWEEN (h.hora_inicio - INTERVAL '30 minutes') AND (h.hora_fin + INTERVAL '30 minutes') THEN 0
-                                     ELSE 1
-                                  END), h.hora_inicio ASC
-                        LIMIT 1";
+        $sqlHorario .= " ORDER BY h.hora_inicio ASC";
 
         $stmtH = $this->conn->prepare($sqlHorario);
         $stmtH->execute($paramsH);
-        $horario = $stmtH->fetch(PDO::FETCH_ASSOC);
+        $horariosDia = $stmtH->fetchAll(PDO::FETCH_ASSOC);
 
-        if (!$horario) {
+        if (empty($horariosDia)) {
             return null;
         }
 
-                $id_asignacion = (int)$horario['id_asignacion'];
+        // 2. Determinar si hay clase activa o si nos encontramos en receso/pausa/previo
+        $horarioActivo = null;
+        $materiaAnterior = null;
+        $materiaSiguiente = null;
+
+        foreach ($horariosDia as $hd) {
+            $hIni = substr($hd['hora_inicio'], 0, 8);
+            $hFin = substr($hd['hora_fin'], 0, 8);
+
+            if ($hora >= $hIni && $hora < $hFin) {
+                $horarioActivo = $hd;
+                break;
+            }
+
+            if ($hora >= $hFin) {
+                $materiaAnterior = $hd;
+            } elseif ($hora < $hIni && $materiaSiguiente === null) {
+                $materiaSiguiente = $hd;
+            }
+        }
+
+        // Si no hay clase activa en este exacto segundo, gestionar estados intersticiales (Receso / Previo / Finalizado)
+        if (!$horarioActivo) {
+            if ($materiaAnterior !== null && $materiaSiguiente !== null) {
+                // Entre dos clases: EN RECESO / PAUSA INSTITUCIONAL
+                $minutosRestantes = max(0, (int)ceil((strtotime($materiaSiguiente['hora_inicio']) - strtotime($hora)) / 60));
+                return [
+                    'id_clase' => 0,
+                    'en_receso' => true,
+                    'estado_tiempo' => 'EN_RECESO',
+                    'minutos_restantes' => $minutosRestantes,
+                    'hora_inicio_proxima' => substr($materiaSiguiente['hora_inicio'], 0, 5),
+                    'materia_anterior' => [
+                        'materia_nombre' => $materiaAnterior['materia_nombre'],
+                        'profesor_nombre' => $materiaAnterior['profesor_nombre'] . ' ' . $materiaAnterior['profesor_apellido'],
+                        'hora_fin' => substr($materiaAnterior['hora_fin'], 0, 5)
+                    ],
+                    'materia_siguiente' => [
+                        'materia_nombre' => $materiaSiguiente['materia_nombre'],
+                        'profesor_nombre' => $materiaSiguiente['profesor_nombre'] . ' ' . $materiaSiguiente['profesor_apellido'],
+                        'hora_inicio' => substr($materiaSiguiente['hora_inicio'], 0, 5)
+                    ],
+                    'grado_nombre' => $materiaSiguiente['grado_nombre'] ?? $materiaAnterior['grado_nombre'],
+                    'aula_nombre' => $materiaSiguiente['aula_nombre'] ?? $materiaAnterior['aula_nombre'],
+                    'mensaje' => "En receso o pausa institucional. La siguiente materia ({$materiaSiguiente['materia_nombre']}) inicia a las " . substr($materiaSiguiente['hora_inicio'], 0, 5) . " (faltan {$minutosRestantes} min)."
+                ];
+            }
+
+            if ($materiaAnterior === null && $materiaSiguiente !== null) {
+                // Antes del inicio de la primera clase del día
+                $minutosRestantes = max(0, (int)ceil((strtotime($materiaSiguiente['hora_inicio']) - strtotime($hora)) / 60));
+                return [
+                    'id_clase' => 0,
+                    'en_receso' => false,
+                    'estado_tiempo' => 'PREVIO_CLASES',
+                    'minutos_restantes' => $minutosRestantes,
+                    'hora_inicio_proxima' => substr($materiaSiguiente['hora_inicio'], 0, 5),
+                    'materia_siguiente' => [
+                        'materia_nombre' => $materiaSiguiente['materia_nombre'],
+                        'profesor_nombre' => $materiaSiguiente['profesor_nombre'] . ' ' . $materiaSiguiente['profesor_apellido'],
+                        'hora_inicio' => substr($materiaSiguiente['hora_inicio'], 0, 5)
+                    ],
+                    'grado_nombre' => $materiaSiguiente['grado_nombre'],
+                    'aula_nombre' => $materiaSiguiente['aula_nombre'],
+                    'mensaje' => "Jornada previa. La primera clase ({$materiaSiguiente['materia_nombre']}) inicia a las " . substr($materiaSiguiente['hora_inicio'], 0, 5) . " (faltan {$minutosRestantes} min)."
+                ];
+            }
+
+            if ($materiaAnterior !== null && $materiaSiguiente === null) {
+                // Clases del día concluidas
+                return [
+                    'id_clase' => 0,
+                    'en_receso' => false,
+                    'estado_tiempo' => 'JORNADA_FINALIZADA',
+                    'materia_anterior' => [
+                        'materia_nombre' => $materiaAnterior['materia_nombre'],
+                        'profesor_nombre' => $materiaAnterior['profesor_nombre'] . ' ' . $materiaAnterior['profesor_apellido'],
+                        'hora_fin' => substr($materiaAnterior['hora_fin'], 0, 5)
+                    ],
+                    'grado_nombre' => $materiaAnterior['grado_nombre'],
+                    'aula_nombre' => $materiaAnterior['aula_nombre'],
+                    'mensaje' => "Las clases programadas para este grado ya han finalizado por el día de hoy (última materia finalizó a las " . substr($materiaAnterior['hora_fin'], 0, 5) . ")."
+                ];
+            }
+
+            return null;
+        }
+
+        $horario = $horarioActivo;
+        $id_asignacion = (int)$horario['id_asignacion'];
         $id_horario = (int)$horario['id_horario'];
 
         // 2. Obtener la lección del día según el plan anual del profesor

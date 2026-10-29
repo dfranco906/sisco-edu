@@ -53,14 +53,27 @@ try {
         "dia_semana" => ClaseDiaria::obtenerDiaEspanol((int)date('w'))['con_tilde']
     ];
 
+    $esClaseActiva = ($clase !== null && !empty($clase['id_clase']));
+    $infoReceso = ($clase !== null && empty($clase['id_clase'])) ? $clase : null;
+    $claseReal = $esClaseActiva ? $clase : null;
+
+    $mensajeEstado = "Seleccione un grado o curso para monitorear";
+    if ($claseReal) {
+        $mensajeEstado = "Detalle de clase en vivo obtenido";
+    } elseif ($infoReceso) {
+        $mensajeEstado = $infoReceso['mensaje'] ?? "En intervalo institucional";
+    }
+
     // Si la petición es un refresco ligero (solo estado de la clase activa)
     if ($solo_clase) {
         http_response_code(200);
         echo json_encode([
             "status" => "success",
-            "message" => $clase ? "Detalle de clase en vivo obtenido" : "No hay clase activa en este momento para el curso seleccionado",
+            "message" => $mensajeEstado,
             "data" => [
-                "clase" => $clase,
+                "clase" => $claseReal,
+                "receso" => $infoReceso,
+                "estado_tiempo" => $claseReal ? 'EN_CLASE' : ($infoReceso['estado_tiempo'] ?? 'SIN_CLASE'),
                 "servidor" => $servidorInfo
             ]
         ]);
@@ -124,9 +137,11 @@ try {
     http_response_code(200);
     echo json_encode([
         "status" => "success",
-        "message" => $clase ? "Detalle de clase en vivo obtenido" : "Seleccione un grado o curso para monitorear",
+        "message" => $mensajeEstado,
         "data" => [
-            "clase" => $clase,
+            "clase" => $claseReal,
+            "receso" => $infoReceso,
+            "estado_tiempo" => $claseReal ? 'EN_CLASE' : ($infoReceso['estado_tiempo'] ?? 'SIN_CLASE'),
             "grados" => $grados,
             "turnos" => $turnos,
             "niveles" => $niveles,

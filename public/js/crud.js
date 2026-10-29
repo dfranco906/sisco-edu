@@ -197,36 +197,42 @@ window.editarRegistro = function(item) {
                     return `<option value="${op.value}" ${sel}>${op.label}</option>`;
                 }).join('');
                 campos.innerHTML += `
-                    <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">${label}</label>
-                    <select name="${campo}" class="app-input w-full mb-3.5" ${required}>
-                        <option value="">Seleccione una opción</option>
-                        ${optsHtml}
-                    </select>
+                    <div>
+                        <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">${label}</label>
+                        <select name="${campo}" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none transition mb-4" ${required}>
+                            <option value="">Seleccione una opción</option>
+                            ${optsHtml}
+                        </select>
+                    </div>
                 `;
             } else if (def.api) {
                 campos.innerHTML += `
-                    <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">${label}</label>
-                    <select name="${campo}"
-                            data-api="${def.api}"
-                            data-value="${def.value}"
-                            data-label="${def.labelField}"
-                            data-selected-val="${valorActual}"
-                            class="app-input w-full mb-3.5 js-select-editar"
-                            ${required}>
-                        <option value="">Cargando opciones...</option>
-                    </select>
+                    <div>
+                        <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">${label}</label>
+                        <select name="${campo}"
+                                data-api="${def.api}"
+                                data-value="${def.value}"
+                                data-label="${def.labelField}"
+                                data-selected-val="${valorActual}"
+                                class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none transition mb-4 js-select-editar"
+                                ${required}>
+                            <option value="">Cargando opciones...</option>
+                        </select>
+                    </div>
                 `;
             }
         } else {
             const tipo = def?.type || 'text';
             const required = (def?.required !== false) ? 'required' : '';
             campos.innerHTML += `
-                <label class="block mb-1.5 font-semibold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">${label}</label>
-                <input type="${tipo}"
-                       name="${campo}"
-                       value="${valorActual}"
-                       class="app-input w-full mb-3.5"
-                       ${required}>
+                <div>
+                    <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">${label}</label>
+                    <input type="${tipo}"
+                           name="${campo}"
+                           value="${valorActual}"
+                           class="w-full min-h-[48px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none transition mb-4"
+                           ${required}>
+                </div>
             `;
         }
     });

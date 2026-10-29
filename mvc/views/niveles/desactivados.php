@@ -1,5 +1,7 @@
 <?php
 $titulo = "Niveles y Ciclos Desactivados";
+$icono = "🏛️";
+$subtitulo = "Historial de ciclos y niveles académicos archivados o inactivos.";
 $api = "src/api/NivelAcademico/leer_niveles_desactivados.php";
 
 $columnas = ["id_nivel", "nombre", "codigo", "descripcion", "activo"];

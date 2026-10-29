@@ -47,6 +47,10 @@ if (!empty($_GET['ref'])) {
 
             <div class="flex flex-wrap items-center gap-3">
                 <?php if (!$esDocente): ?>
+                <a href="<?= base_url('mvc/views/horarios/marcos_institucionales.php') ?>" class="min-h-[48px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all flex items-center gap-2">
+                    <span>⏱️</span>
+                    <span>Marco Horario Institucional</span>
+                </a>
                 <button id="btn-crear-horario" type="button" class="min-h-[48px] px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm sm:text-base font-extrabold shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />

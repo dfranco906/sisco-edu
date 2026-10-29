@@ -1,5 +1,7 @@
 <?php
 $titulo = "Turnos Desactivados";
+$icono = "⏱️";
+$subtitulo = "Historial de turnos escolares inactivos o dados de baja en la institución.";
 $api = "src/api/Turno/leer_turnos_desactivados.php";
 
 $columnas = ["id_turno", "nombre", "hora_inicio", "hora_fin", "descripcion", "activo"];

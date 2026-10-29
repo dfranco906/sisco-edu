@@ -1,5 +1,8 @@
 <?php
 $titulo = "Ciclos y Niveles Académicos";
+$icono = "🏛️";
+$subtitulo = "Organización curricular por ciclos formativos (EEB 1°, 2°, 3° Ciclo y Nivel Medio).";
+$tituloBotonCrear = "Ciclo / Nivel";
 $api = "src/api/NivelAcademico/leer_niveles.php";
 $columnas = ["id_nivel", "nombre", "codigo", "descripcion", "activo"];
 

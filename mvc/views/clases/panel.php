@@ -183,6 +183,43 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
         </div>
     </div>
 
+    <!-- Banner Especial: En Receso / Intervalo Institucional -->
+    <div id="en-receso-banner" class="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 dark:from-teal-950/40 dark:via-emerald-950/30 dark:to-teal-950/40 border-2 border-teal-300 dark:border-teal-800/80 rounded-3xl p-6 sm:p-8 mb-6 shadow-sm hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <span class="text-3xl sm:text-4xl flex-shrink-0">☕</span>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="text-xl sm:text-2xl font-black text-teal-950 dark:text-teal-100">
+                            En Receso / Intervalo Institucional
+                        </h3>
+                        <span class="px-3 py-0.5 rounded-full text-xs font-black uppercase bg-teal-200 dark:bg-teal-900 text-teal-900 dark:text-teal-200">
+                            Pausa Activa
+                        </span>
+                    </div>
+                    <p id="receso-detalle" class="text-sm sm:text-base text-teal-800 dark:text-teal-300 mt-1 font-medium">
+                        La clase anterior ha concluido y la institución se encuentra en intervalo antes de la siguiente cátedra.
+                    </p>
+                    <div class="mt-3 flex items-center gap-3 text-xs sm:text-sm text-teal-900 dark:text-teal-200 flex-wrap">
+                        <span id="receso-materia-ant" class="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-teal-200 dark:border-teal-800 font-semibold">
+                            ⬅️ Anterior: -
+                        </span>
+                        <span id="receso-materia-sig" class="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-teal-200 dark:border-teal-800 font-semibold">
+                            ➡️ Próxima: -
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-teal-200 dark:border-teal-800 flex items-center gap-3 shrink-0 text-center">
+                <div>
+                    <span class="text-xs uppercase font-extrabold text-teal-600 dark:text-teal-400 block">Próxima Clase En</span>
+                    <span id="receso-cuenta-min" class="text-3xl font-black text-teal-700 dark:text-teal-300 font-mono">--</span>
+                    <span class="text-xs text-slate-500 block font-bold">minutos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Contenedor Principal de la Clase Activa -->
     <div id="clase-activa-container" class="space-y-6 hidden">
 
@@ -727,16 +764,49 @@ document.addEventListener('DOMContentLoaded', () => {
         currentClaseData = clase;
 
         if (promptSeleccionGrado) promptSeleccionGrado.classList.add('hidden');
+        const enRecesoBanner = document.getElementById('en-receso-banner');
 
         if (!clase) {
-            noClaseBanner.classList.remove('hidden');
             claseContainer.classList.add('hidden');
-            if (noClaseDetalle && data.servidor) {
-                noClaseDetalle.textContent = `No se detectó clase en curso para este grado en el horario actual (${data.servidor.dia_semana} ${data.servidor.hora_actual}). Verifique los horarios programados del grado.`;
+
+            if (data.receso && data.receso.en_receso && enRecesoBanner) {
+                noClaseBanner.classList.add('hidden');
+                enRecesoBanner.classList.remove('hidden');
+
+                const rec = data.receso;
+                const recDet = document.getElementById('receso-detalle');
+                const recAnt = document.getElementById('receso-materia-ant');
+                const recSig = document.getElementById('receso-materia-sig');
+                const recMin = document.getElementById('receso-cuenta-min');
+
+                if (recDet) recDet.textContent = rec.mensaje || 'En pausa activa institucional.';
+                if (recAnt) {
+                    recAnt.textContent = rec.materia_anterior 
+                        ? `⬅️ Anterior: ${rec.materia_anterior.materia_nombre} (${rec.materia_anterior.hora_fin} hs)` 
+                        : '⬅️ Anterior: -';
+                }
+                if (recSig) {
+                    recSig.textContent = rec.materia_siguiente 
+                        ? `➡️ Próxima: ${rec.materia_siguiente.materia_nombre} (${rec.materia_siguiente.hora_inicio} hs)` 
+                        : '➡️ Próxima: -';
+                }
+                if (recMin) recMin.textContent = rec.minutos_restantes != null ? rec.minutos_restantes : '--';
+                return;
+            }
+
+            if (enRecesoBanner) enRecesoBanner.classList.add('hidden');
+            noClaseBanner.classList.remove('hidden');
+            if (noClaseDetalle) {
+                if (data.receso && data.receso.mensaje) {
+                    noClaseDetalle.textContent = data.receso.mensaje;
+                } else if (data.servidor) {
+                    noClaseDetalle.textContent = `No se detectó clase en curso para este grado en el horario actual (${data.servidor.dia_semana} ${data.servidor.hora_actual}). Verifique los horarios programados del grado.`;
+                }
             }
             return;
         }
 
+        if (enRecesoBanner) enRecesoBanner.classList.add('hidden');
         noClaseBanner.classList.add('hidden');
         claseContainer.classList.remove('hidden');
 

@@ -1,5 +1,7 @@
 <?php
-$titulo = "Grados desactivados";
+$titulo = "Grados y Cursos Desactivados";
+$icono = "🏫";
+$subtitulo = "Historial de grados y secciones escolares que se encuentran actualmente inactivos.";
 $api = "src/api/Grado/leer_grados_desactivados.php";
 
 $columnas = ["id_grado", "nombre", "aula", "turno", "nivel", "bachillerato", "activo"];

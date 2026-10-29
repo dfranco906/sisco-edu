@@ -1,5 +1,7 @@
 <?php
 $titulo = "Bachilleratos Desactivados";
+$icono = "🎓";
+$subtitulo = "Historial de modalidades o bachilleratos que han sido dados de baja.";
 $api = "src/api/Bachillerato/leer_bachilleratos_desactivados.php";
 
 $columnas = ["id_bachillerato", "nombre", "codigo", "tipo", "descripcion", "activo"];

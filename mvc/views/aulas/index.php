@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../../../src/config/app.php';
 
-$titulo = "Aulas";
+$titulo = "Aulas y Espacios";
+$icono = "🏢";
+$subtitulo = "Gestión de espacios físicos, pabellones, pisos y aulas equipadas con sensores biométricos.";
+$tituloBotonCrear = "Aula";
 $api = "src/api/Aula/leer_aulas.php";
 $columnas = ["id_aula", "nombre", "codigo", "bloque", "piso", "ubicacion", "activo"];
 
@@ -55,105 +58,114 @@ $idCampo = "id_aula";
 $camposEditar = ["nombre", "bloque", "piso", "codigo", "ubicacion"];
 
 $toolbarExtraHtml = '
-<button type="button" id="btn-configurar-campus" onclick="window.abrirModalCampus()" class="btn btn-secondary flex items-center gap-1.5 text-sm font-semibold">
-    <span>🏢</span> Configurar Bloques y Pisos
+<button type="button" id="btn-configurar-campus" onclick="window.abrirModalCampus()" class="btn btn-secondary min-h-[46px] px-5 py-2.5 text-base font-bold rounded-2xl flex items-center gap-2 cursor-pointer active:scale-95 shadow-sm">
+    <span>🏢</span>
+    <span>Configurar Bloques y Pisos</span>
 </button>
 ';
 
 ob_start();
 ?>
 <!-- MODAL CONFIGURACIÓN DE ESTRUCTURA EDILICIA (BLOQUES Y PISOS) -->
-<div id="modal-campus" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 relative">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
-            <div>
-                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <span>🏢</span> Estructura Institucional (Bloques y Pisos)
-                </h3>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    Define los edificios y niveles de la institución para la asignación y generación automática de códigos de aula.
-                </p>
+<div id="modal-campus" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modal-campus-titulo">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <!-- Header -->
+        <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-start justify-between gap-4 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-2xl font-bold shrink-0 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                    🏢
+                </div>
+                <div class="min-w-0">
+                    <h3 id="modal-campus-titulo" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
+                        Estructura Institucional (Bloques y Pisos)
+                    </h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        Define edificios y plantas para la nomenclatura y códigos de aula.
+                    </p>
+                </div>
             </div>
-            <button type="button" onclick="window.cerrarModalCampus()" class="text-gray-400 hover:text-gray-600 font-bold text-xl leading-none">&times;</button>
+            <button type="button" onclick="window.cerrarModalCampus()" class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors shrink-0" aria-label="Cerrar modal">&times;</button>
         </div>
 
-        <div id="mensaje-campus" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold"></div>
+        <div id="mensaje-campus" class="hidden mx-6 mt-4 p-3 rounded-xl text-sm font-semibold"></div>
 
-        <div class="space-y-6">
+        <!-- Body con scroll -->
+        <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6 text-base">
             <!-- SECCIÓN 1: BLOQUES O EDIFICIOS -->
-            <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-xl">
+            <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-2xl">
                 <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <h4 class="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
                         <span>🏛️</span> Bloques / Campus / Edificios
                     </h4>
-                    <span class="text-xs text-slate-500" id="contador-bloques">0 bloques</span>
+                    <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" id="contador-bloques">0 bloques</span>
                 </div>
 
-                <div id="lista-bloques" class="flex flex-wrap gap-2 mb-3 min-h-[40px] p-2 bg-white rounded-lg border border-slate-200">
-                    <span class="text-xs text-slate-400 italic">Cargando bloques...</span>
+                <div id="lista-bloques" class="flex flex-wrap gap-2 mb-4 min-h-[44px] p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span class="text-sm text-slate-400 italic">Cargando bloques...</span>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <input type="text" id="nuevo_bloque_nombre" placeholder="Nombre (ej. Bloque C o Ciencias)" class="app-input flex-1 text-xs">
-                    <input type="text" id="nuevo_bloque_id" placeholder="Prefijo (ej. C)" maxlength="4" class="app-input w-24 text-xs uppercase font-mono">
-                    <button type="button" onclick="window.agregarBloque()" class="btn btn-primary text-xs py-2 px-3 whitespace-nowrap">
-                        + Agregar Bloque
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input type="text" id="nuevo_bloque_nombre" placeholder="Nombre (ej. Bloque C o Ciencias)" class="w-full min-h-[46px] px-4 py-2 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="nuevo_bloque_id" placeholder="Prefijo (ej. C)" maxlength="4" class="w-full sm:w-28 min-h-[46px] px-3 py-2 text-base uppercase font-mono font-bold text-center text-slate-900 dark:text-white bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="button" onclick="window.agregarBloque()" class="btn btn-primary min-h-[46px] px-4 py-2 text-sm font-bold rounded-xl whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>+</span> <span>Agregar Bloque</span>
                     </button>
                 </div>
             </div>
 
             <!-- SECCIÓN 2: PISOS O NIVELES -->
-            <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-xl">
+            <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 rounded-2xl">
                 <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    <h4 class="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
                         <span>📶</span> Pisos / Plantas / Niveles
                     </h4>
-                    <span class="text-xs text-slate-500" id="contador-pisos">0 pisos</span>
+                    <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" id="contador-pisos">0 pisos</span>
                 </div>
 
                 <!-- GENERADOR RÁPIDO -->
-                <div class="p-3 bg-indigo-50/70 border border-indigo-200/70 rounded-lg mb-3">
-                    <div class="text-xs font-semibold text-indigo-900 mb-1.5 flex items-center gap-1">
+                <div class="p-3.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-xl mb-4">
+                    <div class="text-sm font-extrabold text-indigo-900 dark:text-indigo-300 mb-2 flex items-center gap-1.5">
                         <span>⚡</span> Generador Rápido de Pisos:
                     </div>
-                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-700">
-                        <label class="flex items-center gap-1">
-                            Pisos superiores:
-                            <input type="number" id="gen_cantidad_pisos" value="3" min="1" max="20" class="app-input w-16 py-1 px-2 text-center text-xs">
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                        <label class="flex items-center gap-2">
+                            <span>Pisos superiores:</span>
+                            <input type="number" id="gen_cantidad_pisos" value="3" min="1" max="20" class="min-h-[40px] w-20 px-2 py-1 text-center font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
                         </label>
-                        <label class="flex items-center gap-1 cursor-pointer">
-                            <input type="checkbox" id="gen_incluir_pb" checked class="rounded border-slate-300 text-indigo-600">
-                            Incluir Planta Baja (PB)
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="gen_incluir_pb" checked class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            <span>Incluir Planta Baja (PB)</span>
                         </label>
-                        <label class="flex items-center gap-1 cursor-pointer">
-                            <input type="checkbox" id="gen_incluir_ss" class="rounded border-slate-300 text-indigo-600">
-                            Incluir Subsuelo (SS)
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="gen_incluir_ss" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            <span>Incluir Subsuelo (SS)</span>
                         </label>
-                        <button type="button" onclick="window.generarPisosRapido()" class="btn btn-secondary text-xs py-1 px-2.5">
+                        <button type="button" onclick="window.generarPisosRapido()" class="btn btn-secondary min-h-[40px] px-3.5 py-1.5 text-xs font-bold rounded-xl cursor-pointer">
                             Generar Estructura
                         </button>
                     </div>
                 </div>
 
-                <div id="lista-pisos" class="flex flex-wrap gap-2 mb-3 min-h-[40px] p-2 bg-white rounded-lg border border-slate-200">
-                    <span class="text-xs text-slate-400 italic">Cargando pisos...</span>
+                <div id="lista-pisos" class="flex flex-wrap gap-2 mb-4 min-h-[44px] p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span class="text-sm text-slate-400 italic">Cargando pisos...</span>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <input type="text" id="nuevo_piso_nombre" placeholder="Nombre (ej. Terraza o 4° Piso)" class="app-input flex-1 text-xs">
-                    <input type="text" id="nuevo_piso_id" placeholder="Prefijo (ej. P4)" maxlength="4" class="app-input w-24 text-xs uppercase font-mono">
-                    <button type="button" onclick="window.agregarPiso()" class="btn btn-primary text-xs py-2 px-3 whitespace-nowrap">
-                        + Agregar Piso
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input type="text" id="nuevo_piso_nombre" placeholder="Nombre (ej. Terraza o 4° Piso)" class="w-full min-h-[46px] px-4 py-2 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="nuevo_piso_id" placeholder="Prefijo (ej. P4)" maxlength="4" class="w-full sm:w-28 min-h-[46px] px-3 py-2 text-base uppercase font-mono font-bold text-center text-slate-900 dark:text-white bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="button" onclick="window.agregarPiso()" class="btn btn-primary min-h-[46px] px-4 py-2 text-sm font-bold rounded-xl whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>+</span> <span>Agregar Piso</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-4 mt-5 border-t border-gray-100">
-            <button type="button" onclick="window.cerrarModalCampus()" class="btn btn-secondary text-xs py-2 px-4">
+        <!-- Footer fijo -->
+        <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 shrink-0">
+            <button type="button" onclick="window.cerrarModalCampus()" class="btn btn-secondary min-h-[46px] px-5 py-2.5 rounded-xl text-base font-semibold cursor-pointer">
                 Cancelar
             </button>
-            <button type="button" id="btn-guardar-campus" onclick="window.guardarEstructuraCampus()" class="btn btn-success text-xs py-2 px-4 flex items-center gap-1.5 font-bold">
+            <button type="button" id="btn-guardar-campus" onclick="window.guardarEstructuraCampus()" class="btn btn-success min-h-[46px] px-6 py-2.5 rounded-xl text-base font-bold shadow-sm flex items-center gap-2 cursor-pointer active:scale-95">
                 <span>💾</span> Guardar Estructura
             </button>
         </div>
@@ -195,25 +207,25 @@ ob_start();
         if (countP) countP.textContent = `${campusPisosActuales.length} pisos`;
 
         if (!campusBloquesActuales.length) {
-            contBloques.innerHTML = '<span class="text-xs text-rose-500">Sin bloques definidos. Agrega al menos uno.</span>';
+            contBloques.innerHTML = '<span class="text-sm font-semibold text-rose-500">Sin bloques definidos. Agrega al menos uno.</span>';
         } else {
             contBloques.innerHTML = campusBloquesActuales.map((b, i) => `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
                     <span>${b.nombre}</span>
-                    <span class="font-mono text-[10px] text-indigo-500 uppercase">(${b.id || b.nombre})</span>
-                    <button type="button" onclick="window.eliminarBloque(${i})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none" title="Eliminar">&times;</button>
+                    <span class="font-mono text-xs text-indigo-500 uppercase">(${b.id || b.nombre})</span>
+                    <button type="button" onclick="window.eliminarBloque(${i})" class="text-indigo-400 hover:text-rose-600 font-bold ml-1 text-base leading-none cursor-pointer" title="Eliminar">&times;</button>
                 </span>
             `).join("");
         }
 
         if (!campusPisosActuales.length) {
-            contPisos.innerHTML = '<span class="text-xs text-rose-500">Sin pisos definidos. Agrega al menos uno.</span>';
+            contPisos.innerHTML = '<span class="text-sm font-semibold text-rose-500">Sin pisos definidos. Agrega al menos uno.</span>';
         } else {
             contPisos.innerHTML = campusPisosActuales.map((p, i) => `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
                     <span>${p.nombre}</span>
-                    <span class="font-mono text-[10px] text-emerald-600 uppercase">(${p.id || p.nombre})</span>
-                    <button type="button" onclick="window.eliminarPiso(${i})" class="text-emerald-400 hover:text-rose-600 font-bold ml-1 text-sm leading-none" title="Eliminar">&times;</button>
+                    <span class="font-mono text-xs text-emerald-600 dark:text-emerald-400 uppercase">(${p.id || p.nombre})</span>
+                    <button type="button" onclick="window.eliminarPiso(${i})" class="text-emerald-400 hover:text-rose-600 font-bold ml-1 text-base leading-none cursor-pointer" title="Eliminar">&times;</button>
                 </span>
             `).join("");
         }

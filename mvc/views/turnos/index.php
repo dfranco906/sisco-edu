@@ -1,5 +1,8 @@
 <?php
 $titulo = "Turnos Escolares";
+$icono = "⏱️";
+$subtitulo = "Gestión de turnos escolares institucionales, horarios de entrada y salida habituales.";
+$tituloBotonCrear = "Turno";
 $api = "src/api/Turno/leer_turnos.php";
 $columnas = ["id_turno", "nombre", "hora_inicio", "hora_fin", "descripcion", "activo"];
 

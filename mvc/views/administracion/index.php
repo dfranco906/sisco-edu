@@ -153,9 +153,13 @@ try {
                             Gestión de jornadas lectivas (Mañana, Tarde, Noche) y sus franjas horarias de funcionamiento.
                         </p>
                     </div>
-                    <div class="mt-6">
-                        <a href="<?= base_url('mvc/views/turnos/index.php') ?>" class="w-full min-h-[46px] py-2.5 px-4 rounded-xl bg-blue-50/90 dark:bg-blue-950/60 hover:bg-blue-600 dark:hover:bg-blue-600 text-blue-700 dark:text-blue-300 hover:text-white dark:hover:text-white border border-blue-200 dark:border-blue-800/60 hover:border-blue-600 flex items-center justify-between text-base font-bold transition">
+                    <div class="mt-6 flex flex-col gap-2">
+                        <a href="<?= base_url('mvc/views/turnos/index.php') ?>" class="w-full min-h-[44px] py-2 px-4 rounded-xl bg-blue-50/90 dark:bg-blue-950/60 hover:bg-blue-600 dark:hover:bg-blue-600 text-blue-700 dark:text-blue-300 hover:text-white dark:hover:text-white border border-blue-200 dark:border-blue-800/60 hover:border-blue-600 flex items-center justify-between text-sm sm:text-base font-bold transition">
                             <span>Configurar turnos</span>
+                            <span class="text-lg group-hover:translate-x-1 transition-transform">→</span>
+                        </a>
+                        <a href="<?= base_url('mvc/views/horarios/marcos_institucionales.php') ?>" class="w-full min-h-[44px] py-2 px-4 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/60 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 hover:text-white dark:hover:text-white border border-indigo-200 dark:border-indigo-800/60 hover:border-indigo-600 flex items-center justify-between text-sm sm:text-base font-bold transition">
+                            <span>⏱️ Marco Horario Institucional</span>
                             <span class="text-lg group-hover:translate-x-1 transition-transform">→</span>
                         </a>
                     </div>

@@ -1,5 +1,8 @@
 <?php
 $titulo = "Bachilleratos / Especialidades";
+$icono = "🎓";
+$subtitulo = "Catálogo de bachilleratos técnicos y científicos vigentes en la institución.";
+$tituloBotonCrear = "Especialidad";
 $api = "src/api/Bachillerato/leer_bachilleratos.php";
 $columnas = ["id_bachillerato", "nombre", "codigo", "tipo", "descripcion", "activo"];
 

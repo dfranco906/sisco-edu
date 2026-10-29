@@ -1,5 +1,8 @@
 <?php
-$titulo = "Grados";
+$titulo = "Grados y Cursos";
+$icono = "🏫";
+$subtitulo = "Administración de cursos, secciones escolares, turnos asociados y aulas asignadas.";
+$tituloBotonCrear = "Grado / Curso";
 $api = "src/api/Grado/leer_grados.php";
 
 $columnas = ["id_grado", "nombre", "aula", "turno", "nivel", "bachillerato", "activo"];

@@ -57,9 +57,9 @@ function contenidoCelda(columna, valor, item = null) {
         const cant = parseInt(valor || 0);
         if (cant > 0) {
             const tooltip = item && item.hijos_resumen ? ` title="${escaparHtml(item.hijos_resumen)}"` : '';
-            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs cursor-help"${tooltip}>👨‍👩‍👦 ${cant} hijo(s)</span>`;
+            return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bold text-xs cursor-help"${tooltip}>👨‍👩‍👦 ${cant} hijo(s)</span>`;
         }
-        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 font-medium text-xs">Sin hijos</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-xs">Sin hijos</span>`;
     }
 
     if (columna === "estado" && texto !== "") {
@@ -76,7 +76,20 @@ function contenidoCelda(columna, valor, item = null) {
 
     if (columna === "activo" && texto !== "") {
         const activo = texto === "1";
-        return `<span class="status-badge ${activo ? "status-success" : "status-neutral"}">${activo ? "Activo" : "Inactivo"}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider ${activo ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800" : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700"}">${activo ? "Activo" : "Inactivo"}</span>`;
+    }
+
+    if ((columna === "hora_inicio" || columna === "hora_fin") && texto) {
+        return `<span class="font-mono font-bold text-sm text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">⏱️ ${escaparHtml(texto.substring(0, 5))}</span>`;
+    }
+
+    if (columna === "codigo" && texto) {
+        return `<span class="font-mono font-bold text-xs uppercase px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">${escaparHtml(texto)}</span>`;
+    }
+
+    if (columna === "tipo" && texto) {
+        const esTecnico = texto.toLowerCase().includes("téc");
+        return `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-extrabold ${esTecnico ? "bg-purple-100 dark:bg-purple-950/60 text-purple-900 dark:text-purple-300 border border-purple-200 dark:border-purple-800" : "bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300 border border-blue-200 dark:border-blue-800"}">${escaparHtml(texto)}</span>`;
     }
 
     return escaparHtml(texto);
@@ -133,56 +146,58 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
         datos.forEach(item => {
             const idRegistro = window.ID_CAMPO ? item[window.ID_CAMPO] : null;
-            let fila = `<tr class="border-b hover:bg-gray-50">`;
+            let fila = `<tr class="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">`;
 
             columnas.forEach(col => {
-                fila += `<td class="p-3">${contenidoCelda(col, item[col], item)}</td>`;
+                fila += `<td class="p-4 text-base">${contenidoCelda(col, item[col], item)}</td>`;
             });
 
             fila += `
-    <td class="p-3"><div class="table-actions">
+    <td class="p-4 text-center">
+        <div class="table-actions flex items-center justify-center gap-2 flex-wrap">
         ${(typeof window.abrirModalAlcanceUsuario === 'function' && item.id_usuario && (item.rol === 'Coordinador' || item.rol === 'Administrador' || item.rol === 'Administracion')) ? `
         <button type="button" onclick="abrirModalAlcanceUsuario(${item.id_usuario}, '${(item.nombre || '').replace(/'/g, "\\'")} ${(item.apellido || '').replace(/'/g, "\\'")}', '${item.rol}')"
-                class="btn btn-primary btn-sm inline-flex items-center gap-1 font-semibold" title="Asignar turnos, niveles, bachilleratos y cursos de operación">
-            🎯 Alcance
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-900 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Asignar turnos, niveles, bachilleratos y cursos de operación">
+            <span>🎯</span> <span>Alcance</span>
         </button>` : ""}
         ${item.id_tutor ? `
         <button type="button" onclick="abrirVincularTutorDesdeTabla(${item.id_tutor})"
-                class="btn btn-secondary btn-sm inline-flex items-center gap-1 font-semibold" title="Vincular estudiantes o hermanos a este tutor">
-            👨‍👩‍👦 + Hijos
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-blue-100 hover:bg-blue-200 text-blue-900 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Vincular estudiantes o hermanos a este tutor">
+            <span>👨‍👩‍👦</span> <span>+ Hijos</span>
         </button>` : ""}
         ${window.API_ACTUALIZAR && idRegistro ? `
-        <button onclick='editarRegistro(${JSON.stringify(item)})'
-        class="btn btn-edit">
-            Editar
+        <button type="button" onclick='editarRegistro(${JSON.stringify(item)})'
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-blue-100 hover:bg-blue-200 text-blue-900 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>✏️</span> <span>Editar</span>
         </button>` : ""}
         ${window.API_DESACTIVAR && idRegistro ? `
-        <button onclick='desactivarRegistro(${JSON.stringify(idRegistro)})'
-        class="btn btn-warning">
-            Desactivar
+        <button type="button" onclick='desactivarRegistro(${JSON.stringify(idRegistro)})'
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-amber-100 hover:bg-amber-200 text-amber-950 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>⚠️</span> <span>Desactivar</span>
         </button>` : ""}
         ${window.API_RESTAURAR && idRegistro ? `
-        <button onclick='restaurarRegistro(${JSON.stringify(idRegistro)})'
-        class="btn btn-restore">
-            Restaurar
+        <button type="button" onclick='restaurarRegistro(${JSON.stringify(idRegistro)})'
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-950 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>♻️</span> <span>Restaurar</span>
         </button>` : ""}
         ${window.API_ELIMINAR && idRegistro ? `
-        <button onclick='eliminarRegistro(${JSON.stringify(idRegistro)})'
-        class="btn btn-danger btn-sm">
-            Eliminar
+        <button type="button" onclick='eliminarRegistro(${JSON.stringify(idRegistro)})'
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-rose-100 hover:bg-rose-200 text-rose-950 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>🗑️</span> <span>Eliminar</span>
         </button>` : ""}
         ${item.user_id_global && !item.id_profesor ? `
-        <button onclick="descargarYGuardarTemplate('${item.user_id_global}', 'estudiante')"
-        class="btn btn-fingerprint btn-huella">
-            Huella
+        <button type="button" onclick="descargarYGuardarTemplate('${item.user_id_global}', 'estudiante')"
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-purple-100 hover:bg-purple-200 text-purple-900 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>👆</span> <span>Huella</span>
         </button>` : ""}
 
         ${item.user_id_global && item.id_profesor ? `
-        <button onclick="descargarYGuardarTemplate('${item.user_id_global}', 'profesor')"
-        class="btn btn-fingerprint btn-huella">
-          Huella
+        <button type="button" onclick="descargarYGuardarTemplate('${item.user_id_global}', 'profesor')"
+                class="min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-sm bg-purple-100 hover:bg-purple-200 text-purple-900 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>👆</span> <span>Huella</span>
         </button>` : ""}
-            </div></td>`;
+        </div>
+    </td>`;
 
             fila += `</tr>`;
             tbody.innerHTML += fila;
@@ -221,7 +236,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
         }
 
         const contenedor = document.createElement("div");
-        contenedor.className = "flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200 shadow-2xs";
+        contenedor.className = "flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs";
         contenedor.setAttribute("role", "tablist");
 
         opciones.forEach(op => {
@@ -235,19 +250,19 @@ async function cargarTabla(api, columnas, filtros = {}) {
             btn.setAttribute("data-valor", op.valor);
             const esActivo = valorPestanaActiva.toLowerCase() === op.valor.toLowerCase();
 
-            btn.className = `tab-item inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 cursor-pointer ${
+            btn.className = `tab-item inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 esActivo
-                    ? "bg-white text-blue-600 shadow-sm border border-slate-200/80 font-bold"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-extrabold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
             }`;
             btn.setAttribute("aria-selected", esActivo ? "true" : "false");
 
             btn.innerHTML = `
                 <span>${escaparHtml(op.label)}</span>
-                <span class="tab-badge px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${
+                <span class="tab-badge px-2.5 py-0.5 text-xs rounded-full font-bold transition-colors ${
                     esActivo
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-slate-200 text-slate-600"
+                        ? "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                        : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                 }">${count}</span>
             `;
 
@@ -255,16 +270,16 @@ async function cargarTabla(api, columnas, filtros = {}) {
                 valorPestanaActiva = op.valor;
                 contenedor.querySelectorAll(".tab-item").forEach(b => {
                     const active = b.getAttribute("data-valor").toLowerCase() === valorPestanaActiva.toLowerCase();
-                    b.className = `tab-item inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                    b.className = `tab-item inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
                         active
-                            ? "bg-white text-blue-600 shadow-sm border border-slate-200/80 font-bold"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
+                            ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-extrabold"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
                     }`;
                     b.setAttribute("aria-selected", active ? "true" : "false");
                     const badge = b.querySelector(".tab-badge");
                     if (badge) {
-                        badge.className = `tab-badge px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${
-                            active ? "bg-blue-100 text-blue-700" : "bg-slate-200 text-slate-600"
+                        badge.className = `tab-badge px-2.5 py-0.5 text-xs rounded-full font-bold transition-colors ${
+                            active ? "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                         }`;
                     }
                 });
@@ -285,10 +300,13 @@ async function cargarTabla(api, columnas, filtros = {}) {
 
         if (filtros.buscar) {
             filtrosBox.innerHTML += `
-                <input id="buscar-tabla" 
-                       type="text" 
-                       placeholder="${filtros.placeholder ?? 'Buscar...'}"
-                       class="app-input w-full">
+                <div class="relative flex-1 min-w-[220px]">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-base">🔍</span>
+                    <input id="buscar-tabla" 
+                           type="text" 
+                           placeholder="${filtros.placeholder ?? 'Buscar...'}"
+                           class="w-full min-h-[46px] pl-10 pr-4 py-2 text-base text-slate-900 dark:text-white font-semibold bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition">
+                </div>
             `;
         }
 
@@ -298,7 +316,7 @@ async function cargarTabla(api, columnas, filtros = {}) {
                 if (opciones.length === 0) return;
 
                 let select = `
-                    <select data-campo="${f.campo}" class="filtro-select app-input">
+                    <select data-campo="${f.campo}" class="filtro-select min-h-[46px] px-3.5 py-2 text-base text-slate-900 dark:text-white font-semibold bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         <option value="">${escaparHtml(f.label)}</option>
                 `;
 
@@ -312,8 +330,8 @@ async function cargarTabla(api, columnas, filtros = {}) {
         }
 
         filtrosBox.innerHTML += `
-            <button id="limpiar-filtros" class="btn btn-muted">
-                Limpiar filtros
+            <button id="limpiar-filtros" type="button" class="btn btn-secondary min-h-[46px] px-4 py-2 text-sm font-bold rounded-xl flex items-center gap-1.5 cursor-pointer">
+                <span>✕</span> <span>Limpiar</span>
             </button>
         `;
 
