@@ -26,7 +26,7 @@ try {
     $diaSemana = date('w');
 
     // Consultar todas las aulas activas
-    $stmt = $db->query("SELECT id_aula, nombre, numero_aula FROM public.aulas WHERE activo = 1 ORDER BY id_aula ASC");
+    $stmt = $db->query("SELECT id_aula, nombre, COALESCE(codigo, codigo_sala, '') AS codigo_aula FROM public.aulas WHERE activo = 1 ORDER BY id_aula ASC");
     $aulas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $aulasCerradas = [];
@@ -44,7 +44,7 @@ try {
             $aulasCerradas[] = [
                 'id_aula' => $idAula,
                 'nombre' => $a['nombre'],
-                'numero_aula' => $a['numero_aula'],
+                'codigo_aula' => $a['codigo_aula'],
                 'hora_cierre' => $marco['hora_cierre'],
                 'grado_nombre' => $marco['grado_info']['grado_nombre'] ?? '',
                 'descripcion' => $marco['descripcion'] ?? ''
