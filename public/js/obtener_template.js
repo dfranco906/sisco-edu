@@ -91,7 +91,7 @@ function mostrarModalDiagnosticoUsb({ titulo, subtitulo = "", mensaje, tipo = "i
                     ×
                 </button>
             </div>
-            
+
             <div class="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line font-normal">
                 ${escaparTextoHtml(mensaje)}
             </div>
@@ -137,7 +137,7 @@ function mostrarModalPreflightUsb(tipo = 'estudiante') {
     modal.innerHTML = `
         <div class="app-confirm-backdrop" onclick="cerrarModalDiagnosticoUsb()"></div>
         <div class="app-modal-dialog app-confirm-dialog max-w-lg w-full p-6 relative z-10 animate-scale-up" style="background: var(--color-card, #FFFFFF); color: var(--color-text, #0F172A); border: 1px solid var(--color-border, #CBD5E1); border-radius: var(--radius, 1rem);">
-            
+
             <div class="flex items-start justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-start gap-3.5">
                     <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
@@ -161,7 +161,7 @@ function mostrarModalPreflightUsb(tipo = 'estudiante') {
                 <p class="text-sm text-slate-600 dark:text-slate-300">
                     Al utilizar el enlace por cable USB, la captura de huellas se comunica directamente con el lector registrador sin demoras ni interferencias de la red Wi-Fi:
                 </p>
-                
+
                 <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2.5 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
                     <div class="flex items-start gap-2.5">
                         <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">1</span>
