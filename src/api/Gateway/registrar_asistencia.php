@@ -32,9 +32,56 @@ try {
     $tabla = ($tipo === 'estudiante') ? 'estudiantes' : 'profesores';
     $idCol = ($tipo === 'estudiante') ? 'id_estudiante' : 'id_profesor';
     
-    $stmt = $db->prepare("SELECT {$idCol}, user_id_global, nombre, apellido FROM {$tabla} WHERE cedula_identidad = :ci AND activo = 1 LIMIT 1");
+    $stmt = $db->prepare("SELECT {$idCol}, user_id_global, nombre, apellido, cedula_identidad FROM {$tabla} WHERE cedula_identidad = :ci AND activo = 1 LIMIT 1");
     $stmt->execute([':ci' => $ci]);
     $persona = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $salvaguardaCiAplicada = false;
+
+    // Salvaguarda: Si el CI no coincide directamente (por ejemplo, si fue modificado en la BD pero el nodo físico aún conserva el CI anterior en su NVS)
+    if (!$persona) {
+        // 1.1 Intentar localizar la persona mediante el historial de huella en esa aula específica
+        $stmtFallback = $db->prepare("
+            SELECT t.{$idCol}, t.user_id_global, t.nombre, t.apellido, t.cedula_identidad
+            FROM aula_huellas_sync ahs
+            INNER JOIN huellas_templates ht ON ht.id_huella = ahs.id_huella AND ht.activo = 1
+            INNER JOIN {$tabla} t ON (t.{$idCol} = ht.{$idCol} OR (ht.{$idCol} IS NULL AND t.user_id_global = ht.user_id_global)) AND t.activo = 1
+            WHERE ahs.ci = :ci AND ahs.id_aula = :id_aula
+            ORDER BY ahs.id DESC
+            LIMIT 1
+        ");
+        $stmtFallback->execute([':ci' => $ci, ':id_aula' => $id_aula]);
+        $persona = $stmtFallback->fetch(PDO::FETCH_ASSOC);
+
+        // 1.2 Si no se encuentra en el aula específica, buscar en cualquier aula donde esa huella fue sincronizada con ese CI
+        if (!$persona) {
+            $stmtFallbackGlobal = $db->prepare("
+                SELECT t.{$idCol}, t.user_id_global, t.nombre, t.apellido, t.cedula_identidad
+                FROM aula_huellas_sync ahs
+                INNER JOIN huellas_templates ht ON ht.id_huella = ahs.id_huella AND ht.activo = 1
+                INNER JOIN {$tabla} t ON (t.{$idCol} = ht.{$idCol} OR (ht.{$idCol} IS NULL AND t.user_id_global = ht.user_id_global)) AND t.activo = 1
+                WHERE ahs.ci = :ci
+                ORDER BY ahs.id DESC
+                LIMIT 1
+            ");
+            $stmtFallbackGlobal->execute([':ci' => $ci]);
+            $persona = $stmtFallbackGlobal->fetch(PDO::FETCH_ASSOC);
+        }
+
+        if ($persona) {
+            $salvaguardaCiAplicada = true;
+            error_log(sprintf(
+                "[GATEWAY-ASISTENCIA] Salvaguarda de CI activada: %s ID #%d (%s %s) identificado mediante huella histórica (CI recibido de nodo: %s, CI actual en BD: %s) en Aula #%d.",
+                ucfirst($tipo),
+                (int)$persona[$idCol],
+                $persona['nombre'],
+                $persona['apellido'],
+                $ci,
+                $persona['cedula_identidad'],
+                $id_aula
+            ));
+        }
+    }
 
     if (!$persona) {
         http_response_code(404);
@@ -157,12 +204,15 @@ try {
         "duplicado" => $esDuplicado,
         "discrepancia_aula" => $discrepanciaAula,
         "aula_esperada" => $aulaEsperadaInfo,
+        "salvaguarda_ci_aplicada" => $salvaguardaCiAplicada,
         "message" => $resAsistencia['mensaje'] ?? "Asistencia biométrica procesada correctamente",
         "data" => [
             "persona" => [
                 "tipo" => $tipo,
                 "nombre_completo" => $nombreCompleto,
-                "cedula" => $ci,
+                "cedula" => $persona['cedula_identidad'] ?? $ci,
+                "cedula_nodo" => $ci,
+                "salvaguarda_ci" => $salvaguardaCiAplicada,
                 "user_id_global" => $userId,
                 "hora_marcacion" => $resAsistencia['hora'] ?? $horaActual,
                 "estado" => $resAsistencia['estado'] ?? $estado

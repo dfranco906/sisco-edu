@@ -235,13 +235,51 @@ class Estudiante {
     public function actualizar(): bool {
         if (empty($this->id_estudiante)) return false;
 
-        $idUsuario = IdentidadHelper::asegurarUsuario(
-            $this->conn,
-            'Estudiante',
-            (string)$this->cedula_identidad,
-            (string)$this->nombre,
-            (string)$this->apellido
-        );
+        // 1. Obtener la información previa para detectar cambios en Cédula de Identidad
+        $stmtPrevio = $this->conn->prepare("SELECT cedula_identidad, id_usuario FROM " . $this->table_name . " WHERE id_estudiante = :id LIMIT 1");
+        $stmtPrevio->execute([':id' => $this->id_estudiante]);
+        $estudiantePrevio = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
+
+        $ciAnterior = $estudiantePrevio ? trim((string)$estudiantePrevio['cedula_identidad']) : '';
+        $idUsuarioExistente = $estudiantePrevio ? (int)($estudiantePrevio['id_usuario'] ?? 0) : 0;
+        $ciCambio = (!empty($ciAnterior) && $ciAnterior !== (string)$this->cedula_identidad);
+
+        $idUsuario = $idUsuarioExistente;
+        if ($idUsuarioExistente > 0) {
+            if ($ciCambio) {
+                // Si la cédula cambió, actualizar también el login en usuarios
+                $stmtCheckUser = $this->conn->prepare("SELECT id_usuario FROM usuarios WHERE usuario = :ci AND id_usuario != :id_u LIMIT 1");
+                $stmtCheckUser->execute([':ci' => (string)$this->cedula_identidad, ':id_u' => $idUsuarioExistente]);
+                if (!$stmtCheckUser->fetch()) {
+                    $stmtUpdateUser = $this->conn->prepare("UPDATE usuarios SET usuario = :ci WHERE id_usuario = :id_u");
+                    $stmtUpdateUser->execute([':ci' => (string)$this->cedula_identidad, ':id_u' => $idUsuarioExistente]);
+                }
+            }
+        } else {
+            $idUsuario = IdentidadHelper::asegurarUsuario(
+                $this->conn,
+                'Estudiante',
+                (string)$this->cedula_identidad,
+                (string)$this->nombre,
+                (string)$this->apellido
+            );
+        }
+
+        // Si la cédula cambió y el estudiante tiene huellas registradas, marcar en sync_biometrica para resincronizar hardware
+        if ($ciCambio) {
+            $stmtHuella = $this->conn->prepare("SELECT id_huella FROM huellas_templates WHERE id_estudiante = :id AND activo = 1 LIMIT 1");
+            $stmtHuella->execute([':id' => $this->id_estudiante]);
+            $idHuellaEstudiante = $stmtHuella->fetchColumn();
+
+            if ($idHuellaEstudiante) {
+                $stmtReval = $this->conn->prepare("
+                    UPDATE sync_biometrica 
+                    SET estado = 'PENDIENTE', intentos = 0, mensaje = 'CI estudiante actualizado: requiere resincronización en aula para actualizar NVS', fecha_actualizacion = NOW() 
+                    WHERE id_huella = :id_huella
+                ");
+                $stmtReval->execute([':id_huella' => $idHuellaEstudiante]);
+            }
+        }
 
         $campos = [
             "nombre=:nombre",

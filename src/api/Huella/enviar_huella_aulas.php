@@ -53,10 +53,10 @@ try {
 
     // 2. Obtener persona
     if ($idPersona) {
-        $stmtPersona = $db->prepare("SELECT {$idCampo}, user_id_global, nombre, apellido, huella_id FROM {$tabla} WHERE {$idCampo} = :id AND activo = 1 LIMIT 1");
+        $stmtPersona = $db->prepare("SELECT {$idCampo}, user_id_global, nombre, apellido, cedula_identidad, huella_id FROM {$tabla} WHERE {$idCampo} = :id AND activo = 1 LIMIT 1");
         $stmtPersona->execute([':id' => $idPersona]);
     } else {
-        $stmtPersona = $db->prepare("SELECT {$idCampo}, user_id_global, nombre, apellido, huella_id FROM {$tabla} WHERE user_id_global = :uid AND activo = 1 LIMIT 1");
+        $stmtPersona = $db->prepare("SELECT {$idCampo}, user_id_global, nombre, apellido, cedula_identidad, huella_id FROM {$tabla} WHERE user_id_global = :uid AND activo = 1 LIMIT 1");
         $stmtPersona->execute([':uid' => $userIdGlobal]);
     }
 
@@ -209,7 +209,7 @@ try {
     ");
 
     $stmtCheckHardware = $db->prepare("
-        SELECT id_aula_sync, slot_local, estado 
+        SELECT id_aula_sync, slot_local, estado, ci 
         FROM aula_huellas_sync 
         WHERE id_huella = :huella AND id_aula = :aula AND UPPER(estado) = 'CONFIRMADO'
         LIMIT 1
@@ -242,14 +242,23 @@ try {
             $stmtCheckHardware->execute([':huella' => $idHuella, ':aula' => $idAulaActual]);
             $yaEnSensor = $stmtCheckHardware->fetch(PDO::FETCH_ASSOC);
             if ($yaEnSensor) {
-                $detallesAulas[] = [
-                    'id_aula'     => $idAulaActual,
-                    'nombre'      => $nombreAula,
-                    'codigo_sala' => $roomId,
-                    'accion'      => 'omitido_ya_sincronizado',
-                    'slot_local'  => (int)$yaEnSensor['slot_local']
-                ];
-                continue;
+                // Verificar si la cédula en el sensor coincide con la cédula actual de la persona en BD
+                $ciPersonaActual = trim((string)($persona['cedula_identidad'] ?? ''));
+                $ciEnSensor = trim((string)($yaEnSensor['ci'] ?? ''));
+
+                if (!empty($ciPersonaActual) && !empty($ciEnSensor) && $ciPersonaActual !== $ciEnSensor) {
+                    // El CI cambió en la base de datos pero el sensor del aula tiene el CI viejo.
+                    // NO omitir: se requiere reenviar para actualizar los metadatos y el NVS del nodo.
+                } else {
+                    $detallesAulas[] = [
+                        'id_aula'     => $idAulaActual,
+                        'nombre'      => $nombreAula,
+                        'codigo_sala' => $roomId,
+                        'accion'      => 'omitido_ya_sincronizado',
+                        'slot_local'  => (int)$yaEnSensor['slot_local']
+                    ];
+                    continue;
+                }
             }
         }
 

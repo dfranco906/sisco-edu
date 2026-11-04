@@ -72,7 +72,7 @@ uint32_t ultimoRegistroSlot[201] = {0};
 bool asistenciaMarcadaHoy[201] = {false};
 String fechaActualAula = "";
 
-struct RegistroUsuario { char ci[15]; char tipo[15]; bool registrado; };
+struct RegistroUsuario { char ci[15]; char tipo[15]; int idHuella; bool registrado; };
 RegistroUsuario dbLocal[201] = {};
 char huellaBuffer[HUELLA_TEMPLATE_HEX_CHARS + 1] = {};
 int ultimoIndiceProcesado = -1;
@@ -454,6 +454,7 @@ void guardarSlotEnNVS(int slot) {
   prefs.begin("dblocal", false);
   prefs.putString(("ci_" + String(slot)).c_str(), dbLocal[slot].ci);
   prefs.putString(("tipo_" + String(slot)).c_str(), dbLocal[slot].tipo);
+  prefs.putInt(("hid_" + String(slot)).c_str(), dbLocal[slot].idHuella);
   prefs.putBool(("reg_" + String(slot)).c_str(), dbLocal[slot].registrado);
   prefs.end();
 }
@@ -464,6 +465,7 @@ void cargarDbLocalDesdeNVS() {
     if (!prefs.getBool(("reg_" + String(i)).c_str(), false)) continue;
     prefs.getString(("ci_" + String(i)).c_str(), "").toCharArray(dbLocal[i].ci, sizeof(dbLocal[i].ci));
     prefs.getString(("tipo_" + String(i)).c_str(), "").toCharArray(dbLocal[i].tipo, sizeof(dbLocal[i].tipo));
+    dbLocal[i].idHuella = prefs.getInt(("hid_" + String(i)).c_str(), 0);
     dbLocal[i].registrado = true;
   }
   prefs.end();
@@ -999,11 +1001,23 @@ void atenderComandosLoRa() {
   } else {
     huellaBuffer[longitudHuellaHex] = '\0';
     int slot = -1;
-    for (int s = 1; s <= 200; ++s) {
-      if (dbLocal[s].registrado && String(dbLocal[s].ci) == String(ciSyncActual)) {
-        slot = s; break;
+    // 1. Priorizar coincidencia exacta por ID de huella central (identidad permanente aunque cambie el CI)
+    if (idHuellaActual > 0) {
+      for (int s = 1; s <= 200; ++s) {
+        if (dbLocal[s].registrado && dbLocal[s].idHuella == idHuellaActual) {
+          slot = s; break;
+        }
       }
     }
+    // 2. Coincidencia por CI si no se halló por ID de huella
+    if (slot < 0) {
+      for (int s = 1; s <= 200; ++s) {
+        if (dbLocal[s].registrado && String(dbLocal[s].ci) == String(ciSyncActual)) {
+          slot = s; break;
+        }
+      }
+    }
+    // 3. Asignar primer slot libre si es nueva
     if (slot < 0) {
       for (int s = 1; s <= 200; ++s) {
         if (!dbLocal[s].registrado) { slot = s; break; }
@@ -1013,6 +1027,7 @@ void atenderComandosLoRa() {
     if (slot > 0 && guardarHuellaDY50(String(huellaBuffer), slot, crcVerificado, error)) {
       strncpy(dbLocal[slot].ci, ciSyncActual, sizeof(dbLocal[slot].ci) - 1);
       strncpy(dbLocal[slot].tipo, tipoSyncActual, sizeof(dbLocal[slot].tipo) - 1);
+      dbLocal[slot].idHuella = idHuellaActual;
       dbLocal[slot].registrado = true;
       guardarSlotEnNVS(slot);
       notificarResultadoSync(true, slot, crcVerificado);
