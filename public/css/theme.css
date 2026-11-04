@@ -766,11 +766,18 @@ html.sidebar-init-collapsed .app-sidebar .app-nav-link.is-active::before {
     display: none;
 }
 
-.app-modal-dialog {
-    width: min(95vw, 42rem);
-    max-height: 90vh;
+/* ==========================================================================
+   ESTÁNDAR UNIFICADO DE MODALES: REGLA DEL 80% EN EJE X (20% MARGEN LATERAL)
+   ========================================================================== */
+.app-modal-dialog,
+.modal-wide-80,
+.modal-ficha-wide,
+.modal-biometria-wide {
+    width: 96vw;
+    max-width: 96vw;
+    max-height: 94vh;
     overflow-y: auto;
-    border-radius: 1rem;
+    border-radius: 1.5rem;
     background: var(--color-modal-bg);
     border: 1px solid var(--color-border);
     color: var(--color-text);
@@ -778,54 +785,40 @@ html.sidebar-init-collapsed .app-sidebar .app-nav-link.is-active::before {
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
 }
 
-/* Modales de Ficha Amplia (Profesores / Estudiantes) - 80% ancho en pantallas horizontales y máxima verticalidad en móvil */
+@media (min-width: 640px) {
+    .app-modal-dialog,
+    .modal-wide-80,
+    .modal-ficha-wide,
+    .modal-biometria-wide {
+        width: 92vw;
+        max-width: 92vw;
+        max-height: 92vh;
+    }
+}
+
+@media (min-width: 1024px) {
+    .app-modal-dialog,
+    .modal-wide-80,
+    .modal-ficha-wide,
+    .modal-biometria-wide {
+        width: 80vw !important;
+        max-width: 80vw !important;
+        max-height: 90vh;
+        padding: 2rem;
+    }
+}
+
+/* Fichas integrales con scroll y cabecera sin padding externo */
 .app-modal-dialog.modal-ficha-wide {
-    width: 96vw;
-    max-width: 96vw;
-    height: 96vh;
-    max-height: 96vh;
     padding: 0;
 }
 
-@media (min-width: 640px) {
-    .app-modal-dialog.modal-ficha-wide {
-        width: 92vw;
-        max-width: 92vw;
-        height: auto;
-        max-height: 92vh;
-    }
-}
-
-@media (min-width: 1024px) {
-    .app-modal-dialog.modal-ficha-wide {
-        width: 80vw;
-        max-width: 80vw;
-        height: auto;
-        max-height: 90vh;
-    }
-}
-
-/* Modales de Vinculación Biométrica Amplia - 80% ancho en pantallas horizontales (solo 20% disponible) para visualización sin scroll */
-.app-modal-dialog.modal-biometria-wide {
-    width: 96vw;
-    max-width: 96vw;
-    max-height: 94vh;
-}
-
-@media (min-width: 640px) {
-    .app-modal-dialog.modal-biometria-wide {
-        width: 92vw;
-        max-width: 92vw;
-        max-height: 92vh;
-    }
-}
-
-@media (min-width: 1024px) {
-    .app-modal-dialog.modal-biometria-wide {
-        width: 80vw;
-        max-width: 80vw;
-        max-height: 88vh;
-    }
+/* Diálogos de confirmación atómica (excepción para confirmaciones breves) */
+.app-confirm-dialog {
+    width: min(92vw, 30rem) !important;
+    max-width: 30rem !important;
+    max-height: auto;
+    padding: 1.5rem;
 }
 
 .app-modal-close {
@@ -1308,25 +1301,20 @@ body.sidebar-open {
         padding: 0.5rem;
     }
 
-    .app-modal-dialog {
-        width: 95vw;
-        max-height: 90vh;
+    .app-modal-dialog,
+    .modal-wide-80,
+    .modal-ficha-wide,
+    .modal-biometria-wide {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        max-height: 94vh;
         padding: 1rem;
     }
 
     .app-modal-dialog.modal-ficha-wide {
-        width: 96vw;
-        max-width: 96vw;
         height: 96vh;
         max-height: 96vh;
         padding: 0;
-    }
-
-    .app-modal-dialog.modal-biometria-wide {
-        width: 96vw;
-        max-width: 96vw;
-        max-height: 94vh;
-        padding: 1.25rem;
     }
 
     .app-modal-actions > * {

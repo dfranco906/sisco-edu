@@ -438,8 +438,8 @@ $puedeMarcarManual = $esAdmin || $esOperativo;
 
     <?php if ($puedeMarcarManual): ?>
     <!-- Modal para Ajuste / Rectificación de Asistencia Manual -->
-    <div id="modal-ajuste-asistencia" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden" aria-labelledby="modal-ajuste-titulo" role="dialog" aria-modal="true">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div id="modal-ajuste-asistencia" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden" aria-labelledby="modal-ajuste-titulo" role="dialog" aria-modal="true">
+        <div class="app-modal-dialog modal-wide-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] overflow-hidden animate-in fade-in zoom-in duration-150">
             <!-- Header -->
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-3">

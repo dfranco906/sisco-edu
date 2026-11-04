@@ -1,6 +1,6 @@
 <!-- Submodal Accesible: Detalle Integral de Asignación Docente -->
 <div id="modal-detalle-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-det-asig-titulo" onclick="if (event.target === this) cerrarModalDetalleAsignacion();">
-    <div class="relative w-full max-w-3xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    <div class="app-modal-dialog modal-wide-80 relative w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Cabecera del Submodal -->
         <div class="flex items-center justify-between p-6 sm:p-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 shrink-0">

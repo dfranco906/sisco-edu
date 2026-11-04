@@ -276,7 +276,11 @@
                 }
             });
 
-            // 6. Monitoreo de Hardware IoT en Tiempo Real (USB Registrador & Gateway LoRa)
+            // 6. Monitoreo de Hardware IoT con Caché Inteligente (USB Registrador & Gateway LoRa)
+            // Se utiliza sessionStorage con TTL de 5 minutos para evitar saturar la red y el hardware en cada navegación.
+            const IOT_CACHE_KEY = "sisco_iot_hw_status";
+            const IOT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
             const verificarEstadoHardwareIoT = async (manual = false) => {
                 const dotReg = document.getElementById("dot-iot-registrador");
                 const dotGate = document.getElementById("dot-iot-gateway");
@@ -288,11 +292,39 @@
 
                 if (!dotReg && !dotGate) return;
 
+                const now = Date.now();
+
+                // Si no es refresco manual, verificar si tenemos datos en caché válidos
+                if (!manual) {
+                    try {
+                        const raw = sessionStorage.getItem(IOT_CACHE_KEY);
+                        if (raw) {
+                            const cached = JSON.parse(raw);
+                            if (cached && (now - (cached.timestamp || 0) < IOT_CACHE_TTL_MS)) {
+                                if (cached.reg) {
+                                    if (dotReg) dotReg.className = cached.reg.dotClass;
+                                    if (dotMiniReg) dotMiniReg.className = cached.reg.dotMiniClass;
+                                    if (chipReg) chipReg.title = cached.reg.title;
+                                }
+                                if (cached.gate) {
+                                    if (dotGate) dotGate.className = cached.gate.dotClass;
+                                    if (dotMiniGate) dotMiniGate.className = cached.gate.dotMiniClass;
+                                    if (chipGate) chipGate.title = cached.gate.title;
+                                }
+                                return; // Estado restaurado desde caché, sin peticiones de red
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback a consulta directa si falla lectura de caché
+                    }
+                }
+
                 if (iconPing) iconPing.classList.add("animate-spin");
 
                 const baseUrl = (window.BASE_URL || "/").replace(/\/+$/, "");
+                const nuevoEstado = { timestamp: now, reg: null, gate: null };
 
-                // Test Registrador
+                // Test Registrador USB / Wi-Fi
                 try {
                     const r = await fetch(`${baseUrl}/src/api/Configuracion/probar_conexion.php?tipo=registrador`, { cache: 'no-cache' });
                     const j = await r.json();
@@ -301,19 +333,29 @@
 
                     if (online) {
                         const title = `Lector USB / Wi-Fi: ONLINE${ms ? ` (${ms} ms)` : ''}`;
-                        if (dotReg) dotReg.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
-                        if (dotMiniReg) dotMiniReg.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0";
+                        const dotClass = "w-2 h-2 rounded-full bg-emerald-500 shrink-0";
+                        const dotMiniClass = "w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0";
+                        if (dotReg) dotReg.className = dotClass;
+                        if (dotMiniReg) dotMiniReg.className = dotMiniClass;
                         if (chipReg) chipReg.title = title;
+                        nuevoEstado.reg = { title, dotClass, dotMiniClass };
                     } else {
                         const title = `Lector USB / Wi-Fi: ${j.message || 'Fuera de línea'}`;
-                        if (dotReg) dotReg.className = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
-                        if (dotMiniReg) dotMiniReg.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                        const dotClass = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
+                        const dotMiniClass = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                        if (dotReg) dotReg.className = dotClass;
+                        if (dotMiniReg) dotMiniReg.className = dotMiniClass;
                         if (chipReg) chipReg.title = title;
+                        nuevoEstado.reg = { title, dotClass, dotMiniClass };
                     }
                 } catch (e) {
-                    if (dotReg) dotReg.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
-                    if (dotMiniReg) dotMiniReg.className = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
-                    if (chipReg) chipReg.title = "Lector USB: Error de consulta";
+                    const title = "Lector USB: Error de consulta";
+                    const dotClass = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+                    const dotMiniClass = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
+                    if (dotReg) dotReg.className = dotClass;
+                    if (dotMiniReg) dotMiniReg.className = dotMiniClass;
+                    if (chipReg) chipReg.title = title;
+                    nuevoEstado.reg = { title, dotClass, dotMiniClass };
                 }
 
                 // Test Gateway LoRa
@@ -325,20 +367,34 @@
 
                     if (online) {
                         const title = `Gateway LoRa: ONLINE${ms ? ` (${ms} ms)` : ''}`;
-                        if (dotGate) dotGate.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
-                        if (dotMiniGate) dotMiniGate.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0";
+                        const dotClass = "w-2 h-2 rounded-full bg-emerald-500 shrink-0";
+                        const dotMiniClass = "w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0";
+                        if (dotGate) dotGate.className = dotClass;
+                        if (dotMiniGate) dotMiniGate.className = dotMiniClass;
                         if (chipGate) chipGate.title = title;
+                        nuevoEstado.gate = { title, dotClass, dotMiniClass };
                     } else {
                         const title = `Gateway LoRa: ${j.message || 'Fuera de línea'}`;
-                        if (dotGate) dotGate.className = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
-                        if (dotMiniGate) dotMiniGate.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                        const dotClass = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
+                        const dotMiniClass = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                        if (dotGate) dotGate.className = dotClass;
+                        if (dotMiniGate) dotMiniGate.className = dotMiniClass;
                         if (chipGate) chipGate.title = title;
+                        nuevoEstado.gate = { title, dotClass, dotMiniClass };
                     }
                 } catch (e) {
-                    if (dotGate) dotGate.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
-                    if (dotMiniGate) dotMiniGate.className = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
-                    if (chipGate) chipGate.title = "Gateway LoRa: Error de consulta";
+                    const title = "Gateway LoRa: Error de consulta";
+                    const dotClass = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+                    const dotMiniClass = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
+                    if (dotGate) dotGate.className = dotClass;
+                    if (dotMiniGate) dotMiniGate.className = dotMiniClass;
+                    if (chipGate) chipGate.title = title;
+                    nuevoEstado.gate = { title, dotClass, dotMiniClass };
                 }
+
+                try {
+                    sessionStorage.setItem(IOT_CACHE_KEY, JSON.stringify(nuevoEstado));
+                } catch (e) {}
 
                 if (iconPing) iconPing.classList.remove("animate-spin");
 

@@ -233,7 +233,7 @@ if (!empty($_GET['ref'])) {
 
 <!-- Modal: Detalle / Metadatos de Materia -->
 <div id="modal-detalle-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="detalle-materia-nombre">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-3xl lg:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="app-modal-dialog modal-wide-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <!-- Header Accesible y Prominente -->
         <div class="p-5 sm:p-6 lg:p-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-start justify-between gap-4 shrink-0">
             <div class="flex items-start gap-4 min-w-0">
@@ -363,7 +363,7 @@ if (!empty($_GET['ref'])) {
 
 <!-- Modal: Crear Horario -->
 <div id="modal-crear-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-crear-horario">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="app-modal-dialog modal-wide-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div class="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 shrink-0">
             <div>
                 <h3 id="titulo-crear-horario" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Crear horario de clase</h3>
@@ -452,7 +452,7 @@ if (!empty($_GET['ref'])) {
 
 <!-- Modal: Editar Horario -->
 <div id="modal-editar-horario" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" <?= $esDocente ? 'style="display:none;" aria-hidden="true"' : '' ?> role="dialog" aria-modal="true" aria-labelledby="titulo-editar-horario">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="app-modal-dialog modal-wide-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div class="flex items-start justify-between gap-4 p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 shrink-0">
             <div>
                 <h3 id="titulo-editar-horario" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Editar horario de clase</h3>

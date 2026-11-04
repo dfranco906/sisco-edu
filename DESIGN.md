@@ -41,6 +41,25 @@
 2. **Cuerpo Espacioso:** Tarjetas informativas con bordes de 2 px, padding generoso (`p-5` a `p-6`) y scroll independiente si el contenido es extenso.
 3. **Pie con Acción Clara:** Botón de confirmación o cierre (`min-h-[46px] px-6 text-base font-bold`).
 
+### 📐 2.2 Estándar Unificado de Modales: Regla del 80% en Eje X (20% de Margen Lateral)
+
+Para evitar la sensación de "cajas apretadas" y aprovechar al máximo las pantallas de computadoras y laptops en el trabajo administrativo y directivo, **todos los modales y submodales del sistema deben cumplir rigurosamente el siguiente estándar dimensional unificado**:
+
+1. **Pantallas de Escritorio y Horizontales (`lg:` / `≥ 1024 px`):**
+   * El modal debe ocupar el **80% del viewport horizontal** (`w-[80vw] max-w-[80vw]`).
+   * Los costados deben reservar **únicamente un 20% de margen total** (10% en el lateral izquierdo y 10% en el lateral derecho), maximizando el espacio de visualización para formularios, tablas, comparativas, asignaciones y expedientes sin claustrofobia visual.
+   * Altura máxima: `max-h-[90vh]` con `overflow-y: auto` interno y encabezado/pie fijos cuando corresponda.
+   * Clases maestras: `.app-modal-dialog` o `.modal-wide-80` (`w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw]`).
+
+2. **Dispositivos Móviles y Pantallas Angostas (`< 1024 px`):**
+   * El modal se expande al **96% del viewport** (`w-[96vw] sm:w-[92vw]`) maximizando la verticalidad (`max-h-[96vh]`), eliminando scroll horizontal.
+
+3. **Organización Interna del Contenido en 80vw:**
+   * Al disponer de un ancho generoso del 80%, los campos de formulario **nunca deben apilarse en una sola columna infinita**. Deben estructurarse en cuadrículas adaptativas de 2 o 3 columnas (`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5`), manteniendo una proporción armónica y ergonómica de lectura.
+
+4. **Única Excepción Justificada (Diálogos Atómicos):**
+   * Únicamente los diálogos de confirmación binaria rápida (`SISCO.confirm` o confirmación destructiva de eliminación) conservan un ancho contenido (`w-full max-w-md`), dado que sólo presentan una pregunta y dos botones ("Aceptar" / "Cancelar"). Todo lo demás (creación, edición, consulta, importación, auditoría, sincronización y expedientes) se adhiere obligatoriamente a la **Regla del 80%**.
+
 ---
 
 ## 🎨 3. Paleta Cromática y Tokens Semánticos
@@ -113,4 +132,5 @@ Toda pantalla administrativa de gestión de catálogo (ej. Estudiantes, Tutores,
 * ❌ **Prohibido:** Botones de acción que sean un único emoji de 16 px sin etiqueta o tooltip accesible.
 * ❌ **Prohibido:** Campos de formulario con altura menor a 40 px.
 * ❌ **Prohibido:** Modales con fuentes apretadas y sin scroll asistido para resoluciones medianas.
+* ❌ **Prohibido:** Modales operativos estrechos (`max-w-md`, `max-w-lg`, `max-w-xl`) en pantallas de escritorio que desperdicien más del 20% del ancho horizontal en márgenes vacíos (violación de la Regla del 80%).
 * ❌ **Prohibido:** Duplicar datos que pertenecen a otra vista o jerarquía (ej. Carga Horaria Semanal en el catálogo general de materias).

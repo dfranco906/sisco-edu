@@ -3,7 +3,7 @@ declare(strict_types=1);
 ?>
 <!-- Modal Editar Profesor (Rediseñado con Tipografía Grande y Accesibilidad) -->
 <div id="modal-editar-profesor" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mep-titulo">
-    <div class="app-modal-dialog max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6 max-h-[92vh] overflow-y-auto">
+    <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6 max-h-[92vh] overflow-y-auto">
         
         <!-- Header -->
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">

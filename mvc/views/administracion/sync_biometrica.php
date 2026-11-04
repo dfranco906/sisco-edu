@@ -242,7 +242,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 <!-- MODAL DE PROCESAMIENTO EN COLA / TRANSMISIÓN LORA -->
 <div id="modal-progreso-cola" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-cola-titulo">
-    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    <div class="app-modal-dialog modal-wide-80 relative w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Cabecera del modal -->
         <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-blue-500/10 dark:bg-slate-800/60">
@@ -327,7 +327,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 <!-- Modal: Resetear / Vaciar Huellas de Aula (Solo Administradores) -->
 <div id="modal-resetear-aula" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-reset-titulo">
-    <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    <div class="app-modal-dialog modal-wide-80 relative w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-rose-50/70 dark:bg-rose-950/40">
             <div class="flex items-center gap-3.5">
@@ -412,7 +412,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 <!-- MODAL DE AUDITORÍA Y CONCILIACIÓN REMOTA DE SENSORES DY50 (ETAPA 6) -->
 <div id="modal-auditar-aula" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-audit-titulo">
-    <div class="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    <div class="app-modal-dialog modal-wide-80 relative w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-sky-500/10 to-indigo-500/10 dark:bg-slate-800/60">
             <div class="flex items-center gap-3.5">

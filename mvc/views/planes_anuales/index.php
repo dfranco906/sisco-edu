@@ -289,7 +289,7 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- MODAL 1: CREAR / EDITAR ENCABEZADO DEL PLAN ANUAL        -->
 <!-- ======================================================== -->
 <div id="modal-plan" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl my-8 overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 my-8 overflow-hidden animate-in fade-in zoom-in duration-150">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h3 id="modal-plan-title" class="font-black text-slate-900 dark:text-white text-xl">Crear Nuevo Plan Anual</h3>
             <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
@@ -353,7 +353,7 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- MODAL 2: CREAR / EDITAR UNIDAD TEMÁTICA                  -->
 <!-- ======================================================== -->
 <div id="modal-unidad" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in duration-150">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h3 id="modal-unidad-title" class="font-black text-slate-900 dark:text-white text-xl">Nueva Unidad Temática</h3>
             <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
@@ -390,7 +390,7 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- MODAL 3: CREAR / EDITAR CAPACIDAD MEC                    -->
 <!-- ======================================================== -->
 <div id="modal-capacidad" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in duration-150">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h3 id="modal-capacidad-title" class="font-black text-slate-900 dark:text-white text-xl">Capacidad Pedagógica MEC</h3>
             <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>
@@ -422,7 +422,7 @@ $rolUsuario = $_SESSION['rol'] ?? 'Usuario';
 <!-- MODAL 4: CREAR / EDITAR TEMA / LECCIÓN DETALLADA         -->
 <!-- ======================================================== -->
 <div id="modal-tema" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-2xl my-8 overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 my-8 overflow-hidden animate-in fade-in zoom-in duration-150">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h3 id="modal-tema-title" class="font-black text-slate-900 dark:text-white text-xl">Planificar Lección / Tema</h3>
             <button type="button" class="btn-close-modal w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">&times;</button>

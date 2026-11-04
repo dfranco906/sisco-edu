@@ -496,7 +496,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 <!-- SUBMODAL ACCESIBLE: AÑADIR / EDITAR NODO LORA -->
 <div id="modal-nodo" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-6 sm:p-8 border-2 border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
+    <div class="app-modal-dialog modal-wide-80 bg-white rounded-3xl shadow-2xl w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] p-6 sm:p-8 border-2 border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
         
         <!-- Cabecera del Submodal Accesible -->
         <div class="flex items-center justify-between pb-4 border-b-2 border-slate-100 mb-6">

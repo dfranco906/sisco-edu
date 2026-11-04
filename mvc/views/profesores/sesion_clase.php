@@ -253,7 +253,7 @@ $idProfesorSesion = $_SESSION['id_profesor'] ?? null;
 
     <!-- MODAL: NUEVO REGISTRO ANECDOTARIO -->
     <div id="modal-nuevo-anecdotario" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mna-titulo">
-        <div class="app-modal-dialog max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-5">
+        <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-5">
             <div class="flex items-start justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                 <h3 id="mna-titulo" class="text-xl font-black text-slate-900 dark:text-white">
                     Registrar Incidente o Hecho Anecdotario

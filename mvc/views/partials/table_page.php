@@ -25,7 +25,7 @@ if (!empty($_GET['ref'])) {
 <?php if (isset($formCrear)): ?>
 <!-- Modal: Crear Registro Accesible -->
 <div id="modal-crear" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-crear">
-    <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="app-modal-dialog modal-wide-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <!-- Header -->
         <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-start justify-between gap-4 shrink-0">
             <div class="flex items-center gap-3 min-w-0">
@@ -48,7 +48,7 @@ if (!empty($_GET['ref'])) {
 
         <!-- Formulario con Scroll Interno -->
         <form id="form-crear" data-api="<?= base_url($formCrear['api']) ?>" class="flex flex-col flex-1 overflow-hidden">
-            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 text-base">
+            <div class="p-5 sm:p-6 lg:p-8 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-5 text-base">
                 <?php foreach ($formCrear['campos'] as $campo): ?>
                     <div>
                         <label class="block text-sm sm:text-base font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
@@ -185,7 +185,7 @@ if (!empty($_GET['ref'])) {
 
     <!-- Modal: Editar Registro Accesible -->
     <div id="modal-editar" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-editar">
-        <div class="app-modal-dialog bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div class="app-modal-dialog modal-wide-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <!-- Header -->
             <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-start justify-between gap-4 shrink-0">
                 <div class="flex items-center gap-3 min-w-0">
@@ -208,7 +208,7 @@ if (!empty($_GET['ref'])) {
 
             <!-- Formulario con Scroll Interno -->
             <form id="form-editar" class="flex flex-col flex-1 overflow-hidden">
-                <div id="campos-editar" class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 text-base"></div>
+                <div id="campos-editar" class="p-5 sm:p-6 lg:p-8 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-5 text-base"></div>
 
                 <!-- Footer Fijo Accesible -->
                 <div class="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 shrink-0">

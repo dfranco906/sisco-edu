@@ -3,7 +3,7 @@ declare(strict_types=1);
 ?>
 <!-- Modal Crear Estudiante (Rediseñado con Tipografía Grande y Accesibilidad) -->
 <div id="modal-crear-estudiante" class="app-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mce-titulo">
-    <div class="app-modal-dialog max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6 max-h-[92vh] overflow-y-auto">
+    <div class="app-modal-dialog modal-wide-80 w-[96vw] sm:w-[92vw] lg:w-[80vw] max-w-[96vw] lg:max-w-[80vw] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 space-y-6 max-h-[92vh] overflow-y-auto">
         
         <!-- Header -->
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -26,7 +26,7 @@ declare(strict_types=1);
         </div>
 
         <form id="form-crear-estudiante" class="space-y-4 text-base">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block mb-1.5 font-bold text-base text-slate-900 dark:text-white">Nombre *</label>
                     <input type="text" name="nombre" class="app-input w-full text-base py-2.5 px-3.5 rounded-xl min-h-[46px]" placeholder="Ej: Lucas Valentín" required>
@@ -35,24 +35,22 @@ declare(strict_types=1);
                     <label class="block mb-1.5 font-bold text-base text-slate-900 dark:text-white">Apellido *</label>
                     <input type="text" name="apellido" class="app-input w-full text-base py-2.5 px-3.5 rounded-xl min-h-[46px]" placeholder="Ej: Benítez Silva" required>
                 </div>
-            </div>
-
-            <div>
-                <label class="block mb-1.5 font-bold text-base text-slate-900 dark:text-white">Cédula de Identidad *</label>
-                <input type="text" name="cedula_identidad" placeholder="Ej: 6306661 (sin puntos)" class="app-input w-full text-base font-mono font-bold py-2.5 px-3.5 rounded-xl min-h-[46px]" required>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
-                    Servirá como usuario inicial y clave para consultar calificaciones y asistencias.
-                </p>
-            </div>
-
-            <div>
-                <label class="block mb-1.5 font-bold text-base text-slate-900 dark:text-white">Grado o Curso *</label>
-                <select name="id_grado" id="modal-crear-grado-select" class="app-input w-full text-base font-bold py-2.5 px-3.5 rounded-xl min-h-[46px]" required>
-                    <option value="">Seleccione grado o curso...</option>
-                </select>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
-                    El alumno quedará matriculado de inmediato en todas las asignaturas de este curso.
-                </p>
+                <div>
+                    <label class="block mb-1.5 font-bold text-base text-slate-900 dark:text-white">Cédula de Identidad *</label>
+                    <input type="text" name="cedula_identidad" placeholder="Ej: 6306661 (sin puntos)" class="app-input w-full text-base font-mono font-bold py-2.5 px-3.5 rounded-xl min-h-[46px]" required>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
+                        Servirá como usuario inicial y clave para consultar calificaciones y asistencias.
+                    </p>
+                </div>
+                <div>
+                    <label class="block mb-1.5 font-bold text-base text-slate-900 dark:text-white">Grado o Curso *</label>
+                    <select name="id_grado" id="modal-crear-grado-select" class="app-input w-full text-base font-bold py-2.5 px-3.5 rounded-xl min-h-[46px]" required>
+                        <option value="">Seleccione grado o curso...</option>
+                    </select>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">
+                        El alumno quedará matriculado de inmediato en todas las asignaturas de este curso.
+                    </p>
+                </div>
             </div>
 
             <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
