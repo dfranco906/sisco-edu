@@ -131,6 +131,17 @@ document.addEventListener('DOMContentLoaded', function() {
 async function cargarMateriasDesactivadas() {
     const tbody = document.getElementById('tbody-desactivadas');
     
+    if (tbody) {
+        tbody.innerHTML = Array(4).fill(0).map(() => `
+            <tr class="animate-pulse border-b border-slate-100 dark:border-slate-800">
+                <td class="p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div><div class="space-y-1.5"><div class="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded"></div><div class="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div></div></div></td>
+                <td class="p-4"><div class="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full"></div></td>
+                <td class="p-4 text-center"><div class="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto"></div></td>
+                <td class="p-4 text-right"><div class="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto"></div></td>
+            </tr>
+        `).join('');
+    }
+
     try {
         const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Materia/leer_materias_desactivadas.php';
         const res = await fetch(url);

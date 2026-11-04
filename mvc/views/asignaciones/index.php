@@ -258,10 +258,22 @@ async function cargarAsignaciones() {
 
     if (contenedor) {
         contenedor.innerHTML = `
-            <div class="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <div class="animate-spin inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                <p class="text-lg font-bold text-slate-700 dark:text-slate-200">Cargando asignaciones docentes...</p>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Consultando asignaciones para el período seleccionado</p>
+            <div class="space-y-4 animate-pulse">
+                ${Array(3).fill(0).map(() => `
+                    <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
+                                <div class="space-y-2">
+                                    <div class="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
+                                    <div class="h-3 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
+                                </div>
+                            </div>
+                            <div class="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                        </div>
+                        <div class="h-16 w-full bg-slate-100 dark:bg-slate-800/60 rounded-2xl"></div>
+                    </div>
+                `).join('')}
             </div>
         `;
     }

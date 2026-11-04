@@ -654,6 +654,21 @@ window.BASE_URL = "<?= base_url('') ?>";
     // ==========================================
     async function cargarMarcos() {
         const tbody = document.getElementById('tabla-marcos-body');
+        if (tbody) {
+            tbody.innerHTML = Array(4).fill(0).map(() => `
+                <tr class="animate-pulse border-b border-slate-100 dark:border-slate-800">
+                    <td class="py-4 px-3"><div class="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-14 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3 text-center"><div class="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto"></div></td>
+                    <td class="py-4 px-3 text-right"><div class="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto"></div></td>
+                </tr>
+            `).join('');
+        }
         try {
             const res = await fetch(`${window.BASE_URL}src/api/Horario/leer_marcos_horarios.php`);
             const data = await res.json();
@@ -872,6 +887,20 @@ window.BASE_URL = "<?= base_url('') ?>";
     // ==========================================
     async function cargarRecesos() {
         const tbody = document.getElementById('tabla-recesos-body');
+        if (tbody) {
+            tbody.innerHTML = Array(3).fill(0).map(() => `
+                <tr class="animate-pulse border-b border-slate-100 dark:border-slate-800">
+                    <td class="py-4 px-3"><div class="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3"><div class="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                    <td class="py-4 px-3 text-center"><div class="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto"></div></td>
+                    <td class="py-4 px-3 text-right"><div class="h-8 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto"></div></td>
+                </tr>
+            `).join('');
+        }
         try {
             const res = await fetch(`${window.BASE_URL}src/api/Horario/leer_recesos.php`);
             const data = await res.json();

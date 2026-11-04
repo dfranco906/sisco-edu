@@ -362,7 +362,14 @@ async function cargarEstudiantes(idGrado) {
     if (tableContainer) tableContainer.classList.remove('hidden');
 
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-base text-slate-500 font-semibold">Cargando nómina de estudiantes...</td></tr>';
+        tbody.innerHTML = Array(4).fill(0).map(() => `
+            <tr class="animate-pulse border-b border-slate-100 dark:border-slate-800">
+                <td class="p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div><div class="space-y-1.5"><div class="h-4 w-36 bg-slate-200 dark:bg-slate-800 rounded"></div><div class="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div></div></div></td>
+                <td class="p-4 hidden sm:table-cell"><div class="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded"></div></td>
+                <td class="p-4"><div class="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full"></div></td>
+                <td class="p-4 text-right"><div class="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto"></div></td>
+            </tr>
+        `).join('');
     }
 
     // Actualizar metadatos del encabezado
