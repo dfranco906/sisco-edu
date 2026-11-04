@@ -46,7 +46,7 @@ try {
 
     // 2. Obtener huella activa del profesor
     $stmtH = $db->prepare("
-        SELECT id_huella, bytes, crc32_hash, fecha_creacion
+        SELECT id_huella, crc32_hash, fecha_creacion
         FROM huellas_templates
         WHERE (id_profesor = :id OR (user_id_global IS NOT NULL AND user_id_global = :uid))
           AND activo = 1
