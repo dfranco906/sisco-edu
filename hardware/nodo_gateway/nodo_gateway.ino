@@ -11,6 +11,12 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "configuracion_red.h"
+#if defined(GATEWAY_CONEXION_ETHERNET_W5500)
+#include <SPI.h>
+#include <Ethernet.h>
+#elif defined(GATEWAY_CONEXION_WT32_ETH01)
+#include <ETH.h>
+#endif
 #include "interfaz_web.h"
 #include "seguridad_portal.h"
 #include "seguridad_lora.h"
@@ -99,9 +105,18 @@ SemaphoreHandle_t mutexLoRa = NULL;
 TaskHandle_t tareaRedHandle = NULL;
 
 // ============================================================================
+// COLA DE DRENAJE BIOMÉTRICO ASÍNCRONA (EVENT-DRIVEN DRAIN QUEUE)
+// ============================================================================
+volatile bool solicitudDrenajeSync = false;
+volatile int syncTargetHuella = 0;
+volatile int syncTargetAula = 0;
+bool drenandoSyncActualmente = false;
+
+// ============================================================================
 // PROTOTIPOS DE FUNCIONES
 // ============================================================================
 void tareaRedCore0(void *pvParameters);
+void ejecutarCicloDrenajeSync();
 void encolarAsistencia(const String &payload, int rssi = 0, int snr = 0);
 void encolarSyncOk(const String &payload, int rssi = 0, int snr = 0);
 void encolarSyncErr(const String &payload, int rssi = 0, int snr = 0);
@@ -856,18 +871,12 @@ void setup() {
     int idHuella = server.hasArg("id_huella") ? server.arg("id_huella").toInt() : 0;
     int idAula = server.hasArg("id_aula") ? server.arg("id_aula").toInt() : 0;
 
-    server.send(202, "application/json", "{\"status\":\"accepted\",\"id_huella\":" + String(idHuella) + ",\"id_aula\":" + String(idAula) + "}");
+    syncTargetHuella = idHuella;
+    syncTargetAula = idAula;
+    solicitudDrenajeSync = true;
 
-    if (idHuella > 0 && idAula > 0) {
-      Serial.printf("[SYNC DIRIGIDO] Huella ID %d dirigida al Aula %d...\n", idHuella, idAula);
-      pedirSyncEspecifica(idHuella, idAula);
-    } else if (idHuella > 0) {
-      Serial.printf("[SYNC DIRIGIDO] Huella ID %d dirigida a sus aulas asignadas...\n", idHuella);
-      pedirSyncHuella(idHuella);
-    } else {
-      Serial.println("[SYNC] Consultando aulas activas con huellas pendientes...");
-      pedirSyncPendiente();
-    }
+    server.send(202, "application/json", "{\"status\":\"accepted\",\"message\":\"Cola de drenaje activada\",\"id_huella\":" + String(idHuella) + ",\"id_aula\":" + String(idAula) + "}");
+    Serial.printf("[SYNC QUEUE] Evento de sync recibido (huella=%d, aula=%d). Respondido 202; drenaje asincrono encolado.\n", idHuella, idAula);
   });
 
   // Endpoint de vaciado remoto del sensor de un aula (protegido por X-GATEWAY-KEY)
@@ -1144,14 +1153,19 @@ void tareaRedCore0(void *pvParameters) {
         WiFi.reconnect();
       }
 
-      // 6. Sondeo periódico automático de huellas pendientes (cada 45 segundos)
-      if (estadoWifi == WL_CONNECTED && (millis() - ultimoSondeoSyncAuto >= 45000)) {
-        ultimoSondeoSyncAuto = millis();
-        Serial.println("[AUTO-SYNC] Comprobando sincronizaciones pendientes en segundo plano...");
-        pedirSyncPendiente();
+      // 6. Drenaje asíncrono dirigido / por eventos de sincronización biométrica
+      if (estadoWifi == WL_CONNECTED && solicitudDrenajeSync && !drenandoSyncActualmente) {
+        ejecutarCicloDrenajeSync();
       }
 
-      // 7. Verificación periódica de cierre institucional de aulas y reset diario (cada 5 minutos)
+      // 7. Sondeo de contingencia / Heartbeat (cada 30 minutos en vez de cada 45 segundos)
+      if (estadoWifi == WL_CONNECTED && (millis() - ultimoSondeoSyncAuto >= 1800000)) {
+        ultimoSondeoSyncAuto = millis();
+        Serial.println("[HEARTBEAT-SYNC] Verificando huellas pendientes en cola de contingencia...");
+        solicitudDrenajeSync = true;
+      }
+
+      // 8. Verificación periódica de cierre institucional de aulas y reset diario (cada 5 minutos)
       if (estadoWifi == WL_CONNECTED && (millis() - ultimoChequeoCierreAulas >= 300000)) {
         ultimoChequeoCierreAulas = millis();
         verificarCierreAulasServidor();
@@ -2022,53 +2036,104 @@ bool enviarHuellaPorLoRa(int loraId, int idSync, int idHuella, int idAula, const
 }
 
 // ============================================================================
-// COMUNICACIÓN CON LA API BACKEND SISCO-EDU (SINCRONIZACIÓN DINÁMICA)
+// COMUNICACIÓN CON LA API BACKEND SISCO-EDU (SINCRONIZACIÓN DINÁMICA Y DRENAJE)
 // ============================================================================
-void pedirSyncPendiente() {
+void ejecutarCicloDrenajeSync() {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[SYNC] Consulta omitida: Wi-Fi no conectado");
+    Serial.println("[DRAIN-QUEUE] Omitido: Red no conectada");
+    solicitudDrenajeSync = false;
     return;
   }
+  if (drenandoSyncActualmente) return;
+  drenandoSyncActualmente = true;
+  solicitudDrenajeSync = false;
+  Serial.println("\n[DRAIN-QUEUE] >>> INICIANDO CICLO DE DRENAJE DE HUELLAS BIOMETRICAS <<<");
 
-  HTTPClient http;
-  const String url = configBaseUrl + "src/api/Gateway/obtener_aulas_sync.php";
-  if (!http.begin(url)) {
-    Serial.println("[SYNC] Error al inicializar peticion a obtener_aulas_sync.php");
-    return;
+  // 1. Atender objetivo dirigido si fue solicitado específicamente
+  const int huellaTarget = syncTargetHuella;
+  const int aulaTarget = syncTargetAula;
+  syncTargetHuella = 0;
+  syncTargetAula = 0;
+
+  if (huellaTarget > 0 && aulaTarget > 0) {
+    Serial.printf("[DRAIN-QUEUE] Transmision dirigida especifica: Huella %d -> Aula %d\n", huellaTarget, aulaTarget);
+    pedirSyncEspecifica(huellaTarget, aulaTarget);
+    server.handleClient();
+    despacharColaAsistencias();
+    despacharColaSync();
+  } else if (huellaTarget > 0) {
+    Serial.printf("[DRAIN-QUEUE] Transmision dirigida: Huella %d a sus aulas asignadas\n", huellaTarget);
+    pedirSyncHuella(huellaTarget);
+    server.handleClient();
+    despacharColaAsistencias();
+    despacharColaSync();
   }
-  http.addHeader("X-GATEWAY-KEY", configApiKey);
-  const int codigo = http.GET();
-  const String respuesta = http.getString();
-  http.end();
 
-  if (codigo != 200) {
-    Serial.printf("[SYNC] API obtener_aulas_sync respondio HTTP %d\n", codigo);
-    return;
-  }
+  // 2. Drenaje en bucle de la cola de la base de datos hasta que haya 0 pendientes
+  int limiteRondas = 50;
+  while (limiteRondas-- > 0 && WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    const String url = configBaseUrl + "src/api/Gateway/obtener_aulas_sync.php";
+    if (!http.begin(url)) {
+      Serial.println("[DRAIN-QUEUE] Error inicializando conexion a obtener_aulas_sync.php");
+      break;
+    }
+    http.addHeader("X-GATEWAY-KEY", configApiKey);
+    http.setTimeout(4500);
+    const int codigo = http.GET();
+    if (codigo != 200) {
+      Serial.printf("[DRAIN-QUEUE] obtener_aulas_sync respondio HTTP %d. Pausando drenaje.\n", codigo);
+      http.end();
+      break;
+    }
+    const String respuesta = http.getString();
+    http.end();
 
-  DynamicJsonDocument doc(4096);
-  if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") {
-    Serial.println("[SYNC] Respuesta JSON de aulas no valida");
-    return;
-  }
+    DynamicJsonDocument doc(4096);
+    if (deserializeJson(doc, respuesta) || String(doc["status"] | "") != "success") {
+      Serial.println("[DRAIN-QUEUE] Formato JSON invalido en obtener_aulas_sync");
+      break;
+    }
 
-  JsonArray aulas = doc["data"]["aulas"].as<JsonArray>();
-  Serial.printf("[SYNC] %u aulas registradas en la base de datos\n", aulas.size());
+    JsonArray aulas = doc["data"]["aulas"].as<JsonArray>();
+    int totalPendientes = 0;
+    int enviadasEnRonda = 0;
 
-  for (JsonObject aula : aulas) {
-    const int idAula = aula["id_aula"] | 0;
-    const int loraId = aula["lora_id"] | 0;
-    const int pendientes = aula["pendientes"] | 0;
-    const String nombre = aula["nombre_aula"] | "";
+    for (JsonObject aula : aulas) {
+      const int idAula = aula["id_aula"] | 0;
+      const int loraId = aula["lora_id"] | 0;
+      const int pendientes = aula["pendientes"] | 0;
+      const String nombre = aula["nombre_aula"] | "";
 
-    if (idAula > 0 && loraId > 0 && pendientes > 0) {
-      Serial.printf("[SYNC] Aula %s (ID %d, LoRa %d) tiene %d huellas pendientes\n",
-                    nombre.c_str(), idAula, loraId, pendientes);
-      pedirSyncAula(idAula, loraId);
+      if (idAula > 0 && loraId > 0 && pendientes > 0) {
+        totalPendientes += pendientes;
+        Serial.printf("[DRAIN-QUEUE] Aula %s (ID %d, LoRa %d): drenando huella (%d pendientes)...\n",
+                      nombre.c_str(), idAula, loraId, pendientes);
+
+        // Envía 1 huella de la cola para este aula
+        pedirSyncAula(idAula, loraId);
+        enviadasEnRonda++;
+
+        // Atender peticiones web y despachos para mantener el sistema reactivo
+        server.handleClient();
+        despacharColaAsistencias();
+        despacharColaSync();
+        vTaskDelay(pdMS_TO_TICKS(400));
+      }
+    }
+
+    // Si no quedan pendientes o no se pudo avanzar en esta ronda, finaliza la cola
+    if (totalPendientes == 0 || enviadasEnRonda == 0) {
+      break;
     }
   }
 
-  Serial.println("[SYNC] Consulta dinamica finalizada");
+  drenandoSyncActualmente = false;
+  Serial.println("[DRAIN-QUEUE] >>> COLA VACIA O DRENAJE FINALIZADO. GATEWAY EN REPOSO <<<\n");
+}
+
+void pedirSyncPendiente() {
+  ejecutarCicloDrenajeSync();
 }
 
 bool pedirSyncAula(int idAula, int loraId, int idHuella) {

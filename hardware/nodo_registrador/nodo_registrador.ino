@@ -314,6 +314,88 @@ bool enrolarHuella() {
 }
 
 // ============================================================================
+// EXPORTACIÓN DE TEMPLATE NORMALIZADO (CONTRATO 1536 BYTES / 3072 HEX)
+// ============================================================================
+bool exportarTemplateJson(String &jsonSalida, String &errorSalida) {
+  if (finger.loadModel(SLOT_TEMPORAL_REGISTRO) != FINGERPRINT_OK) {
+    errorSalida = "No se pudo recargar el template temporal";
+    return false;
+  }
+  if (finger.getModel() != FINGERPRINT_OK) {
+    errorSalida = "No se pudo iniciar la exportacion";
+    return false;
+  }
+
+  static uint8_t datos[Dy50TemplateTransport::TEMPLATE_BYTES];
+  size_t bytesLeidos = 0;
+  String error;
+  if (!Dy50TemplateTransport::readTemplate(dy50Serial, datos, sizeof(datos), bytesLeidos, error)) {
+    errorSalida = error;
+    return false;
+  }
+  const String hex = Dy50TemplateTransport::encodeHex(datos, bytesLeidos);
+  String crc = String(Dy50TemplateTransport::crc32(datos, bytesLeidos), HEX);
+  while (crc.length() < 8) crc = "0" + crc;
+  crc.toUpperCase();
+  Serial.printf("[BIOMETRIA] Exportacion verificada: bytes=%u CRC32=%s\n",
+                (unsigned int)bytesLeidos, crc.c_str());
+  pantalla("EXPORTADO", String(bytesLeidos) + " bytes HEX");
+
+  jsonSalida = "{\"status\":\"success\",\"format\":\"HEX\",\"bytes\":" + String(bytesLeidos) + ",\"crc32\":\"" + crc + "\",\"template\":\"" + hex + "\"}";
+  return true;
+}
+
+// ============================================================================
+// PROTOCOLO SERIAL USB DIRECTO (WEB SERIAL API PARA CHROME / EDGE)
+// ============================================================================
+void atenderComandosSerialUSB() {
+  if (!Serial.available()) return;
+
+  String comando = Serial.readStringUntil('\n');
+  comando.trim();
+  if (comando.length() == 0) return;
+
+  if (comando == "CMD:PING") {
+    Serial.println("PONG:SISCO_REGISTRADOR");
+  } else if (comando == "CMD:STATUS") {
+    const bool capturando = enrolamientoPendiente || enrolandoActualmente;
+    Serial.printf("{\"status\":\"success\",\"capturando\":%s,\"template_disponible\":%s,\"ultimo_error\":\"%s\"}\n",
+                  capturando ? "true" : "false",
+                  templateDisponible ? "true" : "false",
+                  ultimoError.c_str());
+  } else if (comando == "CMD:CAPTURAR") {
+    if (enrolamientoPendiente || enrolandoActualmente) {
+      Serial.println("ERROR:Captura en progreso");
+      return;
+    }
+    Serial.println("STATUS:INICIANDO_CAPTURA");
+    pantalla("CAPTURA USB", "Coloque dedo");
+    if (!enrolarHuella()) {
+      Serial.println("ERROR:" + ultimoError);
+      pantalla("ERROR", ultimoError);
+      delay(1200);
+      pantalla("ONLINE", modoAP ? "192.168.4.1" : WiFi.localIP().toString());
+      return;
+    }
+    Serial.println("STATUS:CAPTURADA");
+    String json, err;
+    if (exportarTemplateJson(json, err)) {
+      Serial.println("TEMPLATE:" + json);
+    } else {
+      Serial.println("ERROR:" + err);
+    }
+  } else if (comando == "CMD:LIMPIAR") {
+    enrolandoActualmente = false;
+    enrolamientoPendiente = false;
+    finger.deleteModel(SLOT_TEMPORAL_REGISTRO);
+    templateDisponible = false;
+    ultimoError = "";
+    pantalla("ONLINE", modoAP ? "192.168.4.1" : WiFi.localIP().toString());
+    Serial.println("OK:LIMPIO");
+  }
+}
+
+// ============================================================================
 // CONFIGURACIÓN DE RUTAS HTTP
 // ============================================================================
 void configurarRutas() {
@@ -348,23 +430,13 @@ void configurarRutas() {
     cors();
     if (enrolamientoPendiente || enrolandoActualmente) { server.send(409, "application/json", "{\"status\":\"error\",\"message\":\"Captura en progreso\"}"); return; }
     if (!templateDisponible) { jsonError(404, "No hay huella capturada"); return; }
-    if (finger.loadModel(SLOT_TEMPORAL_REGISTRO) != FINGERPRINT_OK) { jsonError(500, "No se pudo recargar el template temporal"); return; }
-    if (finger.getModel() != FINGERPRINT_OK) { jsonError(500, "No se pudo iniciar la exportacion"); return; }
-
-    static uint8_t datos[Dy50TemplateTransport::TEMPLATE_BYTES];
-    size_t bytesLeidos = 0;
-    String error;
-    if (!Dy50TemplateTransport::readTemplate(dy50Serial, datos, sizeof(datos), bytesLeidos, error)) {
-      pantalla("ERR TRANS", error); jsonError(500, error); return;
+    String json, err;
+    if (!exportarTemplateJson(json, err)) {
+      pantalla("ERR TRANS", err);
+      jsonError(500, err);
+      return;
     }
-    const String hex = Dy50TemplateTransport::encodeHex(datos, bytesLeidos);
-    String crc = String(Dy50TemplateTransport::crc32(datos, bytesLeidos), HEX);
-    while (crc.length() < 8) crc = "0" + crc;
-    crc.toUpperCase();
-    Serial.printf("[BIOMETRIA] Exportacion verificada: bytes=%u CRC32=%s\n",
-                  (unsigned int)bytesLeidos, crc.c_str());
-    pantalla("EXPORTADO", String(bytesLeidos) + " bytes HEX");
-    server.send(200, "application/json", "{\"status\":\"success\",\"format\":\"HEX\",\"bytes\":" + String(bytesLeidos) + ",\"crc32\":\"" + crc + "\",\"template\":\"" + hex + "\"}");
+    server.send(200, "application/json", json);
   });
 
   server.on("/limpiar", HTTP_GET, []() {
@@ -482,6 +554,7 @@ void loop() {
   }
 
   server.handleClient();
+  atenderComandosSerialUSB();
 
   // Monitoreo del botón BOOT (GPIO 0) en tiempo de ejecución:
   // - Pulsar durante 2.5s: Activa inmediatamente el Modo AP (SISCO-REGISTRADOR-CONFIG)

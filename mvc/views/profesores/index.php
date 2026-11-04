@@ -976,6 +976,9 @@ function abrirModalBiometriaProfesor(idProfesor) {
     };
 
     actualizarEstadoModal(tieneHuella);
+    if (typeof actualizarBadgesCanalSerie === 'function') {
+        actualizarBadgesCanalSerie();
+    }
 
     const feedbackBox = document.getElementById('mbp-feedback-box');
     if (feedbackBox) feedbackBox.classList.add('hidden');

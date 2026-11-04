@@ -25,6 +25,20 @@ declare(strict_types=1);
             </button>
         </div>
 
+        <!-- Selector y Estado de Conexión del Sensor Registrador (USB vs Wi-Fi) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Conexión con Lector:</span>
+                <span id="mbe-badge-canal" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    📶 Modo Wi-Fi
+                </span>
+            </div>
+            <button type="button" id="mbe-btn-conectar-usb" onclick="conectarUsbRegistrador('estudiante')" class="btn btn-secondary text-xs sm:text-sm font-bold py-1.5 px-3.5 min-h-[38px] inline-flex items-center gap-2 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-all">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span id="mbe-btn-conectar-usb-txt">Conectar por Cable USB</span>
+            </button>
+        </div>
+
         <!-- Ficha Resumida del Alumno -->
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>

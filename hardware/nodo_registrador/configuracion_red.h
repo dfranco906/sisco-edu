@@ -25,9 +25,32 @@ constexpr char CLAVE_API_GATEWAY[] = "SISCO_GATEWAY_2026_SECRETO";
 // 4. Parámetros de Red LoRa (Módulos Reyax RYLR998)
 constexpr int LORA_RED_ID = 18;
 constexpr int LORA_ID_GATEWAY = 100;
-constexpr int LORA_ID_AULA_DEFAULT = 101;
+constexpr int LORA_ID_AULA_DEFAULT = 110;
+constexpr unsigned long LORA_BANDA_DEFAULT = 915000000;
+constexpr char LORA_PARAM_DEFAULT[] = "7,9,1,12";
+constexpr int LORA_CRFOP_DEFAULT = 22;
 
 // 5. Parámetros Biométricos Normalizados (Contrato 1536 bytes)
 constexpr size_t TAMANO_HUELLA_BYTES = 1536;
 constexpr size_t TAMANO_HUELLA_HEX = TAMANO_HUELLA_BYTES * 2;
 constexpr int TAMANO_CHUNK_LORA = 128;
+
+// ============================================================================
+// 6. Configuración de Conectividad del Gateway (Wi-Fi vs Ethernet Cableado)
+// ============================================================================
+// Por defecto el Gateway opera en Wi-Fi. Si conectas un módulo SPI W5500 o
+// utilizas una placa con Ethernet integrado (tipo WT32-ETH01), descomenta
+// la directiva correspondiente:
+#define GATEWAY_CONEXION_WIFI
+// #define GATEWAY_CONEXION_ETHERNET_W5500
+// #define GATEWAY_CONEXION_WT32_ETH01
+
+#if defined(GATEWAY_CONEXION_ETHERNET_W5500)
+  // Pines SPI estándar para módulo W5500 conectado a ESP32 WROOM/DevKit
+  constexpr int ETH_PIN_MISO = 19;
+  constexpr int ETH_PIN_MOSI = 23;
+  constexpr int ETH_PIN_SCLK = 18;
+  constexpr int ETH_PIN_CS   = 5;
+  constexpr int ETH_PIN_INT  = 4;
+  constexpr int ETH_PIN_RST  = 33;
+#endif

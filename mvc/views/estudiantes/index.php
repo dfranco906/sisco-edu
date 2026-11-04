@@ -773,6 +773,9 @@ function abrirModalBiometriaEstudiante(idEstudiante) {
     };
 
     actualizarEstadoModal(tieneHuella);
+    if (typeof actualizarBadgesCanalSerie === 'function') {
+        actualizarBadgesCanalSerie();
+    }
 
     // Limpiar feedback anterior
     const feedbackBox = document.getElementById('mbe-feedback-box');
