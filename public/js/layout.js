@@ -182,8 +182,98 @@
                 });
             });
 
+            // 5. Control global de modales y tecla Escape
+            const syncModalScrollLock = () => {
+                const hasOpenModal = Array.from(document.querySelectorAll(
+                    '.app-modal:not(.hidden), [role="dialog"]:not(.hidden), [id^="modal-"]:not(.hidden)'
+                )).some(el => {
+                    if (['H1', 'H2', 'H3', 'H4', 'SPAN', 'P', 'INPUT', 'SELECT', 'LABEL'].includes(el.tagName)) return false;
+                    const style = window.getComputedStyle(el);
+                    return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetWidth > 0 || el.offsetHeight > 0);
+                });
+
+                document.body.classList.toggle('overflow-hidden', hasOpenModal);
+            };
+
+            const modalObserver = new MutationObserver((mutations) => {
+                let shouldCheck = false;
+                for (const m of mutations) {
+                    if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
+                        const t = m.target;
+                        if (t && ((t.id && t.id.startsWith('modal-')) || t.classList?.contains('app-modal') || t.getAttribute?.('role') === 'dialog')) {
+                            shouldCheck = true;
+                            break;
+                        }
+                    } else if (m.type === 'childList') {
+                        for (const n of m.addedNodes) {
+                            if (n.nodeType === 1 && ((n.id && n.id.startsWith('modal-')) || n.classList?.contains('app-modal') || n.getAttribute?.('role') === 'dialog')) {
+                                shouldCheck = true;
+                                break;
+                            }
+                        }
+                        if (shouldCheck) break;
+                        for (const n of m.removedNodes) {
+                            if (n.nodeType === 1 && ((n.id && n.id.startsWith('modal-')) || n.classList?.contains('app-modal') || n.getAttribute?.('role') === 'dialog')) {
+                                shouldCheck = true;
+                                break;
+                            }
+                        }
+                        if (shouldCheck) break;
+                    }
+                }
+                if (shouldCheck) {
+                    syncModalScrollLock();
+                }
+            });
+            modalObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'], childList: true, subtree: true });
+
             document.addEventListener("keydown", (event) => {
-                if (event.key === "Escape") setOpen(false);
+                if (event.key === "Escape") {
+                    const visibleModals = Array.from(document.querySelectorAll(
+                        '.app-modal:not(.hidden), [role="dialog"]:not(.hidden), [id^="modal-"]:not(.hidden)'
+                    )).filter(el => {
+                        if (['H1', 'H2', 'H3', 'H4', 'SPAN', 'P', 'INPUT', 'SELECT', 'LABEL'].includes(el.tagName)) return false;
+                        const style = window.getComputedStyle(el);
+                        return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetWidth > 0 || el.offsetHeight > 0);
+                    });
+
+                    if (visibleModals.length > 0) {
+                        event.preventDefault();
+                        const topModal = visibleModals[visibleModals.length - 1];
+                        const closeBtn = topModal.querySelector(
+                            '[data-action="close"], .app-modal-close, button[onclick*="cerrar"], button[onclick*="Cerrar"], button[id*="cerrar"], button[id*="close"]'
+                        );
+                        if (closeBtn) {
+                            closeBtn.click();
+                        } else {
+                            topModal.classList.add("hidden");
+                        }
+                        setTimeout(syncModalScrollLock, 50);
+                        return;
+                    }
+
+                    setOpen(false);
+                }
+            });
+
+            // Cierre accesible al hacer click en el backdrop exterior del modal
+            document.addEventListener("click", (event) => {
+                const target = event.target;
+                if (!target || !target.classList) return;
+                if (
+                    (target.classList.contains("app-modal") || (target.id && target.id.startsWith("modal-") && target.classList.contains("fixed"))) &&
+                    !target.classList.contains("hidden")
+                ) {
+                    const closeBtn = target.querySelector(
+                        '[data-action="close"], .app-modal-close, button[onclick*="cerrar"], button[onclick*="Cerrar"], button[id*="cerrar"], button[id*="close"]'
+                    );
+                    if (closeBtn) {
+                        closeBtn.click();
+                    } else {
+                        target.classList.add("hidden");
+                    }
+                    setTimeout(syncModalScrollLock, 50);
+                }
             });
 
             window.addEventListener("resize", () => {
