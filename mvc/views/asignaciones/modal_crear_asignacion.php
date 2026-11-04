@@ -1,5 +1,5 @@
 <!-- Submodal Accesible: Registrar Nueva Asignación Docente -->
-<div id="modal-crear-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-crear-asig-titulo">
+<div id="modal-crear-asignacion" class="app-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm hidden" role="dialog" aria-modal="true" aria-labelledby="modal-crear-asig-titulo" onclick="if (event.target === this) cerrarModalCrearAsignacion();">
     <div class="relative w-full max-w-2xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Cabecera del Submodal -->
@@ -17,7 +17,7 @@
                     </p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarModalCrearAsignacion()" class="w-12 h-12 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" aria-label="Cerrar modal">
+            <button type="button" onclick="cerrarModalCrearAsignacion()" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 flex items-center justify-center text-2xl font-bold transition focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer" aria-label="Cerrar modal">
                 ✕
             </button>
         </div>
@@ -98,13 +98,6 @@
                     Cancelar
                 </button>
                 <button type="submit" id="btn-submit-crear-asignacion" class="btn btn-primary min-h-[48px] px-8 text-base font-bold rounded-xl shadow-xs cursor-pointer">
-                    Guardar Asignación
-                </button>
-            </div>
-        </form>
-
-    </div>
-</div>
                     Guardar Asignación
                 </button>
             </div>

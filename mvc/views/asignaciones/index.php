@@ -146,30 +146,22 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                             title="Activar o desactivar la agrupación por ciclos académicos">
                         <span>🏫</span>
                         <span>Ciclo</span>
-                        <span id="badge-estado-ciclo" class="px-2 py-0.5 rounded-lg text-xs font-black uppercase bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                        <span id="badge-estado-ciclo" class="px-2.5 py-0.5 rounded-lg text-sm font-bold uppercase bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                             Off
                         </span>
                     </button>
 
                     <!-- Botón para Expandir/Colapsar Todos -->
                     <button type="button" id="btn-toggle-expandir" onclick="alternarExpandirTodos()"
-                            class="min-h-[48px] px-4 py-2.5 rounded-2xl text-base font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+                            class="min-h-[48px] px-4 py-2.5 rounded-2xl text-base font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
                             title="Expandir o colapsar todas las tarjetas de profesores">
                         <span id="icono-expandir-todos">↕️</span>
                         <span id="texto-expandir-todos">Expandir todos</span>
                     </button>
 
-                    <!-- Selector de Escala Visual (11pt | 12pt | 13pt) Enlazado Globalmente -->
-                    <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-2xs" role="group" aria-label="Selector de escala de texto">
-                        <span class="text-xs font-black uppercase text-slate-500 dark:text-slate-400 px-2 hidden md:inline">Vista:</span>
-                        <button type="button" data-font-size="11pt" class="btn-font-scale min-h-[38px] px-3 py-1.5 text-xs font-black rounded-xl transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Tamaño 11pt - Compacta">11pt</button>
-                        <button type="button" data-font-size="12pt" class="btn-font-scale min-h-[38px] px-3 py-1.5 text-xs font-black rounded-xl transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Tamaño 12pt - Estándar">12pt</button>
-                        <button type="button" data-font-size="13pt" class="btn-font-scale min-h-[38px] px-3 py-1.5 text-xs font-black rounded-xl transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Tamaño 13pt - Grande">13pt</button>
-                    </div>
-
                     <!-- Selector de Año Lectivo Optimizado -->
                     <select id="filtro-anio-asignacion" onchange="cambiarAnhoLectivo()"
-                            class="min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-extrabold bg-slate-50 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="min-h-[48px] px-4 py-2.5 text-base text-slate-900 dark:text-white font-extrabold bg-slate-50 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                         <option value="2026" selected>Año Lectivo 2026</option>
                         <option value="2025">Año Lectivo 2025</option>
                         <option value="2024">Año Lectivo 2024</option>
@@ -180,20 +172,20 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
 
             <!-- Barra de Filtros Rápidos por Ciclo (Visible solo cuando 'Ciclo' está activado) -->
-            <div id="franja-filtro-ciclos" class="hidden pt-3 border-t border-slate-200/90 dark:border-slate-800 flex flex-wrap items-center gap-2 animate-in fade-in duration-150">
+            <div id="franja-filtro-ciclos" class="hidden pt-3 border-t border-slate-200/90 dark:border-slate-800 flex flex-wrap items-center gap-2.5 animate-in fade-in duration-150">
                 <span class="text-sm font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400 mr-2">
                     Filtrar Ciclo:
                 </span>
                 <button type="button" onclick="filtrarPorCicloSeleccionado(null)" id="btn-ciclo-todos"
-                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-extrabold bg-blue-600 text-white border border-blue-600 transition cursor-pointer">
+                        class="btn-ciclo-pill min-h-[44px] px-4 py-2 rounded-xl text-sm font-extrabold bg-blue-600 text-white border border-blue-600 transition cursor-pointer">
                     Todos los ciclos
                 </button>
                 <button type="button" onclick="filtrarPorCicloSeleccionado('EEB3')" id="btn-ciclo-eeb3"
-                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                        class="btn-ciclo-pill min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
                     EEB - 3° Ciclo (7°, 8°, 9°)
                 </button>
                 <button type="button" onclick="filtrarPorCicloSeleccionado('NM')" id="btn-ciclo-nm"
-                        class="btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                        class="btn-ciclo-pill min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
                     Nivel Medio / Bachilleratos (1°, 2°, 3°)
                 </button>
             </div>
@@ -344,13 +336,13 @@ function alternarAgrupacionCiclo() {
     const franjaFiltro = document.getElementById('franja-filtro-ciclos');
 
     if (agruparPorCiclo) {
-        btnCiclo.className = "min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-emerald-600 text-white border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-200";
-        badgeCiclo.className = "px-2 py-0.5 rounded-lg text-xs font-black uppercase bg-white text-emerald-800";
+        btnCiclo.className = "min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-emerald-600 text-white border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-200 cursor-pointer";
+        badgeCiclo.className = "px-2.5 py-0.5 rounded-lg text-sm font-bold uppercase bg-white text-emerald-800";
         badgeCiclo.textContent = "Agrupado";
         if (franjaFiltro) franjaFiltro.classList.remove('hidden');
     } else {
-        btnCiclo.className = "min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200";
-        badgeCiclo.className = "px-2 py-0.5 rounded-lg text-xs font-black uppercase bg-slate-300 text-slate-800";
+        btnCiclo.className = "min-h-[48px] px-5 py-2.5 rounded-2xl text-base font-extrabold flex items-center gap-2 border-2 transition shadow-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200 cursor-pointer";
+        badgeCiclo.className = "px-2.5 py-0.5 rounded-lg text-sm font-bold uppercase bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200";
         badgeCiclo.textContent = "Off";
         if (franjaFiltro) franjaFiltro.classList.add('hidden');
         filtroCicloActivo = null;
@@ -364,15 +356,18 @@ function filtrarPorCicloSeleccionado(codigoCiclo) {
 
     // Actualizar estilo visual de las píldoras de filtro
     document.querySelectorAll('.btn-ciclo-pill').forEach(btn => {
-        btn.className = "btn-ciclo-pill px-4 py-1.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-800 border border-slate-300 hover:bg-slate-200 transition";
+        btn.className = "btn-ciclo-pill min-h-[44px] px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer";
     });
 
     if (!codigoCiclo) {
         document.getElementById('btn-ciclo-todos')?.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        document.getElementById('btn-ciclo-todos')?.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-800', 'dark:text-slate-200');
     } else if (codigoCiclo === 'EEB3') {
         document.getElementById('btn-ciclo-eeb3')?.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        document.getElementById('btn-ciclo-eeb3')?.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-800', 'dark:text-slate-200');
     } else if (codigoCiclo === 'NM') {
         document.getElementById('btn-ciclo-nm')?.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        document.getElementById('btn-ciclo-nm')?.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-800', 'dark:text-slate-200');
     }
 
     renderizarDocentesAgrupados();
@@ -594,29 +589,29 @@ function renderizarDocentesAgrupados() {
                         <!-- Píldora de Horas Cátedra Semanales Totales -->
                         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border-2 border-indigo-200 dark:border-indigo-800 shadow-2xs">
                             <span class="text-xl font-black text-indigo-900 dark:text-indigo-300">${doc.total_horas} hs</span>
-                            <span class="text-xs font-black uppercase text-indigo-700 dark:text-indigo-400">cátedra/sem</span>
+                            <span class="text-sm font-bold uppercase text-indigo-700 dark:text-indigo-400">cátedra/sem</span>
                         </div>
 
                         <!-- Cursos a su cargo -->
-                        <span class="px-3.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-extrabold border border-slate-300 dark:border-slate-700">
+                        <span class="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-extrabold border border-slate-300 dark:border-slate-700">
                             ${cantCursos} ${cantCursos === 1 ? 'curso' : 'cursos'}
                         </span>
 
                         <!-- Ciclos en los que enseña -->
-                        <div class="hidden sm:flex flex-wrap items-center gap-1.5">
+                        <div class="hidden sm:flex flex-wrap items-center gap-2">
                             ${pillsCiclos}
                         </div>
 
                         <!-- Botón de Acción Rápida: Asignar a este profesor -->
                         <button type="button" onclick="event.stopPropagation(); abrirModalCrearAsignacion({ id_profesor: ${doc.id_profesor} })"
-                                class="min-h-[44px] px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-sm font-extrabold border border-blue-200 dark:border-blue-800 transition shadow-2xs flex items-center gap-1.5 focus:outline-none cursor-pointer"
+                                class="min-h-[44px] px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-sm font-extrabold border border-blue-200 dark:border-blue-800 transition shadow-2xs flex items-center gap-1.5 focus:outline-none cursor-pointer"
                                 title="Agregar nueva cátedra a este profesor">
                             <span>+</span>
                             <span class="hidden md:inline">Asignar Materia</span>
                         </button>
 
                         <!-- Icono Chevron Expandir/Colapsar -->
-                        <div class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold transition-transform duration-200 docente-card-chevron ${isExpanded ? 'rotate-180' : ''}"
+                        <div class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold transition-transform duration-200 docente-card-chevron ${isExpanded ? 'rotate-180' : ''}"
                              id="docente-chevron-${doc.id_profesor}">
                             ▼
                         </div>
@@ -664,10 +659,10 @@ function renderizarContenidoDocente(doc) {
                             <span class="text-2xl">${esMedio ? '🎓' : '🏫'}</span>
                             <div>
                                 <h4 class="text-base sm:text-lg font-black tracking-tight">${ciclo.nombre}</h4>
-                                <span class="text-xs font-bold uppercase opacity-80">${ciclo.asignaciones.length} ${ciclo.asignaciones.length === 1 ? 'materia' : 'materias'} en este ciclo</span>
+                                <span class="text-sm font-bold uppercase opacity-80">${ciclo.asignaciones.length} ${ciclo.asignaciones.length === 1 ? 'materia' : 'materias'} en este ciclo</span>
                             </div>
                         </div>
-                        <div class="px-3.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-black text-sm text-slate-800 dark:text-slate-200">
+                        <div class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-black text-sm text-slate-800 dark:text-slate-200">
                             Subtotal: ${ciclo.horas} hs cátedra
                         </div>
                     </div>
@@ -675,7 +670,7 @@ function renderizarContenidoDocente(doc) {
                     <!-- Tabla de Cátedras en este Ciclo -->
                     <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
                         <table class="w-full text-left text-base">
-                            <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase font-bold text-xs sm:text-sm border-b border-slate-200 dark:border-slate-800">
+                            <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase font-bold text-sm border-b border-slate-200 dark:border-slate-800">
                                 <tr>
                                     <th class="p-4">Materia / Asignatura</th>
                                     <th class="p-4">Curso / Grado & Bachillerato</th>
@@ -702,7 +697,7 @@ function renderizarContenidoDocente(doc) {
             <div class="p-4 sm:p-6">
                 <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
                     <table class="w-full text-left text-base">
-                        <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase font-bold text-xs sm:text-sm border-b border-slate-200 dark:border-slate-800">
+                        <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase font-bold text-sm border-b border-slate-200 dark:border-slate-800">
                             <tr>
                                 <th class="p-4">Materia / Asignatura</th>
                                 <th class="p-4">Curso / Grado & Bachillerato</th>
@@ -738,8 +733,8 @@ function renderizarFilaCatedra(a, doc, incluirColumnaCiclo = false) {
         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
             <!-- Materia -->
             <td class="p-4">
-                <div class="flex items-center gap-2">
-                    <span class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg shrink-0 border border-blue-200 dark:border-blue-800">
+                <div class="flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg shrink-0 border border-blue-200 dark:border-blue-800">
                         📚
                     </span>
                     <span class="text-base font-extrabold text-slate-900 dark:text-white">${matNombre}</span>
@@ -750,14 +745,14 @@ function renderizarFilaCatedra(a, doc, incluirColumnaCiclo = false) {
             <td class="p-4">
                 <div>
                     <span class="text-base font-bold text-slate-800 dark:text-slate-200 block">${gradoNombre}${seccion}</span>
-                    ${bach ? `<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 block truncate max-w-xs">${bach}</span>` : ''}
+                    ${bach ? `<span class="text-sm font-medium text-slate-600 dark:text-slate-400 block truncate max-w-xs mt-0.5">${bach}</span>` : ''}
                 </div>
             </td>
 
             <!-- Ciclo (si está visible en tabla continua) -->
             ${incluirColumnaCiclo ? `
                 <td class="p-4">
-                    <span class="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-extrabold">
+                    <span class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-sm font-bold">
                         ${cicloNom}
                     </span>
                 </td>
@@ -765,14 +760,14 @@ function renderizarFilaCatedra(a, doc, incluirColumnaCiclo = false) {
 
             <!-- Turno -->
             <td class="p-4 text-slate-600 dark:text-slate-400 font-semibold text-sm">
-                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                <span class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-medium">
                     ${turno}
                 </span>
             </td>
 
             <!-- Carga Horaria -->
             <td class="p-4">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-300 font-extrabold text-sm">
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-300 font-extrabold text-sm">
                     <span>⏱️</span>
                     <span>${carga} hs</span>
                 </span>
@@ -782,19 +777,19 @@ function renderizarFilaCatedra(a, doc, incluirColumnaCiclo = false) {
             <td class="p-4 text-right">
                 <div class="flex items-center justify-end gap-2 flex-wrap">
                     <button type="button" onclick="abrirModalDetalleAsignacion(${a.id_asignacion})"
-                            class="min-h-[40px] px-3.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-sm font-bold rounded-xl border border-blue-200 dark:border-blue-800 transition shadow-2xs flex items-center gap-1 cursor-pointer"
+                            class="min-h-[44px] px-4 py-2 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-sm font-bold rounded-xl border border-blue-200 dark:border-blue-800 transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
                             title="Ver detalles, horarios y alumnos matriculados">
                         <span>📋</span>
                         <span>Detalles</span>
                     </button>
                     <button type="button" onclick="abrirModalEditarAsignacionPorId(${a.id_asignacion})"
-                            class="min-h-[40px] px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 text-sm font-bold rounded-xl border border-amber-200 dark:border-amber-800 transition shadow-2xs flex items-center gap-1 cursor-pointer"
+                            class="min-h-[44px] px-4 py-2 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 text-sm font-bold rounded-xl border border-amber-200 dark:border-amber-800 transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
                             title="Modificar asignación">
                         <span>✏️</span>
                         <span>Editar</span>
                     </button>
                     <button type="button" onclick="desactivarAsignacion(${a.id_asignacion}, '${(doc.nombre).replace(/'/g, "\\'")} - ${(matNombre).replace(/'/g, "\\'")}')"
-                            class="min-h-[40px] px-3.5 py-1.5 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-800 dark:text-rose-300 text-sm font-bold rounded-xl border border-rose-200 dark:border-rose-800 transition shadow-2xs flex items-center gap-1 cursor-pointer"
+                            class="min-h-[44px] px-4 py-2 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-800 dark:text-rose-300 text-sm font-bold rounded-xl border border-rose-200 dark:border-rose-800 transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
                             title="Dar de baja esta cátedra">
                         <span>🗑️</span>
                         <span>Desactivar</span>
