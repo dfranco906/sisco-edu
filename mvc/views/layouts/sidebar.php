@@ -241,6 +241,43 @@ $adminPaths = [
         </div>
     </div>
 
+    <?php if (in_array(strtolower($rolActual), ['superadmin', 'administrador', 'administracion', 'coordinador'], true)): ?>
+    <!-- Chip de Monitoreo de Hardware IoT (Lector USB Biométrico & Gateway LoRa) -->
+    <div class="sidebar-iot-box mb-4">
+        <div class="sidebar-iot-full p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs space-y-2">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    </svg>
+                    <span>Hardware IoT</span>
+                </span>
+                <button type="button" id="btn-ping-iot-sidebar" class="text-slate-400 hover:text-white transition-colors cursor-pointer" title="Verificar enlace de hardware" aria-label="Actualizar estado IoT">
+                    <svg id="icon-ping-iot-sidebar" class="w-3.5 h-3.5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5">
+                <div id="chip-iot-registrador" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/60 border border-slate-800/80 text-[11px] font-medium text-slate-300" title="Lector USB Biométrico: Consultando...">
+                    <span id="dot-iot-registrador" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
+                    <span class="truncate">USB DY50</span>
+                </div>
+                <div id="chip-iot-gateway" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/60 border border-slate-800/80 text-[11px] font-medium text-slate-300" title="Gateway LoRa: Consultando...">
+                    <span id="dot-iot-gateway" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
+                    <span class="truncate">LoRa Hub</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Versión Mini para modo colapsado -->
+        <div class="sidebar-iot-mini hidden flex-col items-center gap-1.5 p-1 rounded-xl bg-slate-900/60 border border-slate-800" title="Hardware IoT: Lector USB y Gateway LoRa">
+            <span id="dot-iot-mini-registrador" class="w-2.5 h-2.5 rounded-full bg-slate-500" title="Lector USB DY50"></span>
+            <span id="dot-iot-mini-gateway" class="w-2.5 h-2.5 rounded-full bg-slate-500" title="Gateway LoRa"></span>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Navegación Principal -->
     <nav class="app-sidebar-nav flex-1 space-y-1.5">
         <?php foreach ($navItems as $item): ?>

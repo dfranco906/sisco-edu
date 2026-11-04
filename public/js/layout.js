@@ -276,6 +276,86 @@
                 }
             });
 
+            // 6. Monitoreo de Hardware IoT en Tiempo Real (USB Registrador & Gateway LoRa)
+            const verificarEstadoHardwareIoT = async (manual = false) => {
+                const dotReg = document.getElementById("dot-iot-registrador");
+                const dotGate = document.getElementById("dot-iot-gateway");
+                const dotMiniReg = document.getElementById("dot-iot-mini-registrador");
+                const dotMiniGate = document.getElementById("dot-iot-mini-gateway");
+                const chipReg = document.getElementById("chip-iot-registrador");
+                const chipGate = document.getElementById("chip-iot-gateway");
+                const iconPing = document.getElementById("icon-ping-iot-sidebar");
+
+                if (!dotReg && !dotGate) return;
+
+                if (iconPing) iconPing.classList.add("animate-spin");
+
+                const baseUrl = (window.BASE_URL || "/").replace(/\/+$/, "");
+
+                // Test Registrador
+                try {
+                    const r = await fetch(`${baseUrl}/src/api/Configuracion/probar_conexion.php?tipo=registrador`, { cache: 'no-cache' });
+                    const j = await r.json();
+                    const online = Boolean(j.online === true || (j.status === 'success' && j.data?.online === true));
+                    const ms = j.latencia_ms || j.data?.latencia_ms;
+
+                    if (online) {
+                        const title = `Lector USB / Wi-Fi: ONLINE${ms ? ` (${ms} ms)` : ''}`;
+                        if (dotReg) dotReg.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
+                        if (dotMiniReg) dotMiniReg.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0";
+                        if (chipReg) chipReg.title = title;
+                    } else {
+                        const title = `Lector USB / Wi-Fi: ${j.message || 'Fuera de línea'}`;
+                        if (dotReg) dotReg.className = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
+                        if (dotMiniReg) dotMiniReg.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                        if (chipReg) chipReg.title = title;
+                    }
+                } catch (e) {
+                    if (dotReg) dotReg.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+                    if (dotMiniReg) dotMiniReg.className = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
+                    if (chipReg) chipReg.title = "Lector USB: Error de consulta";
+                }
+
+                // Test Gateway LoRa
+                try {
+                    const r = await fetch(`${baseUrl}/src/api/Configuracion/probar_conexion.php?tipo=gateway`, { cache: 'no-cache' });
+                    const j = await r.json();
+                    const online = Boolean(j.online === true || (j.status === 'success' && j.data?.online === true));
+                    const ms = j.latencia_ms || j.data?.latencia_ms;
+
+                    if (online) {
+                        const title = `Gateway LoRa: ONLINE${ms ? ` (${ms} ms)` : ''}`;
+                        if (dotGate) dotGate.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
+                        if (dotMiniGate) dotMiniGate.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0";
+                        if (chipGate) chipGate.title = title;
+                    } else {
+                        const title = `Gateway LoRa: ${j.message || 'Fuera de línea'}`;
+                        if (dotGate) dotGate.className = "w-2 h-2 rounded-full bg-amber-500 shrink-0";
+                        if (dotMiniGate) dotMiniGate.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                        if (chipGate) chipGate.title = title;
+                    }
+                } catch (e) {
+                    if (dotGate) dotGate.className = "w-2 h-2 rounded-full bg-rose-500 shrink-0";
+                    if (dotMiniGate) dotMiniGate.className = "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0";
+                    if (chipGate) chipGate.title = "Gateway LoRa: Error de consulta";
+                }
+
+                if (iconPing) iconPing.classList.remove("animate-spin");
+
+                if (manual && window.Toast) {
+                    window.Toast.info("Diagnóstico de enlace hardware actualizado.", "Hardware IoT", 2500);
+                }
+            };
+
+            const btnPingIot = document.getElementById("btn-ping-iot-sidebar");
+            btnPingIot?.addEventListener("click", (e) => {
+                e.preventDefault();
+                verificarEstadoHardwareIoT(true);
+            });
+
+            // Verificación inicial diferida tras 1.2 segundos
+            setTimeout(verificarEstadoHardwareIoT, 1200);
+
             window.addEventListener("resize", () => {
                 if (window.innerWidth >= 768) {
                     setOpen(false);

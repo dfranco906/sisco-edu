@@ -27,7 +27,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $rolUsuario = strtolower($_SESSION['rol'] ?? '');
-if (!in_array($rolUsuario, ['superadmin', 'administracion', 'administrador'], true)) {
+if (!in_array($rolUsuario, ['superadmin', 'administracion', 'administrador', 'coordinador'], true)) {
     http_response_code(403);
     echo json_encode([
         "status" => "error",

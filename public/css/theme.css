@@ -246,12 +246,16 @@ body {
     }
 
     .app-sidebar.is-collapsed .sidebar-profile-full,
-    html.sidebar-init-collapsed .app-sidebar .sidebar-profile-full {
+    html.sidebar-init-collapsed .app-sidebar .sidebar-profile-full,
+    .app-sidebar.is-collapsed .sidebar-iot-full,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-iot-full {
         display: none !important;
     }
 
     .app-sidebar.is-collapsed .sidebar-profile-mini,
-    html.sidebar-init-collapsed .app-sidebar .sidebar-profile-mini {
+    html.sidebar-init-collapsed .app-sidebar .sidebar-profile-mini,
+    .app-sidebar.is-collapsed .sidebar-iot-mini,
+    html.sidebar-init-collapsed .app-sidebar .sidebar-iot-mini {
         display: flex !important;
     }
 
