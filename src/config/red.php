@@ -58,7 +58,11 @@ if (!defined('GATEWAY_SYNC_URL')) {
     if ($dbSyncUrl && strpos($dbSyncUrl, IP_ESP32_GATEWAY) === false) {
         $dbSyncUrl = null;
     }
-    $syncUrl = getenv('GATEWAY_SYNC_URL') ?: ($localConfig['GATEWAY_SYNC_URL'] ?? ($dbSyncUrl ?: ('http://' . IP_ESP32_GATEWAY . '/sync')));
+    $localSyncUrl = $localConfig['GATEWAY_SYNC_URL'] ?? null;
+    if ($localSyncUrl && strpos($localSyncUrl, IP_ESP32_GATEWAY) === false) {
+        $localSyncUrl = null;
+    }
+    $syncUrl = getenv('GATEWAY_SYNC_URL') ?: ($localSyncUrl ?? ($dbSyncUrl ?: ('http://' . IP_ESP32_GATEWAY . '/sync')));
     define('GATEWAY_SYNC_URL', $syncUrl);
 }
 

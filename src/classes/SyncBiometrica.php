@@ -110,7 +110,7 @@ class SyncBiometrica {
      * (persona, aula, huella, nodo LoRa).
      */
     public function obtenerCola(array $filtros = []): array {
-        $whereClauses = ["h.activo = 1"];
+        $whereClauses = [];
         $params = [];
 
         // Filtro por estado
@@ -153,7 +153,7 @@ class SyncBiometrica {
             $params[':b9'] = $term;
         }
 
-        $whereSql = implode(' AND ', $whereClauses);
+        $whereSql = !empty($whereClauses) ? ('WHERE ' . implode(' AND ', $whereClauses)) : '';
         $limit = isset($filtros['limit']) ? max(1, (int)$filtros['limit']) : 200;
         $offset = isset($filtros['offset']) ? max(0, (int)$filtros['offset']) : 0;
 
@@ -178,6 +178,7 @@ class SyncBiometrica {
                 h.crc32_hash,
                 h.sensor_slot,
                 h.formato,
+                COALESCE(h.activo, 0) AS huella_activa,
                 COALESCE(e.nombre || ' ' || e.apellido, p.nombre || ' ' || p.apellido, 'Sin asignar') AS nombre_completo,
                 COALESCE(e.cedula_identidad, p.cedula_identidad, '') AS ci,
                 CASE 
@@ -187,14 +188,14 @@ class SyncBiometrica {
                 END AS tipo_persona,
                 COALESCE(e.id_estudiante, p.id_profesor) AS id_persona
             FROM {$this->table_name} s
-            INNER JOIN huellas_templates h ON h.id_huella = s.id_huella
+            LEFT JOIN huellas_templates h ON h.id_huella = s.id_huella
             LEFT JOIN estudiantes e ON e.activo = 1 
                 AND (e.id_estudiante = h.id_estudiante OR (h.id_estudiante IS NULL AND e.user_id_global = h.user_id_global))
             LEFT JOIN profesores p ON p.activo = 1 
                 AND (p.id_profesor = h.id_profesor OR (h.id_profesor IS NULL AND p.user_id_global = h.user_id_global))
             LEFT JOIN aulas a ON a.id_aula = s.id_aula
             LEFT JOIN nodos_esp32 n ON n.id_aula = s.id_aula AND n.activo = 1 AND UPPER(n.tipo) = 'AULA'
-            WHERE {$whereSql}
+            {$whereSql}
             ORDER BY 
                 CASE s.estado 
                     WHEN 'PENDIENTE' THEN 1 
@@ -268,7 +269,7 @@ class SyncBiometrica {
                     ELSE 'Desconocido'
                 END AS tipo_persona
             FROM {$this->table_name} s
-            INNER JOIN huellas_templates h ON h.id_huella = s.id_huella
+            LEFT JOIN huellas_templates h ON h.id_huella = s.id_huella
             LEFT JOIN estudiantes e ON e.activo = 1 
                 AND (e.id_estudiante = h.id_estudiante OR (h.id_estudiante IS NULL AND e.user_id_global = h.user_id_global))
             LEFT JOIN profesores p ON p.activo = 1 
@@ -360,11 +361,11 @@ class SyncBiometrica {
     public function eliminar(int $idSync): bool {
         $stmtSel = $this->conn->prepare("SELECT id_huella FROM {$this->table_name} WHERE id_sync = :id");
         $stmtSel->execute([':id' => $idSync]);
-        $idHuella = $stmtSel->fetchColumn();
-
-        if (!$idHuella) {
+        $rowSync = $stmtSel->fetch(PDO::FETCH_ASSOC);
+        if ($rowSync === false) {
             return false;
         }
+        $idHuella = !empty($rowSync['id_huella']) ? (int)$rowSync['id_huella'] : null;
 
         $this->conn->beginTransaction();
         try {
@@ -374,19 +375,21 @@ class SyncBiometrica {
             $stmtSync = $this->conn->prepare("DELETE FROM {$this->table_name} WHERE id_sync = :id");
             $stmtSync->execute([':id' => $idSync]);
 
-            $stmtCheck = $this->conn->prepare("
-                SELECT COUNT(*) FROM {$this->table_name} 
-                WHERE id_huella = :id_huella AND estado = 'PENDIENTE'
-            ");
-            $stmtCheck->execute([':id_huella' => $idHuella]);
-            $pendientesRestantes = (int)$stmtCheck->fetchColumn();
+            if ($idHuella !== null && $idHuella > 0) {
+                $stmtCheck = $this->conn->prepare("
+                    SELECT COUNT(*) FROM {$this->table_name} 
+                    WHERE id_huella = :id_huella AND estado = 'PENDIENTE'
+                ");
+                $stmtCheck->execute([':id_huella' => $idHuella]);
+                $pendientesRestantes = (int)$stmtCheck->fetchColumn();
 
-            if ($pendientesRestantes === 0) {
-                $this->conn->prepare("
-                    UPDATE huellas_templates 
-                    SET pendiente_sync = 0 
-                    WHERE id_huella = :id_huella AND sensor_slot IS NOT NULL
-                ")->execute([':id_huella' => $idHuella]);
+                if ($pendientesRestantes === 0) {
+                    $this->conn->prepare("
+                        UPDATE huellas_templates 
+                        SET pendiente_sync = 0 
+                        WHERE id_huella = :id_huella AND sensor_slot IS NOT NULL
+                    ")->execute([':id_huella' => $idHuella]);
+                }
             }
 
             $this->conn->commit();
@@ -409,6 +412,7 @@ class SyncBiometrica {
         }
 
         $inClause = implode(',', array_fill(0, count($validos), '?'));
+
 
         $this->conn->beginTransaction();
         try {

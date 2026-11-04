@@ -708,6 +708,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     <td class="p-4">
                         <div class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                             <span>👆 Huella #${it.id_huella}</span>
+                            ${(typeof it.huella_activa !== 'undefined' && Number(it.huella_activa) === 0) ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300" title="Plantilla reemplazada por una inscripción biométrica más reciente">Reemplazada</span>' : ''}
                         </div>
                         <div class="mt-1">
                             ${crc32Str}
@@ -806,6 +807,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                 return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> PENDIENTE</span>';
             case 'ENVIADO':
                 return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> ENVIADO</span>';
+            case 'CANCELADO':
+                return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700">⊘ CANCELADO</span>';
             case 'CONFIRMADO':
                 return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">✓ CONFIRMADO</span>';
             case 'ERROR':

@@ -69,6 +69,18 @@ try {
     $db->prepare("UPDATE huellas_templates SET activo = 0 WHERE {$idCampo} = :id")
        ->execute([':id' => $idPersona]);
 
+    // Cancelar sincronizaciones previas pendientes para evitar registros huérfanos
+    $db->prepare("
+        UPDATE sync_biometrica 
+        SET estado = 'CANCELADO',
+            mensaje = 'Cancelado al registrarse una nueva huella',
+            fecha_actualizacion = NOW()
+        WHERE id_huella IN (
+            SELECT id_huella FROM huellas_templates WHERE {$idCampo} = :id AND activo = 0
+        )
+        AND estado IN ('PENDIENTE', 'ERROR')
+    ")->execute([':id' => $idPersona]);
+
     $driver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
     $returningHuella = ($driver === 'pgsql') ? ' RETURNING id_huella' : '';
 
