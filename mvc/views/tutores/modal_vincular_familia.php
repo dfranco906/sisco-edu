@@ -344,9 +344,9 @@ window.GestorFamilias = (function() {
                 const totalTut = parseInt(est.total_tutores || 0);
                 let badgeTutores = '';
                 if (totalTut === 0) {
-                    badgeTutores = `<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs border border-amber-200">⚠ Sin tutor</span>`;
+                    badgeTutores = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs border border-amber-200"><svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Sin tutor</span>`;
                 } else {
-                    badgeTutores = `<span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 font-bold text-xs border border-blue-200 truncate max-w-[220px] inline-block" title="${est.tutores_resumen || ''}">👤 ${est.tutores_resumen || totalTut + ' Tutores'}</span>`;
+                    badgeTutores = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 font-bold text-xs border border-blue-200 truncate max-w-[220px]" title="${est.tutores_resumen || ''}"><svg class="w-3 h-3 text-blue-600 inline-block flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>${est.tutores_resumen || totalTut + ' Tutores'}</span>`;
                 }
 
                 const jsonStr = JSON.stringify(est).replace(/"/g, '&quot;');

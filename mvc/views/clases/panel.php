@@ -853,7 +853,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             badgeProf.className = 'inline-flex items-center px-3.5 py-1 rounded-xl text-sm font-extrabold bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-2 border-rose-300 dark:border-rose-700';
-            badgeProf.textContent = '🔴 AUSENTE';
+            badgeProf.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 inline-block mr-1.5"></span>AUSENTE';
             profHoraElem.textContent = 'Hora: Pendiente';
             if (profOrigenElem) {
                 profOrigenElem.textContent = 'Origen: Pendiente';
@@ -865,26 +865,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!profAsist.presente) {
                 btnMarcarProfManual.style.display = '';
                 btnMarcarProfManual.disabled = !PUEDE_MARCAR;
-                btnMarcarProfManual.innerHTML = '<span>✏️</span> Asistencia';
+                btnMarcarProfManual.innerHTML = '<svg class="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg><span>Asistencia</span>';
                 btnMarcarProfManual.title = 'Registrar asistencia docente manual (Docentes, Coordinadores y Admins)';
                 btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl text-sm font-extrabold border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5';
             } else if (profAsist.tipo_registro === 'BIOMETRICO') {
                 btnMarcarProfManual.style.display = '';
                 btnMarcarProfManual.disabled = true;
-                btnMarcarProfManual.innerHTML = '<span>🔒</span> Huella Inmutable';
+                btnMarcarProfManual.innerHTML = '<svg class="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg><span>Huella Inmutable</span>';
                 btnMarcarProfManual.title = 'La asistencia por huella dactilar es inmutable y no puede modificarse';
                 btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center gap-1.5';
             } else if (profAsist.tipo_registro === 'MANUAL') {
                 if (ES_ADMIN) {
                     btnMarcarProfManual.style.display = '';
                     btnMarcarProfManual.disabled = false;
-                    btnMarcarProfManual.innerHTML = '<span>✏️</span> Modificar (Admin)';
+                    btnMarcarProfManual.innerHTML = '<svg class="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg><span>Modificar (Admin)</span>';
                     btnMarcarProfManual.title = 'Rectificar asistencia docente manual (Solo Administrador)';
                     btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 rounded-xl text-sm font-extrabold border border-amber-200 dark:border-amber-800 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5';
                 } else {
                     btnMarcarProfManual.style.display = '';
                     btnMarcarProfManual.disabled = true;
-                    btnMarcarProfManual.innerHTML = '<span>✍️</span> Manual Registrado';
+                    btnMarcarProfManual.innerHTML = '<svg class="w-4 h-4 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>Manual Registrado</span>';
                     btnMarcarProfManual.title = 'Solo administradores pueden modificar o revertir asistencias registradas';
                     btnMarcarProfManual.className = 'min-h-[44px] px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 cursor-not-allowed flex items-center gap-1.5';
                 }
@@ -1353,7 +1353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .finally(() => {
                 btnConfirmarModalAjuste.disabled = false;
-                btnConfirmarModalAjuste.innerHTML = '<span>💾</span> Guardar Cambio';
+                btnConfirmarModalAjuste.innerHTML = '<svg class="w-4 h-4 text-current inline-block mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg><span>Guardar Cambio</span>';
             });
         });
     }

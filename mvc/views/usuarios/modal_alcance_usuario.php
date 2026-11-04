@@ -115,7 +115,9 @@
                     Cancelar
                 </button>
                 <button type="button" id="btn-guardar-alcance" onclick="guardarAlcanceUsuario()" class="btn btn-primary w-full sm:w-auto text-base font-bold py-2.5 px-6 min-h-[46px] shadow-sm inline-flex items-center justify-center gap-2 cursor-pointer">
-                    <span id="alcance-btn-icono" class="text-lg">💾</span>
+                    <span id="alcance-btn-icono" class="w-5 h-5 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                    </span>
                     <span id="alcance-btn-texto">Guardar Alcance Operativo</span>
                 </button>
             </div>
@@ -200,12 +202,16 @@
         const bachiDiv = document.getElementById('alcance-botones-bachilleratos');
 
         // Render Botones Turnos (Pills accesibles con min-h-[40px] y text-base)
+        const iconoTurno = `<svg class="w-4 h-4 text-amber-500 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`;
+        const iconoNivel = `<svg class="w-4 h-4 text-indigo-500 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>`;
+        const iconoBachi = `<svg class="w-4 h-4 text-purple-500 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5"/></svg>`;
+
         turnosDiv.innerHTML = '';
         (data.turnos || []).forEach(t => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'pill-filtro px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:hover:bg-indigo-950/70 dark:hover:text-indigo-200 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5';
-            btn.innerHTML = `<span>🌅 ${escapeHtml(t.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(t.grados || []).length}</span>`;
+            btn.innerHTML = `<span>${iconoTurno}${escapeHtml(t.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(t.grados || []).length}</span>`;
             btn.title = 'Alternar todos los cursos de: ' + t.nombre;
             btn.onclick = () => alternarGrupoGrados(t.grados);
             turnosDiv.appendChild(btn);
@@ -217,7 +223,7 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'pill-filtro px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:hover:bg-indigo-950/70 dark:hover:text-indigo-200 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5';
-            btn.innerHTML = `<span>📚 ${escapeHtml(n.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(n.grados || []).length}</span>`;
+            btn.innerHTML = `<span>${iconoNivel}${escapeHtml(n.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(n.grados || []).length}</span>`;
             btn.title = 'Alternar todos los cursos de: ' + n.nombre;
             btn.onclick = () => alternarGrupoGrados(n.grados);
             nivelesDiv.appendChild(btn);
@@ -229,7 +235,7 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'pill-filtro px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:hover:bg-indigo-950/70 dark:hover:text-indigo-200 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5';
-            btn.innerHTML = `<span>🎓 ${escapeHtml(b.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(b.grados || []).length}</span>`;
+            btn.innerHTML = `<span>${iconoBachi}${escapeHtml(b.nombre)}</span> <span class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md font-mono">${(b.grados || []).length}</span>`;
             btn.title = 'Alternar todos los cursos de: ' + b.nombre;
             btn.onclick = () => alternarGrupoGrados(b.grados);
             bachiDiv.appendChild(btn);
@@ -425,7 +431,7 @@
         } finally {
             btn.disabled = false;
             btn.classList.remove('opacity-70', 'cursor-not-allowed');
-            ico.textContent = '💾';
+            ico.innerHTML = '<svg class="w-5 h-5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>';
             txt.textContent = 'Guardar Alcance Operativo';
         }
     };

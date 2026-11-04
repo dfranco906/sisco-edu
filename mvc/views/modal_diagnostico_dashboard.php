@@ -190,8 +190,8 @@ async function ejecutarDiagnosticoHardwareModal() {
                     card.className = "p-4 rounded-xl border-2 border-emerald-400 dark:border-emerald-700 bg-emerald-50/70 dark:bg-emerald-950/30 transition-all space-y-2";
                 }
                 if (badge) {
-                    badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700";
-                    badge.innerHTML = `🟢 ONLINE${latencia}`;
+                    badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 inline-flex items-center";
+                    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse inline-block"></span>ONLINE${latencia}`;
                 }
                 if (msg) {
                     msg.className = "text-sm font-semibold text-emerald-900 dark:text-emerald-200";
@@ -202,8 +202,8 @@ async function ejecutarDiagnosticoHardwareModal() {
                     card.className = "p-4 rounded-xl border-2 border-rose-400 dark:border-rose-700 bg-rose-50/70 dark:bg-rose-950/30 transition-all space-y-2";
                 }
                 if (badge) {
-                    badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-rose-100 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200 border border-rose-300 dark:border-rose-700";
-                    badge.innerHTML = "🔴 OFFLINE";
+                    badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-rose-100 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200 border border-rose-300 dark:border-rose-700 inline-flex items-center";
+                    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5 inline-block"></span>OFFLINE`;
                 }
                 if (msg) {
                     msg.className = "text-sm font-medium text-rose-900 dark:text-rose-200";
@@ -215,8 +215,8 @@ async function ejecutarDiagnosticoHardwareModal() {
                 card.className = "p-4 rounded-xl border-2 border-rose-400 dark:border-rose-700 bg-rose-50/70 dark:bg-rose-950/30 transition-all space-y-2";
             }
             if (badge) {
-                badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-rose-100 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200 border border-rose-300 dark:border-rose-700";
-                badge.innerHTML = "🔴 ERROR";
+                badge.className = "px-3 py-1 rounded-full text-xs font-mono font-black bg-rose-100 text-rose-950 dark:bg-rose-900/60 dark:text-rose-200 border border-rose-300 dark:border-rose-700 inline-flex items-center";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5 inline-block"></span>ERROR`;
             }
             if (msg) {
                 msg.className = "text-sm font-medium text-rose-900 dark:text-rose-200";
@@ -232,7 +232,7 @@ async function ejecutarDiagnosticoHardwareModal() {
 
     if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<span>🔄</span><span>Repetir Prueba</span>';
+        btn.innerHTML = `<svg class="w-4 h-4 text-current inline-block mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span>Repetir Prueba</span>`;
     }
 }
 </script>
