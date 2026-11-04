@@ -774,6 +774,33 @@ html.sidebar-init-collapsed .app-sidebar .app-nav-link.is-active::before {
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
 }
 
+/* Modales de Ficha Amplia (Profesores / Estudiantes) - 80% ancho en pantallas horizontales y máxima verticalidad en móvil */
+.app-modal-dialog.modal-ficha-wide {
+    width: 96vw;
+    max-width: 96vw;
+    height: 96vh;
+    max-height: 96vh;
+    padding: 0;
+}
+
+@media (min-width: 640px) {
+    .app-modal-dialog.modal-ficha-wide {
+        width: 92vw;
+        max-width: 92vw;
+        height: auto;
+        max-height: 92vh;
+    }
+}
+
+@media (min-width: 1024px) {
+    .app-modal-dialog.modal-ficha-wide {
+        width: 80vw;
+        max-width: 80vw;
+        height: auto;
+        max-height: 90vh;
+    }
+}
+
 .app-modal-close {
     flex: 0 0 auto;
     width: 2.25rem;
@@ -1249,10 +1276,23 @@ body.sidebar-open {
         padding: 5vh 0.65rem;
     }
 
+    .app-modal.modal-ficha-wrapper {
+        align-items: center;
+        padding: 0.5rem;
+    }
+
     .app-modal-dialog {
         width: 95vw;
         max-height: 90vh;
         padding: 1rem;
+    }
+
+    .app-modal-dialog.modal-ficha-wide {
+        width: 96vw;
+        max-width: 96vw;
+        height: 96vh;
+        max-height: 96vh;
+        padding: 0;
     }
 
     .app-modal-actions > * {

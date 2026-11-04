@@ -598,8 +598,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selG = document.getElementById('filtro-grado');
                 const val = selG ? selG.value : 'TODOS';
                 cargarEstudiantes(val || 'TODOS');
+                if (window.Toast && window.Toast.success) window.Toast.success("Estudiante registrado exitosamente");
             } catch (err) {
-                alert("Error al registrar estudiante: " + err.message);
+                if (window.Toast && window.Toast.error) {
+                    window.Toast.error("Error al registrar estudiante: " + err.message);
+                } else {
+                    alert("Error al registrar estudiante: " + err.message);
+                }
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -631,8 +636,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selG = document.getElementById('filtro-grado');
                 const val = selG ? selG.value : 'TODOS';
                 cargarEstudiantes(val || 'TODOS');
+                if (window.Toast && window.Toast.success) window.Toast.success("Estudiante actualizado correctamente");
             } catch (err) {
-                alert("Error al actualizar estudiante: " + err.message);
+                if (window.Toast && window.Toast.error) {
+                    window.Toast.error("Error al actualizar estudiante: " + err.message);
+                } else {
+                    alert("Error al actualizar estudiante: " + err.message);
+                }
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -730,11 +740,13 @@ function abrirModalDetalleEstudiante(idEstudiante) {
     }
 
     modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
 }
 
 function cerrarModalDetalleEstudiante() {
     const modal = document.getElementById('modal-detalle-estudiante');
     if (modal) modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
 }
 
 // Submodal 2: Asistente de Huella Biométrica Estudiantil
@@ -882,9 +894,17 @@ async function enviarHuellaEstudianteDirecto(idEstudiante) {
     const est = estudiantesCargados.find(e => parseInt(e.id_estudiante) === parseInt(idEstudiante));
     if (!est) return;
 
-    if (!confirm(`¿Desea enviar la huella de ${est.nombre} ${est.apellido} al aula correspondiente?`)) {
-        return;
-    }
+    const confirmado = window.SISCO && window.SISCO.confirm
+        ? await window.SISCO.confirm({
+            title: "Transmitir Huella al Aula",
+            message: `¿Desea enviar la huella de ${est.nombre} ${est.apellido} al aula correspondiente vía Gateway LoRa?`,
+            confirmText: "Enviar al Aula",
+            cancelText: "Cancelar",
+            type: "primary"
+        })
+        : confirm(`¿Desea enviar la huella de ${est.nombre} ${est.apellido} al aula correspondiente?`);
+
+    if (!confirmado) return;
 
     try {
         const res = await enviarHuellaAulas({
@@ -896,14 +916,27 @@ async function enviarHuellaEstudianteDirecto(idEstudiante) {
         });
 
         if (res && res.ok) {
-            alert(res.data?.message || '✓ Huella encolada exitosamente para el aula.');
+            if (window.Toast && window.Toast.success) {
+                window.Toast.success(res.data?.message || '✓ Huella encolada exitosamente para el aula.');
+            } else {
+                alert(res.data?.message || '✓ Huella encolada exitosamente para el aula.');
+            }
             const gradoActualDir = document.getElementById('filtro-grado')?.value || 'TODOS';
             await cargarEstudiantes(gradoActualDir);
         } else {
-            alert('Error al enviar huella: ' + (res?.message || 'Compruebe el estado del servidor.'));
+            const errorMsg = 'Error al enviar huella: ' + (res?.message || 'Compruebe el estado del servidor.');
+            if (window.Toast && window.Toast.error) {
+                window.Toast.error(errorMsg);
+            } else {
+                alert(errorMsg);
+            }
         }
     } catch (e) {
-        alert('Error: ' + e.message);
+        if (window.Toast && window.Toast.error) {
+            window.Toast.error(e.message, 'Error');
+        } else {
+            alert('Error: ' + e.message);
+        }
     }
 }
 
@@ -953,7 +986,17 @@ function cerrarModalEditarEstudiante() {
 }
 
 async function desactivarEstudiante(idEstudiante, nombreCompleto) {
-    if (!confirm(`¿Desea dar de baja al estudiante "${nombreCompleto}"?`)) return;
+    const confirmado = window.SISCO && window.SISCO.confirm
+        ? await window.SISCO.confirm({
+            title: "Desactivar Estudiante",
+            message: `¿Desea dar de baja al estudiante "${nombreCompleto}"?`,
+            confirmText: "Dar de Baja",
+            cancelText: "Cancelar",
+            type: "danger"
+        })
+        : confirm(`¿Desea dar de baja al estudiante "${nombreCompleto}"?`);
+
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -966,15 +1009,24 @@ async function desactivarEstudiante(idEstudiante, nombreCompleto) {
         const json = await res.json();
 
         if (json.status === 'success') {
+            if (window.Toast && window.Toast.success) window.Toast.success("Estudiante desactivado correctamente");
             const fGrado = document.getElementById('filtro-grado');
             const val = fGrado ? fGrado.value : 'TODOS';
             cargarEstudiantes(val || 'TODOS');
         } else {
-            alert(json.message || "Error al dar de baja");
+            if (window.Toast && window.Toast.error) {
+                window.Toast.error(json.message || "Error al dar de baja");
+            } else {
+                alert(json.message || "Error al dar de baja");
+            }
         }
     } catch (err) {
         console.error("Error al desactivar estudiante:", err);
-        alert("Error de red al desactivar estudiante");
+        if (window.Toast && window.Toast.error) {
+            window.Toast.error("Error de red al desactivar estudiante");
+        } else {
+            alert("Error de red al desactivar estudiante");
+        }
     }
 }
 

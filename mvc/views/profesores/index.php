@@ -502,8 +502,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 cerrarModalCrearProfesor();
                 formCrear.reset();
                 await cargarProfesores();
+                if (window.Toast && window.Toast.success) window.Toast.success("Docente registrado exitosamente");
             } catch (err) {
-                alert("Error al registrar profesor: " + err.message);
+                if (window.Toast && window.Toast.error) {
+                    window.Toast.error("Error al registrar profesor: " + err.message);
+                } else {
+                    alert("Error al registrar profesor: " + err.message);
+                }
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -532,8 +537,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cerrarModalEditarProfesor();
                 await cargarProfesores();
+                if (window.Toast && window.Toast.success) window.Toast.success("Docente actualizado exitosamente");
             } catch (err) {
-                alert("Error al actualizar profesor: " + err.message);
+                if (window.Toast && window.Toast.error) {
+                    window.Toast.error("Error al actualizar profesor: " + err.message);
+                } else {
+                    alert("Error al actualizar profesor: " + err.message);
+                }
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -629,6 +639,7 @@ async function abrirModalDetalleProfesor(idProfesor) {
     }
 
     modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
 
     // Cargar estado en tiempo real (Paraguay) y materias
     await cargarEstadoTiempoRealFicha(prof.id_profesor);
@@ -637,6 +648,7 @@ async function abrirModalDetalleProfesor(idProfesor) {
 function cerrarModalDetalleProfesor() {
     const modal = document.getElementById('modal-detalle-profesor');
     if (modal) modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
 }
 
 // 6. Consultar estado en vivo de Paraguay y asignaciones
@@ -874,7 +886,11 @@ function seleccionarSoloFaltantesAulas() {
 async function ejecutarEnvioAulasSeleccionadas() {
     const seleccionadas = Array.from(document.querySelectorAll('.check-aula-envio:checked')).map(c => parseInt(c.value));
     if (seleccionadas.length === 0) {
-        alert("Seleccioná al menos un aula destino para transmitir la huella.");
+        if (window.Toast && window.Toast.warning) {
+            window.Toast.warning("Seleccioná al menos un aula destino para transmitir la huella.");
+        } else {
+            alert("Seleccioná al menos un aula destino para transmitir la huella.");
+        }
         return;
     }
 
@@ -1076,9 +1092,17 @@ function cerrarModalEditarProfesor() {
 
 // Desactivar Profesor
 async function desactivarProfesor(idProfesor, nombre) {
-    if (!confirm(`¿Estás seguro de que deseás desactivar al profesor ${nombre}?`)) {
-        return;
-    }
+    const confirmado = window.SISCO && window.SISCO.confirm
+        ? await window.SISCO.confirm({
+            title: "Desactivar Profesor",
+            message: `¿Estás seguro de que deseás desactivar al profesor "${nombre}"?`,
+            confirmText: "Desactivar",
+            cancelText: "Cancelar",
+            type: "danger"
+        })
+        : confirm(`¿Estás seguro de que deseás desactivar al profesor ${nombre}?`);
+
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -1094,9 +1118,14 @@ async function desactivarProfesor(idProfesor, nombre) {
             throw new Error(json.message || "Error al desactivar");
         }
 
+        if (window.Toast && window.Toast.success) window.Toast.success("Profesor desactivado exitosamente");
         await cargarProfesores();
     } catch (err) {
-        alert("Error al desactivar profesor: " + err.message);
+        if (window.Toast && window.Toast.error) {
+            window.Toast.error("Error al desactivar profesor: " + err.message);
+        } else {
+            alert("Error al desactivar profesor: " + err.message);
+        }
     }
 }
 

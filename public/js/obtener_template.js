@@ -25,35 +25,40 @@ function escaparTextoHtml(str) {
 }
 
 // ============================================================================
-// DIÁLOGO MODAL DE DIAGNÓSTICO Y NOTIFICACIÓN USB
+// DIÁLOGO MODAL DE DIAGNÓSTICO Y NOTIFICACIÓN USB (CONTRATO VISUAL SISCO-EDU)
 // ============================================================================
 function cerrarModalDiagnosticoUsb() {
     const modal = document.getElementById("modal-diagnostico-usb");
-    if (modal) modal.remove();
+    if (modal) {
+        modal.classList.add("modal-closing");
+        setTimeout(() => {
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        }, 160);
+    }
 }
 
-function mostrarModalDiagnosticoUsb({ titulo, subtitulo = "", mensaje, tipo = "info", botonTexto = "Entendido" }) {
+function mostrarModalDiagnosticoUsb({ titulo, subtitulo = "", mensaje, tipo = "info", botonTexto = "Entendido", onConfirm = null }) {
     cerrarModalDiagnosticoUsb();
 
     const configEstilos = {
         success: {
             bgIcono: "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
-            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"></path></svg>`,
+            icono: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"></path></svg>`,
             btnClase: "btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white"
         },
         warning: {
             bgIcono: "bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800",
-            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`,
+            icono: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`,
             btnClase: "btn btn-warning bg-amber-600 hover:bg-amber-700 text-white"
         },
         error: {
             bgIcono: "bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800",
-            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>`,
+            icono: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>`,
             btnClase: "btn btn-danger bg-rose-600 hover:bg-rose-700 text-white"
         },
         info: {
             bgIcono: "bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800",
-            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            icono: `<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
             btnClase: "btn btn-primary"
         }
     };
@@ -62,28 +67,37 @@ function mostrarModalDiagnosticoUsb({ titulo, subtitulo = "", mensaje, tipo = "i
 
     const modal = document.createElement("div");
     modal.id = "modal-diagnostico-usb";
-    modal.className = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in";
+    modal.className = "app-modal app-confirm-modal flex items-center justify-center";
+    modal.style.cssText = "z-index: 99999 !important; position: fixed; inset: 0;";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+
     modal.innerHTML = `
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 w-full max-w-lg shadow-2xl border border-slate-200 dark:border-slate-800 relative space-y-4">
-            <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-1">
-                ×
-            </button>
-            <div class="flex items-start gap-4">
-                <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${estilo.bgIcono}">
-                    ${estilo.icono}
+        <div class="app-confirm-backdrop" onclick="cerrarModalDiagnosticoUsb()"></div>
+        <div class="app-modal-dialog app-confirm-dialog max-w-lg w-full p-6 relative z-10 animate-scale-up" style="background: var(--color-card, #FFFFFF); color: var(--color-text, #0F172A); border: 1px solid var(--color-border, #CBD5E1); border-radius: var(--radius, 1rem);">
+            <div class="flex items-start justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${estilo.bgIcono}">
+                        ${estilo.icono}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">
+                            ${escaparTextoHtml(titulo)}
+                        </h3>
+                        ${subtitulo ? `<p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">${escaparTextoHtml(subtitulo)}</p>` : ""}
+                    </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="text-xl font-black text-slate-900 dark:text-white leading-tight">
-                        ${escaparTextoHtml(titulo)}
-                    </h3>
-                    ${subtitulo ? `<p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5">${escaparTextoHtml(subtitulo)}</p>` : ""}
-                </div>
+                <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="app-modal-close text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-1 leading-none" aria-label="Cerrar ventana">
+                    ×
+                </button>
             </div>
-            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line font-normal">
+            
+            <div class="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line font-normal">
                 ${escaparTextoHtml(mensaje)}
             </div>
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="${estilo.btnClase} py-2.5 px-5 text-sm font-bold w-full sm:w-auto min-h-[42px]">
+
+            <div class="app-modal-actions mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" id="btn-cerrar-diag-usb" class="${estilo.btnClase} py-2 px-5 text-sm font-bold min-h-[38px]">
                     ${escaparTextoHtml(botonTexto)}
                 </button>
             </div>
@@ -92,8 +106,163 @@ function mostrarModalDiagnosticoUsb({ titulo, subtitulo = "", mensaje, tipo = "i
 
     document.body.appendChild(modal);
 
+    const btnCerrar = modal.querySelector("#btn-cerrar-diag-usb");
+    if (btnCerrar) {
+        btnCerrar.onclick = () => {
+            cerrarModalDiagnosticoUsb();
+            if (typeof onConfirm === "function") onConfirm();
+        };
+        btnCerrar.focus();
+    }
+
     if (tipo === "success") {
         setTimeout(() => cerrarModalDiagnosticoUsb(), 3500);
+    }
+}
+
+/**
+ * Modal explicativo previo a solicitar la selección de puerto serie USB por el navegador.
+ * Cumple con el diseño de modales de SISCO-EDU y evita alertas o cuadros emergentes descontextualizados.
+ */
+function mostrarModalPreflightUsb(tipo = 'estudiante') {
+    cerrarModalDiagnosticoUsb();
+
+    const modal = document.createElement("div");
+    modal.id = "modal-diagnostico-usb";
+    modal.className = "app-modal app-confirm-modal flex items-center justify-center";
+    modal.style.cssText = "z-index: 99999 !important; position: fixed; inset: 0;";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+
+    modal.innerHTML = `
+        <div class="app-confirm-backdrop" onclick="cerrarModalDiagnosticoUsb()"></div>
+        <div class="app-modal-dialog app-confirm-dialog max-w-lg w-full p-6 relative z-10 animate-scale-up" style="background: var(--color-card, #FFFFFF); color: var(--color-text, #0F172A); border: 1px solid var(--color-border, #CBD5E1); border-radius: var(--radius, 1rem);">
+            
+            <div class="flex items-start justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">
+                            Conectar Lector por Cable USB
+                        </h3>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                            Enlace serial directo (115200 baudios)
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="app-modal-close text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-1 leading-none" aria-label="Cerrar">
+                    ×
+                </button>
+            </div>
+
+            <div class="mt-4 space-y-3">
+                <p class="text-sm text-slate-600 dark:text-slate-300">
+                    Al utilizar el enlace por cable USB, la captura de huellas se comunica directamente con el lector registrador sin demoras ni interferencias de la red Wi-Fi:
+                </p>
+                
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2.5 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                    <div class="flex items-start gap-2.5">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">1</span>
+                        <span>Asegúrese de que el <strong>ESP32 esté conectado por cable USB</strong> a esta computadora.</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">2</span>
+                        <span>Al presionar <strong>Seleccionar Puerto USB</strong>, el navegador mostrará el cuadro de diálogo para elegir el puerto serial (ej. <em>CP210x</em>, <em>CH340</em> o <em>USB Serial</em>).</span>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[11px]">3</span>
+                        <span>Seleccione el puerto en la lista y presione <strong>Conectar</strong>.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-modal-actions mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="btn btn-muted py-2 px-4 text-xs sm:text-sm font-semibold min-h-[38px]">
+                    Continuar con Wi-Fi
+                </button>
+                <button type="button" id="btn-ejecutar-webserial" class="btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-5 text-xs sm:text-sm font-bold min-h-[38px] inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>Seleccionar Puerto USB</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const btnEjecutar = modal.querySelector("#btn-ejecutar-webserial");
+    if (btnEjecutar) {
+        btnEjecutar.onclick = () => {
+            cerrarModalDiagnosticoUsb();
+            ejecutarConexionSerialUsb(tipo);
+        };
+        btnEjecutar.focus();
+    }
+}
+
+/**
+ * Modal de confirmación para desconectar el cable USB y volver a Wi-Fi.
+ */
+function mostrarModalDesconectarUsb(tipo = 'estudiante') {
+    cerrarModalDiagnosticoUsb();
+
+    const modal = document.createElement("div");
+    modal.id = "modal-diagnostico-usb";
+    modal.className = "app-modal app-confirm-modal flex items-center justify-center";
+    modal.style.cssText = "z-index: 99999 !important; position: fixed; inset: 0;";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+
+    modal.innerHTML = `
+        <div class="app-confirm-backdrop" onclick="cerrarModalDiagnosticoUsb()"></div>
+        <div class="app-modal-dialog app-confirm-dialog max-w-md w-full p-6 relative z-10 animate-scale-up" style="background: var(--color-card, #FFFFFF); color: var(--color-text, #0F172A); border: 1px solid var(--color-border, #CBD5E1); border-radius: var(--radius, 1rem);">
+            <div class="flex items-start gap-3.5">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">
+                        ¿Desconectar Cable USB?
+                    </h3>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                        Conmutar al Modo Wi-Fi
+                    </p>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                ¿Desea liberar el puerto serie USB? El sensor registrador volverá a operar a través de la red Wi-Fi.
+            </p>
+
+            <div class="app-modal-actions mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="btn btn-muted py-2 px-4 text-xs sm:text-sm font-semibold min-h-[38px]">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-desconexion-usb" class="btn btn-warning bg-amber-600 hover:bg-amber-700 text-white py-2 px-5 text-xs sm:text-sm font-bold min-h-[38px]">
+                    Desconectar y Usar Wi-Fi
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const btnConfirmar = modal.querySelector("#btn-confirmar-desconexion-usb");
+    if (btnConfirmar) {
+        btnConfirmar.onclick = async () => {
+            cerrarModalDiagnosticoUsb();
+            await SiscoWebSerial.desconectar();
+            mostrarModalDiagnosticoUsb({
+                titulo: "Cable USB Desconectado",
+                subtitulo: "Canal cambiado a Wi-Fi",
+                mensaje: "Se ha liberado el puerto serial USB. El lector registrador operará a través de la red Wi-Fi.",
+                tipo: "info",
+                botonTexto: "Aceptar"
+            });
+            actualizarBadgesCanalSerie();
+        };
     }
 }
 
@@ -316,31 +485,30 @@ async function conectarUsbRegistrador(tipo = 'estudiante') {
         return;
     }
 
+    if (SiscoWebSerial.isConnected) {
+        mostrarModalDesconectarUsb(tipo);
+        return;
+    }
+
+    // Modal pre-vuelo explicativo conforme al diseño de modales de SISCO-EDU
+    mostrarModalPreflightUsb(tipo);
+}
+
+async function ejecutarConexionSerialUsb(tipo = 'estudiante') {
     const btnId = (tipo === 'profesor') ? 'mbp-btn-conectar-usb' : 'mbe-btn-conectar-usb';
     const btn = document.getElementById(btnId);
     if (btn) btn.disabled = true;
 
     try {
-        if (SiscoWebSerial.isConnected) {
-            await SiscoWebSerial.desconectar();
+        const exito = await SiscoWebSerial.conectar();
+        if (exito) {
             mostrarModalDiagnosticoUsb({
-                titulo: "Cable USB Desconectado",
-                subtitulo: "Canal cambiado a Wi-Fi",
-                mensaje: "Se ha liberado el puerto serial USB. El lector registrador operará a través de la red Wi-Fi.",
-                tipo: "info",
-                botonTexto: "Aceptar"
+                titulo: "¡Lector USB Conectado!",
+                subtitulo: "Enlace directo activo a 115200 baudios",
+                mensaje: "El sensor registrador está enlazado directamente por cable USB.\n\nAl presionar '1. Registrar Huella', la captura se realizará de inmediato a través del cable sin depender de la red Wi-Fi.",
+                tipo: "success",
+                botonTexto: "Listo para Enrolar"
             });
-        } else {
-            const exito = await SiscoWebSerial.conectar();
-            if (exito) {
-                mostrarModalDiagnosticoUsb({
-                    titulo: "¡Lector USB Conectado!",
-                    subtitulo: "Enlace directo activo a 115200 baudios",
-                    mensaje: "El nodo registrador está enlazado directamente por cable USB.\n\nAl presionar '1. Registrar Huella', la captura se realizará de inmediato a través del puerto serie sin interferencias de la red Wi-Fi.",
-                    tipo: "success",
-                    botonTexto: "Listo para Enrolar"
-                });
-            }
         }
     } catch (e) {
         if (e.name === 'NotFoundError') {
@@ -415,6 +583,9 @@ window.addEventListener('siscoSerialStatus', () => actualizarBadgesCanalSerie())
 
 // Exponer funciones globales inmediatamente
 window.conectarUsbRegistrador = conectarUsbRegistrador;
+window.ejecutarConexionSerialUsb = ejecutarConexionSerialUsb;
+window.mostrarModalPreflightUsb = mostrarModalPreflightUsb;
+window.mostrarModalDesconectarUsb = mostrarModalDesconectarUsb;
 window.actualizarBadgesCanalSerie = actualizarBadgesCanalSerie;
 window.cerrarModalDiagnosticoUsb = cerrarModalDiagnosticoUsb;
 window.mostrarModalDiagnosticoUsb = mostrarModalDiagnosticoUsb;
@@ -452,8 +623,8 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
     if (esUsb) {
         mostrarEstadoHuella("Conectado directamente por cable USB (Web Serial). Iniciando captura...", true);
     } else {
-        const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "192.168.100.39";
-        mostrarEstadoHuella(`Conectando con ESP32 Registrador vía Wi-Fi (${ipESP32})...`, true);
+        const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "";
+        mostrarEstadoHuella(`Conectando con ESP32 Registrador vía Wi-Fi (${ipESP32 || "red local"})...`, true);
     }
 
     try {
@@ -462,7 +633,10 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
         if (esUsb) {
             data = await SiscoWebSerial.capturarYExportar((msg) => mostrarEstadoHuella(msg, true));
         } else {
-            const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "192.168.100.39";
+            const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "";
+            if (!ipESP32) {
+                throw new Error("La dirección IP del nodo registrador no está configurada en src/config/red.php");
+            }
 
             mostrarEstadoHuella("Iniciando captura en el sensor registrador...", true);
             const { respuesta: registro, data: dataRegistro } = await llamadaRegistrador("registrar", ipESP32, 12000);
@@ -529,8 +703,8 @@ async function descargarYGuardarTemplate(userIdGlobal, tipoUsuario = "estudiante
                 if (esUsb) {
                     await SiscoWebSerial.enviarComando("CMD:LIMPIAR", 4000);
                 } else {
-                    const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "192.168.100.39";
-                    await limpiarSlotTemporalRemoto(ipESP32);
+                    const ipESP32 = (window.CONFIG_RED && window.CONFIG_RED.ipRegistrador) ? window.CONFIG_RED.ipRegistrador : "";
+                    if (ipESP32) await limpiarSlotTemporalRemoto(ipESP32);
                 }
             } catch (errorLimpieza) {
                 console.warn("[Biometría] Advertencia al limpiar slot temporal:", errorLimpieza);
@@ -679,7 +853,12 @@ async function limpiarSlotTemporalRemoto(ipESP32) {
 
 function cerrarModalEstadoHuella() {
     const modal = document.getElementById("modal-huella");
-    if (modal) modal.remove();
+    if (modal) {
+        modal.classList.add("modal-closing");
+        setTimeout(() => {
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        }, 160);
+    }
 }
 
 function mostrarEstadoHuella(mensaje, cargando = false, error = false, exito = false) {
@@ -688,18 +867,22 @@ function mostrarEstadoHuella(mensaje, cargando = false, error = false, exito = f
     if (!modal) {
         modal = document.createElement("div");
         modal.id = "modal-huella";
-        modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4";
+        modal.className = "app-modal app-confirm-modal flex items-center justify-center";
+        modal.style.cssText = "z-index: 99999 !important; position: fixed; inset: 0;";
+        modal.setAttribute("role", "dialog");
+        modal.setAttribute("aria-modal", "true");
         modal.innerHTML = `
-            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl text-center border border-slate-200 dark:border-slate-800 relative">
-                <button type="button" onclick="cerrarModalEstadoHuella()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-1">
+            <div class="app-confirm-backdrop" onclick="cerrarModalEstadoHuella()"></div>
+            <div class="app-modal-dialog app-confirm-dialog max-w-md w-full p-6 relative z-10 text-center animate-scale-up" style="background: var(--color-card, #FFFFFF); color: var(--color-text, #0F172A); border: 1px solid var(--color-border, #CBD5E1); border-radius: var(--radius, 1rem);">
+                <button type="button" onclick="cerrarModalEstadoHuella()" class="app-modal-close text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-1 absolute top-4 right-4" aria-label="Cerrar">
                     ×
                 </button>
                 <div id="huella-icono" class="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold mb-4"></div>
                 <h3 id="huella-titulo" class="text-xl font-bold mb-2 text-slate-900 dark:text-slate-100">Captura de Huella</h3>
                 <div id="huella-loader" class="mb-3 text-purple-600 dark:text-purple-400 font-semibold animate-pulse text-sm"></div>
                 <p id="huella-mensaje" class="text-slate-700 dark:text-slate-300 whitespace-pre-line text-sm leading-relaxed"></p>
-                <div id="huella-acciones" class="mt-5 hidden">
-                    <button type="button" onclick="cerrarModalEstadoHuella()" class="btn btn-primary w-full py-2.5 px-4 text-sm font-bold">
+                <div id="huella-acciones" class="mt-5 hidden flex justify-center">
+                    <button type="button" onclick="cerrarModalEstadoHuella()" class="btn btn-primary py-2.5 px-6 text-sm font-bold min-h-[38px]">
                         Aceptar
                     </button>
                 </div>
@@ -763,6 +946,9 @@ window.llamadaRegistrador = llamadaRegistrador;
 window.descargarYGuardarTemplate = descargarYGuardarTemplate;
 window.enviarHuellaAulas = enviarHuellaAulas;
 window.conectarUsbRegistrador = conectarUsbRegistrador;
+window.ejecutarConexionSerialUsb = ejecutarConexionSerialUsb;
+window.mostrarModalPreflightUsb = mostrarModalPreflightUsb;
+window.mostrarModalDesconectarUsb = mostrarModalDesconectarUsb;
 window.actualizarBadgesCanalSerie = actualizarBadgesCanalSerie;
 window.mostrarEstadoHuella = mostrarEstadoHuella;
 window.cerrarModalEstadoHuella = cerrarModalEstadoHuella;
