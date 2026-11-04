@@ -156,8 +156,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         </div>
 
-        <!-- Tabla Rediseñada: Fuentes Grandes (>= 16px / 12 pt) y Revelación Progresiva -->
-        <div class="app-table-wrap rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <!-- Tabla Rediseñada: Fuentes Grandes (>= 16px / 12 pt) y Revelación Progresiva (Desktop y Tablets) -->
+        <div class="app-table-wrap hidden md:block rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
             <div class="overflow-x-auto w-full">
                 <table class="w-full text-base border-collapse">
                     <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 text-sm sm:text-base font-bold uppercase tracking-wider">
@@ -173,6 +173,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- Contenedor Adaptativo de Tarjetas para Celulares y Pantallas Pequeñas (< 768px) -->
+        <div id="cards-estudiantes-container" class="grid grid-cols-1 gap-3 md:hidden">
+            <!-- Tarjetas móviles dinámicas -->
         </div>
 
     </div>
@@ -361,6 +366,8 @@ async function cargarEstudiantes(idGrado) {
     if (metaBox) metaBox.classList.remove('hidden');
     if (tableContainer) tableContainer.classList.remove('hidden');
 
+    const cardsContainer = document.getElementById('cards-estudiantes-container');
+
     if (tbody) {
         tbody.innerHTML = Array(4).fill(0).map(() => `
             <tr class="animate-pulse border-b border-slate-100 dark:border-slate-800">
@@ -369,6 +376,21 @@ async function cargarEstudiantes(idGrado) {
                 <td class="p-4"><div class="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full"></div></td>
                 <td class="p-4 text-right"><div class="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto"></div></td>
             </tr>
+        `).join('');
+    }
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = Array(3).fill(0).map(() => `
+            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                        <div class="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-8 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            </div>
         `).join('');
     }
 
@@ -432,113 +454,169 @@ function mostrarPromptVacio() {
 // 3. Renderizar Tabla de Estudiantes (Rediseñada para Máxima Legibilidad)
 function renderizarTablaEstudiantes(lista) {
     const tbody = document.getElementById('tabla-estudiantes-body');
+    const cardsContainer = document.getElementById('cards-estudiantes-container');
     const cntFiltrados = document.getElementById('contador-filtrados');
     const cntTotal = document.getElementById('contador-total');
 
     if (cntFiltrados) cntFiltrados.textContent = String(lista.length);
     if (cntTotal) cntTotal.textContent = String(estudiantesCargados.length);
 
-    if (!tbody) return;
-
     if (lista.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="p-10 text-center text-slate-500">
-                    <p class="font-extrabold text-lg text-slate-800 dark:text-slate-200">No se encontraron estudiantes</p>
-                    <p class="text-base mt-1">Pruebe ajustando los filtros superiores o registre un nuevo estudiante.</p>
-                </td>
-            </tr>
-        `;
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="p-10 text-center text-slate-500">
+                        <p class="font-extrabold text-lg text-slate-800 dark:text-slate-200">No se encontraron estudiantes</p>
+                        <p class="text-base mt-1">Pruebe ajustando los filtros superiores o registre un nuevo estudiante.</p>
+                    </td>
+                </tr>
+            `;
+        }
+        if (cardsContainer) {
+            cardsContainer.innerHTML = `
+                <div class="p-8 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <p class="font-extrabold text-base text-slate-800 dark:text-slate-200">No se encontraron estudiantes</p>
+                    <p class="text-sm mt-1">Pruebe ajustando los filtros superiores.</p>
+                </div>
+            `;
+        }
         return;
     }
 
-    tbody.innerHTML = lista.map(est => {
-        const tieneHuella = parseInt(est.huella_registrada || 0) > 0 || parseInt(est.huella_id || 0) > 0;
-        const totalTut = parseInt(est.total_tutores || 0);
+    if (tbody) {
+        tbody.innerHTML = lista.map(est => {
+            const tieneHuella = parseInt(est.huella_registrada || 0) > 0 || parseInt(est.huella_id || 0) > 0;
+            const totalTut = parseInt(est.total_tutores || 0);
 
-        // Badge Biométrico de Alto Contraste (>= 15px) - Exacto al de Profesores
-        const huellaBadge = tieneHuella
-            ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                <span>Huella vinculada</span>
-               </span>`
-            : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span>Sin registrar</span>
-               </span>`;
+            const huellaBadge = tieneHuella
+                ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Huella vinculada</span>
+                   </span>`
+                : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span>Sin registrar</span>
+                   </span>`;
 
-        const iniciales = obtenerIniciales(est.nombre, est.apellido);
-        const jsonEst = JSON.stringify(est).replace(/"/g, '&quot;');
+            const iniciales = obtenerIniciales(est.nombre, est.apellido);
+            const jsonEst = JSON.stringify(est).replace(/"/g, '&quot;');
 
-        return `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                <!-- Columna 1: Estudiante & Cédula -->
-                <td class="py-4 px-5">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 flex items-center justify-center font-black text-lg border border-blue-200 dark:border-blue-800 shrink-0">
-                            ${iniciales}
+            return `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="py-4 px-5">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 flex items-center justify-center font-black text-lg border border-blue-200 dark:border-blue-800 shrink-0">
+                                ${iniciales}
+                            </div>
+                            <div>
+                                <div class="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
+                                    ${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}
+                                </div>
+                                <div class="text-base text-slate-700 dark:text-slate-300 font-mono mt-0.5">
+                                    CI: <strong class="text-blue-700 dark:text-blue-300 font-bold">${escapeHtml(est.cedula_identidad)}</strong>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
-                                ${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}
+                    </td>
+                    <td class="py-4 px-5">
+                        <div class="space-y-1">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100/80 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-sm sm:text-base">
+                                🏫 ${escapeHtml(est.grado || 'Sin curso asignado')}
+                            </span>
+                            <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                                ${est.materias_matriculadas || 0} materias matriculadas
                             </div>
-                            <div class="text-base text-slate-700 dark:text-slate-300 font-mono mt-0.5">
-                                CI: <strong class="text-blue-700 dark:text-blue-300 font-bold">${escapeHtml(est.cedula_identidad)}</strong>
+                        </div>
+                    </td>
+                    <td class="py-4 px-5">
+                        ${huellaBadge}
+                    </td>
+                    <td class="py-4 px-5 text-right">
+                        <div class="flex items-center gap-2 justify-end flex-wrap">
+                            <button type="button" onclick="abrirModalDetalleEstudiante(${est.id_estudiante})"
+                                    class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
+                                    title="Ver ficha integral, tutores y expediente">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <span>Ver Ficha</span>
+                            </button>
+                            <button type="button" onclick="abrirModalEditarEstudiante(${jsonEst})"
+                                    class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
+                                    title="Editar datos del estudiante">
+                                <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <span>Editar</span>
+                            </button>
+                            <a href="${getBaseUrl()}/mvc/views/tutores/expediente_estudiante.php?id_estudiante=${est.id_estudiante}"
+                               class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
+                               title="Consultar historial de faltas, calificaciones y citaciones">
+                                <span>Expediente</span>
+                            </a>
+                            <button type="button" onclick="desactivarEstudiante(${est.id_estudiante}, '${escaparJs(est.nombre)} ${escaparJs(est.apellido)}')"
+                                    class="btn btn-danger text-base font-semibold py-2.5 px-3 min-h-[44px] inline-flex items-center justify-center"
+                                    title="Desactivar estudiante">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = lista.map(est => {
+            const tieneHuella = parseInt(est.huella_registrada || 0) > 0 || parseInt(est.huella_id || 0) > 0;
+            const huellaBadge = tieneHuella
+                ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Huella</span>
+                   </span>`
+                : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span>Sin huella</span>
+                   </span>`;
+
+            const iniciales = obtenerIniciales(est.nombre, est.apellido);
+            const jsonEst = JSON.stringify(est).replace(/"/g, '&quot;');
+
+            return `
+                <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 flex items-center justify-center font-black text-base border border-blue-200 dark:border-blue-800 shrink-0">
+                                ${iniciales}
                             </div>
+                            <div class="min-w-0">
+                                <div class="font-extrabold text-base text-slate-900 dark:text-white leading-tight truncate">
+                                    ${escapeHtml(est.apellido)}, ${escapeHtml(est.nombre)}
+                                </div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400 font-mono mt-0.5">
+                                    CI: <strong class="text-blue-700 dark:text-blue-300 font-bold">${escapeHtml(est.cedula_identidad)}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            ${huellaBadge}
                         </div>
                     </div>
-                </td>
-
-                <!-- Columna 2: Curso & Matrícula -->
-                <td class="py-4 px-5">
-                    <div class="space-y-1">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100/80 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-sm sm:text-base">
-                            🏫 ${escapeHtml(est.grado || 'Sin curso asignado')}
-                        </span>
-                        <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                            ${est.materias_matriculadas || 0} materias matriculadas
-                        </div>
+                    <div class="flex items-center justify-between text-sm py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate">🏫 ${escapeHtml(est.grado || 'Sin curso asignado')}</span>
+                        <span class="text-xs text-slate-500 font-semibold shrink-0 ml-2">${est.materias_matriculadas || 0} mat.</span>
                     </div>
-                </td>
-
-                <!-- Columna 3: Estado Biométrico Exclusivo (Sin botones que saturen la tabla) -->
-                <td class="py-4 px-5">
-                    ${huellaBadge}
-                </td>
-
-                <!-- Columna 4: Acciones Principales con Objetivos Táctiles Grandes -->
-                <td class="py-4 px-5 text-right">
-                    <div class="flex items-center gap-2 justify-end flex-wrap">
-                        <button type="button" onclick="abrirModalDetalleEstudiante(${est.id_estudiante})"
-                                class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
-                                title="Ver ficha integral, tutores y expediente">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            <span>Ver Ficha</span>
+                    <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" onclick="abrirModalDetalleEstudiante(${est.id_estudiante})" class="btn btn-primary text-xs font-bold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <span>Ficha</span>
                         </button>
-
-                        <button type="button" onclick="abrirModalEditarEstudiante(${jsonEst})"
-                                class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
-                                title="Editar datos del estudiante">
-                            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <button type="button" onclick="abrirModalEditarEstudiante(${jsonEst})" class="btn btn-secondary text-xs font-semibold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
                             <span>Editar</span>
                         </button>
-
-                        <a href="${getBaseUrl()}/mvc/views/tutores/expediente_estudiante.php?id_estudiante=${est.id_estudiante}"
-                           class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
-                           title="Consultar historial de faltas, calificaciones y citaciones">
-                            <span>Expediente</span>
+                        <a href="${getBaseUrl()}/mvc/views/tutores/expediente_estudiante.php?id_estudiante=${est.id_estudiante}" class="btn btn-secondary text-xs font-semibold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <span>Historial</span>
                         </a>
-
-                        <button type="button" onclick="desactivarEstudiante(${est.id_estudiante}, '${escaparJs(est.nombre)} ${escaparJs(est.apellido)}')"
-                                class="btn btn-danger text-base font-semibold py-2.5 px-3 min-h-[44px] inline-flex items-center justify-center"
-                                title="Desactivar estudiante">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
                     </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 function escaparJs(str) {

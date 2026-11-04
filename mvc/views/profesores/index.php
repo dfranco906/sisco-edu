@@ -133,8 +133,8 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         </div>
 
-        <!-- Tabla Rediseñada: Fuentes Grandes (>= 16px / 12 pt) y Revelación Progresiva -->
-        <div class="app-table-wrap rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <!-- Tabla Rediseñada: Fuentes Grandes (>= 16px / 12 pt) y Revelación Progresiva (Desktop y Tablets) -->
+        <div class="app-table-wrap hidden md:block rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full text-base">
                     <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 text-sm sm:text-base font-bold uppercase tracking-wider">
@@ -154,6 +154,11 @@ require_once __DIR__ . '/../layouts/sidebar.php';
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- Contenedor Adaptativo de Tarjetas para Celulares y Pantallas Pequeñas (< 768px) -->
+        <div id="cards-profesores-container" class="grid grid-cols-1 gap-3 md:hidden">
+            <!-- Tarjetas móviles dinámicas -->
         </div>
 
     </div>
@@ -283,6 +288,8 @@ function poblarSelectoresModales() {
 // 2. Cargar nómina completa de profesores (UNA SOLA CONSULTA OPTIMIZADA)
 async function cargarProfesores() {
     const tbody = document.getElementById('tabla-profesores-body');
+    const cardsContainer = document.getElementById('cards-profesores-container');
+
     if (tbody) {
         tbody.innerHTML = Array(4).fill(0).map(() => `
             <tr class="animate-pulse border-b border-slate-100 dark:border-slate-800">
@@ -291,6 +298,21 @@ async function cargarProfesores() {
                 <td class="p-4"><div class="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full"></div></td>
                 <td class="p-4 text-right"><div class="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto"></div></td>
             </tr>
+        `).join('');
+    }
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = Array(3).fill(0).map(() => `
+            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                        <div class="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-8 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            </div>
         `).join('');
     }
 
@@ -353,120 +375,176 @@ function aplicarFiltrosLocales() {
 // 4. Renderizar Tabla de Profesores (Columna Biometría Limpia y Botones Centralizados en Ficha)
 function renderizarTablaProfesores(lista) {
     const tbody = document.getElementById('tabla-profesores-body');
+    const cardsContainer = document.getElementById('cards-profesores-container');
     const cntFilt = document.getElementById('contador-filtrados');
     const cntTot = document.getElementById('contador-total');
-
-    if (!tbody) return;
 
     if (cntTot) cntTot.textContent = String(profesoresCargados.length);
     if (cntFilt) cntFilt.textContent = String(lista.length);
 
     if (lista.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="p-10 text-center text-slate-500">
-                    <p class="font-extrabold text-lg text-slate-800 dark:text-slate-200">No se encontraron docentes</p>
-                    <p class="text-base mt-1">Pruebe ajustando los filtros superiores o registre un nuevo profesor.</p>
-                </td>
-            </tr>
-        `;
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="p-10 text-center text-slate-500">
+                        <p class="font-extrabold text-lg text-slate-800 dark:text-slate-200">No se encontraron docentes</p>
+                        <p class="text-base mt-1">Pruebe ajustando los filtros superiores o registre un nuevo profesor.</p>
+                    </td>
+                </tr>
+            `;
+        }
+        if (cardsContainer) {
+            cardsContainer.innerHTML = `
+                <div class="p-8 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <p class="font-extrabold text-base text-slate-800 dark:text-slate-200">No se encontraron docentes</p>
+                    <p class="text-sm mt-1">Pruebe ajustando los filtros superiores.</p>
+                </div>
+            `;
+        }
         return;
     }
 
-    tbody.innerHTML = lista.map(p => {
-        const tieneHuella = (parseInt(p.huella_registrada || 0) > 0) || (parseInt(p.huella_id || 0) > 0);
-        
-        // Estado Biométrico Estricto: Solo dos estados limpios (WCAG AAA)
-        const huellaBadge = tieneHuella
-            ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                <span>Huella vinculada</span>
-               </span>`
-            : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span>Sin registrar</span>
-               </span>`;
+    if (tbody) {
+        tbody.innerHTML = lista.map(p => {
+            const tieneHuella = (parseInt(p.huella_registrada || 0) > 0) || (parseInt(p.huella_id || 0) > 0);
 
-        // Resumen de asignaciones
-        const totalAsig = parseInt(p.total_asignaciones || 0);
-        let asignacionesResumenHtml = '';
-        if (totalAsig > 0) {
-            asignacionesResumenHtml = `
-                <div class="space-y-1">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-100/80 text-purple-900 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold text-sm sm:text-base">
-                        📚 ${totalAsig} ${totalAsig === 1 ? 'materia asignada' : 'materias asignadas'}
+            const huellaBadge = tieneHuella
+                ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Huella vinculada</span>
+                   </span>`
+                : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span>Sin registrar</span>
+                   </span>`;
+
+            const totalAsig = parseInt(p.total_asignaciones || 0);
+            let asignacionesResumenHtml = '';
+            if (totalAsig > 0) {
+                asignacionesResumenHtml = `
+                    <div class="space-y-1">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-100/80 text-purple-900 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold text-sm sm:text-base">
+                            📚 ${totalAsig} ${totalAsig === 1 ? 'materia asignada' : 'materias asignadas'}
+                        </span>
+                        <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})" class="block text-sm font-bold text-purple-700 dark:text-purple-400 hover:underline">
+                            Ver cursos, horarios y estado en vivo →
+                        </button>
+                    </div>
+                `;
+            } else {
+                asignacionesResumenHtml = `
+                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-sm font-semibold">
+                        Sin materias asignadas
                     </span>
-                    <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})" class="block text-sm font-bold text-purple-700 dark:text-purple-400 hover:underline">
-                        Ver cursos, horarios y estado en vivo →
-                    </button>
-                </div>
-            `;
-        } else {
-            asignacionesResumenHtml = `
-                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-sm font-semibold">
-                    Sin materias asignadas
-                </span>
-            `;
-        }
+                `;
+            }
 
-        const iniciales = obtenerIniciales(p.nombre, p.apellido);
+            const iniciales = obtenerIniciales(p.nombre, p.apellido);
 
-        return `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                <!-- Columna 1: Docente e Identificación -->
-                <td class="py-4 px-5">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 flex items-center justify-center font-black text-lg border border-purple-200 dark:border-purple-800 shrink-0">
-                            ${iniciales}
+            return `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td class="py-4 px-5">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 flex items-center justify-center font-black text-lg border border-purple-200 dark:border-purple-800 shrink-0">
+                                ${iniciales}
+                            </div>
+                            <div>
+                                <div class="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
+                                    ${escapeHtml(p.nombre)} ${escapeHtml(p.apellido)}
+                                </div>
+                                <div class="text-base text-slate-700 dark:text-slate-300 font-mono mt-0.5">
+                                    CI: <strong class="text-purple-700 dark:text-purple-300 font-bold">${escapeHtml(p.cedula_identidad)}</strong>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
-                                ${escapeHtml(p.nombre)} ${escapeHtml(p.apellido)}
+                    </td>
+                    <td class="py-4 px-5">
+                        ${asignacionesResumenHtml}
+                    </td>
+                    <td class="py-4 px-5">
+                        ${huellaBadge}
+                    </td>
+                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                        <div class="inline-flex items-center gap-2 justify-end">
+                            <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})"
+                                    class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
+                                    title="Ver ficha integral, horarios en vivo y gestión biométrica">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <span>Ver Ficha</span>
+                            </button>
+                            <button type="button" onclick="abrirModalEditarProfesor(${JSON.stringify(p).replace(/"/g, '&quot;')})"
+                                    class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
+                                    title="Editar datos del docente">
+                                <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <span>Editar</span>
+                            </button>
+                            <button type="button" onclick="desactivarProfesor(${p.id_profesor}, '${escapeHtml(p.nombre + ' ' + p.apellido)}')"
+                                    class="btn btn-danger text-base font-semibold py-2.5 px-3 min-h-[44px] inline-flex items-center justify-center"
+                                    title="Desactivar profesor">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = lista.map(p => {
+            const tieneHuella = (parseInt(p.huella_registrada || 0) > 0) || (parseInt(p.huella_id || 0) > 0);
+            const huellaBadge = tieneHuella
+                ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Huella</span>
+                   </span>`
+                : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span>Sin huella</span>
+                   </span>`;
+
+            const totalAsig = parseInt(p.total_asignaciones || 0);
+            const iniciales = obtenerIniciales(p.nombre, p.apellido);
+
+            return `
+                <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 flex items-center justify-center font-black text-base border border-purple-200 dark:border-purple-800 shrink-0">
+                                ${iniciales}
                             </div>
-                            <div class="text-base text-slate-700 dark:text-slate-300 font-mono mt-0.5">
-                                CI: <strong class="text-purple-700 dark:text-purple-300 font-bold">${escapeHtml(p.cedula_identidad)}</strong>
+                            <div class="min-w-0">
+                                <div class="font-extrabold text-base text-slate-900 dark:text-white leading-tight truncate">
+                                    ${escapeHtml(p.nombre)} ${escapeHtml(p.apellido)}
+                                </div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400 font-mono mt-0.5">
+                                    CI: <strong class="text-purple-700 dark:text-purple-300 font-bold">${escapeHtml(p.cedula_identidad)}</strong>
+                                </div>
                             </div>
+                        </div>
+                        <div class="shrink-0">
+                            ${huellaBadge}
                         </div>
                     </div>
-                </td>
-
-                <!-- Columna 2: Carga Académica Resumida -->
-                <td class="py-4 px-5">
-                    ${asignacionesResumenHtml}
-                </td>
-
-                <!-- Columna 3: Estado Biométrico Exclusivo (Sin botones que saturen la tabla) -->
-                <td class="py-4 px-5">
-                    ${huellaBadge}
-                </td>
-
-                <!-- Columna 4: Acciones Principales -->
-                <td class="py-4 px-5 text-right whitespace-nowrap">
-                    <div class="inline-flex items-center gap-2 justify-end">
-                        <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})"
-                                class="btn btn-primary text-base font-bold py-2.5 px-4 min-h-[44px] inline-flex items-center gap-1.5 shadow-xs"
-                                title="Ver ficha integral, horarios en vivo y gestión biométrica">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            <span>Ver Ficha</span>
+                    <div class="flex items-center justify-between text-sm py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate">📚 ${totalAsig} ${totalAsig === 1 ? 'materia' : 'materias'}</span>
+                        <span class="text-xs text-slate-500 font-semibold shrink-0 ml-2">${escapeHtml(p.email || 'Sin email')}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" onclick="abrirModalDetalleProfesor(${p.id_profesor})" class="btn btn-primary text-xs font-bold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <span>Ficha</span>
                         </button>
-
-                        <button type="button" onclick="abrirModalEditarProfesor(${JSON.stringify(p).replace(/"/g, '&quot;')})"
-                                class="btn btn-secondary text-base font-semibold py-2.5 px-3.5 min-h-[44px] inline-flex items-center gap-1"
-                                title="Editar datos del docente">
-                            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <button type="button" onclick="abrirModalEditarProfesor(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="btn btn-secondary text-xs font-semibold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
                             <span>Editar</span>
                         </button>
-
-                        <button type="button" onclick="desactivarProfesor(${p.id_profesor}, '${escapeHtml(p.nombre + ' ' + p.apellido)}')"
-                                class="btn btn-danger text-base font-semibold py-2.5 px-3 min-h-[44px] inline-flex items-center justify-center"
-                                title="Desactivar profesor">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <button type="button" onclick="desactivarProfesor(${p.id_profesor}, '${escapeHtml(p.nombre + ' ' + p.apellido)}')" class="btn btn-danger text-xs font-semibold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <span>Baja</span>
                         </button>
                     </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 // 5. Inicialización de la Página

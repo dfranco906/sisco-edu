@@ -112,25 +112,33 @@ require_once __DIR__ . '/../layouts/sidebar.php';
             </div>
         </div>
 
-        <!-- Tabla Accesible de Materias (Sin la columna de carga horaria semanal) -->
-        <div class="overflow-x-auto rounded-3xl border-2 border-slate-200/90 bg-white shadow-sm">
-            <table class="w-full text-left text-base" id="tabla-materias">
-                <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-sm border-b-2 border-slate-200">
-                    <tr>
-                        <th class="p-5">Materia / Asignatura</th>
-                        <th class="p-5">Descripción Pedagógica</th>
-                        <th class="p-5">Cursos Asignados</th>
-                        <th class="p-5 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-materias" class="divide-y divide-slate-200 text-slate-800">
-                    <tr>
-                        <td colspan="4" class="p-12 text-center text-slate-500 font-medium">
-                            Cargando materias de la malla curricular...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Contenedor Lista: Tabla (Desktop) y Tarjetas (Mobile) -->
+        <div id="contenedor-lista-materias" class="space-y-4">
+            <!-- Tabla Accesible de Materias (Desktop y Tablets) -->
+            <div class="overflow-x-auto rounded-3xl border-2 border-slate-200/90 bg-white shadow-sm hidden md:block">
+                <table class="w-full text-left text-base" id="tabla-materias">
+                    <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-sm border-b-2 border-slate-200">
+                        <tr>
+                            <th class="p-5">Materia / Asignatura</th>
+                            <th class="p-5">Descripción Pedagógica</th>
+                            <th class="p-5">Cursos Asignados</th>
+                            <th class="p-5 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-materias" class="divide-y divide-slate-200 text-slate-800">
+                        <tr>
+                            <td colspan="4" class="p-12 text-center text-slate-500 font-medium">
+                                Cargando materias de la malla curricular...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Contenedor Adaptativo de Tarjetas para Celulares y Pantallas Pequeñas (< 768px) -->
+            <div id="cards-materias-container" class="grid grid-cols-1 gap-3 md:hidden">
+                <!-- Tarjetas móviles dinámicas -->
+            </div>
         </div>
 
         <!-- Estado Vacío cuando no hay coincidencias -->
@@ -167,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function cargarMaterias() {
     const tbody = document.getElementById('tbody-materias');
+    const cardsContainer = document.getElementById('cards-materias-container');
     const labelContador = document.getElementById('contador-materias-visibles');
     
     if (tbody) {
@@ -180,13 +189,29 @@ async function cargarMaterias() {
         `).join('');
     }
 
+    if (cardsContainer) {
+        cardsContainer.innerHTML = Array(3).fill(0).map(() => `
+            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-pulse space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                    <div class="space-y-1.5 flex-1">
+                        <div class="h-4 w-36 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                        <div class="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-8 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            </div>
+        `).join('');
+    }
+
     try {
         const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Materia/leer_materias.php';
         const res = await fetch(url);
         const json = await res.json();
 
         if (json.status !== 'success' || !Array.isArray(json.data)) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-rose-600 font-bold">Error al cargar materias: ${json.message || 'Respuesta inválida'}</td></tr>`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-rose-600 font-bold">Error al cargar materias: ${json.message || 'Respuesta inválida'}</td></tr>`;
+            if (cardsContainer) cardsContainer.innerHTML = `<div class="p-6 text-center text-rose-600 font-bold bg-white dark:bg-slate-900 rounded-2xl border border-rose-200">Error al cargar materias</div>`;
             return;
         }
 
@@ -198,6 +223,9 @@ async function cargarMaterias() {
         console.error("Error cargando materias:", e);
         if (tbody) {
             tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-rose-600 font-bold">Error de conexión al cargar la lista de materias.</td></tr>`;
+        }
+        if (cardsContainer) {
+            cardsContainer.innerHTML = `<div class="p-6 text-center text-rose-600 font-bold bg-white dark:bg-slate-900 rounded-2xl border border-rose-200">Error de conexión al cargar la lista de materias.</div>`;
         }
     }
 }
@@ -224,9 +252,10 @@ function filtrarMaterias() {
     const inputBuscar = document.getElementById('input-busqueda-materia');
     const btnLimpiar = document.getElementById('btn-limpiar-busqueda-materia');
     const tbody = document.getElementById('tbody-materias');
+    const cardsContainer = document.getElementById('cards-materias-container');
     const labelContador = document.getElementById('contador-materias-visibles');
     const emptyBox = document.getElementById('empty-busqueda-materias');
-    const tabla = document.getElementById('tabla-materias');
+    const contenedorLista = document.getElementById('contenedor-lista-materias');
 
     const q = (inputBuscar ? inputBuscar.value : '').trim().toLowerCase();
 
@@ -245,82 +274,131 @@ function filtrarMaterias() {
     }
 
     if (filtradas.length === 0) {
-        tbody.innerHTML = '';
-        if (tabla) tabla.classList.add('hidden');
+        if (tbody) tbody.innerHTML = '';
+        if (cardsContainer) cardsContainer.innerHTML = '';
+        if (contenedorLista) contenedorLista.classList.add('hidden');
         if (emptyBox) emptyBox.classList.remove('hidden');
         return;
     }
 
-    if (tabla) tabla.classList.remove('hidden');
+    if (contenedorLista) contenedorLista.classList.remove('hidden');
     if (emptyBox) emptyBox.classList.add('hidden');
 
-    tbody.innerHTML = filtradas.map(m => {
-        const inicial = (m.nombre || 'M').charAt(0).toUpperCase();
-        const cantAsig = parseInt(m.total_asignaciones) || 0;
-        const matJson = JSON.stringify(m).replace(/"/g, '&quot;');
+    if (tbody) {
+        tbody.innerHTML = filtradas.map(m => {
+            const inicial = (m.nombre || 'M').charAt(0).toUpperCase();
+            const cantAsig = parseInt(m.total_asignaciones) || 0;
+            const matJson = JSON.stringify(m).replace(/"/g, '&quot;');
 
-        let badgeAsig = '';
-        if (cantAsig > 0) {
-            badgeAsig = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 text-sm font-bold border border-indigo-200">
-                🏫 ${cantAsig} curso(s)
-            </span>`;
-        } else {
-            badgeAsig = `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm font-semibold border border-slate-200">
-                Sin asignar
-            </span>`;
-        }
+            let badgeAsig = '';
+            if (cantAsig > 0) {
+                badgeAsig = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 text-sm font-bold border border-indigo-200">
+                    🏫 ${cantAsig} curso(s)
+                </span>`;
+            } else {
+                badgeAsig = `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm font-semibold border border-slate-200">
+                    Sin asignar
+                </span>`;
+            }
 
-        return `
-            <tr class="hover:bg-slate-50 transition-colors">
-                <!-- Materia -->
-                <td class="p-5">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 font-black flex items-center justify-center text-lg border border-blue-200 shrink-0">
-                            ${inicial}
+            return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <!-- Materia -->
+                    <td class="p-5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-black flex items-center justify-center text-lg border border-blue-200 dark:border-blue-800 shrink-0">
+                                ${inicial}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-slate-100 leading-snug">${escapeHtml(m.nombre)}</h3>
+                                <span class="text-xs font-mono font-semibold text-slate-500">ID #${m.id_materia}</span>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-lg font-extrabold text-slate-900 leading-snug">${escapeHtml(m.nombre)}</h3>
-                            <span class="text-xs font-mono font-semibold text-slate-500">ID #${m.id_materia}</span>
+                    </td>
+
+                    <!-- Descripción -->
+                    <td class="p-5 font-medium text-slate-700 dark:text-slate-300 max-w-md">
+                        ${m.descripcion ? escapeHtml(m.descripcion) : '<span class="text-slate-400 italic">Sin descripción registrada</span>'}
+                    </td>
+
+                    <!-- Cursos Asignados -->
+                    <td class="p-5">
+                        ${badgeAsig}
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="p-5 text-right">
+                        <div class="inline-flex items-center gap-2 justify-end">
+                            <button type="button" onclick="abrirModalDetalleMateria(${m.id_materia})"
+                                    class="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-bold text-sm border border-indigo-200 transition flex items-center gap-1.5 shadow-xs"
+                                    title="Ver detalles y asignaciones">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <span>Detalles</span>
+                            </button>
+                            <button type="button" onclick="abrirModalEditarMateria(${matJson})"
+                                    class="min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white font-bold text-sm border border-amber-200 transition flex items-center gap-1.5"
+                                    title="Editar materia">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                <span>Editar</span>
+                            </button>
+                            <button type="button" onclick="desactivarMateria(${m.id_materia}, '${escapeJs(m.nombre)}')"
+                                    class="min-h-[44px] px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-sm border border-rose-200 transition flex items-center gap-1.5"
+                                    title="Desactivar materia">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>Desactivar</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = filtradas.map(m => {
+            const inicial = (m.nombre || 'M').charAt(0).toUpperCase();
+            const cantAsig = parseInt(m.total_asignaciones) || 0;
+            const matJson = JSON.stringify(m).replace(/"/g, '&quot;');
+
+            let badgeAsig = cantAsig > 0
+                ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200 dark:border-indigo-800">🏫 ${cantAsig} curso(s)</span>`
+                : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold border border-slate-200 dark:border-slate-700">Sin asignar</span>`;
+
+            return `
+                <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-col gap-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-black flex items-center justify-center text-lg border border-blue-200 dark:border-blue-800 shrink-0">
+                                ${inicial}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 truncate">${escapeHtml(m.nombre)}</h3>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-xs font-mono font-semibold text-slate-500">ID #${m.id_materia}</span>
+                                    ${badgeAsig}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </td>
-
-                <!-- Descripción -->
-                <td class="p-5 font-medium text-slate-700 max-w-md">
-                    ${m.descripcion ? escapeHtml(m.descripcion) : '<span class="text-slate-400 italic">Sin descripción registrada</span>'}
-                </td>
-
-                <!-- Cursos Asignados -->
-                <td class="p-5">
-                    ${badgeAsig}
-                </td>
-
-                <!-- Acciones -->
-                <td class="p-5 text-right">
-                    <div class="inline-flex items-center gap-2 justify-end">
-                        <button type="button" onclick="abrirModalDetalleMateria(${m.id_materia})"
-                                class="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-bold text-sm border border-indigo-200 transition flex items-center gap-1.5"
-                                title="Ver detalles y asignaciones">
-                            <span>📖</span>
+                    ${m.descripcion ? `<p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">${escapeHtml(m.descripcion)}</p>` : ''}
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" onclick="abrirModalDetalleMateria(${m.id_materia})" class="btn btn-primary text-xs font-bold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                             <span>Detalles</span>
                         </button>
-                        <button type="button" onclick="abrirModalEditarMateria(${matJson})"
-                                class="min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white font-bold text-sm border border-amber-200 transition flex items-center gap-1.5"
-                                title="Editar materia">
-                            <span>✏️</span>
+                        <button type="button" onclick="abrirModalEditarMateria(${matJson})" class="btn btn-secondary text-xs font-semibold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             <span>Editar</span>
                         </button>
-                        <button type="button" onclick="desactivarMateria(${m.id_materia}, '${escapeJs(m.nombre)}')"
-                                class="min-h-[44px] px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-sm border border-rose-200 transition flex items-center gap-1.5"
-                                title="Desactivar materia">
-                            <span>✕</span>
-                            <span>Desactivar</span>
+                        <button type="button" onclick="desactivarMateria(${m.id_materia}, '${escapeJs(m.nombre)}')" class="btn btn-danger text-xs font-semibold py-2.5 px-2 min-h-[44px] flex items-center justify-center gap-1 w-full truncate">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span>Baja</span>
                         </button>
                     </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 function limpiarBusquedaMateria() {
