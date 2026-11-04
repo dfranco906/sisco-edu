@@ -801,6 +801,29 @@ html.sidebar-init-collapsed .app-sidebar .app-nav-link.is-active::before {
     }
 }
 
+/* Modales de Vinculación Biométrica Amplia - 80% ancho en pantallas horizontales (solo 20% disponible) para visualización sin scroll */
+.app-modal-dialog.modal-biometria-wide {
+    width: 96vw;
+    max-width: 96vw;
+    max-height: 94vh;
+}
+
+@media (min-width: 640px) {
+    .app-modal-dialog.modal-biometria-wide {
+        width: 92vw;
+        max-width: 92vw;
+        max-height: 92vh;
+    }
+}
+
+@media (min-width: 1024px) {
+    .app-modal-dialog.modal-biometria-wide {
+        width: 80vw;
+        max-width: 80vw;
+        max-height: 88vh;
+    }
+}
+
 .app-modal-close {
     flex: 0 0 auto;
     width: 2.25rem;
@@ -1293,6 +1316,13 @@ body.sidebar-open {
         height: 96vh;
         max-height: 96vh;
         padding: 0;
+    }
+
+    .app-modal-dialog.modal-biometria-wide {
+        width: 96vw;
+        max-width: 96vw;
+        max-height: 94vh;
+        padding: 1.25rem;
     }
 
     .app-modal-actions > * {
