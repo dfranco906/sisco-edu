@@ -448,7 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (criterios.length === 0) {
-                alert("Debe agregar al menos un criterio o indicador al instrumento.");
+                if (window.Toast) Toast.warning("Debe agregar al menos un criterio o indicador al instrumento.", "Instrumento Incompleto");
+                else alert("Debe agregar al menos un criterio o indicador al instrumento.");
                 if (btn) btn.disabled = false;
                 return;
             }
@@ -470,8 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cerrarModalCrearPlantilla();
                 await cargarDatosPlantillas();
+                if (window.Toast) Toast.success(json.message || "Plantilla creada exitosamente.", "Instrumentos");
             } catch (err) {
-                alert("Error: " + err.message);
+                if (window.Toast) Toast.error("Error: " + err.message, "Error");
+                else alert("Error: " + err.message);
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -480,7 +483,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function eliminarPlantilla(idPlantilla) {
-    if (!confirm("¿Desea eliminar esta plantilla de evaluación personalizada?")) return;
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: "¿Eliminar Plantilla?",
+            message: "¿Desea eliminar esta plantilla de evaluación personalizada?",
+            confirmText: "Eliminar",
+            cancelText: "Cancelar",
+            type: "danger"
+        });
+    } else {
+        confirmado = confirm("¿Desea eliminar esta plantilla de evaluación personalizada?");
+    }
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -497,8 +512,10 @@ async function eliminarPlantilla(idPlantilla) {
         }
 
         await cargarDatosPlantillas();
+        if (window.Toast) Toast.success("Plantilla eliminada correctamente.", "Operación Exitosa");
     } catch (e) {
-        alert("Error al eliminar plantilla: " + e.message);
+        if (window.Toast) Toast.error("Error al eliminar plantilla: " + e.message, "Error");
+        else alert("Error al eliminar plantilla: " + e.message);
     }
 }
 </script>

@@ -153,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-                alert("Por favor seleccione un archivo CSV para importar.");
+                if (window.Toast) Toast.warning("Por favor seleccione un archivo CSV para importar.", "Importación");
+                else alert("Por favor seleccione un archivo CSV para importar.");
                 return;
             }
 
@@ -209,10 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof cargarTutores === 'function') {
                     cargarTutores();
                 }
+                if (window.Toast) Toast.success("Archivo importado con éxito.", "Importación de Tutores");
 
             } catch (err) {
                 console.error("Error en importación de tutores:", err);
-                alert("Error al importar tutores: " + err.message);
+                if (window.Toast) Toast.error("Error al importar tutores: " + err.message, "Importación");
+                else alert("Error al importar tutores: " + err.message);
             } finally {
                 if (btnSubmit) {
                     btnSubmit.disabled = false;

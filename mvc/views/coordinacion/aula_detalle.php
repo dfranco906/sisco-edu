@@ -426,7 +426,19 @@ function cambiarPestana(targetId) {
 
 async function desvincularTutor(idTutor, idEstudiante, nombreTutor, nombreEstudiante) {
     const msg = `¿Desea desvincular a "${nombreTutor}" como tutor de "${nombreEstudiante}"?`;
-    if (!confirm(msg)) return;
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: "¿Desvincular Tutor?",
+            message: msg,
+            confirmText: "Desvincular",
+            cancelText: "Cancelar",
+            type: "danger"
+        });
+    } else {
+        confirmado = confirm(msg);
+    }
+    if (!confirmado) return;
 
     try {
         const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Tutor/desvincular_hijo.php';

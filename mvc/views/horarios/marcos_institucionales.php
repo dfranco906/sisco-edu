@@ -814,13 +814,16 @@ window.BASE_URL = "<?= base_url('') ?>";
             if (data.status === 'success') {
                 cerrarModalMarco();
                 cargarMarcos();
-                alert('✅ ' + data.message);
+                if (window.Toast) Toast.success(data.message, 'Marco Horario');
+                else alert(data.message);
             } else {
-                alert('⚠️ ' + (data.message || 'Error al guardar marco horario.'));
+                if (window.Toast) Toast.warning(data.message || 'Error al guardar marco horario.', 'Atención');
+                else alert(data.message || 'Error al guardar marco horario.');
             }
         } catch (err) {
             console.error(err);
-            alert('❌ Error de conexión al guardar marco horario.');
+            if (window.Toast) Toast.error('Error de conexión al guardar marco horario.', 'Error');
+            else alert('Error de conexión al guardar marco horario.');
         } finally {
             btn.disabled = false;
             btn.classList.remove('opacity-70');
@@ -828,7 +831,19 @@ window.BASE_URL = "<?= base_url('') ?>";
     };
 
     window.desactivarMarco = async function(id) {
-        if (!confirm('¿Está seguro de desactivar este marco horario institucional?')) return;
+        let confirmado = false;
+        if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+            confirmado = await window.SISCO.confirm({
+                title: "¿Desactivar Marco Horario?",
+                message: "¿Está seguro de desactivar este marco horario institucional?",
+                confirmText: "Desactivar",
+                cancelText: "Cancelar",
+                type: "danger"
+            });
+        } else {
+            confirmado = confirm('¿Está seguro de desactivar este marco horario institucional?');
+        }
+        if (!confirmado) return;
 
         try {
             const res = await fetch(`${window.BASE_URL}src/api/Horario/desactivar_marco_horario.php`, {
@@ -839,13 +854,16 @@ window.BASE_URL = "<?= base_url('') ?>";
             const data = await res.json();
 
             if (data.status === 'success') {
+                if (window.Toast) Toast.success(data.message || 'Marco horario desactivado.', 'Operación Exitosa');
                 cargarMarcos();
             } else {
-                alert('⚠️ ' + data.message);
+                if (window.Toast) Toast.warning(data.message, 'Atención');
+                else alert(data.message);
             }
         } catch (err) {
             console.error(err);
-            alert('❌ Error de conexión al desactivar.');
+            if (window.Toast) Toast.error('Error de conexión al desactivar.', 'Error');
+            else alert('Error de conexión al desactivar.');
         }
     };
 
@@ -1016,13 +1034,16 @@ window.BASE_URL = "<?= base_url('') ?>";
             if (data.status === 'success') {
                 cerrarModalReceso();
                 cargarRecesos();
-                alert('✅ ' + data.message);
+                if (window.Toast) Toast.success(data.message, 'Receso Institucional');
+                else alert(data.message);
             } else {
-                alert('⚠️ ' + (data.message || 'Error al guardar receso institucional.'));
+                if (window.Toast) Toast.warning(data.message || 'Error al guardar receso institucional.', 'Atención');
+                else alert(data.message || 'Error al guardar receso institucional.');
             }
         } catch (err) {
             console.error(err);
-            alert('❌ Error de conexión al guardar receso institucional.');
+            if (window.Toast) Toast.error('Error de conexión al guardar receso institucional.', 'Error');
+            else alert('Error de conexión al guardar receso institucional.');
         } finally {
             btn.disabled = false;
             btn.classList.remove('opacity-70');
@@ -1030,7 +1051,19 @@ window.BASE_URL = "<?= base_url('') ?>";
     };
 
     window.desactivarReceso = async function(id) {
-        if (!confirm('¿Está seguro de desactivar este receso institucional?')) return;
+        let confirmado = false;
+        if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+            confirmado = await window.SISCO.confirm({
+                title: "¿Desactivar Receso?",
+                message: "¿Está seguro de desactivar este receso institucional?",
+                confirmText: "Desactivar",
+                cancelText: "Cancelar",
+                type: "danger"
+            });
+        } else {
+            confirmado = confirm('¿Está seguro de desactivar este receso institucional?');
+        }
+        if (!confirmado) return;
 
         try {
             const res = await fetch(`${window.BASE_URL}src/api/Horario/desactivar_receso.php`, {
@@ -1041,13 +1074,16 @@ window.BASE_URL = "<?= base_url('') ?>";
             const data = await res.json();
 
             if (data.status === 'success') {
+                if (window.Toast) Toast.success(data.message || 'Receso desactivado.', 'Operación Exitosa');
                 cargarRecesos();
             } else {
-                alert('⚠️ ' + data.message);
+                if (window.Toast) Toast.warning(data.message, 'Atención');
+                else alert(data.message);
             }
         } catch (err) {
             console.error(err);
-            alert('❌ Error de conexión al desactivar receso.');
+            if (window.Toast) Toast.error('Error de conexión al desactivar receso.', 'Error');
+            else alert('Error de conexión al desactivar receso.');
         }
     };
 

@@ -248,7 +248,19 @@ function limpiarBusquedaDesactivadas() {
 }
 
 async function restaurarMateria(idMateria, nombreMateria) {
-    if (!confirm(`¿Desea restaurar la materia "${nombreMateria}" a la malla activa?`)) return;
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: "¿Restaurar Materia?",
+            message: `¿Desea restaurar la materia "${nombreMateria}" a la malla activa?`,
+            confirmText: "Restaurar",
+            cancelText: "Cancelar",
+            type: "info"
+        });
+    } else {
+        confirmado = confirm(`¿Desea restaurar la materia "${nombreMateria}" a la malla activa?`);
+    }
+    if (!confirmado) return;
 
     try {
         const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Materia/restaurar_materia.php';
@@ -273,7 +285,19 @@ async function restaurarMateria(idMateria, nombreMateria) {
 
 async function eliminarMateriaDefinitiva(idMateria, nombreMateria) {
     const msg = `⚠️ ADVERTENCIA DE ELIMINACIÓN PERMANENTE:\n\n¿Está seguro de eliminar definitivamente la materia "${nombreMateria}"?\n\nEsta acción no se puede deshacer. Si la materia tiene asignaciones históricas, la base de datos impedirá su eliminación para proteger los registros escolares.`;
-    if (!confirm(msg)) return;
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: "¿Eliminar Definitivamente?",
+            message: `¿Está seguro de eliminar definitivamente la materia "${nombreMateria}"? Esta acción no se puede deshacer. Si tiene asignaciones históricas, no podrá eliminarse.`,
+            confirmText: "Eliminar",
+            cancelText: "Cancelar",
+            type: "danger"
+        });
+    } else {
+        confirmado = confirm(msg);
+    }
+    if (!confirmado) return;
 
     try {
         const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Materia/eliminar_materia.php';

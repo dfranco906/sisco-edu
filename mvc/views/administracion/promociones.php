@@ -711,7 +711,8 @@ async function ejecutarPromocion() {
 
     } catch (err) {
         console.error('Error al ejecutar promoción:', err);
-        alert('Error: ' + err.message);
+        if (window.Toast) Toast.error('Error: ' + err.message, 'Promoción');
+        else alert('Error: ' + err.message);
     } finally {
         btnConfirmar.disabled = false;
         spinner.classList.add('hidden');
@@ -723,7 +724,14 @@ function cerrarModalResultado() {
 }
 
 function mostrarAlerta(msg, tipo = 'info') {
-    alert(msg);
+    if (window.Toast) {
+        if (tipo === 'error') Toast.error(msg);
+        else if (tipo === 'warning') Toast.warning(msg);
+        else if (tipo === 'success') Toast.success(msg);
+        else Toast.info(msg);
+    } else {
+        alert(msg);
+    }
 }
 </script>
 

@@ -183,7 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-                alert("Por favor seleccioná un archivo CSV para importar.");
+                if (window.Toast) Toast.warning("Por favor seleccioná un archivo CSV para importar.", "Importación");
+                else alert("Por favor seleccioná un archivo CSV para importar.");
                 return;
             }
 
@@ -247,7 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (err) {
                 console.error("Error en importación de profesores:", err);
-                alert("Error al importar profesores: " + err.message);
+                if (window.Toast) Toast.error("Error al importar profesores: " + err.message, "Importación");
+                else alert("Error al importar profesores: " + err.message);
             } finally {
                 if (btnSubmit) {
                     btnSubmit.disabled = false;

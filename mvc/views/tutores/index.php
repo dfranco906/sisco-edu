@@ -367,8 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 cerrarModalCrearTutor();
                 formCrear.reset();
                 cargarTutores();
+                if (window.Toast) Toast.success(json.message || "Tutor registrado exitosamente.", "Registro Exitoso");
             } catch (err) {
-                alert("Error al registrar tutor: " + err.message);
+                if (window.Toast) Toast.error("Error al registrar tutor: " + err.message, "Error");
+                else alert("Error al registrar tutor: " + err.message);
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -397,8 +399,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cerrarModalEditarTutor();
                 cargarTutores();
+                if (window.Toast) Toast.success(json.message || "Tutor actualizado correctamente.", "Actualización Exitosa");
             } catch (err) {
-                alert("Error al actualizar tutor: " + err.message);
+                if (window.Toast) Toast.error("Error al actualizar tutor: " + err.message, "Error");
+                else alert("Error al actualizar tutor: " + err.message);
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -593,7 +597,19 @@ function cerrarModalEditarTutor() {
 }
 
 async function desactivarTutor(idTutor, nombreCompleto) {
-    if (!confirm(`¿Está seguro de que desea desactivar al tutor "${nombreCompleto}"?`)) return;
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: "¿Desactivar Tutor?",
+            message: `¿Está seguro de que desea desactivar al tutor "${nombreCompleto}"?`,
+            confirmText: "Desactivar",
+            cancelText: "Cancelar",
+            type: "danger"
+        });
+    } else {
+        confirmado = confirm(`¿Está seguro de que desea desactivar al tutor "${nombreCompleto}"?`);
+    }
+    if (!confirmado) return;
 
     try {
         const formData = new FormData();
@@ -606,13 +622,16 @@ async function desactivarTutor(idTutor, nombreCompleto) {
         const json = await res.json();
 
         if (json.status === 'success') {
+            if (window.Toast) Toast.success(json.message || "Tutor desactivado correctamente.", "Operación Exitosa");
             cargarTutores();
         } else {
-            alert(json.message || "Error al desactivar tutor.");
+            if (window.Toast) Toast.warning(json.message || "Error al desactivar tutor.", "Atención");
+            else alert(json.message || "Error al desactivar tutor.");
         }
     } catch (e) {
         console.error("Error desactivando tutor:", e);
-        alert("Error de comunicación al desactivar tutor.");
+        if (window.Toast) Toast.error("Error de comunicación al desactivar tutor.", "Error");
+        else alert("Error de comunicación al desactivar tutor.");
     }
 }
 </script>

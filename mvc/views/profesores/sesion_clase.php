@@ -498,11 +498,14 @@ async function rectificarAsistenciaManual(idEstudiante, nuevoEstado) {
         const json = await res.json();
         if (json.status === 'success') {
             await cargarSesionClase(document.getElementById('selector-catedra-activa')?.value);
+            if (window.Toast) Toast.success(json.message || "Asistencia registrada correctamente.", "Asistencia Actualizada");
         } else {
-            alert("Error al actualizar asistencia: " + json.message);
+            if (window.Toast) Toast.warning("Error al actualizar asistencia: " + json.message, "Atención");
+            else alert("Error al actualizar asistencia: " + json.message);
         }
     } catch (e) {
-        alert("Error de comunicación: " + e.message);
+        if (window.Toast) Toast.error("Error de comunicación: " + e.message, "Error");
+        else alert("Error de comunicación: " + e.message);
     }
 }
 
@@ -665,7 +668,8 @@ async function guardarCalificacionEstudiante(idEstudiante, puntajeMaximo) {
 
     const ptsVal = parseFloat(inpPts?.value);
     if (isNaN(ptsVal) || ptsVal < 0) {
-        alert("Ingrese un puntaje numérico válido mayor o igual a 0.");
+        if (window.Toast) Toast.warning("Ingrese un puntaje numérico válido mayor o igual a 0.", "Puntaje Inválido");
+        else alert("Ingrese un puntaje numérico válido mayor o igual a 0.");
         return;
     }
 
@@ -690,11 +694,14 @@ async function guardarCalificacionEstudiante(idEstudiante, puntajeMaximo) {
             setTimeout(() => {
                 inpPts.classList.remove('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40');
             }, 1500);
+            if (window.Toast) Toast.success("Calificación guardada.", "Evaluación", 2000);
         } else {
-            alert("Error: " + json.message);
+            if (window.Toast) Toast.warning("Error: " + json.message, "Atención");
+            else alert("Error: " + json.message);
         }
     } catch (e) {
-        alert("Error al guardar evaluación: " + e.message);
+        if (window.Toast) Toast.error("Error al guardar evaluación: " + e.message, "Error");
+        else alert("Error al guardar evaluación: " + e.message);
     }
 }
 
@@ -746,8 +753,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cerrarModalNuevoAnecdotario();
                 await cargarSesionClase(document.getElementById('selector-catedra-activa')?.value);
+                if (window.Toast) Toast.success("Registro anecdótico guardado.", "Anecdotario");
             } catch (err) {
-                alert("Error: " + err.message);
+                if (window.Toast) Toast.error("Error: " + err.message, "Error");
+                else alert("Error: " + err.message);
             } finally {
                 if (btn) btn.disabled = false;
             }

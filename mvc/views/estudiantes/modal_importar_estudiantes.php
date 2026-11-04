@@ -161,7 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             if (!fileInput || !fileInput.files[0]) {
-                alert("Por favor seleccione un archivo CSV primero.");
+                if (window.Toast) Toast.warning("Por favor seleccione un archivo CSV primero.", "Importación");
+                else alert("Por favor seleccione un archivo CSV primero.");
                 return;
             }
 
@@ -212,12 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (typeof window.recargarListaEstudiantesActual === 'function') {
                         window.recargarListaEstudiantesActual();
                     }
+                    if (window.Toast) Toast.success("Archivo importado con éxito.", "Importación de Estudiantes");
                 } else {
-                    alert(json.message || "Error al procesar la importación.");
+                    if (window.Toast) Toast.error(json.message || "Error al procesar la importación.", "Error");
+                    else alert(json.message || "Error al procesar la importación.");
                 }
             } catch (err) {
                 console.error("Error importando estudiantes:", err);
-                alert("Error de comunicación al importar estudiantes.");
+                if (window.Toast) Toast.error("Error de comunicación al importar estudiantes.", "Error");
+                else alert("Error de comunicación al importar estudiantes.");
             } finally {
                 if (btn) {
                     btn.disabled = false;

@@ -323,7 +323,19 @@ function limpiarBusquedaMateria() {
 
 async function desactivarMateria(idMateria, nombreMateria) {
     const msg = `¿Desea desactivar la materia "${nombreMateria}"?\n\nPasará a la lista de inactivas y no podrá ser asignada a nuevos cursos.`;
-    if (!confirm(msg)) return;
+    let confirmado = false;
+    if (window.SISCO && typeof window.SISCO.confirm === 'function') {
+        confirmado = await window.SISCO.confirm({
+            title: "¿Desactivar Materia?",
+            message: `¿Desea desactivar la materia "${nombreMateria}"? Pasará a la lista de inactivas y no podrá ser asignada a nuevos cursos.`,
+            confirmText: "Desactivar",
+            cancelText: "Cancelar",
+            type: "danger"
+        });
+    } else {
+        confirmado = confirm(msg);
+    }
+    if (!confirmado) return;
 
     try {
         const url = (window.BASE_URL ? window.BASE_URL.replace(/\/+$/, '') : '') + '/src/api/Materia/desactivar_materia.php';

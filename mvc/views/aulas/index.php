@@ -247,7 +247,8 @@ ob_start();
 
     window.eliminarBloque = function(idx) {
         if (campusBloquesActuales.length <= 1) {
-            alert("Debe existir al menos un bloque.");
+            if (window.Toast) Toast.warning("Debe existir al menos un bloque.", "Gestión de Campus");
+            else alert("Debe existir al menos un bloque.");
             return;
         }
         campusBloquesActuales.splice(idx, 1);
@@ -271,7 +272,8 @@ ob_start();
 
     window.eliminarPiso = function(idx) {
         if (campusPisosActuales.length <= 1) {
-            alert("Debe existir al menos un piso.");
+            if (window.Toast) Toast.warning("Debe existir al menos un piso.", "Gestión de Campus");
+            else alert("Debe existir al menos un piso.");
             return;
         }
         campusPisosActuales.splice(idx, 1);
