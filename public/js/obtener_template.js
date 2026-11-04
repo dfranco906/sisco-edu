@@ -15,6 +15,88 @@ function urlApi(relativa) {
     return base ? `${base}/${limpia}` : `/${limpia}`;
 }
 
+function escaparTextoHtml(str) {
+    return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+// ============================================================================
+// DIÁLOGO MODAL DE DIAGNÓSTICO Y NOTIFICACIÓN USB
+// ============================================================================
+function cerrarModalDiagnosticoUsb() {
+    const modal = document.getElementById("modal-diagnostico-usb");
+    if (modal) modal.remove();
+}
+
+function mostrarModalDiagnosticoUsb({ titulo, subtitulo = "", mensaje, tipo = "info", botonTexto = "Entendido" }) {
+    cerrarModalDiagnosticoUsb();
+
+    const configEstilos = {
+        success: {
+            bgIcono: "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
+            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"></path></svg>`,
+            btnClase: "btn btn-primary bg-emerald-600 hover:bg-emerald-700 text-white"
+        },
+        warning: {
+            bgIcono: "bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800",
+            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`,
+            btnClase: "btn btn-warning bg-amber-600 hover:bg-amber-700 text-white"
+        },
+        error: {
+            bgIcono: "bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800",
+            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>`,
+            btnClase: "btn btn-danger bg-rose-600 hover:bg-rose-700 text-white"
+        },
+        info: {
+            bgIcono: "bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800",
+            icono: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            btnClase: "btn btn-primary"
+        }
+    };
+
+    const estilo = configEstilos[tipo] || configEstilos.info;
+
+    const modal = document.createElement("div");
+    modal.id = "modal-diagnostico-usb";
+    modal.className = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in";
+    modal.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 w-full max-w-lg shadow-2xl border border-slate-200 dark:border-slate-800 relative space-y-4">
+            <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white text-2xl font-bold p-1">
+                ×
+            </button>
+            <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${estilo.bgIcono}">
+                    ${estilo.icono}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                        ${escaparTextoHtml(titulo)}
+                    </h3>
+                    ${subtitulo ? `<p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5">${escaparTextoHtml(subtitulo)}</p>` : ""}
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line font-normal">
+                ${escaparTextoHtml(mensaje)}
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="cerrarModalDiagnosticoUsb()" class="${estilo.btnClase} py-2.5 px-5 text-sm font-bold w-full sm:w-auto min-h-[42px]">
+                    ${escaparTextoHtml(botonTexto)}
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    if (tipo === "success") {
+        setTimeout(() => cerrarModalDiagnosticoUsb(), 3500);
+    }
+}
+
 // ============================================================================
 // ADAPTADOR WEB SERIAL API (CONEXIÓN DIRECTA POR CABLE USB)
 // ============================================================================
@@ -46,10 +128,14 @@ const SiscoWebSerial = {
             this._iniciarLectura();
 
             // Saludo de confirmación con el registrador
+            let pingOk = false;
             try {
                 await this.escribir("CMD:PING");
-                const resp = await this.esperarLinea(l => l.startsWith("PONG:"), 3000);
-                console.log("[WebSerial] Handshake con registrador exitoso:", resp);
+                const resp = await this.esperarLinea(l => l.startsWith("PONG:"), 2500);
+                if (resp && resp.includes("PONG:SISCO_REGISTRADOR")) {
+                    pingOk = true;
+                    console.log("[WebSerial] Handshake exitoso con ESP32 Registrador.");
+                }
             } catch (e) {
                 console.warn("[WebSerial] Handshake sin confirmación inmediata:", e.message);
             }
@@ -197,6 +283,141 @@ const SiscoWebSerial = {
 };
 
 window.SiscoWebSerial = SiscoWebSerial;
+
+// Detección de desconexión física de cable USB en tiempo de ejecución
+if (typeof navigator !== "undefined" && "serial" in navigator) {
+    navigator.serial.addEventListener("disconnect", (event) => {
+        if (SiscoWebSerial.port && event.target === SiscoWebSerial.port) {
+            console.warn("[WebSerial] Cable USB desconectado físicamente.");
+            SiscoWebSerial.desconectar();
+            mostrarModalDiagnosticoUsb({
+                titulo: "Dispositivo USB Desconectado",
+                subtitulo: "Se interrumpió la conexión física por cable",
+                mensaje: "El cable USB del sensor registrador fue desconectado de la computadora.\n\nEl sistema conmutó automáticamente al Modo Wi-Fi.",
+                tipo: "warning",
+                botonTexto: "Entendido"
+            });
+        }
+    });
+}
+
+// ============================================================================
+// GESTIÓN DE INTERFAZ Y CONEXIÓN USB SERIAL
+// ============================================================================
+async function conectarUsbRegistrador(tipo = 'estudiante') {
+    if (!SiscoWebSerial.isSupported()) {
+        mostrarModalDiagnosticoUsb({
+            titulo: "Navegador no compatible con Web Serial",
+            subtitulo: "Se requiere Google Chrome o Microsoft Edge",
+            mensaje: "La conexión directa por cable USB requiere soporte para Web Serial API, disponible en Google Chrome, Microsoft Edge y navegadores Chromium en equipos de escritorio.\n\nNo se preocupe: el sistema continuará registrando huellas normalmente a través de la conexión Wi-Fi.",
+            tipo: "warning",
+            botonTexto: "Continuar con Wi-Fi"
+        });
+        return;
+    }
+
+    const btnId = (tipo === 'profesor') ? 'mbp-btn-conectar-usb' : 'mbe-btn-conectar-usb';
+    const btn = document.getElementById(btnId);
+    if (btn) btn.disabled = true;
+
+    try {
+        if (SiscoWebSerial.isConnected) {
+            await SiscoWebSerial.desconectar();
+            mostrarModalDiagnosticoUsb({
+                titulo: "Cable USB Desconectado",
+                subtitulo: "Canal cambiado a Wi-Fi",
+                mensaje: "Se ha liberado el puerto serial USB. El lector registrador operará a través de la red Wi-Fi.",
+                tipo: "info",
+                botonTexto: "Aceptar"
+            });
+        } else {
+            const exito = await SiscoWebSerial.conectar();
+            if (exito) {
+                mostrarModalDiagnosticoUsb({
+                    titulo: "¡Lector USB Conectado!",
+                    subtitulo: "Enlace directo activo a 115200 baudios",
+                    mensaje: "El nodo registrador está enlazado directamente por cable USB.\n\nAl presionar '1. Registrar Huella', la captura se realizará de inmediato a través del puerto serie sin interferencias de la red Wi-Fi.",
+                    tipo: "success",
+                    botonTexto: "Listo para Enrolar"
+                });
+            }
+        }
+    } catch (e) {
+        if (e.name === 'NotFoundError') {
+            mostrarModalDiagnosticoUsb({
+                titulo: "Dispositivo USB no seleccionado",
+                subtitulo: "No se estableció el enlace por cable",
+                mensaje: "No se seleccionó ningún puerto en el cuadro de diálogo del navegador.\n\nSi su ESP32 no aparece en la lista de puertos:\n1. Conecte el cable USB firmemente a la computadora.\n2. Asegúrese de que el cable sea de datos (no solo de carga de celular).\n3. Verifique que el microcontrolador esté encendido (LED encendido).\n\nEl sistema continuará operando en Modo Wi-Fi.",
+                tipo: "info",
+                botonTexto: "Entendido (Usar Wi-Fi)"
+            });
+        } else if (e.name === 'NetworkError' || (e.message && e.message.toLowerCase().includes('busy'))) {
+            mostrarModalDiagnosticoUsb({
+                titulo: "Puerto USB Ocupado o No Disponible",
+                subtitulo: "Conflicto con otra aplicación",
+                mensaje: "El puerto USB fue detectado pero no pudo abrirse.\n\nPosible causa: otra aplicación (como el Monitor Serie de Arduino IDE, PuTTY u otro software) está utilizando el puerto serie.\n\nCierre las aplicaciones que puedan estar usando el puerto e intente nuevamente, o continúe usando el Modo Wi-Fi.",
+                tipo: "error",
+                botonTexto: "Cerrar"
+            });
+        } else {
+            mostrarModalDiagnosticoUsb({
+                titulo: "Error al Conectar Lector USB",
+                subtitulo: e.name || "Error de comunicación",
+                mensaje: `Ocurrió un error al intentar abrir el puerto serial:\n\n${e.message}\n\nEl sistema continuará operando en Modo Wi-Fi.`,
+                tipo: "error",
+                botonTexto: "Continuar con Wi-Fi"
+            });
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+        actualizarBadgesCanalSerie();
+    }
+}
+
+function actualizarBadgesCanalSerie() {
+    const conectado = Boolean(window.SiscoWebSerial && window.SiscoWebSerial.isConnected);
+    
+    // Modal estudiante
+    const badgeEst = document.getElementById('mbe-badge-canal');
+    const btnEstTxt = document.getElementById('mbe-btn-conectar-usb-txt');
+    if (badgeEst) {
+        if (conectado) {
+            badgeEst.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm';
+            badgeEst.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>✓ Cable USB</span>';
+        } else {
+            badgeEst.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+            badgeEst.innerHTML = '<span>📶 Modo Wi-Fi</span>';
+        }
+    }
+    if (btnEstTxt) {
+        btnEstTxt.textContent = conectado ? 'Desconectar USB' : 'Conectar USB';
+    }
+
+    // Modal profesor
+    const badgeProf = document.getElementById('mbp-badge-canal');
+    const btnProfTxt = document.getElementById('mbp-btn-conectar-usb-txt');
+    if (badgeProf) {
+        if (conectado) {
+            badgeProf.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm';
+            badgeProf.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>✓ Cable USB</span>';
+        } else {
+            badgeProf.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+            badgeProf.innerHTML = '<span>📶 Modo Wi-Fi</span>';
+        }
+    }
+    if (btnProfTxt) {
+        btnProfTxt.textContent = conectado ? 'Desconectar USB' : 'Conectar USB';
+    }
+}
+
+// Escuchar cambios de estado para reactividad en la UI
+window.addEventListener('siscoSerialStatus', () => actualizarBadgesCanalSerie());
+
+// Exponer funciones globales inmediatamente
+window.conectarUsbRegistrador = conectarUsbRegistrador;
+window.actualizarBadgesCanalSerie = actualizarBadgesCanalSerie;
+window.cerrarModalDiagnosticoUsb = cerrarModalDiagnosticoUsb;
+window.mostrarModalDiagnosticoUsb = mostrarModalDiagnosticoUsb;
 
 // ============================================================================
 // CONEXIÓN WI-FI (FALLBACK AUTOMÁTICO)
@@ -536,73 +757,6 @@ function bloquearBotonesHuella(estado) {
     });
 }
 
-// ============================================================================
-// GESTIÓN DE INTERFAZ Y CONEXIÓN USB SERIAL
-// ============================================================================
-async function conectarUsbRegistrador(tipo = 'estudiante') {
-    if (!SiscoWebSerial.isSupported()) {
-        alert("Su navegador no soporta Web Serial API. Para conexión directa USB utilice Google Chrome o Microsoft Edge.");
-        return;
-    }
-    const btnId = (tipo === 'profesor') ? 'mbp-btn-conectar-usb' : 'mbe-btn-conectar-usb';
-    const btn = document.getElementById(btnId);
-    if (btn) btn.disabled = true;
-
-    try {
-        if (SiscoWebSerial.isConnected) {
-            await SiscoWebSerial.desconectar();
-        } else {
-            await SiscoWebSerial.conectar();
-        }
-    } catch (e) {
-        if (e.name !== 'NotFoundError') {
-            alert("No se pudo establecer la conexión por cable USB: " + e.message);
-        }
-    } finally {
-        if (btn) btn.disabled = false;
-        actualizarBadgesCanalSerie();
-    }
-}
-
-function actualizarBadgesCanalSerie() {
-    const conectado = Boolean(window.SiscoWebSerial && window.SiscoWebSerial.isConnected);
-    
-    // Modal estudiante
-    const badgeEst = document.getElementById('mbe-badge-canal');
-    const btnEstTxt = document.getElementById('mbe-btn-conectar-usb-txt');
-    if (badgeEst) {
-        if (conectado) {
-            badgeEst.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm';
-            badgeEst.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>✓ Cable USB</span>';
-        } else {
-            badgeEst.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
-            badgeEst.innerHTML = '<span>📶 Modo Wi-Fi</span>';
-        }
-    }
-    if (btnEstTxt) {
-        btnEstTxt.textContent = conectado ? 'Desconectar USB' : 'Conectar USB';
-    }
-
-    // Modal profesor
-    const badgeProf = document.getElementById('mbp-badge-canal');
-    const btnProfTxt = document.getElementById('mbp-btn-conectar-usb-txt');
-    if (badgeProf) {
-        if (conectado) {
-            badgeProf.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm';
-            badgeProf.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>✓ Cable USB</span>';
-        } else {
-            badgeProf.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
-            badgeProf.innerHTML = '<span>📶 Modo Wi-Fi</span>';
-        }
-    }
-    if (btnProfTxt) {
-        btnProfTxt.textContent = conectado ? 'Desconectar USB' : 'Conectar USB';
-    }
-}
-
-// Escuchar cambios de estado para reactividad en la UI
-window.addEventListener('siscoSerialStatus', () => actualizarBadgesCanalSerie());
-
 // Exponer funciones globales
 window.urlApi = urlApi;
 window.llamadaRegistrador = llamadaRegistrador;
@@ -613,3 +767,5 @@ window.actualizarBadgesCanalSerie = actualizarBadgesCanalSerie;
 window.mostrarEstadoHuella = mostrarEstadoHuella;
 window.cerrarModalEstadoHuella = cerrarModalEstadoHuella;
 window.bloquearBotonesHuella = bloquearBotonesHuella;
+window.mostrarModalDiagnosticoUsb = mostrarModalDiagnosticoUsb;
+window.cerrarModalDiagnosticoUsb = cerrarModalDiagnosticoUsb;

@@ -239,7 +239,7 @@ if (!empty($_GET['ref'])) {
 </script>
 <script src="<?= base_url('public/js/table-loader.js') ?>"></script>
 <script src="<?= base_url('public/js/crud.js') ?>"></script>
-<script src="<?= base_url('public/js/obtener_template.js') ?>"></script>
+<script src="<?= base_url('public/js/obtener_template.js?v=' . filemtime(__DIR__ . '/../../../public/js/obtener_template.js')) ?>"></script>
 
 <script>
     cargarTabla(

@@ -187,7 +187,7 @@ require_once __DIR__ . '/../layouts/sidebar.php';
 
 </main>
 
-<script src="<?= base_url('public/js/obtener_template.js') ?>"></script>
+<script src="<?= base_url('public/js/obtener_template.js?v=' . filemtime(__DIR__ . '/../../../public/js/obtener_template.js')) ?>"></script>
 
 <script>
 let catalogoGrados = [];

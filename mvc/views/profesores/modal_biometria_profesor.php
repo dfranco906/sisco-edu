@@ -33,7 +33,7 @@ declare(strict_types=1);
                     📶 Modo Wi-Fi
                 </span>
             </div>
-            <button type="button" id="mbp-btn-conectar-usb" onclick="conectarUsbRegistrador('profesor')" class="btn btn-secondary text-xs sm:text-sm font-bold py-1.5 px-3.5 min-h-[38px] inline-flex items-center gap-2 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-all">
+            <button type="button" id="mbp-btn-conectar-usb" onclick="if (typeof conectarUsbRegistrador === 'function') { conectarUsbRegistrador('profesor'); } else if (window.conectarUsbRegistrador) { window.conectarUsbRegistrador('profesor'); } else { alert('El módulo biométrico se está inicializando. Por favor espere un momento...'); }" class="btn btn-secondary text-xs sm:text-sm font-bold py-1.5 px-3.5 min-h-[38px] inline-flex items-center gap-2 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-all">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 <span id="mbp-btn-conectar-usb-txt">Conectar por Cable USB</span>
             </button>
