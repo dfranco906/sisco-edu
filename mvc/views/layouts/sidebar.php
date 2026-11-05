@@ -354,118 +354,84 @@ if (in_array($rolNormalized, ['superadmin', 'administrador', 'administracion'], 
 </button>
 <div id="app-sidebar-overlay" class="app-sidebar-overlay md:hidden" aria-hidden="true"></div>
 
-<aside id="app-sidebar" class="app-sidebar flex w-64 flex-col p-3.5 md:p-4" aria-label="Navegacion principal">
-    <!-- Encabezado del Sidebar (Logo + Botones de Control) -->
-    <div class="sidebar-header flex items-center justify-between gap-2 mb-3.5 shrink-0">
-        <!-- Logo / Marca Expandida -->
-        <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="sidebar-brand-text flex-1 min-w-0 flex items-center gap-3 group">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 p-0.5 shadow-md shadow-indigo-500/25 shrink-0 flex items-center justify-center transition-transform group-hover:scale-105">
-                <img src="<?= base_url('public/img/logo-badge.svg') ?>" alt="SISCO-EDU Logo" class="w-full h-full rounded-[10px] object-cover">
-            </div>
-            <div class="min-w-0 flex-1">
-                <h1 class="app-logo text-lg font-black tracking-tight leading-none text-white truncate">SISCO-EDU</h1>
-                <p class="text-[11px] text-slate-400 font-medium truncate mt-1">Gestion Academica & IoT</p>
-            </div>
-        </a>
-
-        <!-- Logo Compacto (Visible solo al colapsar) -->
-        <a href="<?= base_url('mvc/views/dashboard.php') ?>"
-           id="sidebar-brand-mini"
-           class="sidebar-brand-mini hidden group relative items-center justify-center w-full rounded-xl transition-all"
-           title="SISCO-EDU - Click para expandir menu">
-            <span class="sidebar-logo-badge w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
-                <img src="<?= base_url('public/img/logo-badge.svg') ?>" alt="SISCO-EDU" class="w-full h-full rounded-[9px] object-cover">
-            </span>
-        </a>
-
-        <div class="sidebar-header-actions flex items-center gap-1">
-            <!-- Boton Colapsar / Expandir (Desktop) -->
-            <button id="app-sidebar-collapse-btn" type="button"
-                    class="sidebar-collapse-btn hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors group relative cursor-pointer"
-                    title="Colapsar o expandir menu lateral" aria-label="Colapsar o expandir menu lateral">
-                <svg class="sidebar-chevron w-4 h-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
-            </button>
-
-            <!-- Boton Cerrar (Movil) -->
-            <button id="app-menu-close" class="app-menu-close md:hidden text-slate-400 hover:text-white cursor-pointer" type="button" aria-label="Cerrar menu">×</button>
-        </div>
-    </div>
-
-    <!-- Perfil del usuario (Compacto y Elegante) -->
-    <div class="sidebar-profile-box mb-3 shrink-0">
-        <!-- Version Expandida -->
-        <div class="sidebar-profile-full p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 shadow-xs flex items-center gap-2.5">
-            <div class="relative w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-2xs">
-                <?= htmlspecialchars($inicialUsuario, ENT_QUOTES, 'UTF-8') ?>
-                <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border-2 border-slate-900"></span>
-            </div>
-            <div class="min-w-0 flex-1">
-                <div class="text-xs font-bold text-slate-200 truncate leading-snug" title="<?= htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8') ?>">
-                    <?= htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8') ?>
+<aside id="app-sidebar" class="app-sidebar flex w-64 flex-col p-3 md:p-3.5" aria-label="Navegacion principal">
+    <!-- Encabezado del Sidebar (Logo + IoT Micro-strip + Colapso) -->
+    <div class="sidebar-header-wrapper mb-2 shrink-0">
+        <div class="sidebar-header flex items-center justify-between gap-2">
+            <!-- Logo / Marca Expandida -->
+            <a href="<?= base_url('mvc/views/dashboard.php') ?>" class="sidebar-brand-text flex-1 min-w-0 flex items-center gap-2.5 group">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 p-0.5 shadow-md shadow-indigo-500/20 shrink-0 flex items-center justify-center transition-transform group-hover:scale-105">
+                    <img src="<?= base_url('public/img/logo-badge.svg') ?>" alt="SISCO-EDU Logo" class="w-full h-full rounded-[9px] object-cover">
                 </div>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                    <span class="text-[10px] font-extrabold text-blue-400 uppercase tracking-wider truncate"><?= htmlspecialchars($rolActual, ENT_QUOTES, 'UTF-8') ?></span>
+                <div class="min-w-0 flex-1">
+                    <h1 class="app-logo text-base font-black tracking-tight leading-none text-white truncate">SISCO-EDU</h1>
+                    <p class="text-[10px] text-slate-400 font-medium truncate mt-0.5">Gestion Academica &amp; IoT</p>
                 </div>
-            </div>
-        </div>
+            </a>
 
-        <!-- Version Mini (Avatar de Inicial) -->
-        <div class="sidebar-profile-mini hidden items-center justify-center p-1" title="<?= htmlspecialchars($nombreUsuario . ' (' . $rolActual . ')', ENT_QUOTES, 'UTF-8') ?>">
-            <div class="relative w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs shadow-xs">
-                <?= htmlspecialchars($inicialUsuario, ENT_QUOTES, 'UTF-8') ?>
-                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900"></span>
-            </div>
-        </div>
-    </div>
-
-    <?php if (in_array($rolNormalized, ['superadmin', 'administrador', 'administracion', 'coordinador'], true)): ?>
-    <!-- Chip de Monitoreo de Hardware IoT (USB Biometrico & Gateway LoRa) -->
-    <div class="sidebar-iot-box mb-3 shrink-0">
-        <div class="sidebar-iot-full p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs space-y-1.5">
-            <div class="flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-0.5">
-                <span class="flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                    </svg>
-                    <span>Hardware IoT</span>
+            <!-- Logo Compacto (Visible solo al colapsar) -->
+            <a href="<?= base_url('mvc/views/dashboard.php') ?>"
+               id="sidebar-brand-mini"
+               class="sidebar-brand-mini hidden group relative items-center justify-center w-full rounded-xl transition-all"
+               title="SISCO-EDU - Click para expandir menu">
+                <span class="sidebar-logo-badge w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
+                    <img src="<?= base_url('public/img/logo-badge.svg') ?>" alt="SISCO-EDU" class="w-full h-full rounded-[9px] object-cover">
                 </span>
-                <button type="button" id="btn-ping-iot-sidebar" class="text-slate-400 hover:text-white transition-colors cursor-pointer" title="Verificar enlace de hardware (Lector USB y Gateway LoRa)" aria-label="Actualizar estado IoT">
-                    <svg id="icon-ping-iot-sidebar" class="w-3.5 h-3.5 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </a>
+
+            <div class="sidebar-header-actions flex items-center gap-1">
+                <!-- Boton Colapsar / Expandir (Desktop) -->
+                <button id="app-sidebar-collapse-btn" type="button"
+                        class="sidebar-collapse-btn hidden md:flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors group relative cursor-pointer"
+                        title="Colapsar o expandir menu lateral" aria-label="Colapsar o expandir menu lateral">
+                    <svg class="sidebar-chevron w-4 h-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                     </svg>
                 </button>
+
+                <!-- Boton Cerrar (Movil) -->
+                <button id="app-menu-close" class="app-menu-close md:hidden text-slate-400 hover:text-white cursor-pointer" type="button" aria-label="Cerrar menu">&times;</button>
             </div>
-            <div class="grid grid-cols-2 gap-1.5">
-                <div id="chip-iot-registrador" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-[10px] font-semibold text-slate-300" title="Lector USB Biometrico: Consultando...">
-                    <span id="dot-iot-registrador" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
-                    <span class="truncate">USB DY50</span>
-                </div>
-                <div id="chip-iot-gateway" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/70 border border-slate-800 text-[10px] font-semibold text-slate-300" title="Gateway LoRa: Consultando...">
-                    <span id="dot-iot-gateway" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
-                    <span class="truncate">LoRa Hub</span>
-                </div>
+        </div>
+
+        <?php if (in_array($rolNormalized, ['superadmin', 'administrador', 'administracion', 'coordinador'], true)): ?>
+        <!-- Micro-Strip Monitoreo Hardware IoT (USB DY50 y LoRa Hub) -->
+        <div class="sidebar-iot-strip mt-2 px-2 py-1 rounded-lg bg-slate-900/80 border border-slate-800/80 text-[10px] flex items-center justify-between" title="Estado de Hardware IoT">
+            <div class="flex items-center gap-2">
+                <span id="chip-iot-registrador" class="flex items-center gap-1 font-semibold text-slate-400 hover:text-slate-200 cursor-help" title="Lector USB Biometrico: Consultando...">
+                    <span id="dot-iot-registrador" class="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0"></span>
+                    <span class="tracking-tight">USB</span>
+                </span>
+                <span class="text-slate-700 font-light">|</span>
+                <span id="chip-iot-gateway" class="flex items-center gap-1 font-semibold text-slate-400 hover:text-slate-200 cursor-help" title="Gateway LoRa: Consultando...">
+                    <span id="dot-iot-gateway" class="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0"></span>
+                    <span class="tracking-tight">LoRa</span>
+                </span>
             </div>
+            <button type="button" id="btn-ping-iot-sidebar" class="text-slate-500 hover:text-white transition-colors p-0.5 cursor-pointer" title="Verificar enlace de hardware (USB y LoRa)" aria-label="Actualizar estado IoT">
+                <svg id="icon-ping-iot-sidebar" class="w-3 h-3 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </button>
         </div>
 
         <!-- Version Mini para modo colapsado -->
-        <div class="sidebar-iot-mini hidden flex-col items-center gap-1.5 p-1.5 rounded-xl bg-slate-900/60 border border-slate-800" title="Hardware IoT: Lector USB y Gateway LoRa">
+        <div class="sidebar-iot-mini hidden flex-col items-center gap-1.5 p-1 rounded-lg bg-slate-900/60 border border-slate-800 my-1" title="Hardware IoT: Lector USB y Gateway LoRa">
             <span id="dot-iot-mini-registrador" class="w-2 h-2 rounded-full bg-slate-500" title="Lector USB DY50"></span>
             <span id="dot-iot-mini-gateway" class="w-2 h-2 rounded-full bg-slate-500" title="Gateway LoRa"></span>
         </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 
     <!-- Navegacion Principal con Categorias Jerarquicas (Mental Model) -->
-    <nav class="app-sidebar-nav flex-1 space-y-3 pr-0.5" aria-label="Menu principal del sistema">
+    <nav class="app-sidebar-nav flex-1 space-y-2 pr-0.5" aria-label="Menu principal del sistema">
         <?php foreach ($navSections as $seccion): ?>
             <div class="app-nav-section">
                 <!-- Titulo de Categoria / Separador en modo compacto -->
                 <span class="app-nav-section-title"><?= htmlspecialchars($seccion['titulo'], ENT_QUOTES, 'UTF-8') ?></span>
                 <div class="app-nav-section-divider" aria-hidden="true"></div>
 
-                <div class="space-y-1">
+                <div class="space-y-0.5">
                     <?php foreach ($seccion['items'] as $item): ?>
                         <?php
                         $label = $item['label'];
@@ -505,54 +471,73 @@ if (in_array($rolNormalized, ['superadmin', 'administrador', 'administracion'], 
                         ?>
 
                         <?php if ($hasSubmenu): ?>
-                            <!-- Item con Submenu Desplegable Accesible -->
+                            <!-- Item con Submenu Desplegable Accesible y Flyout en Hover -->
                             <?php $isSubmenuOpen = $hasActiveChild || $isActive; ?>
-                            <div class="app-nav-group <?= $hasActiveChild ? 'has-active-child' : '' ?>" id="group-admin-nav">
+                            <div class="app-nav-group app-nav-item-has-flyout relative <?= $hasActiveChild ? 'has-active-child' : '' ?>" id="group-admin-nav">
                                 <div class="flex items-center gap-1">
                                     <a href="<?= base_url($path) ?>"
-                                       class="app-nav-link flex-1 group relative flex items-center gap-3 px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-150 <?= $isActive ? 'is-active' : ($hasActiveChild ? 'is-parent-active' : '') ?>"
+                                       class="app-nav-link flex-1 group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-150 <?= $isActive ? 'is-active' : ($hasActiveChild ? 'is-parent-active' : '') ?>"
                                        title="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>">
                                         <?= obtenerIconoNav($iconoClave) ?>
                                         <span class="app-nav-text flex-1 truncate"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+                                        <svg class="app-nav-flyout-arrow app-nav-text w-3.5 h-3.5 text-slate-500 transition-transform group-hover:translate-x-0.5 group-hover:text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
                                     </a>
+                                    <!-- Boton toggle para movil (acordeon touch) -->
                                     <button type="button"
-                                            class="app-submenu-toggle app-nav-text w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+                                            class="app-submenu-toggle md:hidden app-nav-text w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
                                             aria-expanded="<?= $isSubmenuOpen ? 'true' : 'false' ?>"
                                             aria-controls="submenu-admin-items"
-                                            aria-label="Alternar submódulos de administración"
-                                            title="Desplegar submódulos">
+                                            aria-label="Alternar submodulos de administracion"
+                                            title="Desplegar submodulos">
                                         <svg class="w-3.5 h-3.5 transition-transform duration-200 <?= $isSubmenuOpen ? 'rotate-180' : '' ?>" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
                                 </div>
 
-                                <!-- Submenu Desplegable -->
+                                <!-- Submenu: Flyout flotante en Desktop (hover) / Acordeon en Movil -->
                                 <div id="submenu-admin-items"
-                                     class="app-submenu space-y-0.5 pl-3.5 pr-1 mt-1 border-l-2 border-slate-800 ml-4.5 <?= $isSubmenuOpen ? '' : 'hidden' ?>"
-                                     role="region" aria-label="Submódulos de Administración">
-                                    <?php foreach ($item['subitems'] as $sub): ?>
-                                        <?php
-                                        $subActive = false;
-                                        if (!empty($sub['exact'])) {
-                                            $subActive = (strpos($currentPath, '/' . $sub['path']) !== false);
-                                        } elseif (!empty($sub['match'])) {
-                                            $subActive = (strpos($currentPath, '/' . $sub['match']) !== false);
-                                        }
-                                        ?>
-                                        <a href="<?= base_url($sub['path']) ?>"
-                                           class="app-submenu-link group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all <?= $subActive ? 'is-active text-blue-400 bg-blue-600/15 border-l-2 border-blue-500 font-bold' : '' ?>"
-                                           title="<?= htmlspecialchars($sub['label'], ENT_QUOTES, 'UTF-8') ?>">
-                                            <?= obtenerIconoNav($sub['icon']) ?>
-                                            <span class="truncate"><?= htmlspecialchars($sub['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                                     class="app-nav-flyout app-submenu <?= $isSubmenuOpen ? '' : 'hidden md:block' ?>"
+                                     role="region" aria-label="Submodulos de <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>">
+                                    <!-- Cabecera del Flyout (Visible solo en desktop) -->
+                                    <div class="app-flyout-header hidden md:flex items-center justify-between pb-2 mb-2 border-b border-slate-700/60">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                            <span class="text-xs font-bold text-white tracking-wide"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="text-[10px] text-slate-400 font-medium">Submodulos</span>
+                                        </div>
+                                        <a href="<?= base_url($path) ?>" class="text-[10px] font-extrabold text-blue-400 hover:text-blue-300 uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-blue-500/10 transition-colors">
+                                            Ver panel &rarr;
                                         </a>
-                                    <?php endforeach; ?>
+                                    </div>
+
+                                    <!-- Grilla de Submodulos (2 columnas en desktop) -->
+                                    <div class="app-flyout-grid grid grid-cols-1 md:grid-cols-2 gap-1">
+                                        <?php foreach ($item['subitems'] as $sub): ?>
+                                            <?php
+                                            $subActive = false;
+                                            if (!empty($sub['exact'])) {
+                                                $subActive = (strpos($currentPath, '/' . $sub['path']) !== false);
+                                            } elseif (!empty($sub['match'])) {
+                                                $subActive = (strpos($currentPath, '/' . $sub['match']) !== false);
+                                            }
+                                            ?>
+                                            <a href="<?= base_url($sub['path']) ?>"
+                                               class="app-submenu-link app-flyout-item group flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/90 transition-all <?= $subActive ? 'is-active text-blue-300 bg-blue-600/20 border-l-2 border-blue-500 font-bold' : '' ?>"
+                                               title="<?= htmlspecialchars($sub['label'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <?= obtenerIconoNav($sub['icon']) ?>
+                                                <span class="truncate"><?= htmlspecialchars($sub['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
                                 </div>
                             </div>
                         <?php else: ?>
                             <!-- Item Estandar de Navegacion -->
                             <a href="<?= base_url($path) ?>"
-                               class="app-nav-link group relative flex items-center gap-3 px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-150 <?= $isActive ? 'is-active' : '' ?>"
+                               class="app-nav-link group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl font-semibold text-xs md:text-sm transition-all duration-150 <?= $isActive ? 'is-active' : '' ?>"
                                title="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>">
                                 <?= obtenerIconoNav($iconoClave) ?>
                                 <span class="app-nav-text flex-1 truncate"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
@@ -573,77 +558,65 @@ if (in_array($rolNormalized, ['superadmin', 'administrador', 'administracion'], 
         <?php endforeach; ?>
     </nav>
 
-    <!-- Pie del Sidebar: Tema, Escala Visual y Cerrar Sesion -->
-    <div class="sidebar-footer pt-3 mt-auto border-t border-slate-800/80 space-y-2 shrink-0">
-        <!-- Alternar Tema Claro / Oscuro -->
-        <button type="button" data-action="toggle-theme"
-           class="app-theme-btn w-full group relative flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer"
-           title="Alternar Modo Oscuro / Claro" aria-label="Alternar Modo Oscuro / Claro">
-            <svg class="theme-icon-sun w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <svg class="theme-icon-moon w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-            <span class="app-nav-text flex-1 truncate text-left">Modo Claro / Oscuro</span>
-        </button>
+    <!-- Pie del Sidebar: Barra de Utilidades Compacta (Perfil, Escala Tipografica, Tema y Logout) -->
+    <div class="sidebar-footer pt-2 mt-auto border-t border-slate-800/80 shrink-0">
+        <!-- Barra de Utilidades Unificada (Altura ultra-optimizada) -->
+        <div class="sidebar-utility-bar flex items-center justify-between gap-1 p-1 rounded-xl bg-slate-900/70 border border-slate-800/80">
+            <!-- Perfil de usuario (Avatar + Tooltip/Nombre) -->
+            <div class="sidebar-profile-toolbar flex items-center gap-2 min-w-0 flex-1 px-1" title="<?= htmlspecialchars($nombreUsuario . ' (' . $rolActual . ')', ENT_QUOTES, 'UTF-8') ?>">
+                <div class="relative w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-2xs">
+                    <?= htmlspecialchars($inicialUsuario, ENT_QUOTES, 'UTF-8') ?>
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border-2 border-slate-900"></span>
+                </div>
+                <div class="min-w-0 flex-1 app-nav-text">
+                    <div class="text-xs font-bold text-slate-200 truncate leading-tight"><?= htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8') ?></div>
+                    <div class="text-[9px] font-extrabold text-blue-400 uppercase tracking-wider truncate"><?= htmlspecialchars($rolActual, ENT_QUOTES, 'UTF-8') ?></div>
+                </div>
+            </div>
 
-        <!-- Selector Triple de Tamano de Elementos / Tipografia (11pt | 12pt | 13pt) -->
-        <div class="sidebar-font-scale-container px-2 py-1.5 rounded-xl bg-slate-900/70 border border-slate-800" role="group" aria-label="Selector de escala de texto">
-            <div class="flex items-center justify-between px-1 pb-1 app-nav-text">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h6" />
+            <!-- Acciones Rapidas: Escala Visual, Tema y Logout -->
+            <div class="sidebar-quick-actions flex items-center gap-0.5 shrink-0">
+                <!-- Ciclar Tamano de Vista (11pt / 12pt / 13pt) -->
+                <button type="button"
+                        id="btn-font-scale-cycle"
+                        class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                        title="Alternar tamano de vista (11pt / 12pt / 13pt)"
+                        aria-label="Alternar escala de vista">
+                    <span class="text-[10px] font-black tracking-tight text-blue-400 flex items-center leading-none">
+                        <span class="text-[9px] opacity-75">Aa</span>
+                        <span id="mini-font-size-badge" class="ml-0.5">12</span>
+                    </span>
+                    <span id="label-current-font-size" class="hidden">12pt</span>
+                </button>
+
+                <!-- Alternar Modo Oscuro / Claro -->
+                <button type="button" data-action="toggle-theme"
+                        class="app-theme-btn w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                        title="Alternar Modo Oscuro / Claro" aria-label="Alternar Modo Oscuro / Claro">
+                    <svg class="theme-icon-sun w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
-                    <span>Tamano de vista</span>
-                </span>
-                <span id="label-current-font-size" class="text-xs font-black text-blue-400">12pt</span>
-            </div>
+                    <svg class="theme-icon-moon w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
 
-            <!-- Segmented Control Triple para Modo Expandido y Movil -->
-            <div class="sidebar-font-scale-control flex items-center p-0.5 rounded-lg bg-slate-950/80 border border-slate-800 gap-1">
-                <button type="button"
-                        data-font-size="11pt"
-                        class="btn-font-scale flex-1 py-1 px-1.5 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
-                        title="Tamano 11pt - Vista Compacta con mayor informacion en pantalla"
-                        aria-label="Tamano compacto 11 puntos">
-                    11pt
-                </button>
-                <button type="button"
-                        data-font-size="12pt"
-                        class="btn-font-scale flex-1 py-1 px-1.5 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
-                        title="Tamano 12pt - Vista Estandar Equilibrada"
-                        aria-label="Tamano estandar 12 puntos">
-                    12pt
-                </button>
-                <button type="button"
-                        data-font-size="13pt"
-                        class="btn-font-scale flex-1 py-1 px-1.5 text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white hover:bg-slate-800/70 text-center cursor-pointer"
-                        title="Tamano 13pt - Vista Grande y Clara para lectura descansada"
-                        aria-label="Tamano grande 13 puntos">
-                    13pt
-                </button>
+                <!-- Cerrar Sesion -->
+                <a href="<?= base_url('src/api/logout.php') ?>"
+                   class="app-logout w-7 h-7 flex items-center justify-center rounded-lg text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 transition-colors"
+                   title="Cerrar sesion" aria-label="Cerrar sesion">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
             </div>
-
-            <!-- Boton Compacto para Sidebar Colapsado (Desktop Mini) -->
-            <button type="button"
-                    id="btn-font-scale-cycle"
-                    class="sidebar-font-scale-mini hidden w-full py-1.5 px-1 text-center font-extrabold text-xs text-blue-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer"
-                    title="Alternar tamano de vista (11pt / 12pt / 13pt)"
-                    aria-label="Alternar escala de vista">
-                <span class="block text-[10px] text-slate-400 font-semibold leading-none">Aa</span>
-                <span id="mini-font-size-badge" class="block text-xs font-black mt-0.5 leading-none">12</span>
-            </button>
         </div>
 
-        <!-- Boton Cerrar Sesion -->
-        <a href="<?= base_url('src/api/logout.php') ?>"
-           class="app-logout group relative flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-rose-400 hover:text-rose-200 hover:bg-rose-950/30 transition-colors"
-           title="Cerrar sesion" aria-label="Cerrar sesion">
-            <svg class="app-nav-icon w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span class="app-nav-text flex-1 truncate">Cerrar sesion</span>
-        </a>
+        <!-- Botones triples ocultos para compatibilidad total con scripts existentes -->
+        <div class="hidden" aria-hidden="true">
+            <button type="button" data-font-size="11pt" class="btn-font-scale">11pt</button>
+            <button type="button" data-font-size="12pt" class="btn-font-scale">12pt</button>
+            <button type="button" data-font-size="13pt" class="btn-font-scale">13pt</button>
+        </div>
     </div>
 </aside>
