@@ -125,7 +125,35 @@ Toda pantalla administrativa de gestión de catálogo (ej. Estudiantes, Tutores,
 
 ---
 
-## 🚫 7. Lista Negra de Anti-patrones de Diseño en SISCO-EDU
+## 🧭 7. Estándar de Navegación Lateral (Sidebar Jerárquico, Ergonómico y Predecible)
+
+Para maximizar la intuición y eficiencia del usuario al navegar por el ecosistema de SISCO-EDU, la barra lateral izquierda sigue estas directrices arquitectónicas:
+
+1. **Jerarquía Visual por Categorías Semánticas (Mental Model):**
+   * Los enlaces nunca deben presentarse como una lista plana desorganizada.
+   * Se agrupan en bloques con títulos en mayúsculas sutiles (`text-[10px] font-extrabold uppercase tracking-wider text-slate-400`):
+     - **Principal / General:** Dashboard, Coordinación, Clase en Vivo.
+     - **Comunidad Educativa:** Profesores, Estudiantes, Tutores y Familias.
+     - **Planificación Académica:** Horarios, Planes Anuales, Instrumentos de Evaluación (MEC).
+     - **Gestión Institucional:** Administración estructurada.
+   * En modo colapsado (`is-collapsed` / 4.75rem en desktop), los títulos de sección se transforman limpiamente en divisores sutiles de 1 px (`app-nav-section-divider`).
+
+2. **Acordeón Desplegable para Módulos Complejos (Submenús de Administración):**
+   * El módulo de **Administración** cuenta con un acordeón accesible con chevron interactivo:
+     - Permite saltar en **1 solo clic** a cualquiera de sus 11 submódulos (Grados, Materias, Asignaciones, Aulas, Turnos, Niveles, Bachilleratos, Usuarios, Sincronización LoRa, Promociones y Configuración IoT).
+     - **Apertura Contextual Automática:** Si el usuario se encuentra navegando dentro de cualquier submódulo administrativo, el acordeón se renderiza abierto automáticamente con el submódulo activo resaltado (`is-active`).
+     - Al colapsar el menú lateral en modo mini desktop, los submenús se pliegan de forma compacta y hacer clic en el padre expande automáticamente el sidebar para no truncar opciones.
+
+3. **Badges de Estado Operativo en Tiempo Real:**
+   * Las vistas con actividad en tiempo real (`Clase en Vivo` / `Sesión de Clase`) portan un badge semántico verde esmeralda con punto pulsante (`EN VIVO` / `EN AULA`), destacando visualmente la operación inmediata de asistencia.
+
+4. **Zona de Control y Ergonomía Visual:**
+   * La cabecera aloja el perfil del usuario activo (con avatar de inicial y rol institucional) y el chip de diagnóstico dual del Hardware IoT (USB DY50 y LoRa Hub).
+   * El pie del sidebar aloja permanentemente el conmutador de tema Claro/Oscuro, el selector triple de tamaño tipográfico (`11pt` | `12pt` | `13pt`) y el cierre seguro de sesión.
+
+---
+
+## 🚫 8. Lista Negra de Anti-patrones de Diseño en SISCO-EDU
 
 * ❌ **Prohibido:** Tablas con más de 6 columnas horizontales que fuercen barras de desplazamiento ilegibles.
 * ❌ **Prohibido:** Usar fuentes `text-[10px]` o `text-xs` en nombres de personas, materias o cédulas.

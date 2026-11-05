@@ -293,6 +293,31 @@ body {
         transform: rotate(180deg);
     }
 
+    .app-sidebar.is-collapsed .app-nav-section-title,
+    html.sidebar-init-collapsed .app-sidebar .app-nav-section-title {
+        display: none !important;
+    }
+
+    .app-sidebar.is-collapsed .app-nav-section-divider,
+    html.sidebar-init-collapsed .app-sidebar .app-nav-section-divider {
+        display: block !important;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 0.45rem 0.4rem;
+    }
+
+    .app-sidebar.is-collapsed .app-nav-badge,
+    html.sidebar-init-collapsed .app-sidebar .app-nav-badge {
+        display: none !important;
+    }
+
+    .app-sidebar.is-collapsed .app-submenu,
+    html.sidebar-init-collapsed .app-sidebar .app-submenu,
+    .app-sidebar.is-collapsed .app-submenu-toggle,
+    html.sidebar-init-collapsed .app-sidebar .app-submenu-toggle {
+        display: none !important;
+    }
+
     /* Tooltips manejados mediante title nativo */
 }
 
@@ -384,20 +409,42 @@ body {
     letter-spacing: 0;
 }
 
+/* Estructura de Secciones Jerarquicas */
+.app-nav-section {
+    margin-bottom: 0.65rem;
+}
+
+.app-nav-section-title {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748B;
+    padding: 0.65rem 0.85rem 0.3rem 0.85rem;
+    user-select: none;
+}
+
+.app-nav-section-divider {
+    display: none;
+}
+
 .app-nav-link {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     position: relative;
     border-radius: 12px;
-    padding: 0.65rem 0.85rem;
+    padding: 0.625rem 0.85rem;
     color: #CBD5E1;
     font-weight: 600;
+    font-size: 0.875rem;
     transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+    cursor: pointer;
 }
 
 .app-nav-link:hover {
-    background: rgba(37, 99, 235, 0.16);
+    background: rgba(255, 255, 255, 0.08);
     color: #FFFFFF;
 }
 
@@ -407,24 +454,79 @@ body {
 }
 
 .app-nav-link.is-active {
-    background: rgba(37, 99, 235, 0.28);
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.28) 0%, rgba(37, 99, 235, 0.12) 100%);
     color: #FFFFFF;
+    font-weight: 700;
 }
 
 .app-nav-link.is-active::before {
     content: "";
     position: absolute;
     left: -0.25rem;
-    top: 0.65rem;
-    bottom: 0.65rem;
+    top: 0.625rem;
+    bottom: 0.625rem;
     width: 4px;
     border-radius: 999px;
     background: #60A5FA;
 }
 
+.app-nav-link.is-parent-active {
+    background: rgba(255, 255, 255, 0.06);
+    color: #E2E8F0;
+}
+
 .app-sidebar.is-collapsed .app-nav-link.is-active::before,
 html.sidebar-init-collapsed .app-sidebar .app-nav-link.is-active::before {
     left: 4px;
+}
+
+/* Badges de Navegacion */
+.app-nav-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 0.18rem 0.45rem;
+    border-radius: 6px;
+    line-height: 1.2;
+}
+
+/* Submenus Desplegables Accesibles */
+.app-nav-group {
+    position: relative;
+}
+
+.app-submenu {
+    position: relative;
+}
+
+.app-submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94A3B8;
+    transition: background-color 150ms ease, color 150ms ease;
+    cursor: pointer;
+}
+
+.app-submenu-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #F8FAFC;
+}
+
+.app-submenu-link.is-active {
+    background: rgba(59, 130, 246, 0.18);
+    color: #93C5FD;
+    font-weight: 700;
+    border-left: 2px solid #3B82F6;
+    padding-left: calc(0.75rem - 2px);
+}
+
+.app-submenu-toggle {
+    cursor: pointer;
 }
 
 .app-logout {

@@ -182,6 +182,43 @@
                 });
             });
 
+            // 4.1 Control de submenús desplegables (Acordeón accesible)
+            const submenuToggles = sidebar.querySelectorAll(".app-submenu-toggle");
+            submenuToggles.forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetId = btn.getAttribute("aria-controls");
+                    const submenu = document.getElementById(targetId);
+                    if (!submenu) return;
+
+                    const isExpanded = btn.getAttribute("aria-expanded") === "true";
+                    const willExpand = !isExpanded;
+
+                    btn.setAttribute("aria-expanded", String(willExpand));
+                    const chevron = btn.querySelector("svg");
+                    if (chevron) {
+                        chevron.classList.toggle("rotate-180", willExpand);
+                    }
+                    submenu.classList.toggle("hidden", !willExpand);
+                });
+            });
+
+            // Si el sidebar está colapsado y se hace click en el enlace del grupo, expandir sidebar
+            sidebar.querySelectorAll(".app-nav-group").forEach(group => {
+                const parentLink = group.querySelector(".app-nav-link");
+                parentLink?.addEventListener("click", () => {
+                    if (sidebar.classList.contains("is-collapsed")) {
+                        collapseBtn?.click();
+                        const toggleBtn = group.querySelector(".app-submenu-toggle");
+                        const submenu = group.querySelector(".app-submenu");
+                        if (toggleBtn && submenu && submenu.classList.contains("hidden")) {
+                            toggleBtn.click();
+                        }
+                    }
+                });
+            });
+
             // 5. Control global de modales y tecla Escape
             const syncModalScrollLock = () => {
                 const hasOpenModal = Array.from(document.querySelectorAll(

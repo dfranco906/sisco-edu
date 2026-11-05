@@ -59,3 +59,7 @@ $RECYCLE.BIN/
 
 !database/seeds/
 !database/seeds/*.sql
+
+# Python caches
+__pycache__/
+*.py[cod]
